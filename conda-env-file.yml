@@ -1,0 +1,28 @@
+name: twfe-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  # - python   # or 2.7 if you are feeling nostalgic
+  - pip
+  - pybind11
+  - ipython
+  - jupyterlab
+  - notebook
+  - pytest
+  - numpy
+  - pandas
+  - scipy
+  - tqdm
+  - networkx
+  - scikit-learn
+  - pyamg
+  - pyreadr
+  # - sphinx
+  - nbsphinx
+  - pip:
+      - sphinx-rtd-theme # Sphinx theme
+      # - pyarrow
+
+# conda env create --file environment.yml
+# conda env remove --name twfe-env
