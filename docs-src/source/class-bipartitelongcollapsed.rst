@@ -1,7 +1,7 @@
 BipartiteLongCollapsed class
 ============================
 
-.. autoclass:: bipartitepandas.bipartitepandas.BipartiteLongCollapsed
+.. autoclass:: bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed
    :members:
    :undoc-members:
    :show-inheritance:

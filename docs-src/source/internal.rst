@@ -11,19 +11,19 @@ The main bipartitepandas API is split into four classes. bipartitepandas is cano
 
     import bipartitepandas as bpd
 
-* ``pytwoway.BipartiteLong``: Class for formatting bipartite networks in long form.
+* ``bipartitepandas.BipartiteLong``: Class for formatting bipartite networks in long form.
 
-* ``pytwoway.BipartiteLongCollapsed``: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation).
+* ``bipartitepandas.BipartiteLongCollapsed``: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation).
 
-* ``pytwoway.BipartiteEventStudy``: Class for formatting bipartite networks in event study form.
+* ``bipartitepandas.BipartiteEventStudy``: Class for formatting bipartite networks in event study form.
 
-* ``pytwoway.BipartiteEventStudyCollapsed``: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation).
+* ``bipartitepandas.BipartiteEventStudyCollapsed``: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation).
 
 Modules and Methods
 -------------------
 
-``pytwoway.BipartiteLong``
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``bipartitepandas.BipartiteLong``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
@@ -35,8 +35,8 @@ Modules and Methods
    ~bipartitepandas.BipartiteData.get_es
    ~bipartitepandas.BipartiteData.rename
 
-``pytwoway.BipartiteLongCollapsed``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``bipartitepandas.BipartiteLongCollapsed``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
    .. autosummary::
 
@@ -47,8 +47,8 @@ Modules and Methods
    ~bipartitepandas.BipartiteLongCollapsed.get_es
    ~bipartitepandas.BipartiteLongCollapsed.rename
 
-``pytwoway.BipartiteEventStudy``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``bipartitepandas.BipartiteEventStudy``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 
@@ -59,8 +59,8 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudy.get_long
    ~bipartitepandas.BipartiteEventStudy.rename
 
-``pytwoway.BipartiteEventStudyCollapsed``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``bipartitepandas.BipartiteEventStudyCollapsed``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autosummary::
 

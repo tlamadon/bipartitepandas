@@ -1,7 +1,7 @@
 BipartiteEventStudyCollapsed class
 ==================================
 
-.. autoclass:: bipartitepandas.bipartitepandas.BipartiteEventStudyCollapsed
+.. autoclass:: bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed
    :members:
    :undoc-members:
    :show-inheritance:

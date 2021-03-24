@@ -1,7 +1,7 @@
 BipartiteEventStudy class
 =========================
 
-.. autoclass:: bipartitepandas.bipartitepandas.BipartiteEventStudy
+.. autoclass:: bipartitepandas.bipartiteeventstudy.BipartiteEventStudy
    :members:
    :undoc-members:
    :show-inheritance:

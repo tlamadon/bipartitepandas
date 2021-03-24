@@ -96,10 +96,10 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Python API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#modules-and-methods">Modules and Methods</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#pytwoway-bipartitelong"><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteLong</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pytwoway-bipartitelongcollapsed"><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteLongCollapsed</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pytwoway-bipartiteeventstudy"><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteEventStudy</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#pytwoway-bipartiteeventstudycollapsed"><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteEventStudyCollapsed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitelong"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitelongcollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudy"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudycollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -208,30 +208,27 @@
 </div>
 </div></blockquote>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteLong</span></code>: Class for formatting bipartite networks in long form.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteLongCollapsed</span></code>: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteEventStudy</span></code>: Class for formatting bipartite networks in event study form.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteEventStudyCollapsed</span></code>: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code>: Class for formatting bipartite networks in long form.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code>: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code>: Class for formatting bipartite networks in event study form.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code>: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation).</p></li>
 </ul>
 </div>
 <div class="section" id="modules-and-methods">
 <h2>Modules and Methods<a class="headerlink" href="#modules-and-methods" title="Permalink to this headline">¶</a></h2>
-<div class="section" id="pytwoway-bipartitelong">
-<h3><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteLong</span></code><a class="headerlink" href="#pytwoway-bipartitelong" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="bipartitepandas-bipartitelong">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code><a class="headerlink" href="#bipartitepandas-bipartitelong" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteLong</span></code>(*args[, col_dict])</p></td>
-<td><p>Class for bipartite networks of firms and workers in long form.</p></td>
-</tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="pytwoway-bipartitelongcollapsed">
-<h3><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteLongCollapsed</span></code><a class="headerlink" href="#pytwoway-bipartitelongcollapsed" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="bipartitepandas-bipartitelongcollapsed">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code><a class="headerlink" href="#bipartitepandas-bipartitelongcollapsed" title="Permalink to this headline">¶</a></h3>
 <blockquote>
 <div><table class="longtable docutils align-default">
 <colgroup>
@@ -249,61 +246,25 @@
 ~bipartitepandas.BipartiteLongCollapsed.rename</p>
 </div></blockquote>
 </div>
-<div class="section" id="pytwoway-bipartiteeventstudy">
-<h3><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteEventStudy</span></code><a class="headerlink" href="#pytwoway-bipartiteeventstudy" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="bipartitepandas-bipartiteeventstudy">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventstudy" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteEventStudy</span></code>(*args[, col_dict])</p></td>
-<td><p>Class for bipartite networks of firms and workers in event study form.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_data</span></code>([inplace])</p></td>
-<td><p>Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code>([user_cluster])</p></td>
-<td><p>Cluster data and assign a new column giving the cluster for each firm.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(indices[, axis, inplace])</p></td>
-<td><p>Drop indices along axis.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_long</span></code>()</p></td>
-<td><p>Return event study data reformatted into long form.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
-<td><p>Rename a column.</p></td>
-</tr>
 </tbody>
 </table>
 </div>
-<div class="section" id="pytwoway-bipartiteeventstudycollapsed">
-<h3><code class="docutils literal notranslate"><span class="pre">pytwoway.BipartiteEventStudyCollapsed</span></code><a class="headerlink" href="#pytwoway-bipartiteeventstudycollapsed" title="Permalink to this headline">¶</a></h3>
+<div class="section" id="bipartitepandas-bipartiteeventstudycollapsed">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventstudycollapsed" title="Permalink to this headline">¶</a></h3>
 <table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteEventStudyCollapsed</span></code>(*args[, col_dict])</p></td>
-<td><p>Class for bipartite networks of firms and workers in collapsed event study form (i.e.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_data</span></code>([inplace])</p></td>
-<td><p>Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code>([user_cluster])</p></td>
-<td><p>Cluster data and assign a new column giving the cluster for each firm.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(indices[, axis, inplace])</p></td>
-<td><p>Drop indices along axis.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_collapsed_long</span></code>()</p></td>
-<td><p>Return collapsed event study data reformatted into collapsed long form.</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
-<td><p>Rename a column.</p></td>
-</tr>
 </tbody>
 </table>
 </div>

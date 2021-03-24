@@ -1,7 +1,7 @@
 BipartiteLong class
 ===================
 
-.. autoclass:: bipartitepandas.bipartitepandas.BipartiteLong
+.. autoclass:: bipartitepandas.bipartitelong.BipartiteLong
    :members:
    :undoc-members:
    :show-inheritance:

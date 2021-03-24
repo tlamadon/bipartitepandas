@@ -190,9 +190,9 @@
 <div class="section" id="bipartitelongcollapsed-class">
 <h1>BipartiteLongCollapsed class<a class="headerlink" href="#bipartitelongcollapsed-class" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
-<dt id="bipartitepandas.bipartitepandas.BipartiteLongCollapsed">
-<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartitepandas.</code><code class="sig-name descname">BipartiteLongCollapsed</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitepandas.BipartiteLongCollapsed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">bipartitepandas.bipartitepandas.BipartiteLongBase</span></code></p>
+<dt id="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed">
+<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartitelongcollapsed.</code><code class="sig-name descname">BipartiteLongCollapsed</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">bipartitepandas.bipartitelongbase.BipartiteLongBase</span></code></p>
 <p>Class for bipartite networks of firms and workers in collapsed long form (i.e. employment spells are collapsed into a single observation). Inherits from BipartiteLongBase.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -204,8 +204,8 @@
 </dd>
 </dl>
 <dl class="py method">
-<dt id="bipartitepandas.bipartitepandas.BipartiteLongCollapsed.clean_data">
-<code class="sig-name descname">clean_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitepandas.BipartiteLongCollapsed.clean_data" title="Permalink to this definition">¶</a></dt>
+<dt id="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.clean_data">
+<code class="sig-name descname">clean_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.clean_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -215,14 +215,14 @@
 <dd class="field-even"><p>BipartiteLongCollapsed with cleaned data</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitepandas.BipartiteLongCollapsed" title="bipartitepandas.bipartitepandas.BipartiteLongCollapsed">BipartiteLongCollapsed</a>)</p>
+<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed" title="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed">BipartiteLongCollapsed</a>)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="bipartitepandas.bipartitepandas.BipartiteLongCollapsed.data_validity">
-<code class="sig-name descname">data_validity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitepandas.BipartiteLongCollapsed.data_validity" title="Permalink to this definition">¶</a></dt>
+<dt id="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.data_validity">
+<code class="sig-name descname">data_validity</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.data_validity" title="Permalink to this definition">¶</a></dt>
 <dd><p>Checks that data is formatted correctly and updates relevant attributes.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -232,21 +232,21 @@
 <dd class="field-even"><p>BipartiteLongCollapsed with corrected columns and attributes</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitepandas.BipartiteLongCollapsed" title="bipartitepandas.bipartitepandas.BipartiteLongCollapsed">BipartiteLongCollapsed</a>)</p>
+<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed" title="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed">BipartiteLongCollapsed</a>)</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
-<dt id="bipartitepandas.bipartitepandas.BipartiteLongCollapsed.get_es">
-<code class="sig-name descname">get_es</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitepandas.BipartiteLongCollapsed.get_es" title="Permalink to this definition">¶</a></dt>
+<dt id="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.get_es">
+<code class="sig-name descname">get_es</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.get_es" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return collapsed long form data reformatted into event study data.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns</dt>
 <dd class="field-odd"><p>BipartiteEventStudyCollapsed object generated from collapsed long data</p>
 </dd>
 <dt class="field-even">Return type</dt>
-<dd class="field-even"><p>es_frame (<a class="reference internal" href="class-bipartiteeventstudycollapsed.html#bipartitepandas.bipartitepandas.BipartiteEventStudyCollapsed" title="bipartitepandas.bipartitepandas.BipartiteEventStudyCollapsed">BipartiteEventStudyCollapsed</a>)</p>
+<dd class="field-even"><p>es_frame (<a class="reference internal" href="class-bipartiteeventstudycollapsed.html#bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed" title="bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed">BipartiteEventStudyCollapsed</a>)</p>
 </dd>
 </dl>
 </dd></dl>
