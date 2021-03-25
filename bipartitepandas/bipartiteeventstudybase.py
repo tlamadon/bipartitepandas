@@ -48,13 +48,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         else:
             frame = self.copy()
 
+        bpd.BipartiteBase.clean_data(frame)
+
         frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
         frame.logger.info('checking quality of data')
         frame.data_validity()
 
         frame.logger.info('BipartiteEventStudyBase data cleaning complete')
-
-        bpd.BipartiteBase.clean_data(frame)
 
         return frame
 

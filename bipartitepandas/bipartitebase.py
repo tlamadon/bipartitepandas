@@ -3,13 +3,14 @@ Class for a bipartite network
 '''
 from tqdm.auto import tqdm
 import numpy as np
+from numpy_groupies.aggregate_numpy import aggregate
 import pandas as pd
 from pandas import DataFrame
 import networkx as nx
 from sklearn.cluster import KMeans
 from scipy.sparse.csgraph import connected_components
 import warnings
-from bipartitepandas import col_order, update_dict, to_list, logger_init, col_dict_optional_cols
+from bipartitepandas import col_order, update_dict, to_list, logger_init, col_dict_optional_cols, aggregate_transform
 
 class BipartiteBase(DataFrame):
     '''
@@ -465,7 +466,7 @@ class BipartiteBase(DataFrame):
         if not frame.connected:
             # Generate largest connected set
             frame.logger.info('generating largest connected set')
-            frame.conset(frame)
+            frame = frame.conset()
 
         # Next, make firm ids contiguous
         if not frame.contiguous_fids:
@@ -484,7 +485,7 @@ class BipartiteBase(DataFrame):
 
         # Using contiguous fids, get NetworkX Graph of largest connected set (note that this must be done even if firms already connected and contiguous)
         # frame.logger.info('generating NetworkX Graph of largest connected set')
-        # frame.G = frame.conset() # FIXME currently not used
+        # _, frame.G = frame.conset(return_G=True) # FIXME currently not used
 
         frame.logger.info('BipartiteBase data cleaning complete')
 
@@ -579,7 +580,8 @@ class BipartiteBase(DataFrame):
 
         frame.logger.info('--- checking connected set ---')
         if self.reference_dict['fid'] == 'fid':
-            frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max)
+            # frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max)
+            frame['fid_max'] = aggregate_transform(frame, col_groupby='wid', col_grouped='fid', func='max', col_name='fid_max')
             G = nx.from_pandas_edgelist(frame, 'fid', 'fid_max')
             # Drop fid_max
             frame.drop('fid_max', axis=1)
@@ -639,13 +641,12 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def conset(self, return_G=False, inplace=True):
+    def conset(self, return_G=False):
         '''
         Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
 
         Arguments:
             return_G (bool): if True, return a tuple of (frame, G)
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteBase): BipartiteBase with connected set of movers
@@ -654,10 +655,7 @@ class BipartiteBase(DataFrame):
                 frame (BipartiteBase): BipartiteBase with connected set of movers
                 G (NetworkX Graph): largest connected set of movers (only returns if firm ids are contiguous, otherwise returns None)
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self.copy()
 
         prev_workers = frame.n_workers()
         prev_firms = frame.n_firms()
@@ -665,7 +663,8 @@ class BipartiteBase(DataFrame):
         if self.reference_dict['fid'] == 'fid':
             # Add max firm id per worker to serve as a central node for the worker
             # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
-            frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max) # FIXME - this is undirected but is much faster
+            # frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max) # FIXME - this is undirected but is much faster
+            frame['fid_max'] = aggregate_transform(frame, col_groupby='wid', col_grouped='fid', func='max', col_name='fid_max')
 
             # Find largest connected set
             # Source: https://networkx.github.io/documentation/stable/reference/algorithms/generated/networkx.algorithms.components.connected_components.html
@@ -716,15 +715,17 @@ class BipartiteBase(DataFrame):
         else:
             frame = self.copy()
 
-        if not self.col_included('m'):
-            if self.reference_dict['fid'] == 'fid':
-                frame['m'] = frame.groupby('wid')['fid'].transform(lambda x: len(np.unique(x)) > 1).astype(int)
+        if not frame.col_included('m'):
+            if frame.reference_dict['fid'] == 'fid':
+                frame['m'] = (aggregate_transform(frame, col_groupby='wid', col_grouped='fid', func='n_unique', col_name='m') > 1).astype(int)
             else:
                 frame['m'] = (frame['f1i'] != frame['f2i']).astype(int)
             frame.col_dict['m'] = 'm'
             # Sort columns
             sorted_cols = sorted(frame.columns, key=col_order)
             frame = frame[sorted_cols]
+
+        return frame
 
     def approx_cdfs(self, cdf_resolution=10, grouping='quantile_all', stayers_movers=None, year=None):
         '''
@@ -777,7 +778,10 @@ class BipartiteBase(DataFrame):
 
             # Generate firm-level cdfs
             for i, quant in enumerate(quantile_groups):
-                cdfs[:, i] = data.assign(firm_quant=lambda d: d['comp'] <= quant).groupby('fid')['firm_quant'].agg(sum).to_numpy()
+                firm_quant = data.assign(firm_quant=lambda d: d['comp'] <= quant)[['fid', 'firm_quant']]
+                cdfs[:, i] = aggregate(firm_quant['fid'], firm_quant['firm_quant'], func='sum')
+                del firm_quant
+                
 
             # Normalize by firm size (convert to cdf)
             fsize = data.groupby('fid').size().to_numpy()
@@ -791,7 +795,9 @@ class BipartiteBase(DataFrame):
                 # Convert pandas dataframe into a dictionary to access data faster
                 # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
                 # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
-                data_dict = data['comp'].groupby(level=0).agg(list).to_dict()
+                # data_dict = data['comp'].groupby(level=0).agg(list).to_dict()
+                # data_dict = data.groupby('fid')['comp'].agg(list).to_dict()
+                data_dict = pd.Series(aggregate(data['fid'], data['comp'], func='array', fill_value=[]), index=np.unique(data['fid'])).to_dict()
 
             # Generate the cdfs
             for fid in tqdm(range(n_firms)):

@@ -19,7 +19,8 @@ setuptools.setup(
         'scipy',
         'tqdm',
         'networkx',
-        'scikit-learn'
+        'scikit-learn',
+        'numpy_groupies'
       ],
     classifiers=[
         'Programming Language :: Python :: 3',

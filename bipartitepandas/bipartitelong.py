@@ -42,13 +42,13 @@ class BipartiteLong(bpd.BipartiteLongBase):
         else:
             frame = self.copy()
 
+        bpd.BipartiteLongBase.clean_data(frame)
+
         frame.logger.info('beginning BipartiteLong data cleaning')
         frame.logger.info('checking quality of data')
         frame.data_validity()
 
         frame.logger.info('BipartiteLong data cleaning complete')
-
-        bpd.BipartiteLongBase.clean_data(frame)
 
         return frame
 

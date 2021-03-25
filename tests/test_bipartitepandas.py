@@ -5,7 +5,7 @@ DATE: March 2021
 '''
 import pytest
 import pandas as pd
-import pytwoway as tw
+import bipartitepandas as bpd
 
 def test_twfe_refactor_1():
     # Continuous time, 2 movers between firms 1 and 2, and 1 stayer at firm 3, and discontinuous time still counts as a move

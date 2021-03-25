@@ -3,6 +3,10 @@ Utility functions
 '''
 import logging
 from pathlib import Path
+from numpy_groupies.aggregate_numpy import aggregate
+import numpy as np
+import pandas as pd
+import warnings
 
 col_order = ['wid', 'fid', 'f1i', 'f2i', 'comp', 'y1', 'y2', 'year', 'year_1', 'year_2', 'year_start', 'year_end', 'year_start_1', 'year_end_1', 'year_start_2', 'year_end_2', 'weight', 'w1', 'w2', 'j', 'j1', 'j2', 'm', 'cs'].index
 
@@ -37,6 +41,8 @@ def to_list(data):
         return [data]
     return data
 
+loggers = {}
+
 def logger_init(obj):
     '''
     Initialize logger.
@@ -44,25 +50,33 @@ def logger_init(obj):
     Arguments:
         obj (object): object requiring logger
     '''
+    global loggers
     obj_name = type(obj).__name__.lower()
-    # Begin logging
-    obj.logger = logging.getLogger(obj_name)
-    obj.logger.setLevel(logging.DEBUG)
-    # Create logs folder
-    Path('{}_logs'.format(obj_name)).mkdir(parents=True, exist_ok=True)
-    # Create file handler which logs even debug messages
-    fh = logging.FileHandler('{}_logs/{}_spam.log'.format(obj_name, obj_name))
-    fh.setLevel(logging.DEBUG)
-    # Create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
-    # Create formatter and add it to the handlers
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    # Add the handlers to the logger
-    obj.logger.addHandler(fh)
-    obj.logger.addHandler(ch)
+
+    if loggers.get(obj_name):
+        # Prevent duplicate loggers
+        # Source: https://stackoverflow.com/questions/7173033/duplicate-log-output-when-using-python-logging-module/55877763
+        obj.logger = loggers.get(obj_name)
+    else:
+        # Begin logging
+        obj.logger = logging.getLogger(obj_name)
+        obj.logger.setLevel(logging.DEBUG)
+        # Create logs folder
+        Path('{}_logs'.format(obj_name)).mkdir(parents=True, exist_ok=True)
+        # Create file handler which logs even debug messages
+        fh = logging.FileHandler('{}_logs/{}_spam.log'.format(obj_name, obj_name))
+        fh.setLevel(logging.DEBUG)
+        # Create console handler with a higher log level
+        ch = logging.StreamHandler()
+        ch.setLevel(logging.ERROR)
+        # Create formatter and add it to the handlers
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+        # Add the handlers to the logger
+        obj.logger.addHandler(fh)
+        obj.logger.addHandler(ch)
+        loggers[obj_name] = obj.logger
 
 def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_cols=()):
     '''
@@ -97,3 +111,54 @@ def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_
             for col in to_list(col_list):
                 new_col_dict[col] = None
     return new_col_dict
+
+def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None):
+    '''
+    Adds transform to the numpy_groupies function aggregate. Source: https://stackoverflow.com/a/65967344.
+
+    Arguments:
+        frame (Pandas DataFrame): frame to transform into
+        col_groupby (str): column to group by
+        col_grouped (str): column to group
+        func (function): function to apply. Can input a function, or a string for a pre-built function. Pre-built functions include:
+
+            n_unique: number of unique values in col_grouped for each value in col_groupby
+
+            max: max value
+
+            min: min value
+
+            sum: sum
+        col_name (str or None): specify what to name the new column. If None and func is a string, sets col_name=func. If None and func is a function, sets col_name=m. If col_name is in frame's columns, adds 'm' until it will not overwrite an existing column
+
+    Returns:
+        (Pandas Series): aggregated, transformed data
+    '''
+    col1 = frame[col_groupby].to_numpy()
+    col2 = frame[col_grouped].to_numpy()
+    with warnings.catch_warnings():
+        warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+        agg_array = aggregate(col1, col2, 'array', fill_value=[])
+    if isinstance(func, str):
+        if col_name is None:
+            col_name = func
+        if col_name in frame.columns:
+            while col_name in frame.columns:
+                col_name += 'm'
+        if func == 'n_unique':
+            agg_array = [len(np.unique(np.array(vals))) for vals in agg_array]
+        elif func == 'max':
+            agg_array = [np.max(np.array(vals)) for vals in agg_array]
+        elif func == 'min':
+            agg_array = [np.min(np.array(vals)) for vals in agg_array]
+        elif func == 'sum':
+            agg_array = [np.sum(np.array(vals)) for vals in agg_array]
+    else:
+        if col_name in frame.columns:
+            while col_name in frame.columns:
+                col_name += 'm'
+        agg_array = func(agg_array)
+
+    agg_df = pd.DataFrame({col_groupby: np.unique(col1), col_name: agg_array}, index=np.arange(len(agg_array)))
+
+    return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name]
