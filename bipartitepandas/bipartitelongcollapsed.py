@@ -19,7 +19,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         reference_dict = {'year': ['year_start', 'year_end'], 'weight': 'weight'}
         col_dtype_dict = {'weight': 'float'}
         # Initialize DataFrame
-        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, **kwargs)
+        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
 
         self.logger.info('BipartiteLongCollapsed object initialized')
 
@@ -30,22 +30,14 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return BipartiteLongCollapsed
 
-    def clean_data(self, inplace=True):
+    def clean_data(self):
         '''
         Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteLongCollapsed): BipartiteLongCollapsed with cleaned data
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
-
-        bpd.BipartiteLongBase.clean_data(frame)
+        frame = bpd.BipartiteLongBase.clean_data(self)
 
         frame.logger.info('beginning BipartiteLongCollapsed data cleaning')
         frame.logger.info('checking quality of data')

@@ -17,8 +17,9 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
     def __init__(self, *args, col_dict=None, **kwargs):
         columns_opt = ['weight']
         reference_dict = {'year': ['year_start_1', 'year_end_1', 'year_start_2', 'year_end_2'], 'weight': ['w1', 'w2']}
+        col_dtype_dict = {'weight': 'float'}
         # Initialize DataFrame
-        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dict=col_dict, **kwargs)
+        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
 
         self.logger.info('BipartiteEventStudyCollapsed object initialized')
 

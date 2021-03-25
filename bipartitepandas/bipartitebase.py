@@ -262,17 +262,17 @@ class BipartiteBase(DataFrame):
 
         if axis == 1:
             for col in to_list(indices):
-                if col in frame.columns:
-                    if col in self.columns_opt: # If column optional
-                        for subcol in to_list(self.reference_dict[col]):
+                if col in frame.columns or col in frame.columns_req or col in frame.columns_opt:
+                    if col in frame.columns_opt: # If column optional
+                        for subcol in to_list(frame.reference_dict[col]):
                             DataFrame.drop(frame, subcol, axis=1, inplace=True)
                             frame.col_dict[subcol] = None
                         if col == 'j':
                             frame.contiguous_cids = None
-                    elif col not in self.columns_req and col not in self.columns_opt: # If column is not pre-established
+                    elif col not in frame.included_cols() and col not in frame.included_cols(flat=True): # If column is not pre-established
                         DataFrame.drop(frame, col, axis=1, inplace=True)
                     else:
-                        warnings.warn('{} is a required column and cannot be dropped'.format(col))
+                        warnings.warn("{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'j' instead of 'j1' or 'j2')".format(col))
                 else:
                     warnings.warn('{} is not in data columns'.format(col))
         elif axis == 0:
@@ -299,7 +299,7 @@ class BipartiteBase(DataFrame):
             frame = self.copy()
 
         for col_cur, col_new in rename_dict.items():
-            if col_cur in frame.columns:
+            if col_cur in frame.columns or col_cur in frame.columns_req or col_cur in frame.columns_opt:
                 if col_cur in self.columns_opt: # If column optional
                     if len(to_list(self.reference_dict[col_cur])) > 1:
                         for i, subcol in enumerate(to_list(self.reference_dict[col_cur])):
@@ -310,10 +310,10 @@ class BipartiteBase(DataFrame):
                         frame.col_dict[col_cur] = None
                     if col_cur == 'j':
                         frame.contiguous_cids = None
-                elif col_cur not in self.columns_req and col_cur not in self.columns_opt: # If column is not pre-established
+                elif col_cur not in frame.included_cols() and col_cur not in frame.included_cols(flat=True): # If column is not pre-established
                         DataFrame.rename(frame, {col_cur: col_new}, axis=1, inplace=True)
                 else:
-                    warnings.warn('{} is a required column and cannot be renamed'.format(col_cur))
+                    warnings.warn("{} is either (a) a required column and cannot be renamed or (b) a subcolumn that can be renamed, but only by specifying the general column name (e.g. use 'j' instead of 'j1' or 'j2')".format(col_cur))
             else:
                 warnings.warn('{} is not in data columns'.format(col_cur))
 
@@ -336,21 +336,17 @@ class BipartiteBase(DataFrame):
             frame.reset_attributes()
         return frame
 
-    def contiguous_ids(self, id_col, inplace=True):
+    def contiguous_ids(self, id_col):
         '''
         Make column of ids contiguous.
 
         Arguments:
             id_col (str): column to make contiguous ('fid', 'wid', or 'j'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'. Only optional columns may be renamed
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteBase): BipartiteBase with contiguous ids
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self.copy()
 
         # Create sorted set of unique ids
         ids = []
@@ -426,20 +422,14 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def clean_data(self, inplace=True):
+    def clean_data(self):
         '''
         Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteBase): BipartiteBase with cleaned data
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self.copy()
 
         frame.logger.info('beginning BipartiteBase data cleaning')
         frame.logger.info('checking quality of data')
@@ -471,21 +461,26 @@ class BipartiteBase(DataFrame):
         # Next, make firm ids contiguous
         if not frame.contiguous_fids:
             frame.logger.info('making firm ids contiguous')
-            frame.contiguous_ids('fid')
+            frame = frame.contiguous_ids('fid')
 
         # Next, make worker ids contiguous
         if not frame.contiguous_wids:
-            frame.logger.info('making firm ids contiguous')
-            frame.contiguous_ids('wid')
+            frame.logger.info('making worker ids contiguous')
+            frame = frame.contiguous_ids('wid')
 
         # Next, make cluster ids contiguous
         if frame.contiguous_cids is not None and not frame.contiguous_cids:
             frame.logger.info('making cluster ids contiguous')
-            frame.contiguous_ids('j')
+            frame = frame.contiguous_ids('j')
 
         # Using contiguous fids, get NetworkX Graph of largest connected set (note that this must be done even if firms already connected and contiguous)
         # frame.logger.info('generating NetworkX Graph of largest connected set')
         # _, frame.G = frame.conset(return_G=True) # FIXME currently not used
+
+        # Sort columns
+        frame.logger.info('sorting columns')
+        sorted_cols = sorted(frame.columns, key=col_order)
+        frame = frame[sorted_cols]
 
         frame.logger.info('BipartiteBase data cleaning complete')
 
@@ -509,12 +504,12 @@ class BipartiteBase(DataFrame):
         success = True
 
         frame.logger.info('--- checking columns ---')
-        all_cols = self.included_cols()
+        all_cols = frame.included_cols()
         cols = True
         frame.logger.info('--- checking column datatypes ---')
         col_dtypes = True
         for col in all_cols:
-            for subcol in to_list(self.reference_dict[col]):
+            for subcol in to_list(frame.reference_dict[col]):
                 if frame.col_dict[subcol] not in frame.columns:
                     frame.logger.info('{} missing from data'.format(frame.col_dict[subcol]))
                     col_dtypes = False
@@ -535,28 +530,28 @@ class BipartiteBase(DataFrame):
         frame.logger.info('--- checking column names ---')
         col_names = True
         for col in all_cols:
-            for subcol in to_list(self.reference_dict[col]):
+            for subcol in to_list(frame.reference_dict[col]):
                 if frame.col_dict[subcol] != subcol:
                     col_names = False
                     cols = False
                     break
         frame.logger.info('column names correct:' + str(col_names))
         if col_names:
-            self.correct_cols = True
+            frame.correct_cols = True
         if not col_names:
-            self.correct_cols = False
+            frame.correct_cols = False
             success = False
 
         frame.logger.info('--- checking non-pre-established columns ---')
-        all_cols = self.included_cols(flat=True)
-        for col in self.columns:
+        all_cols = frame.included_cols(flat=True)
+        for col in frame.columns:
             if col not in all_cols:
                 cols = False
                 break
 
         if not cols:
-            self.logger.info('correcting column names')
-            self.update_cols()
+            frame.logger.info('correcting column names')
+            frame.update_cols()
 
         frame.logger.info('--- checking nan data ---')
         nans = frame.shape[0] - frame.dropna().shape[0]
@@ -579,7 +574,7 @@ class BipartiteBase(DataFrame):
             frame.no_duplicates = True
 
         frame.logger.info('--- checking connected set ---')
-        if self.reference_dict['fid'] == 'fid':
+        if frame.reference_dict['fid'] == 'fid':
             frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max)
             G = nx.from_pandas_edgelist(frame, 'fid', 'fid_max')
             # Drop fid_max
@@ -600,7 +595,7 @@ class BipartiteBase(DataFrame):
 
         frame.logger.info('--- checking contiguous firm ids ---')
         fid_max = - np.inf
-        for fid_col in to_list(self.reference_dict['fid']):
+        for fid_col in to_list(frame.reference_dict['fid']):
             fid_max = max(frame[fid_col].max(), fid_max)
         n_firms = frame.n_firms()
 
@@ -622,10 +617,10 @@ class BipartiteBase(DataFrame):
         if not contig_wids:
             success = False
 
-        if self.col_included('j'):
+        if frame.col_included('j'):
             frame.logger.info('--- checking contiguous cluster ids ---')
             cid_max = - np.inf
-            for cid_col in to_list(self.reference_dict['j']):
+            for cid_col in to_list(frame.reference_dict['j']):
                 cid_max = max(frame[cid_col].max(), cid_max)
             n_cids = frame.n_clusters()
 

@@ -27,22 +27,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return BipartiteLong
 
-    def clean_data(self, inplace=True):
+    def clean_data(self):
         '''
         Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteLong): BipartiteLong with cleaned data
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
-
-        bpd.BipartiteLongBase.clean_data(frame)
+        frame = bpd.BipartiteLongBase.clean_data(self)
 
         frame.logger.info('beginning BipartiteLong data cleaning')
         frame.logger.info('checking quality of data')
@@ -173,41 +165,31 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             es_frame (BipartiteEventStudy): BipartiteEventStudy object generated from long data
         '''
+        data_es = self.copy()
+
         # Determine whether m, cluster columns exist
-        m = self.col_included('m')
-        clustered = self.col_included('j')
+        m = data_es.col_included('m')
+        clustered = data_es.col_included('j')
 
         if not m:
             # Generate m column
-            self.gen_m()
+            data_es.gen_m()
 
-        # Split workers by movers and stayers
-        stayers = pd.DataFrame(self[self['m'] == 0])
-        movers = pd.DataFrame(self[self['m'] == 1])
-        self.logger.info('workers split by movers and stayers')
+        # Convert into a dataframe
+        data_es = pd.DataFrame(data_es)
 
         # Add lagged values
-        movers = movers.sort_values(['wid', 'year'])
-        movers['fid_l1'] = movers['fid'].shift(periods=1)
-        movers['wid_l1'] = movers['wid'].shift(periods=1) # Used to mark consecutive observations as being for the same worker
-        movers['comp_l1'] = movers['comp'].shift(periods=1)
-        movers['year_l1'] = movers['year'].shift(periods=1)
+        data_es = data_es.sort_values(['wid', 'year'])
+        data_es['fid_l1'] = data_es['fid'].shift(periods=1)
+        data_es['wid_l1'] = data_es['wid'].shift(periods=1) # Used to mark consecutive observations as being for the same worker
+        data_es['comp_l1'] = data_es['comp'].shift(periods=1)
+        data_es['year_l1'] = data_es['year'].shift(periods=1)
         if clustered:
-            movers['j_l1'] = movers['j'].shift(periods=1)
-        movers = movers[movers['wid'] == movers['wid_l1']]
-        movers[['fid_l1', 'year_l1']] = movers[['fid_l1', 'year_l1']].astype(int) # Shifting adds nans which converts columns into float, but want int
-
-        # Update columns
-        stayers = stayers.rename({
-            'fid': 'f1i',
-            'comp': 'y1',
-            'year': 'year_1'
-        }, axis=1)
-        stayers['f2i'] = stayers['f1i']
-        stayers['y2'] = stayers['y1']
-        stayers['year_2'] = stayers['year_1']
+            data_es['j_l1'] = data_es['j'].shift(periods=1)
+        data_es = data_es[data_es['wid'] == data_es['wid_l1']]
+        data_es[['fid_l1', 'year_l1']] = data_es[['fid_l1', 'year_l1']].astype(int) # Shifting adds nans which converts columns into float, but want int
         
-        movers = movers.rename({
+        data_es = data_es.rename({
             'fid_l1': 'f1i',
             'fid': 'f2i',
             'comp_l1': 'y1',
@@ -219,23 +201,17 @@ class BipartiteLong(bpd.BipartiteLongBase):
         keep_cols = ['wid', 'y1', 'y2', 'f1i', 'f2i', 'year_1', 'year_2', 'm']
 
         if clustered:
-            stayers = stayers.rename({'j': 'j1'}, axis=1)
-            stayers['j2'] = stayers['j1']
-            movers['j_l1'] = movers['j_l1'].astype(int)
-            movers = movers.rename({'j': 'j2', 'j_l1': 'j1'}, axis=1)
+            data_es['j_l1'] = data_es['j_l1'].astype(int)
+            data_es = data_es.rename({'j': 'j2', 'j_l1': 'j1'}, axis=1)
             keep_cols += ['j1', 'j2']
 
         # Keep only relevant columns
-        stayers = stayers[keep_cols]
-        movers = movers[keep_cols]
+        data_es = data_es[keep_cols]
         self.logger.info('columns updated')
-
-        # Merge stayers and movers
-        data_es = pd.concat([stayers, movers]).reset_index(drop=True)
 
         # Sort columns
         sorted_cols = sorted(data_es.columns, key=bpd.col_order)
-        data_es = data_es[sorted_cols]
+        data_es = data_es[sorted_cols].reset_index(drop=True)
 
         self.logger.info('data reformatted as event study')
 

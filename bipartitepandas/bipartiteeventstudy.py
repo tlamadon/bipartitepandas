@@ -36,7 +36,6 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
             long_frame (BipartiteLong): BipartiteLong object generated from event study data
         '''
         # Determine whether weight, m, cluster, year columns exist
-        weighted = self.col_included('weight')
         m = self.col_included('m')
         clustered = self.col_included('j')
         years = self.col_included('year')
@@ -54,8 +53,6 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
             'y2': 'y1',
             'year_1': 'year_2',
             'year_2': 'year_1',
-            'w1': 'w2',
-            'w2': 'w1',
             'j1': 'j2',
             'j2': 'j1'
         }
@@ -64,7 +61,6 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
             'f1i': 'fid',
             'y1': 'comp',
             'year_1': 'year',
-            'w1': 'weight',
             'j1': 'j'
         }
 
@@ -77,9 +73,6 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         if clustered:
             drops += ['j2']
             astype_dict['j'] = int
-        if weighted:
-            drops += ['w2']
-            astype_dict['weight'] = int
         if years:
             drops += ['year_2']
             astype_dict['year'] = int

@@ -33,22 +33,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         return BipartiteEventStudyBase
 
-    def clean_data(self, inplace=True):
+    def clean_data(self):
         '''
         Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteEventStudyBase): BipartiteEventStudyBase with cleaned data
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
-
-        bpd.BipartiteBase.clean_data(frame)
+        frame = bpd.BipartiteBase.clean_data(self)
 
         frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
         frame.logger.info('checking quality of data')
