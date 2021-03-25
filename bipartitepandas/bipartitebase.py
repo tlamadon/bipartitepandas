@@ -580,8 +580,7 @@ class BipartiteBase(DataFrame):
 
         frame.logger.info('--- checking connected set ---')
         if self.reference_dict['fid'] == 'fid':
-            # frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max)
-            frame['fid_max'] = aggregate_transform(frame, col_groupby='wid', col_grouped='fid', func='max', col_name='fid_max')
+            frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max)
             G = nx.from_pandas_edgelist(frame, 'fid', 'fid_max')
             # Drop fid_max
             frame.drop('fid_max', axis=1)
@@ -663,8 +662,7 @@ class BipartiteBase(DataFrame):
         if self.reference_dict['fid'] == 'fid':
             # Add max firm id per worker to serve as a central node for the worker
             # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
-            # frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max) # FIXME - this is undirected but is much faster
-            frame['fid_max'] = aggregate_transform(frame, col_groupby='wid', col_grouped='fid', func='max', col_name='fid_max')
+            frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max) # FIXME - this is undirected but is much faster
 
             # Find largest connected set
             # Source: https://networkx.github.io/documentation/stable/reference/algorithms/generated/networkx.algorithms.components.connected_components.html
@@ -781,7 +779,6 @@ class BipartiteBase(DataFrame):
                 firm_quant = data.assign(firm_quant=lambda d: d['comp'] <= quant)[['fid', 'firm_quant']]
                 cdfs[:, i] = aggregate(firm_quant['fid'], firm_quant['firm_quant'], func='sum')
                 del firm_quant
-                
 
             # Normalize by firm size (convert to cdf)
             fsize = data.groupby('fid').size().to_numpy()
