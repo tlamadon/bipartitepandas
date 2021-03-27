@@ -25,7 +25,7 @@ class BipartiteBase(DataFrame):
         col_dict (dict or None): make data columns readable. Keep None if column names already correct
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'contiguous_fids', 'contiguous_wids', 'contiguous_cids', 'no_na', 'no_duplicates'] # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'contiguous_fids', 'contiguous_wids', 'contiguous_cids', 'no_na', 'no_duplicates', 'worker_year_unique'] # Attributes, required for Pandas inheritance
 
     def __init__(self, *args, columns_req=[], columns_opt=[], reference_dict={}, col_dtype_dict={}, col_dict=None, **kwargs):
         # Initialize DataFrame
