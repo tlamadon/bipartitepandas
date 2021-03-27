@@ -18,7 +18,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Initialize DataFrame
         reference_dict = {'year': 'year'}
         super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, **kwargs)
-        self.logger.info('BipartiteLong object initialized')
+
+        # self.logger.info('BipartiteLong object initialized')
 
     @property
     def _constructor(self):
@@ -120,53 +121,70 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             es_frame (BipartiteEventStudy): BipartiteEventStudy object generated from long data
         '''
-        data_es = self.copy()
-
         # Determine whether m, cluster columns exist
-        m = data_es.col_included('m')
-        clustered = data_es.col_included('j')
+        m = self.col_included('m')
+        clustered = self.col_included('j')
 
         if not m:
             # Generate m column
-            data_es.gen_m()
+            self.gen_m()
 
-        # Convert into a dataframe
-        data_es = pd.DataFrame(data_es)
+        # Split workers by movers and stayers
+        stayers = pd.DataFrame(self[self['m'] == 0])
+        movers = pd.DataFrame(self[self['m'] == 1])
+        self.logger.info('workers split by movers and stayers')
 
         # Add lagged values
-        data_es = data_es.sort_values(['wid', 'year'])
-        data_es['fid_l1'] = data_es['fid'].shift(periods=1)
-        data_es['wid_l1'] = data_es['wid'].shift(periods=1) # Used to mark consecutive observations as being for the same worker
-        data_es['comp_l1'] = data_es['comp'].shift(periods=1)
-        data_es['year_l1'] = data_es['year'].shift(periods=1)
+        movers = movers.sort_values(['wid', 'year'])
+        movers['fid_l1'] = movers['fid'].shift(periods=1)
+        movers['wid_l1'] = movers['wid'].shift(periods=1) # Used to mark consecutive observations as being for the same worker
+        movers['comp_l1'] = movers['comp'].shift(periods=1)
+        movers['year_l1'] = movers['year'].shift(periods=1)
         if clustered:
-            data_es['j_l1'] = data_es['j'].shift(periods=1)
-        data_es = data_es[data_es['wid'] == data_es['wid_l1']]
-        data_es[['fid_l1', 'year_l1']] = data_es[['fid_l1', 'year_l1']].astype(int) # Shifting adds nans which converts columns into float, but want int
-        
-        data_es = data_es.rename({
+            movers['j_l1'] = movers['j'].shift(periods=1)
+        movers = movers[movers['wid'] == movers['wid_l1']]
+        movers[['fid_l1', 'year_l1']] = movers[['fid_l1', 'year_l1']].astype(int) # Shifting adds nans which converts columns into float, but want int
+
+        # Update columns
+        stayers = stayers.rename({
+            'fid': 'f1i',
+            'comp': 'y1',
+            'year': 'year_1',
+            'j': 'j1' # Optional
+        }, axis=1)
+        stayers['f2i'] = stayers['f1i']
+        stayers['y2'] = stayers['y1']
+        stayers['year_2'] = stayers['year_1']
+
+        movers = movers.rename({
             'fid_l1': 'f1i',
             'fid': 'f2i',
             'comp_l1': 'y1',
             'comp': 'y2',
             'year': 'year_2',
             'year_l1': 'year_1',
+            'j_l1': 'j1', # Optional
+            'j': 'j2' # Optional
         }, axis=1)
 
         keep_cols = ['wid', 'y1', 'y2', 'f1i', 'f2i', 'year_1', 'year_2', 'm']
 
         if clustered:
-            data_es['j_l1'] = data_es['j_l1'].astype(int)
-            data_es = data_es.rename({'j': 'j2', 'j_l1': 'j1'}, axis=1)
+            stayers['j2'] = stayers['j1']
+            movers['j1'] = movers['j1'].astype(int)
             keep_cols += ['j1', 'j2']
 
         # Keep only relevant columns
-        data_es = data_es[keep_cols]
+        stayers = stayers[keep_cols]
+        movers = movers[keep_cols]
         self.logger.info('columns updated')
+
+        # Merge stayers and movers
+        data_es = pd.concat([stayers, movers]).reset_index(drop=True)
 
         # Sort columns
         sorted_cols = sorted(data_es.columns, key=bpd.col_order)
-        data_es = data_es[sorted_cols].reset_index(drop=True)
+        data_es = data_es[sorted_cols]
 
         self.logger.info('data reformatted as event study')
 

@@ -19,7 +19,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         # Initialize DataFrame
         super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, **kwargs)
 
-        self.logger.info('BipartiteEventStudy object initialized')
+        # self.logger.info('BipartiteEventStudy object initialized')
 
     @property
     def _constructor(self):
@@ -78,7 +78,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
             astype_dict['year'] = int
 
         # Append the last row if a mover or stayer over multiple periods (this is because the last observation is only given as an f2i, never as an f1i)
-        data_long = pd.DataFrame(self).groupby('wid').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 or (years and a.iloc[0]['year_1'] != a.iloc[0]['year_2']) else a) \
+        data_long = pd.DataFrame(self).groupby('wid').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 else a) \
             .reset_index(drop=True) \
             .drop(drops, axis=1) \
             .rename(rename_dict_2, axis=1) \

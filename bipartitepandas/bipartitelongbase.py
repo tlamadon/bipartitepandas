@@ -1,6 +1,7 @@
 '''
 Base class for bipartite networks in long or collapsed long form
 '''
+import pandas as pd
 import bipartitepandas as bpd
 
 class BipartiteLongBase(bpd.BipartiteBase):
@@ -23,7 +24,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Initialize DataFrame
         super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
 
-        self.logger.info('BipartiteLongBase object initialized')
+        # self.logger.info('BipartiteLongBase object initialized')
 
     @property
     def _constructor(self):

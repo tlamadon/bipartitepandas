@@ -21,7 +21,7 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         # Initialize DataFrame
         super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
 
-        self.logger.info('BipartiteEventStudyCollapsed object initialized')
+        # self.logger.info('BipartiteEventStudyCollapsed object initialized')
 
     @property
     def _constructor(self):

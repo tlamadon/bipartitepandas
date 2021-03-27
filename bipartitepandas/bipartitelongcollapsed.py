@@ -21,7 +21,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         # Initialize DataFrame
         super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
 
-        self.logger.info('BipartiteLongCollapsed object initialized')
+        # self.logger.info('BipartiteLongCollapsed object initialized')
 
     @property
     def _constructor(self):
