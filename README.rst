@@ -7,6 +7,9 @@ bipartitepandas
 .. image:: https://travis-ci.com/tlamadon/bipartitepandas.svg?branch=master
     :target: https://travis-ci.com/tlamadon/bipartitepandas
 
+.. image:: https://img.shields.io/codecov/c/github/tlamadon/bipartitepandas.svg?maxAge=2592000
+    :target: https://codecov.io/github/tlamadon/bipartitepandas?branch=master
+
 .. image:: https://img.shields.io/badge/doc-latest-blue
     :target: https://tlamadon.github.io/bipartitepandas/
 
