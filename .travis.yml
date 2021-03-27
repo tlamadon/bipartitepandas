@@ -4,5 +4,6 @@ python:
 cache: pip
 install:
   - pip install .
+  - pip install pytwoway
 script:
   - python -m pytest
