@@ -630,7 +630,57 @@ def test_col_dict_15():
     assert stayers.iloc[0]['y1'] == 1
     assert stayers.iloc[0]['y2'] == 1
 
-def test_general_methods_16():
+def test_worker_year_unique_16():
+    # Workers with multiple jobs in the same year, keep the highest paying
+    worker_data = []
+    worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'index': 0})
+    worker_data.append({'fid': 1, 'year': 2, 'wid': 0, 'comp': 1., 'index': 1})
+    worker_data.append({'fid': 1, 'year': 1, 'wid': 1, 'comp': 1., 'index': 2})
+    worker_data.append({'fid': 2, 'year': 2, 'wid': 1, 'comp': 1., 'index': 3})
+    worker_data.append({'fid': 3, 'year': 2, 'wid': 1, 'comp': 0.5, 'index': 4})
+    worker_data.append({'fid': 2, 'year': 1, 'wid': 3, 'comp': 1., 'index': 5})
+    worker_data.append({'fid': 1, 'year': 1, 'wid': 3, 'comp': 1.5, 'index': 6})
+    worker_data.append({'fid': 2, 'year': 2, 'wid': 3, 'comp': 1., 'index': 7})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['wid', 'fid', 'comp', 'year']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data().gen_m()
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] == 1]
+
+    assert movers.iloc[0]['wid'] == 0
+    assert movers.iloc[0]['fid'] == 0
+    assert movers.iloc[0]['comp'] == 2
+    assert movers.iloc[0]['year'] == 1
+
+    assert movers.iloc[1]['wid'] == 0
+    assert movers.iloc[1]['fid'] == 1
+    assert movers.iloc[1]['comp'] == 1
+    assert movers.iloc[1]['year'] == 2
+
+    assert movers.iloc[2]['wid'] == 1
+    assert movers.iloc[2]['fid'] == 1
+    assert movers.iloc[2]['comp'] == 1
+    assert movers.iloc[2]['year'] == 1
+
+    assert movers.iloc[3]['wid'] == 1
+    assert movers.iloc[3]['fid'] == 2
+    assert movers.iloc[3]['comp'] == 1
+    assert movers.iloc[3]['year'] == 2
+
+    assert movers.iloc[4]['wid'] == 2
+    assert movers.iloc[4]['fid'] == 1
+    assert movers.iloc[4]['comp'] == 1.5
+    assert movers.iloc[4]['year'] == 1
+
+    assert movers.iloc[5]['wid'] == 2
+    assert movers.iloc[5]['fid'] == 2
+    assert movers.iloc[5]['comp'] == 1
+    assert movers.iloc[5]['year'] == 2
+
+def test_general_methods_17():
     # Continuous time, 1 mover between firms 1 and 2, 1 between firms 2 and 4, and 1 stayer at firm 4, firm 4 gets reset to firm 3, and discontinuous time still counts as a move
     worker_data = []
     worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'j': 2, 'index': 0})
@@ -680,7 +730,7 @@ def test_general_methods_16():
 ##### Tests for BipartiteLongCollapsed #####
 ############################################
 
-def test_long_collapsed_17():
+def test_long_collapsed_1():
     # Continuous time, 1 mover between firms 1 and 2, 1 between firms 2 and 4, and 1 stayer at firm 4, firm 4 gets reset to firm 3, and discontinuous time still counts as a move
     worker_data = []
     worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'index': 0})
@@ -725,7 +775,7 @@ def test_long_collapsed_17():
 ##### Tests for BipartiteEventStudy #####
 #########################################
 
-def test_event_study_18():
+def test_event_study_1():
     # Continuous time, 1 mover between firms 1 and 2, 1 between firms 2 and 4, and 1 stayer at firm 4, firm 4 gets reset to firm 3, and discontinuous time still counts as a move
     worker_data = []
     worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'index': 0})
@@ -774,7 +824,7 @@ def test_event_study_18():
 ##### Tests for BipartiteEventStudyCollapsed #####
 ##################################################
 
-def test_event_study_collapsed_19():
+def test_event_study_collapsed_1():
     # Continuous time, 1 mover between firms 1 and 2, 1 between firms 2 and 4, and 1 stayer at firm 4, firm 4 gets reset to firm 3, and discontinuous time still counts as a move
     worker_data = []
     worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'index': 0})
@@ -826,3 +876,79 @@ def test_event_study_collapsed_19():
     assert stayers.iloc[0]['year_end_1'] == 2
     assert stayers.iloc[0]['year_start_2'] == 1
     assert stayers.iloc[0]['year_end_2'] == 2
+
+#####################################
+##### Tests for BipartitePandas #####
+#####################################
+
+def test_reformatting_1():
+    # Convert from long --> event study --> long --> collapsed long --> collapsed event study --> collapsed long to ensure conversion maintains data properly.
+    worker_data = []
+    worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'j': 1, 'index': 0})
+    worker_data.append({'fid': 1, 'year': 2, 'wid': 0, 'comp': 1., 'j': 2, 'index': 1})
+    worker_data.append({'fid': 1, 'year': 1, 'wid': 1, 'comp': 1., 'j': 2, 'index': 2})
+    worker_data.append({'fid': 2, 'year': 2, 'wid': 1, 'comp': 1., 'j': 1, 'index': 3})
+    worker_data.append({'fid': 2, 'year': 3, 'wid': 1, 'comp': 2., 'j': 1, 'index': 4})
+    worker_data.append({'fid': 2, 'year': 1, 'wid': 3, 'comp': 1., 'j': 1, 'index': 5})
+    worker_data.append({'fid': 2, 'year': 2, 'wid': 3, 'comp': 1., 'j': 1, 'index': 6})
+    worker_data.append({'fid': 0, 'year': 1, 'wid': 4, 'comp': 1., 'j': 1, 'index': 7})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['wid', 'fid', 'comp', 'year', 'j']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data()
+    bdf = bdf.get_es()
+    bdf = bdf.clean_data()
+    bdf = bdf.get_long()
+    bdf = bdf.clean_data()
+    bdf = bdf.get_collapsed_long()
+    bdf = bdf.clean_data()
+    bdf = bdf.get_es()
+    bdf = bdf.clean_data()
+    bdf = bdf.get_collapsed_long()
+    bdf = bdf.clean_data()
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] == 1]
+
+    assert movers.iloc[0]['fid'] == 0
+    assert movers.iloc[0]['wid'] == 0
+    assert movers.iloc[0]['comp'] == 2
+    assert movers.iloc[0]['year_start'] == 1
+    assert movers.iloc[0]['year_end'] == 1
+    assert movers.iloc[0]['j'] == 0
+
+    assert movers.iloc[1]['fid'] == 1
+    assert movers.iloc[1]['wid'] == 0
+    assert movers.iloc[1]['comp'] == 1
+    assert movers.iloc[1]['year_start'] == 2
+    assert movers.iloc[1]['year_end'] == 2
+    assert movers.iloc[1]['j'] == 1
+
+    assert movers.iloc[2]['fid'] == 1
+    assert movers.iloc[2]['wid'] == 1
+    assert movers.iloc[2]['comp'] == 1
+    assert movers.iloc[2]['year_start'] == 1
+    assert movers.iloc[2]['year_end'] == 1
+    assert movers.iloc[2]['j'] == 1
+
+    assert movers.iloc[3]['fid'] == 2
+    assert movers.iloc[3]['wid'] == 1
+    assert movers.iloc[3]['comp'] == 1.5
+    assert movers.iloc[3]['year_start'] == 2
+    assert movers.iloc[3]['year_end'] == 3
+    assert movers.iloc[3]['j'] == 0
+
+    assert stayers.iloc[0]['fid'] == 2
+    assert stayers.iloc[0]['wid'] == 2
+    assert stayers.iloc[0]['comp'] == 1
+    assert stayers.iloc[0]['year_start'] == 1
+    assert stayers.iloc[0]['year_end'] == 2
+    assert stayers.iloc[0]['j'] == 0
+
+    assert stayers.iloc[1]['fid'] == 0
+    assert stayers.iloc[1]['wid'] == 4
+    assert stayers.iloc[1]['comp'] == 1
+    assert stayers.iloc[1]['year_start'] == 1
+    assert stayers.iloc[1]['year_end'] == 1
+    assert stayers.iloc[1]['j'] == 1

@@ -116,6 +116,7 @@ class BipartiteBase(DataFrame):
         ret_str += 'correct column names and types: ' + str(self.correct_cols) + '\n'
         ret_str += 'no nans: ' + str(self.no_na) + '\n'
         ret_str += 'no duplicates: ' + str(self.no_duplicates) + '\n'
+        ret_str += 'worker-year observations unique (None if year column(s) not included): ' + str(self.worker_year_unique)
 
         print(ret_str)
 
@@ -185,6 +186,7 @@ class BipartiteBase(DataFrame):
         self.correct_cols = frame.correct_cols # If True, column names are correct
         self.no_na = frame.no_na # If True, no NaN observations in the data
         self.no_duplicates = frame.no_duplicates # If True, no duplicate rows in the data
+        self.worker_year_unique = frame.worker_year_unique # If True, each worker has at most one observation per year
 
     def reset_attributes(self):
         '''
@@ -197,6 +199,7 @@ class BipartiteBase(DataFrame):
         self.correct_cols = False # If True, column names are correct
         self.no_na = False # If True, no NaN observations in the data
         self.no_duplicates = False # If True, no duplicate rows in the data
+        self.worker_year_unique = None # If True, each worker has at most one observation per year
 
         # Verify whether clusters included
         if self.col_included('j'):
@@ -452,6 +455,14 @@ class BipartiteBase(DataFrame):
             # Update no_duplicates
             frame.no_duplicates = True
 
+        # Next, make sure worker-year observations are unique
+        if frame.worker_year_unique is not None and not frame.worker_year_unique:
+            frame.logger.info('keeping highest paying job for worker-year duplicates')
+            frame.drop_worker_year_duplicates()
+
+            # Update no_duplicates
+            frame.worker_year_unique = True
+
         # Next, find largest set of firms connected by movers
         if not frame.connected:
             # Generate largest connected set
@@ -573,6 +584,22 @@ class BipartiteBase(DataFrame):
         else:
             frame.no_duplicates = True
 
+        if frame.col_included('year'):
+            frame.logger.info('--- checking worker-year observations ---')
+            max_obs = 1
+            for year_col in to_list(frame.reference_dict['year']):
+                max_obs_col = frame.groupby(['wid', year_col]).size().max()
+                max_obs = max(max_obs_col, max_obs)
+
+            frame.logger.info('max number of worker-year observations (should be 1):' + str(max_obs))
+            if max_obs > 1:
+                frame.worker_year_unique = False
+                success = False
+            else:
+                frame.worker_year_unique = True
+        else:
+            frame.worker_year_unique = None
+
         frame.logger.info('--- checking connected set ---')
         if frame.reference_dict['fid'] == 'fid':
             frame['fid_max'] = frame.groupby(['wid'])['fid'].transform(max)
@@ -632,6 +659,29 @@ class BipartiteBase(DataFrame):
                 success = False
 
         frame.logger.info('BipartiteBase success:' + str(success))
+
+        return frame
+
+    def drop_worker_year_duplicates(self, inplace=True):
+        '''
+        Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
+
+        Arguments:
+            inplace (bool): if True, modify in-place
+
+        Returns:
+            frame (BipartiteBase): BipartiteBase that keeps only the highest pyaing job for worker-year duplicates. If no year columns, returns frame with no changes
+        '''
+        if inplace:
+            frame = self
+        else:
+            frame = self.copy()
+
+        if 'year' in frame.included_cols():
+            year_cols = to_list(frame.reference_dict['year'])
+            frame.sort_values(['wid'] + year_cols + to_list(frame.reference_dict['comp']), inplace=True)
+            for year_col in year_cols:
+                frame.drop_duplicates(subset=['wid', year_col], keep='last', inplace=True)
 
         return frame
 
@@ -734,7 +784,6 @@ class BipartiteBase(DataFrame):
             cdf_df (NumPy Array): NumPy array of firm cdfs
             n_firms (int): number of firms in subset of data used to cluster
         '''
-
         if stayers_movers is not None:
             # Determine whether m column exists
             if not self.col_included('m'):

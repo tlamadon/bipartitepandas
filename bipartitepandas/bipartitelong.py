@@ -27,51 +27,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return BipartiteLong
 
-    def clean_data(self):
-        '''
-        Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
-
-        Returns:
-            frame (BipartiteLong): BipartiteLong with cleaned data
-        '''
-        frame = bpd.BipartiteLongBase.clean_data(self)
-
-        frame.logger.info('beginning BipartiteLong data cleaning')
-        frame.logger.info('checking quality of data')
-        frame.data_validity()
-
-        frame.logger.info('BipartiteLong data cleaning complete')
-
-        return frame
-
-    def data_validity(self, inplace=True):
-        '''
-        Checks that data is formatted correctly and updates relevant attributes.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
-
-        Returns:
-            frame (BipartiteLong): BipartiteLong with corrected columns and attributes
-        '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
-
-        success = True
-
-        frame.logger.info('--- checking worker-year observations ---')
-        max_obs = frame.groupby(['wid', 'year']).size().max()
-
-        frame.logger.info('max number of worker-year observations (should be 1):' + str(max_obs))
-        if max_obs > 1:
-            success = False
-
-        frame.logger.info('BipartiteLongBase success:' + str(success))
-
-        return frame
-
     def get_collapsed_long(self):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).

@@ -30,53 +30,6 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return BipartiteLongCollapsed
 
-    def clean_data(self):
-        '''
-        Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
-
-        Returns:
-            frame (BipartiteLongCollapsed): BipartiteLongCollapsed with cleaned data
-        '''
-        frame = bpd.BipartiteLongBase.clean_data(self)
-
-        frame.logger.info('beginning BipartiteLongCollapsed data cleaning')
-        frame.logger.info('checking quality of data')
-        frame.data_validity()
-
-        frame.logger.info('BipartiteLongCollapsed data cleaning complete')
-
-        return frame
-
-    def data_validity(self, inplace=True):
-        '''
-        Checks that data is formatted correctly and updates relevant attributes.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
-
-        Returns:
-            frame (BipartiteLongCollapsed): BipartiteLongCollapsed with corrected columns and attributes
-        '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
-
-        success = True
-
-        frame.logger.info('--- checking worker-year observations ---')
-        max_obs_start = frame.groupby(['wid', 'year_start']).size().max()
-        max_obs_end = frame.groupby(['wid', 'year_end']).size().max()
-        max_obs = max(max_obs_start, max_obs_end)
-
-        frame.logger.info('max number of worker-year observations (should be 1):' + str(max_obs))
-        if max_obs > 1:
-            success = False
-
-        frame.logger.info('BipartiteLongCollapsed success:' + str(success))
-
-        return frame
-
     def get_es(self):
         '''
         Return collapsed long form data reformatted into event study data.

@@ -25,17 +25,3 @@ Quick Start
 To install from pip, run::
 
     pip install bipartitepandas
-
-Citation
---------
-
-Please use the following citation to cite bipartitepandas in academic publications:
-
-Bibtex entry::
-
-  @techreport{bhlmms2020,
-    title={How Much Should We Trust Estimates of Firm Effects and Worker Sorting?},
-    author={Bonhomme, St{\'e}phane and Holzheu, Kerstin and Lamadon, Thibaut and Manresa, Elena and Mogstad, Magne and Setzler, Bradley},
-    year={2020},
-    institution={National Bureau of Economic Research}
-  }
