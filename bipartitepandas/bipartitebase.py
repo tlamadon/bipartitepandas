@@ -25,7 +25,7 @@ class BipartiteBase(DataFrame):
         col_dict (dict or None): make data columns readable. Keep None if column names already correct
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'contiguous_fids', 'contiguous_wids', 'contiguous_cids', 'no_na', 'no_duplicates', 'worker_year_unique'] # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'contiguous_fids', 'contiguous_wids', 'contiguous_cids', 'correct_cols', 'no_na', 'no_duplicates', 'worker_year_unique'] # Attributes, required for Pandas inheritance
 
     def __init__(self, *args, columns_req=[], columns_opt=[], reference_dict={}, col_dtype_dict={}, col_dict=None, **kwargs):
         # Initialize DataFrame
@@ -116,7 +116,7 @@ class BipartiteBase(DataFrame):
         ret_str += 'correct column names and types: ' + str(self.correct_cols) + '\n'
         ret_str += 'no nans: ' + str(self.no_na) + '\n'
         ret_str += 'no duplicates: ' + str(self.no_duplicates) + '\n'
-        ret_str += 'worker-year observations unique (None if year column(s) not included): ' + str(self.worker_year_unique)
+        ret_str += 'worker-year observations unique (None if year column(s) not included): ' + str(self.worker_year_unique) + '\n'
 
         print(ret_str)
 
@@ -335,8 +335,8 @@ class BipartiteBase(DataFrame):
         '''
         frame = DataFrame.merge(self, *args, **kwargs)
         frame = self._constructor(frame) # Use correct constructor
-        if kwargs['how'] != 'left': # Non-left merge could cause issues with data
-            frame.reset_attributes()
+        if kwargs['how'] == 'left': # Non-left merge could cause issues with data, by default resets attributes
+            frame.set_attributes(self)
         return frame
 
     def contiguous_ids(self, id_col):
@@ -371,7 +371,6 @@ class BipartiteBase(DataFrame):
 
             # Adjust id column to use new contiguous id
             frame[id] = frame['adj_' + id]
-            # print(type(frame))
             frame.drop('adj_' + id)
 
         # Sort columns
@@ -536,7 +535,7 @@ class BipartiteBase(DataFrame):
         frame.logger.info('column datatypes correct:' + str(col_dtypes))
         if not col_dtypes:
             success = False
-            raise ValueError('Your data does not include the correct columns. The BipartitePandas object cannot be generated with your data.')
+            raise ValueError('Your data does not include the correct columns or column datatypes. The BipartitePandas object cannot be generated with your data.')
 
         frame.logger.info('--- checking column names ---')
         col_names = True
@@ -546,11 +545,9 @@ class BipartiteBase(DataFrame):
                     col_names = False
                     cols = False
                     break
+
         frame.logger.info('column names correct:' + str(col_names))
-        if col_names:
-            frame.correct_cols = True
         if not col_names:
-            frame.correct_cols = False
             success = False
 
         frame.logger.info('--- checking non-pre-established columns ---')
@@ -560,9 +557,12 @@ class BipartiteBase(DataFrame):
                 cols = False
                 break
 
+        frame.logger.info('columns correct:' + str(cols))
+
         if not cols:
-            frame.logger.info('correcting column names')
+            frame.logger.info('correcting columns')
             frame.update_cols()
+        frame.correct_cols = True
 
         frame.logger.info('--- checking nan data ---')
         nans = frame.shape[0] - frame.dropna().shape[0]
@@ -803,12 +803,11 @@ class BipartiteBase(DataFrame):
                 warnings.warn('Cannot use data from a particular year on non-BipartiteLong data. Convert into BipartiteLong to cluster only on a particular year')
 
         # Create empty numpy array to fill with the cdfs
-        if self.reference_dict['fid'] == 'fid': # If Long
-            n_firms = len(data['fid'].unique()) # Can't use self.n_firms() since data could be a subset of self.data
-        else: # If Event Study
+        if self.reference_dict['fid'] == ['f1i', 'f2i']: # If Event Study
             n_firms = len(set(list(data['f1i'].unique()) + list(data['f2i'].unique()))) # Can't use self.n_firms() since data could be a subset of self.data
             data = data.rename({'f1i': 'fid', 'y1': 'comp'}, axis=1)
             data = pd.concat([data, data.rename({'f2i': 'fid', 'y2': 'comp', 'fid': 'f2i', 'comp': 'y2'}, axis=1).assign(f2i = - 1)], axis=0) # Include irrelevant columns and rename f1i to f2i to prevent nans, which convert columns from int into float # FIXME duplicating both movers and stayers, should probably only be duplicating movers
+        n_firms = len(data['fid'].unique()) # Can't use self.n_firms() since data could be a subset of self.data
         cdfs = np.zeros([n_firms, cdf_resolution])
 
         # Create quantiles of interest
@@ -820,9 +819,10 @@ class BipartiteBase(DataFrame):
 
             # Generate firm-level cdfs
             for i, quant in enumerate(quantile_groups):
-                firm_quant = data.assign(firm_quant=lambda d: d['comp'] <= quant)[['fid', 'firm_quant']]
-                cdfs[:, i] = aggregate(firm_quant['fid'], firm_quant['firm_quant'], func='sum')
-                del firm_quant
+                firm_quant = (data['comp'] <= quant).astype(int)
+                cdfs_col = aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
+                cdfs[:, i] = cdfs_col[cdfs_col >= 0]
+            del firm_quant, cdfs_col
 
             # Normalize by firm size (convert to cdf)
             fsize = data.groupby('fid').size().to_numpy()
@@ -937,6 +937,8 @@ class BipartiteBase(DataFrame):
             frame = frame.dropna().reset_index(drop=True)
             frame[self.reference_dict['j']] = frame[self.reference_dict['j']].astype(int)
             frame.clean_data()
+
+        frame.contiguous_cids = True
 
         frame.logger.info('clusters merged into data')
 
