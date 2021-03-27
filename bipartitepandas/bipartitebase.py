@@ -782,7 +782,7 @@ class BipartiteBase(DataFrame):
 
         Returns:
             cdf_df (NumPy Array): NumPy array of firm cdfs
-            n_firms (int): number of firms in subset of data used to cluster
+            fids (NumPy Array): firm ids of firms in subset of data used to cluster
         '''
         if stayers_movers is not None:
             # Determine whether m column exists
@@ -807,7 +807,8 @@ class BipartiteBase(DataFrame):
             n_firms = len(set(list(data['f1i'].unique()) + list(data['f2i'].unique()))) # Can't use self.n_firms() since data could be a subset of self.data
             data = data.rename({'f1i': 'fid', 'y1': 'comp'}, axis=1)
             data = pd.concat([data, data.rename({'f2i': 'fid', 'y2': 'comp', 'fid': 'f2i', 'comp': 'y2'}, axis=1).assign(f2i = - 1)], axis=0) # Include irrelevant columns and rename f1i to f2i to prevent nans, which convert columns from int into float # FIXME duplicating both movers and stayers, should probably only be duplicating movers
-        n_firms = len(data['fid'].unique()) # Can't use self.n_firms() since data could be a subset of self.data
+        fids = data['fid'].unique()
+        n_firms = len(fids) # Can't use self.n_firms() since data could be a subset of self.data
         cdfs = np.zeros([n_firms, cdf_resolution])
 
         # Create quantiles of interest
@@ -860,7 +861,7 @@ class BipartiteBase(DataFrame):
             data = data[data['f2i'] >= 0]
             data = data.rename({'fid': 'f1i', 'comp': 'y1'}, axis=1)
 
-        return cdfs, n_firms
+        return cdfs, fids
 
     def cluster(self, user_cluster={}):
         '''
@@ -899,20 +900,19 @@ class BipartiteBase(DataFrame):
         user_KMeans = cluster_params['user_KMeans']
 
         # Compute cdfs
-        cdfs, n_firms = frame.approx_cdfs(cdf_resolution=cdf_resolution, grouping=grouping, stayers_movers=stayers_movers, year=year)
+        cdfs, fids = frame.approx_cdfs(cdf_resolution=cdf_resolution, grouping=grouping, stayers_movers=stayers_movers, year=year)
         frame.logger.info('firm cdfs computed')
 
         # Compute firm clusters
         KMeans_params = update_dict(frame.default_KMeans, user_KMeans)
         clusters = KMeans(**KMeans_params).fit(cdfs).labels_
+        print('clusters:', clusters)
         frame.logger.info('firm clusters computed')
         
         # Drop existing clusters
         if frame.col_included('j'):
             frame.drop('j')
 
-        # Create Pandas dataframe linking fid to firm cluster
-        fids = np.arange(n_firms)
         for i, fid_col in enumerate(to_list(self.reference_dict['fid'])):
             if self.reference_dict['fid'] == 'fid':
                 j_col = 'j'
@@ -923,7 +923,7 @@ class BipartiteBase(DataFrame):
             frame.logger.info('dataframe linking fids to clusters generated')
 
             # Merge into event study data
-            frame = frame.merge(clusters_df, how='left', on='fid')
+            frame = frame.merge(clusters_df, how='left', on=fid_col)
             # Keep column as int even with nans
             frame[j_col] = frame[j_col].astype('Int64')
             frame.col_dict[j_col] = j_col
