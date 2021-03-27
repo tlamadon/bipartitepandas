@@ -4,8 +4,10 @@ Tests for bipartitepandas
 DATE: March 2021
 '''
 import pytest
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
+from pytwoway import SimTwoWay
 
 ###################################
 ##### Tests for BipartiteBase #####
@@ -681,7 +683,7 @@ def test_worker_year_unique_16():
     assert movers.iloc[5]['year'] == 2
 
 def test_general_methods_17():
-    # Continuous time, 1 mover between firms 1 and 2, 1 between firms 2 and 4, and 1 stayer at firm 4, firm 4 gets reset to firm 3, and discontinuous time still counts as a move
+    # Test some general methods, like n_workers/n_firms/n_clusters, included_cols(), drop(), and rename().
     worker_data = []
     worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'j': 2, 'index': 0})
     worker_data.append({'fid': 1, 'year': 2, 'wid': 0, 'comp': 1., 'j': 1, 'index': 1})
@@ -725,6 +727,68 @@ def test_general_methods_17():
     assert 'j1' in bdf.columns and 'j2' in bdf.columns
     bdf.rename({'j': 'r'})
     assert 'j1' not in bdf.columns and 'j2' not in bdf.columns
+
+def test_cluster_18():
+    '''
+    Test cluster function is working correctly.
+    '''
+    nk = 10
+    sim_data = SimTwoWay({'nk': nk}).sim_network()
+    bdf = bpd.BipartiteLong(sim_data)
+    bdf = bdf.clean_data()
+    for grouping in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+        print(grouping)
+        bdf = bdf.cluster(user_cluster={'grouping': grouping, 'user_KMeans': {'n_clusters': nk}})
+
+        clusters_true = sim_data['psi'].astype('category').cat.codes.astype(int)
+        clusters_estimated = bdf['j'].astype(int)
+
+        # Find which clusters are most often matched together
+        replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
+        clusters_available = list(np.arange(nk)) # Which clusters have yet to be used
+        matches_available = list(np.arange(nk)) # Which matches have yet to be used
+        clusters_match = []
+        matches_match = []
+        # Iterate through clusters to find matches, but ensure no duplicate matches
+        for i in range(nk):
+            best_proportion = - 1 # Best proportion of matches
+            best_cluster = None # Best cluster
+            best_match = None # Best match
+            for j in clusters_available: # Iterate over remaining clusters
+                cluster_df = replace_df[replace_df['psi'] == j]
+                value_counts = cluster_df[cluster_df['psi_est'].isin(matches_available)].value_counts() # Only show valid remaining matches
+                if len(value_counts) > 0:
+                    proportion = value_counts.iloc[0] / len(cluster_df)
+                else:
+                    proportion = 0
+                if proportion > best_proportion:
+                    best_proportion = proportion
+                    best_cluster = j
+                    if len(value_counts) > 0:
+                        best_match = value_counts.index[0][1]
+                    else:
+                        best_match = matches_available[0] # Just take a random cluster
+            # Use best cluster
+            clusters_match.append(best_cluster)
+            matches_match.append(best_match)
+            del clusters_available[clusters_available.index(best_cluster)]
+            del matches_available[matches_available.index(best_match)]
+        match_df = pd.DataFrame({'psi': clusters_match, 'psi_est': matches_match}, index=np.arange(nk))
+        # replace_df = replace_df.groupby('psi').apply(lambda a: a.value_counts().index[0][1])
+
+        clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
+
+        wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
+        if grouping == 'quantile_all':
+            bound = 2500 # 5% error
+
+        elif grouping == 'quantile_firm_small':
+            bound = 3000 # 6% error
+
+        elif grouping == 'quantile_firm_large':
+            bound = 3000 # 6% error
+
+        assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####

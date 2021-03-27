@@ -1,4 +1,4 @@
-name: twfe-env
+name: bpd-env
 channels:
   - defaults
   - conda-forge
@@ -11,18 +11,18 @@ dependencies:
   - notebook
   - pytest
   - numpy
+  - numpy_groupies
   - pandas
-  - scipy
   - tqdm
   - networkx
+  - scipy
   - scikit-learn
-  - pyamg
-  - pyreadr
   # - sphinx
   - nbsphinx
   - pip:
       - sphinx-rtd-theme # Sphinx theme
+      - pytwoway
       # - pyarrow
 
-# conda env create --file environment.yml
-# conda env remove --name twfe-env
+# conda env create --file conda-env-file.yml
+# conda env remove --name bpd-env

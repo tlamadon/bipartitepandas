@@ -804,7 +804,7 @@ class BipartiteBase(DataFrame):
 
         # Create empty numpy array to fill with the cdfs
         if self.reference_dict['fid'] == ['f1i', 'f2i']: # If Event Study
-            n_firms = len(set(list(data['f1i'].unique()) + list(data['f2i'].unique()))) # Can't use self.n_firms() since data could be a subset of self.data
+            # n_firms = len(set(list(data['f1i'].unique()) + list(data['f2i'].unique()))) # Can't use self.n_firms() since data could be a subset of self.data
             data = data.rename({'f1i': 'fid', 'y1': 'comp'}, axis=1)
             data = pd.concat([data, data.rename({'f2i': 'fid', 'y2': 'comp', 'fid': 'f2i', 'comp': 'y2'}, axis=1).assign(f2i = - 1)], axis=0) # Include irrelevant columns and rename f1i to f2i to prevent nans, which convert columns from int into float # FIXME duplicating both movers and stayers, should probably only be duplicating movers
         fids = data['fid'].unique()
@@ -827,7 +827,7 @@ class BipartiteBase(DataFrame):
 
             # Normalize by firm size (convert to cdf)
             fsize = data.groupby('fid').size().to_numpy()
-            cdfs /= np.expand_dims(fsize, 1)
+            cdfs = (cdfs.T / fsize.T).T
 
         elif grouping in ['quantile_firm_small', 'quantile_firm_large']:
             # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
@@ -839,15 +839,17 @@ class BipartiteBase(DataFrame):
                 # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
                 # data_dict = data['comp'].groupby(level=0).agg(list).to_dict()
                 # data_dict = data.groupby('fid')['comp'].agg(list).to_dict()
-                data_dict = pd.Series(aggregate(data['fid'], data['comp'], func='array', fill_value=[]), index=np.unique(data['fid'])).to_dict()
+                with warnings.catch_warnings():
+                    warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+                    data_dict = pd.Series(aggregate(data['fid'], data['comp'], func='array', fill_value=[]), index=np.unique(data['fid'])).to_dict()
 
             # Generate the cdfs
-            for fid in tqdm(range(n_firms)):
+            for fid in range(n_firms):
                 # Get the firm-level compensation data (don't need to sort because already sorted)
                 if grouping == 'quantile_firm_small':
                     comp = data_dict[fid]
                 elif grouping == 'quantile_firm_large':
-                    comp = data.loc[data['fid'] == fid, 'comp']
+                    comp = data.loc[data['fid'] == fid, 'comp'].to_numpy()
                 # Generate the firm-level cdf
                 # Note: update numpy array element by element
                 # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
@@ -861,7 +863,7 @@ class BipartiteBase(DataFrame):
             data = data[data['f2i'] >= 0]
             data = data.rename({'fid': 'f1i', 'comp': 'y1'}, axis=1)
 
-        return cdfs, fids
+        return cdfs, sorted(fids)
 
     def cluster(self, user_cluster={}):
         '''
@@ -906,7 +908,6 @@ class BipartiteBase(DataFrame):
         # Compute firm clusters
         KMeans_params = update_dict(frame.default_KMeans, user_KMeans)
         clusters = KMeans(**KMeans_params).fit(cdfs).labels_
-        print('clusters:', clusters)
         frame.logger.info('firm clusters computed')
         
         # Drop existing clusters
@@ -917,9 +918,9 @@ class BipartiteBase(DataFrame):
             if self.reference_dict['fid'] == 'fid':
                 j_col = 'j'
             else:
-                j_col = 'j' + str(i)
+                j_col = 'j' + str(i + 1)
             clusters_dict = {fid_col: fids, j_col: clusters}
-            clusters_df = pd.DataFrame(clusters_dict, index=fids)
+            clusters_df = pd.DataFrame(clusters_dict, index=np.arange(len(fids)))
             frame.logger.info('dataframe linking fids to clusters generated')
 
             # Merge into event study data
