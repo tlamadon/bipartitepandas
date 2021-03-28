@@ -81,8 +81,8 @@ class BipartiteBase(DataFrame):
         }
 
         self.dtype_dict = {
-            'int': ['int', 'int16', 'int32', 'int64', 'Int64'],
-            'float': ['float', 'float16', 'float32', 'float64', 'float128', 'int', 'int16', 'int32', 'int64', 'Int64'],
+            'int': ['int', 'int8', 'int16', 'int32', 'int64', 'Int64'],
+            'float': ['float', 'float8', 'float16', 'float32', 'float64', 'float128', 'int', 'int8', 'int16', 'int32', 'int64', 'Int64'],
             'str': 'str'
         }
 

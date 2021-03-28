@@ -62,9 +62,9 @@ def logger_init(obj):
         obj.logger = logging.getLogger(obj_name)
         obj.logger.setLevel(logging.DEBUG)
         # Create logs folder
-        Path('{}_logs'.format(obj_name)).mkdir(parents=True, exist_ok=True)
+        Path('logs/{}_logs'.format(obj_name)).mkdir(parents=True, exist_ok=True)
         # Create file handler which logs even debug messages
-        fh = logging.FileHandler('{}_logs/{}_spam.log'.format(obj_name, obj_name))
+        fh = logging.FileHandler('logs/{}_logs/{}_spam.log'.format(obj_name, obj_name))
         fh.setLevel(logging.DEBUG)
         # Create console handler with a higher log level
         ch = logging.StreamHandler()
