@@ -5,7 +5,7 @@ from tqdm.auto import tqdm
 import numpy as np
 from numpy_groupies.aggregate_numpy import aggregate
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Int64Dtype
 import networkx as nx
 from sklearn.cluster import KMeans
 from scipy.sparse.csgraph import connected_components
@@ -525,7 +525,7 @@ class BipartiteBase(DataFrame):
                     col_dtypes = False
                     cols = False
                 else:
-                    col_type = frame[frame.col_dict[subcol]].dtype
+                    col_type = str(frame[frame.col_dict[subcol]].dtype)
                     valid_types = to_list(frame.dtype_dict[frame.col_dtype_dict[col]])
                     if col_type not in valid_types:
                         frame.logger.info('{} has wrong dtype, should be {} but is {}'.format(frame.col_dict[subcol], frame.col_dtype_dict[col], col_type))
