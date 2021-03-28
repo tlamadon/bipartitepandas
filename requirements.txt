@@ -1,0 +1,9 @@
+numpy
+numpy_groupies
+pandas
+bipartitepandas
+scipy
+scikit-learn
+networkx
+pytwoway
+tqdm
