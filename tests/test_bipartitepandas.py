@@ -783,10 +783,10 @@ def test_cluster_18():
             bound = 2500 # 5% error
 
         elif grouping == 'quantile_firm_small':
-            bound = 3000 # 6% error
+            bound = 5000 # 10% error
 
         elif grouping == 'quantile_firm_large':
-            bound = 3000 # 6% error
+            bound = 5000 # 10% error
 
         assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
 
