@@ -19,7 +19,7 @@ setuptools.setup(
         'numpy_groupies',
         'scipy',
         'scikit-learn',
-        'qpsolver',
+        'qpsolvers',
         'networkx',
         'tqdm',
       ],
