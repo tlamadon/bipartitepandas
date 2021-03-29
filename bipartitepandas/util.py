@@ -3,7 +3,7 @@ Utility functions
 '''
 import logging
 from pathlib import Path
-from numpy_groupies.aggregate_numpy import aggregate
+# from numpy_groupies.aggregate_numpy import aggregate
 import numpy as np
 import pandas as pd
 import warnings
@@ -112,7 +112,7 @@ def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_
                 new_col_dict[col] = None
     return new_col_dict
 
-def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None):
+def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None, merge=True):
     '''
     Adds transform to the numpy_groupies function aggregate. Source: https://stackoverflow.com/a/65967344.
 
@@ -130,35 +130,45 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None):
 
             sum: sum
         col_name (str or None): specify what to name the new column. If None and func is a string, sets col_name=func. If None and func is a function, sets col_name=m. If col_name is in frame's columns, adds 'm' until it will not overwrite an existing column
+        merge (bool): if True, merge into dataframe
 
     Returns:
-        (Pandas Series): aggregated, transformed data
+        if merge:
+            (Pandas DataFrame): aggregated, transformed data merged into original dataframe
+        else:
+            (Pandas Series): aggregated, transformed data
     '''
     col1 = frame[col_groupby].to_numpy()
     col2 = frame[col_grouped].to_numpy()
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-        agg_array = aggregate(col1, col2, 'array', fill_value=[])
+        agg_array = np.split(col2, np.unique(col1, return_index = True)[1])[1:] # aggregate(col1, col2, 'array', fill_value=[])
     if isinstance(func, str):
         if col_name is None:
             col_name = func
         if col_name in frame.columns:
             while col_name in frame.columns:
                 col_name += 'm'
-        if func == 'n_unique':
-            agg_array = [len(np.unique(np.array(vals))) for vals in agg_array]
+        if func == 'array':
+            pass
+        elif func == 'n_unique':
+            agg_array = np.array([len(np.unique(np.array(vals))) for vals in agg_array])
         elif func == 'max':
-            agg_array = [np.max(np.array(vals)) for vals in agg_array]
+            agg_array = np.array([np.max(np.array(vals)) for vals in agg_array])
         elif func == 'min':
-            agg_array = [np.min(np.array(vals)) for vals in agg_array]
+            agg_array = np.array([np.min(np.array(vals)) for vals in agg_array])
         elif func == 'sum':
-            agg_array = [np.sum(np.array(vals)) for vals in agg_array]
+            agg_array = np.array([np.sum(np.array(vals)) for vals in agg_array])
+        else:
+            warnings.warn('Invalid function name, returning groupby with no function applied')
     else:
         if col_name in frame.columns:
             while col_name in frame.columns:
                 col_name += 'm'
         agg_array = func(agg_array)
 
-    agg_df = pd.DataFrame({col_groupby: np.unique(col1), col_name: agg_array}, index=np.arange(len(agg_array)))
+    if merge:
+        agg_df = pd.DataFrame({col_groupby: np.unique(col1), col_name: agg_array}, index=np.arange(len(agg_array)))
 
-    return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name]
+        return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name]
+    return agg_array

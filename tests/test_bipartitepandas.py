@@ -780,7 +780,7 @@ def test_cluster_18():
 
         wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
         if grouping == 'quantile_all':
-            bound = 2500 # 5% error
+            bound = 5000 # 10% error
 
         elif grouping == 'quantile_firm_small':
             bound = 5000 # 10% error

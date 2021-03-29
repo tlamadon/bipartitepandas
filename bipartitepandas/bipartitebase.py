@@ -3,7 +3,7 @@ Class for a bipartite network
 '''
 from tqdm.auto import tqdm
 import numpy as np
-from numpy_groupies.aggregate_numpy import aggregate
+# from numpy_groupies.aggregate_numpy import aggregate
 import pandas as pd
 from pandas import DataFrame, Int64Dtype
 import networkx as nx
@@ -819,11 +819,13 @@ class BipartiteBase(DataFrame):
             quantile_groups = data['comp'].quantile(quantiles)
 
             # Generate firm-level cdfs
+            data.sort_values('fid', inplace=True) # Required for aggregate_transform
             for i, quant in enumerate(quantile_groups):
-                firm_quant = (data['comp'] <= quant).astype(int)
-                cdfs_col = aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
+                data = data.assign(firm_quant=data['comp'] <= quant).astype(int)
+                cdfs_col = aggregate_transform(data, col_groupby='fid', col_grouped='firm_quant', func='sum', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
                 cdfs[:, i] = cdfs_col[cdfs_col >= 0]
-            del firm_quant, cdfs_col
+            data.drop('firm_quant', axis=1, inplace=True)
+            del cdfs_col
 
             # Normalize by firm size (convert to cdf)
             fsize = data.groupby('fid').size().to_numpy()
@@ -838,10 +840,12 @@ class BipartiteBase(DataFrame):
                 # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
                 # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
                 # data_dict = data['comp'].groupby(level=0).agg(list).to_dict()
-                # data_dict = data.groupby('fid')['comp'].agg(list).to_dict()
-                with warnings.catch_warnings():
-                    warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-                    data_dict = pd.Series(aggregate(data['fid'], data['comp'], func='array', fill_value=[]), index=np.unique(data['fid'])).to_dict()
+                data_dict = data.groupby('fid')['comp'].agg(list).to_dict()
+                # data.sort_values(['fid', 'comp'], inplace=True) # Required for aggregate_transform
+                # data_dict = pd.Series(aggregate_transform(data, col_groupby='fid', col_grouped='comp', func='array', merge=False), index=np.unique(data['fid'])).to_dict()
+                # with warnings.catch_warnings():
+                #     warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+                #     data_dict = pd.Series(aggregate(data['fid'], data['comp'], func='array', fill_value=[]), index=np.unique(data['fid'])).to_dict()
 
             # Generate the cdfs
             for fid in range(n_firms):
