@@ -44,26 +44,20 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
         frame.logger.info('checking quality of data')
-        frame.data_validity()
+        frame = frame.data_validity()
 
         frame.logger.info('BipartiteEventStudyBase data cleaning complete')
 
         return frame
 
-    def data_validity(self, inplace=True):
+    def data_validity(self):
         '''
         Checks that data is formatted correctly and updates relevant attributes.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteEventStudyBase): BipartiteEventStudyBase with corrected columns and attributes
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self # .copy()
 
         success_stayers = True
         success_movers = True

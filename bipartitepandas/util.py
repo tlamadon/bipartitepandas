@@ -169,6 +169,7 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None, me
 
     if merge:
         agg_df = pd.DataFrame({col_groupby: np.unique(col1), col_name: agg_array}, index=np.arange(len(agg_array)))
+        frame_df = pd.DataFrame({col_groupby: frame[col_groupby].to_numpy()}, index=np.arange(len(frame)))
 
-        return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name]
+        return frame_df.merge(agg_df, how='left', on=col_groupby)[col_name].to_numpy()
     return agg_array

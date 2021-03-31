@@ -155,7 +155,7 @@ class BipartiteBase(DataFrame):
             cid_lst += list(self[j_col].unique())
         return len(set(cid_lst))
 
-    def set_attributes(self, frame, deep=False, no_dict=False):
+    def set_attributes(self, frame, deep=True, no_dict=False):
         '''
         Set class attributes to equal those of another BipartitePandas object.
 
@@ -195,15 +195,18 @@ class BipartiteBase(DataFrame):
         self.connected = False # If True, all firms are connected by movers
         self.contiguous_fids = False # If True, firm ids are contiguous
         self.contiguous_wids = False # If True, worker ids are contiguous
-        self.contiguous_cids = None # If True, cluster ids are contiguous; if None, data not clustered (set to False later in __init__ if clusters included)
+        self.contiguous_cids = None # If True, cluster ids are contiguous; if None, data not clustered (set to False later in method if clusters included)
         self.correct_cols = False # If True, column names are correct
         self.no_na = False # If True, no NaN observations in the data
         self.no_duplicates = False # If True, no duplicate rows in the data
-        self.worker_year_unique = None # If True, each worker has at most one observation per year
+        self.worker_year_unique = None # If True, each worker has at most one observation per year; if None, year column not included (set to False later in method if year column included)
 
         # Verify whether clusters included
         if self.col_included('j'):
             self.contiguous_cids = False
+        # Verify whether year included
+        if self.col_included('year'):
+            self.worker_year_unique = False
 
     def col_included(self, col):
         '''
@@ -442,7 +445,7 @@ class BipartiteBase(DataFrame):
 
         frame.logger.info('checking quality of data')
         # Make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in data_validity() if all columns are in the data)
-        BipartiteBase.data_validity(frame) # Shared data_validity
+        frame = BipartiteBase.data_validity(frame) # Shared data_validity
 
         # Next, drop NaN observations
         if not frame.no_na:
@@ -464,9 +467,6 @@ class BipartiteBase(DataFrame):
         if frame.worker_year_unique is not None and not frame.worker_year_unique:
             frame.logger.info('keeping highest paying job for worker-year duplicates')
             frame.drop_worker_year_duplicates()
-
-            # Update no_duplicates
-            frame.worker_year_unique = True
 
         # Next, find largest set of firms connected by movers
         if not frame.connected:
@@ -502,20 +502,14 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def data_validity(self, inplace=True):
+    def data_validity(self):
         '''
         Checks that data is formatted correctly and updates relevant attributes.
-
-        Arguments:
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteBase): BipartiteBase with corrected attributes
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self # .copy()
 
         success = True
 
@@ -537,7 +531,7 @@ class BipartiteBase(DataFrame):
                         frame.logger.info('{} has wrong dtype, should be {} but is {}'.format(frame.col_dict[subcol], frame.col_dtype_dict[col], col_type))
                         if col in ['fid', 'wid', 'j']:
                             frame.logger.info('{} has wrong dtype, converting to contiguous integers'.format(frame.col_dict[subcol]))
-                            frame.contiguous_ids(col)
+                            frame = frame.contiguous_ids(col)
                         else:
                             frame.logger.info('{} has wrong dtype. Please check that this is the correct column (it is supposed to give {}), and if it is, cast it to a valid datatype (these include: {})'.format(frame.col_dict[subcol], subcol, valid_types))
                             col_dtypes = False
@@ -569,7 +563,6 @@ class BipartiteBase(DataFrame):
                 break
 
         frame.logger.info('columns correct:' + str(cols))
-
         if not cols:
             frame.correct_cols = False
         else:
@@ -688,11 +681,13 @@ class BipartiteBase(DataFrame):
         else:
             frame = self.copy()
 
-        if 'year' in frame.included_cols():
+        if frame.col_included('year'):
             year_cols = to_list(frame.reference_dict['year'])
             frame.sort_values(['wid'] + year_cols + to_list(frame.reference_dict['comp']), inplace=True)
             for year_col in year_cols:
                 frame.drop_duplicates(subset=['wid', year_col], keep='last', inplace=True)
+        frame = frame.reset_index(drop=True)
+        frame.worker_year_unique = True
 
         return frame
 
@@ -818,7 +813,7 @@ class BipartiteBase(DataFrame):
             # n_firms = len(set(list(data['f1i'].unique()) + list(data['f2i'].unique()))) # Can't use self.n_firms() since data could be a subset of self.data
             data = data.rename({'f1i': 'fid', 'y1': 'comp'}, axis=1)
             data = pd.concat([data, data.rename({'f2i': 'fid', 'y2': 'comp', 'fid': 'f2i', 'comp': 'y2'}, axis=1).assign(f2i = - 1)], axis=0) # Include irrelevant columns and rename f1i to f2i to prevent nans, which convert columns from int into float # FIXME duplicating both movers and stayers, should probably only be duplicating movers
-        fids = data['fid'].unique()
+        fids = sorted(data['fid'].unique()) # Must sort
         n_firms = len(fids) # Can't use self.n_firms() since data could be a subset of self.data
         cdfs = np.zeros([n_firms, cdf_resolution])
 
@@ -832,7 +827,7 @@ class BipartiteBase(DataFrame):
             # Generate firm-level cdfs
             data.sort_values('fid', inplace=True) # Required for aggregate_transform
             for i, quant in enumerate(quantile_groups):
-                data = data.assign(firm_quant=data['comp'] <= quant).astype(int)
+                data['firm_quant'] = (data['comp'] <= quant).astype(int)
                 cdfs_col = aggregate_transform(data, col_groupby='fid', col_grouped='firm_quant', func='sum', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
                 cdfs[:, i] = cdfs_col[cdfs_col >= 0]
             data.drop('firm_quant', axis=1, inplace=True)
@@ -859,7 +854,7 @@ class BipartiteBase(DataFrame):
                 #     data_dict = pd.Series(aggregate(data['fid'], data['comp'], func='array', fill_value=[]), index=np.unique(data['fid'])).to_dict()
 
             # Generate the cdfs
-            for fid in range(n_firms):
+            for i, fid in enumerate(fids):
                 # Get the firm-level compensation data (don't need to sort because already sorted)
                 if grouping == 'quantile_firm_small':
                     comp = data_dict[fid]
@@ -868,17 +863,17 @@ class BipartiteBase(DataFrame):
                 # Generate the firm-level cdf
                 # Note: update numpy array element by element
                 # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
-                for i in range(cdf_resolution):
-                    index = max(len(comp) * (i + 1) // cdf_resolution - 1, 0) # Don't want negative index
+                for j in range(cdf_resolution):
+                    index = max(len(comp) * (j + 1) // cdf_resolution - 1, 0) # Don't want negative index
                     # Update cdfs with the firm-level cdf
-                    cdfs[fid, i] = comp[index]
+                    cdfs[i, j] = comp[index]
 
         if self.reference_dict['fid'] == ['f1i', 'f2i']: # Unstack Event Study
             # Drop rows that were appended earlier and rename columns
             data = data[data['f2i'] >= 0]
             data = data.rename({'fid': 'f1i', 'comp': 'y1'}, axis=1)
 
-        return cdfs, sorted(fids)
+        return cdfs, fids
 
     def cluster(self, user_cluster={}):
         '''
@@ -929,8 +924,8 @@ class BipartiteBase(DataFrame):
         if frame.col_included('j'):
             frame.drop('j')
 
-        for i, fid_col in enumerate(to_list(self.reference_dict['fid'])):
-            if self.reference_dict['fid'] == 'fid':
+        for i, fid_col in enumerate(to_list(frame.reference_dict['fid'])):
+            if frame.reference_dict['fid'] == 'fid':
                 j_col = 'j'
             else:
                 j_col = 'j' + str(i + 1)
@@ -951,7 +946,7 @@ class BipartiteBase(DataFrame):
         if cluster_params['dropna']:
             # Drop firms that don't get clustered
             frame = frame.dropna().reset_index(drop=True)
-            frame[self.reference_dict['j']] = frame[self.reference_dict['j']].astype(int)
+            frame[frame.reference_dict['j']] = frame[frame.reference_dict['j']].astype(int)
             frame.clean_data()
 
         frame.contiguous_cids = True

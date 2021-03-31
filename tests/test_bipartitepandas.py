@@ -682,7 +682,57 @@ def test_worker_year_unique_16():
     assert movers.iloc[5]['comp'] == 1
     assert movers.iloc[5]['year'] == 2
 
-def test_general_methods_17():
+def test_string_ids_17():
+    # String worker and firm ids
+    worker_data = []
+    worker_data.append({'fid': 'a', 'year': 1, 'wid': 'a', 'comp': 2., 'index': 0})
+    worker_data.append({'fid': 'b', 'year': 2, 'wid': 'a', 'comp': 1., 'index': 1})
+    worker_data.append({'fid': 'b', 'year': 1, 'wid': 'b', 'comp': 1., 'index': 2})
+    worker_data.append({'fid': 'c', 'year': 2, 'wid': 'b', 'comp': 1., 'index': 3})
+    worker_data.append({'fid': 'd', 'year': 2, 'wid': 'b', 'comp': 0.5, 'index': 4})
+    worker_data.append({'fid': 'c', 'year': 1, 'wid': 'd', 'comp': 1., 'index': 5})
+    worker_data.append({'fid': 'b', 'year': 1, 'wid': 'd', 'comp': 1.5, 'index': 6})
+    worker_data.append({'fid': 'c', 'year': 2, 'wid': 'd', 'comp': 1., 'index': 7})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['wid', 'fid', 'comp', 'year']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data().gen_m()
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] == 1]
+
+    assert movers.iloc[0]['wid'] == 0
+    assert movers.iloc[0]['fid'] == 0
+    assert movers.iloc[0]['comp'] == 2
+    assert movers.iloc[0]['year'] == 1
+
+    assert movers.iloc[1]['wid'] == 0
+    assert movers.iloc[1]['fid'] == 1
+    assert movers.iloc[1]['comp'] == 1
+    assert movers.iloc[1]['year'] == 2
+
+    assert movers.iloc[2]['wid'] == 1
+    assert movers.iloc[2]['fid'] == 1
+    assert movers.iloc[2]['comp'] == 1
+    assert movers.iloc[2]['year'] == 1
+
+    assert movers.iloc[3]['wid'] == 1
+    assert movers.iloc[3]['fid'] == 2
+    assert movers.iloc[3]['comp'] == 1
+    assert movers.iloc[3]['year'] == 2
+
+    assert movers.iloc[4]['wid'] == 2
+    assert movers.iloc[4]['fid'] == 1
+    assert movers.iloc[4]['comp'] == 1.5
+    assert movers.iloc[4]['year'] == 1
+
+    assert movers.iloc[5]['wid'] == 2
+    assert movers.iloc[5]['fid'] == 2
+    assert movers.iloc[5]['comp'] == 1
+    assert movers.iloc[5]['year'] == 2
+
+def test_general_methods_18():
     # Test some general methods, like n_workers/n_firms/n_clusters, included_cols(), drop(), and rename().
     worker_data = []
     worker_data.append({'fid': 0, 'year': 1, 'wid': 0, 'comp': 2., 'j': 2, 'index': 0})
@@ -728,7 +778,7 @@ def test_general_methods_17():
     bdf.rename({'j': 'r'})
     assert 'j1' not in bdf.columns and 'j2' not in bdf.columns
 
-def test_cluster_18():
+def test_cluster_19():
     '''
     Test cluster function is working correctly.
     '''
@@ -736,59 +786,68 @@ def test_cluster_18():
     sim_data = SimTwoWay({'nk': nk}).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
+    # # Delete below this
+    # grouping = 'quantile_all'
+    # stayers_movers = 'stayers'
+    # bdf = bdf.cluster(user_cluster={'grouping': grouping, 'stayers_movers': stayers_movers, 'user_KMeans': {'n_clusters': nk}})
+    # clusters_true = sim_data[~bdf['j'].isna()]['psi'].astype('category').cat.codes.astype(int)
+    # clusters_estimated = bdf[~bdf['j'].isna()]['j'].astype(int)
+    # # Delete above this
     for grouping in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
-        print(grouping)
-        bdf = bdf.cluster(user_cluster={'grouping': grouping, 'user_KMeans': {'n_clusters': nk}})
+        for stayers_movers in [None, 'stayers', 'movers']:
+            print('grouping:', grouping)
+            print('stayers_movers:', stayers_movers)
+            bdf = bdf.cluster(user_cluster={'grouping': grouping, 'stayers_movers': stayers_movers, 'user_KMeans': {'n_clusters': nk}})
 
-        clusters_true = sim_data['psi'].astype('category').cat.codes.astype(int)
-        clusters_estimated = bdf['j'].astype(int)
+            clusters_true = sim_data[~bdf['j'].isna()]['psi'].astype('category').cat.codes.astype(int).reset_index(drop=True) # Skip firms that aren't clustered
+            clusters_estimated = bdf[~bdf['j'].isna()]['j'].astype(int).reset_index(drop=True) # Skip firms that aren't clustered
 
-        # Find which clusters are most often matched together
-        replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
-        clusters_available = list(np.arange(nk)) # Which clusters have yet to be used
-        matches_available = list(np.arange(nk)) # Which matches have yet to be used
-        clusters_match = []
-        matches_match = []
-        # Iterate through clusters to find matches, but ensure no duplicate matches
-        for i in range(nk):
-            best_proportion = - 1 # Best proportion of matches
-            best_cluster = None # Best cluster
-            best_match = None # Best match
-            for j in clusters_available: # Iterate over remaining clusters
-                cluster_df = replace_df[replace_df['psi'] == j]
-                value_counts = cluster_df[cluster_df['psi_est'].isin(matches_available)].value_counts() # Only show valid remaining matches
-                if len(value_counts) > 0:
-                    proportion = value_counts.iloc[0] / len(cluster_df)
-                else:
-                    proportion = 0
-                if proportion > best_proportion:
-                    best_proportion = proportion
-                    best_cluster = j
+            # Find which clusters are most often matched together
+            replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
+            clusters_available = list(np.arange(nk)) # Which clusters have yet to be used
+            matches_available = list(np.arange(nk)) # Which matches have yet to be used
+            clusters_match = []
+            matches_match = []
+            # Iterate through clusters to find matches, but ensure no duplicate matches
+            for i in range(nk):
+                best_proportion = - 1 # Best proportion of matches
+                best_cluster = None # Best cluster
+                best_match = None # Best match
+                for j in clusters_available: # Iterate over remaining clusters
+                    cluster_df = replace_df[replace_df['psi'] == j]
+                    value_counts = cluster_df[cluster_df['psi_est'].isin(matches_available)].value_counts() # Only show valid remaining matches
                     if len(value_counts) > 0:
-                        best_match = value_counts.index[0][1]
+                        proportion = value_counts.iloc[0] / len(cluster_df)
                     else:
-                        best_match = matches_available[0] # Just take a random cluster
-            # Use best cluster
-            clusters_match.append(best_cluster)
-            matches_match.append(best_match)
-            del clusters_available[clusters_available.index(best_cluster)]
-            del matches_available[matches_available.index(best_match)]
-        match_df = pd.DataFrame({'psi': clusters_match, 'psi_est': matches_match}, index=np.arange(nk))
-        # replace_df = replace_df.groupby('psi').apply(lambda a: a.value_counts().index[0][1])
+                        proportion = 0
+                    if proportion > best_proportion:
+                        best_proportion = proportion
+                        best_cluster = j
+                        if len(value_counts) > 0:
+                            best_match = value_counts.index[0][1]
+                        else:
+                            best_match = matches_available[0] # Just take a random cluster
+                # Use best cluster
+                clusters_match.append(best_cluster)
+                matches_match.append(best_match)
+                del clusters_available[clusters_available.index(best_cluster)]
+                del matches_available[matches_available.index(best_match)]
+            match_df = pd.DataFrame({'psi': clusters_match, 'psi_est': matches_match}, index=np.arange(nk))
+            # replace_df = replace_df.groupby('psi').apply(lambda a: a.value_counts().index[0][1])
 
-        clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
+            clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
 
-        wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
-        if grouping == 'quantile_all':
-            bound = 5000 # 10% error
+            wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
+            if grouping == 'quantile_all':
+                bound = 5000 # 10% error
+            elif grouping == 'quantile_firm_small':
+                bound = 10000 # 20% error
+            elif grouping == 'quantile_firm_large':
+                bound = 10000 # 20% error
+            if stayers_movers == 'stayers':
+                bound = 35000 # 70% error
 
-        elif grouping == 'quantile_firm_small':
-            bound = 5000 # 10% error
-
-        elif grouping == 'quantile_firm_large':
-            bound = 5000 # 10% error
-
-        assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
+            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####
