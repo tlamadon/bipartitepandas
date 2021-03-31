@@ -19,7 +19,7 @@ setuptools.setup(
         'scipy',
         'scikit-learn',
         'networkx',
-        'tqdm',
+        'tqdm'
       ],
     classifiers=[
         'Programming Language :: Python :: 3',
