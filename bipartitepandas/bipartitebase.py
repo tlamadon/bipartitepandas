@@ -434,6 +434,12 @@ class BipartiteBase(DataFrame):
         frame = self.copy()
 
         frame.logger.info('beginning BipartiteBase data cleaning')
+
+        # First, correct columns
+        # Note this must be done before data_validity(), otherwise certain checks are not guaranteed to work
+        frame.logger.info('correcting columns')
+        frame.update_cols()
+
         frame.logger.info('checking quality of data')
         # Make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in data_validity() if all columns are in the data)
         BipartiteBase.data_validity(frame) # Shared data_validity
@@ -514,9 +520,6 @@ class BipartiteBase(DataFrame):
         success = True
 
         frame.logger.info('--- checking columns ---')
-        frame.logger.info('correcting columns')
-        frame.update_cols()
-
         all_cols = frame.included_cols()
         cols = True
         frame.logger.info('--- checking column datatypes ---')
