@@ -33,7 +33,7 @@ class BipartiteBase(DataFrame):
 
         # Start logger
         logger_init(self)
-        self.logger.info('initializing BipartiteBase object')
+        # self.logger.info('initializing BipartiteBase object')
 
         if len(args) > 0 and isinstance(args[0], BipartiteBase): # Note that isinstance works for subclasses
             self.set_attributes(args[0])
@@ -86,7 +86,7 @@ class BipartiteBase(DataFrame):
             'str': 'str'
         }
 
-        self.logger.info('BipartiteBase object initialized')
+        # self.logger.info('BipartiteBase object initialized')
 
     @property
     def _constructor(self):
@@ -514,6 +514,9 @@ class BipartiteBase(DataFrame):
         success = True
 
         frame.logger.info('--- checking columns ---')
+        frame.logger.info('correcting columns')
+        frame.update_cols()
+
         all_cols = frame.included_cols()
         cols = True
         frame.logger.info('--- checking column datatypes ---')
@@ -529,8 +532,13 @@ class BipartiteBase(DataFrame):
                     valid_types = to_list(frame.dtype_dict[frame.col_dtype_dict[col]])
                     if col_type not in valid_types:
                         frame.logger.info('{} has wrong dtype, should be {} but is {}'.format(frame.col_dict[subcol], frame.col_dtype_dict[col], col_type))
-                        col_dtypes = False
-                        cols = False
+                        if col in ['fid', 'wid', 'j']:
+                            frame.logger.info('{} has wrong dtype, converting to contiguous integers'.format(frame.col_dict[subcol]))
+                            frame.contiguous_ids(col)
+                        else:
+                            frame.logger.info('{} has wrong dtype. Please check that this is the correct column (it is supposed to give {}), and if it is, cast it to a valid datatype (these include: {})'.format(frame.col_dict[subcol], subcol, valid_types))
+                            col_dtypes = False
+                            cols = False
 
         frame.logger.info('column datatypes correct:' + str(col_dtypes))
         if not col_dtypes:
@@ -560,9 +568,9 @@ class BipartiteBase(DataFrame):
         frame.logger.info('columns correct:' + str(cols))
 
         if not cols:
-            frame.logger.info('correcting columns')
-            frame.update_cols()
-        frame.correct_cols = True
+            frame.correct_cols = False
+        else:
+            frame.correct_cols = True
 
         frame.logger.info('--- checking nan data ---')
         nans = frame.shape[0] - frame.dropna().shape[0]
