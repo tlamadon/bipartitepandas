@@ -16,10 +16,8 @@ setuptools.setup(
     install_requires=[
         'numpy',
         'pandas',
-        'numpy_groupies',
         'scipy',
         'scikit-learn',
-        'qpsolvers',
         'networkx',
         'tqdm',
       ],
