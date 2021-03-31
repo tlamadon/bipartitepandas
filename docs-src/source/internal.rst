@@ -28,24 +28,34 @@ Modules and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteLong
-   ~bipartitepandas.BipartiteData.clean_data
-   ~bipartitepandas.BipartiteData.cluster
-   ~bipartitepandas.BipartiteData.drop
-   ~bipartitepandas.BipartiteData.get_collapsed_long
-   ~bipartitepandas.BipartiteData.get_es
-   ~bipartitepandas.BipartiteData.rename
+   ~bipartitepandas.BipartiteLong.clean_data
+   ~bipartitepandas.BipartiteLong.cluster
+   ~bipartitepandas.BipartiteLong.drop
+   ~bipartitepandas.BipartiteLong.get_collapsed_long
+   ~bipartitepandas.BipartiteLong.get_es
+   ~bipartitepandas.BipartiteLong.merge
+   ~bipartitepandas.BipartiteLong.n_workers
+   ~bipartitepandas.BipartiteLong.n_firms
+   ~bipartitepandas.BipartiteLong.n_clusters
+   ~bipartitepandas.BipartiteLong.rename
+   ~bipartitepandas.BipartiteLong.summary
 
 ``bipartitepandas.BipartiteLongCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   .. autosummary::
+.. autosummary::
 
    ~bipartitepandas.BipartiteLongCollapsed
    ~bipartitepandas.BipartiteLongCollapsed.clean_data
    ~bipartitepandas.BipartiteLongCollapsed.cluster
    ~bipartitepandas.BipartiteLongCollapsed.drop
    ~bipartitepandas.BipartiteLongCollapsed.get_es
+   ~bipartitepandas.BipartiteLongCollapsed.merge
+   ~bipartitepandas.BipartiteLongCollapsed.n_workers
+   ~bipartitepandas.BipartiteLongCollapsed.n_firms
+   ~bipartitepandas.BipartiteLongCollapsed.n_clusters
    ~bipartitepandas.BipartiteLongCollapsed.rename
+   ~bipartitepandas.BipartiteLongCollapsed.summary
 
 ``bipartitepandas.BipartiteEventStudy``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -56,8 +66,14 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudy.clean_data
    ~bipartitepandas.BipartiteEventStudy.cluster
    ~bipartitepandas.BipartiteEventStudy.drop
+   ~bipartitepandas.BipartiteEventStudy.get_cs
    ~bipartitepandas.BipartiteEventStudy.get_long
+   ~bipartitepandas.BipartiteEventStudy.merge
+   ~bipartitepandas.BipartiteEventStudy.n_workers
+   ~bipartitepandas.BipartiteEventStudy.n_firms
+   ~bipartitepandas.BipartiteEventStudy.n_clusters
    ~bipartitepandas.BipartiteEventStudy.rename
+   ~bipartitepandas.BipartiteEventStudy.summary
 
 ``bipartitepandas.BipartiteEventStudyCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,5 +84,11 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudyCollapsed.clean_data
    ~bipartitepandas.BipartiteEventStudyCollapsed.cluster
    ~bipartitepandas.BipartiteEventStudyCollapsed.drop
+   ~bipartitepandas.BipartiteEventStudyCollapsed.get_cs
    ~bipartitepandas.BipartiteEventStudyCollapsed.get_collapsed_long
+   ~bipartitepandas.BipartiteEventStudyCollapsed.merge
+   ~bipartitepandas.BipartiteEventStudyCollapsed.n_workers
+   ~bipartitepandas.BipartiteEventStudyCollapsed.n_firms
+   ~bipartitepandas.BipartiteEventStudyCollapsed.n_clusters
    ~bipartitepandas.BipartiteEventStudyCollapsed.rename
+   ~bipartitepandas.BipartiteEventStudyCollapsed.summary

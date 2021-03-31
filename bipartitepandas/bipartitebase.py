@@ -664,13 +664,13 @@ class BipartiteBase(DataFrame):
 
     def drop_worker_year_duplicates(self, inplace=True):
         '''
-        Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
+        Keep only the highest paying job for worker-year duplicates.
 
         Arguments:
             inplace (bool): if True, modify in-place
 
         Returns:
-            frame (BipartiteBase): BipartiteBase that keeps only the highest pyaing job for worker-year duplicates. If no year columns, returns frame with no changes
+            frame (BipartiteBase): BipartiteBase that keeps only the highest paying job for worker-year duplicates. If no year columns, returns frame with no changes
         '''
         if inplace:
             frame = self

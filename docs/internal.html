@@ -227,27 +227,85 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteLong</span></code>(*args[, col_dict])</p></td>
 <td><p>Class for bipartite networks of firms and workers in long form.</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_data</span></code>()</p></td>
+<td><p>Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code>([user_cluster])</p></td>
+<td><p>Cluster data and assign a new column giving the cluster for each firm.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(indices[, axis, inplace])</p></td>
+<td><p>Drop indices along axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_collapsed_long</span></code>()</p></td>
+<td><p>Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_es</span></code>()</p></td>
+<td><p>Return long form data reformatted into event study data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
+<td><p>Merge two BipartiteBase objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
+<td><p>Get the number of unique workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
+<td><p>Get the number of unique firms.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
+<td><p>Get the number of unique clusters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
+<td><p>Rename a column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
+<td><p>Print summary statistics.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
 <div class="section" id="bipartitepandas-bipartitelongcollapsed">
 <h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code><a class="headerlink" href="#bipartitepandas-bipartitelongcollapsed" title="Permalink to this headline">¶</a></h3>
-<blockquote>
-<div><table class="longtable docutils align-default">
+<table class="longtable docutils align-default">
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
 </colgroup>
 <tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteLongCollapsed</span></code>(*args[, col_dict])</p></td>
+<td><p>Class for bipartite networks of firms and workers in collapsed long form (i.e.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean_data</span></code>()</p></td>
+<td><p>Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code>([user_cluster])</p></td>
+<td><p>Cluster data and assign a new column giving the cluster for each firm.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(indices[, axis, inplace])</p></td>
+<td><p>Drop indices along axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_es</span></code>()</p></td>
+<td><p>Return collapsed long form data reformatted into event study data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
+<td><p>Merge two BipartiteBase objects.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
+<td><p>Get the number of unique workers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
+<td><p>Get the number of unique firms.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
+<td><p>Get the number of unique clusters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
+<td><p>Rename a column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
+<td><p>Print summary statistics.</p></td>
+</tr>
 </tbody>
 </table>
-<p>~bipartitepandas.BipartiteLongCollapsed
-~bipartitepandas.BipartiteLongCollapsed.clean_data
-~bipartitepandas.BipartiteLongCollapsed.cluster
-~bipartitepandas.BipartiteLongCollapsed.drop
-~bipartitepandas.BipartiteLongCollapsed.get_es
-~bipartitepandas.BipartiteLongCollapsed.rename</p>
-</div></blockquote>
 </div>
 <div class="section" id="bipartitepandas-bipartiteeventstudy">
 <h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventstudy" title="Permalink to this headline">¶</a></h3>
@@ -269,11 +327,29 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(indices[, axis, inplace])</p></td>
 <td><p>Drop indices along axis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_long</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cs</span></code>()</p></td>
+<td><p>Return event study data reformatted into cross section data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_long</span></code>()</p></td>
 <td><p>Return event study data reformatted into long form.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
+<td><p>Merge two BipartiteBase objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
+<td><p>Get the number of unique workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
+<td><p>Get the number of unique firms.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
+<td><p>Get the number of unique clusters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
 <td><p>Rename a column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
+<td><p>Print summary statistics.</p></td>
 </tr>
 </tbody>
 </table>
@@ -298,11 +374,29 @@
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(indices[, axis, inplace])</p></td>
 <td><p>Drop indices along axis.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_collapsed_long</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cs</span></code>()</p></td>
+<td><p>Return event study data reformatted into cross section data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_collapsed_long</span></code>()</p></td>
 <td><p>Return collapsed event study data reformatted into collapsed long form.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
+<td><p>Merge two BipartiteBase objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
+<td><p>Get the number of unique workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
+<td><p>Get the number of unique firms.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
+<td><p>Get the number of unique clusters.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
 <td><p>Rename a column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
+<td><p>Print summary statistics.</p></td>
 </tr>
 </tbody>
 </table>
@@ -333,7 +427,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Mar 27, 2021.
+        Last updated on Mar 31, 2021.
       </span>
 
     </p>

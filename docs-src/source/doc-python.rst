@@ -5,6 +5,10 @@ To install from pip, from the command line run::
 
    pip install bipartitepandas
 
+To install from conda, from the command line run::
+
+   conda install -c tlamadon bipartitepandas
+
 Sample data: :download:`download <twoway_sample_data.csv>`
 
 To run in python:
@@ -13,13 +17,16 @@ To run in python:
 
 .. code-block:: python
 
+   import pandas as pd
    import bipartitepandas as bpd
+   # Load data into pandas dataframe
+   df = pd.read_csv(filepath)
    # Create bipartitepandas object
-   df = bpd.BipartiteLong(data)
+   bdf = bpd.BipartiteLong(df)
    # Clean your data
-   df.clean_data()
+   bdf = bdfdf.clean_data()
    # Cluster
-   df.cluster()
+   bdf = bdf.cluster()
 
 .. note::
    Your data must be long, collapsed long, event study, or collapsed event study.
@@ -90,6 +97,7 @@ To run in python:
         - 1500
       * - 2
         - 3
+        - 2019
         - 2020
         - 525
    Event study data must include the following columns:
