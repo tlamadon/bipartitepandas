@@ -10,7 +10,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     Arguments:
         *args: arguments for Pandas DataFrame
-        col_dict (dict or None): make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (mover)). Keep None if column names already correct
+        col_dict (dict or None): make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct
         **kwargs: keyword arguments for Pandas DataFrame
     '''
 
@@ -46,7 +46,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
             collapsed_frame (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
         '''
         # Generate m column (the function checks if it already exists)
+        print('self 1:')
+        display(self)
+        display(self.included_cols())
         self.gen_m()
+
+        print('self 2:')
+        display(self)
+        display(self.included_cols())
 
         # Copy data
         data = pd.DataFrame(self, copy=True)
