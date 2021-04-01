@@ -31,3 +31,7 @@ Quick Start
 To install from pip, run::
 
     pip install bipartitepandas
+
+To install from conda, from the command line run::
+
+    conda install -c tlamadon bipartitepandas

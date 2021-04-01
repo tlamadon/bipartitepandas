@@ -4,6 +4,9 @@ bipartitepandas
 .. image:: https://badge.fury.io/py/bipartitepandas.svg
     :target: https://badge.fury.io/py/bipartitepandas
 
+.. image:: https://anaconda.org/tlamadon/bipartitepandas/badges/version.svg
+    :target: https://anaconda.org/tlamadon/bipartitepandas
+
 .. image:: https://travis-ci.com/tlamadon/bipartitepandas.svg?branch=master
     :target: https://travis-ci.com/tlamadon/bipartitepandas
 
@@ -28,3 +31,7 @@ Quick Start
 To install from pip, run::
 
     pip install bipartitepandas
+
+To install from conda, from the command line run::
+
+    conda install -c tlamadon bipartitepandas
