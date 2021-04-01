@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import warnings
 
-col_order = ['wid', 'fid', 'f1i', 'f2i', 'comp', 'y1', 'y2', 'year', 'year_1', 'year_2', 'year_start', 'year_end', 'year_start_1', 'year_end_1', 'year_start_2', 'year_end_2', 'weight', 'w1', 'w2', 'j', 'j1', 'j2', 'm', 'cs'].index
+col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'w', 'w1', 'w2', 'g', 'g1', 'g2', 'm', 'cs'].index
 
 def update_dict(default_params, user_params):
     '''
