@@ -118,7 +118,7 @@ class BipartiteBase(DataFrame):
         ret_str += 'correct column names and types: ' + str(self.correct_cols) + '\n'
         ret_str += 'no nans: ' + str(self.no_na) + '\n'
         ret_str += 'no duplicates: ' + str(self.no_duplicates) + '\n'
-        ret_str += 'worker-year observations unique (None if year column(s) not included): ' + str(self.i_t_unique) + '\n'
+        ret_str += 'i-t (worker-year) observations unique (None if t column(s) not included): ' + str(self.i_t_unique) + '\n'
 
         print(ret_str)
 
@@ -178,7 +178,7 @@ class BipartiteBase(DataFrame):
         self.correct_cols = frame.correct_cols # If True, column names are correct
         self.no_na = frame.no_na # If True, no NaN observations in the data
         self.no_duplicates = frame.no_duplicates # If True, no duplicate rows in the data
-        self.i_t_unique = frame.i_t_unique # If True, each worker has at most one observation per year
+        self.i_t_unique = frame.i_t_unique # If True, each worker has at most one observation per period
 
     def reset_attributes(self):
         '''
@@ -193,10 +193,10 @@ class BipartiteBase(DataFrame):
         self.correct_cols = False # If True, column names are correct
         self.no_na = False # If True, no NaN observations in the data
         self.no_duplicates = False # If True, no duplicate rows in the data
-        self.i_t_unique = None # If True, each worker has at most one observation per year; if None, year column not included (set to False later in method if year column included)
+        self.i_t_unique = None # If True, each worker has at most one observation per period; if None, t column not included (set to False later in method if t column included)
 
-        # Verify whether year included
-        if self.col_included('year'):
+        # Verify whether period included
+        if self.col_included('t'):
             self.i_t_unique = False
 
     def col_included(self, col):
@@ -447,9 +447,9 @@ class BipartiteBase(DataFrame):
             # Update no_duplicates
             frame.no_duplicates = True
 
-        # Next, make sure worker-year observations are unique
+        # Next, make sure i-t (worker-year) observations are unique
         if frame.i_t_unique is not None and not frame.i_t_unique:
-            frame.logger.info('keeping highest paying job for worker-year duplicates')
+            frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
             frame.drop_i_t_duplicates()
 
         # Next, find largest set of firms connected by movers
@@ -564,13 +564,13 @@ class BipartiteBase(DataFrame):
             frame.no_duplicates = True
 
         if frame.col_included('t'):
-            frame.logger.info('--- checking t-i (worker-year) observations ---')
+            frame.logger.info('--- checking i-t (worker-year) observations ---')
             max_obs = 1
             for t_col in to_list(frame.reference_dict['t']):
                 max_obs_col = frame.groupby(['i', t_col]).size().max()
                 max_obs = max(max_obs_col, max_obs)
 
-            frame.logger.info('max number of t-i (worker-year) observations (should be 1):' + str(max_obs))
+            frame.logger.info('max number of i-t (worker-year) observations (should be 1):' + str(max_obs))
             if max_obs > 1:
                 frame.i_t_unique = False
                 success = False
@@ -739,7 +739,7 @@ class BipartiteBase(DataFrame):
             sorted_cols = sorted(frame.columns, key=col_order)
             frame = frame[sorted_cols]
         else:
-            warnings.warn('m column already included. Returning unaltered frame')
+            self.logger.info('m column already included. Returning unaltered frame')
 
         return frame
 
@@ -772,7 +772,7 @@ class BipartiteBase(DataFrame):
             if len(to_list(self.reference_dict['t'])) == 1:
                 data = data[data['t'] == t]
             else:
-                warnings.warn('Cannot use data from a particular year on non-BipartiteLong data. Convert into BipartiteLong to cluster only on a particular year')
+                warnings.warn('Cannot use data from a particular period on non-BipartiteLong data. Convert into BipartiteLong to cluster only on a particular period')
 
         # Create empty numpy array to fill with the cdfs
         if len(to_list(self.reference_dict['j'])) == 2: # If Event Study

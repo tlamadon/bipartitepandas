@@ -44,10 +44,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Generate m column (the function checks if it already exists)
         self.gen_m()
 
-
-        # Determine whether m, cluster columns exist
-        clustered = self.col_included('j')
-
         # Split workers by movers and stayers
         stayers = pd.DataFrame(self[self['m'] == 0])
         movers = pd.DataFrame(self[self['m'] == 1])
@@ -59,30 +55,18 @@ class BipartiteLongBase(bpd.BipartiteBase):
         keep_cols = ['i'] # Columns to keep
         for col in all_cols:
             for subcol in bpd.to_list(self.reference_dict[col]):
-                if subcol not in ['m', 't1', 't2']: # Don't want lagged m
+                subcol_number = subcol.strip(col) # E.g. j1 will give 1
+                if subcol != 'm': # Don't want lagged m
                     # Movers
-                    movers[subcol + '1'] = movers[subcol].shift(periods=1) # Lagged value
-                    movers.rename({subcol: subcol + '2'}, axis=1, inplace=True)
+                    plus_1 = col + '1' + subcol_number # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
+                    plus_2 = col + '2' + subcol_number
+                    movers[plus_1] = movers[subcol].shift(periods=1) # Lagged value
+                    movers.rename({subcol: plus_2}, axis=1, inplace=True)
                     # Stayers (no lags)
-                    stayers[subcol + '1'] = stayers[subcol]
-                    stayers.rename({subcol: subcol + '2'}, axis=1, inplace=True)
+                    stayers[plus_1] = stayers[subcol]
+                    stayers.rename({subcol: plus_2}, axis=1, inplace=True)
                     if subcol != 'i': # Columns to keep
-                        keep_cols += [subcol + '1', subcol + '2']
-                elif subcol in ['t1', 't2']: # Treat t1 and t2 differently
-                    if subcol == 't1':
-                        one = 't11'
-                        two = 't21'
-                    else:
-                        one = 't12'
-                        two = 't22'
-                    # Movers
-                    movers[one] = movers[subcol].shift(periods=1) # Lagged value
-                    movers.rename({subcol: two}, axis=1, inplace=True)
-                    # Stayers (no lags)
-                    stayers[one] = stayers[subcol]
-                    stayers.rename({subcol: two}, axis=1, inplace=True)
-                    # Columns to keep
-                    keep_cols += [one, two]
+                        keep_cols += [plus_1, plus_2]
                 else:
                     keep_cols.append('m')
 
@@ -92,8 +76,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
         for col in all_cols:
             if (self.col_dtype_dict[col] == 'int') and (col != 'm'):
                 for subcol in bpd.to_list(self.reference_dict[col]):
-                    movers[subcol + '1'] = movers[subcol + '1'].astype(int)
-                    movers[subcol + '2'] = movers[subcol + '2'].astype(int) # FIXME need 2 as well because of issues with t
+                    subcol_number = subcol.strip(col) # E.g. j1 will give 1
+                    movers[col + '1' + subcol_number] = movers[col + '1' + subcol_number].astype(int)
 
         # Correct i
         movers.drop('i1', axis=1, inplace=True)

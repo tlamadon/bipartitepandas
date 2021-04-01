@@ -155,47 +155,39 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
             if n_subcols % 2 == 0:
-                for i in range(n_subcols // 2):
-                    if subcols[2 * i] not in ['t11', 't21']: # FIXME weird behavior of t
-                        rename_dict_1[subcols[2 * i]] = subcols[2 * i + 1]
-                        rename_dict_1[subcols[2 * i + 1]] = subcols[2 * i]
-                        rename_dict_2[subcols[2 * i]] = subcols[2 * i][: len(subcols[2 * i]) - 1] # Get rid of number, e.g. j1 to j
-                        if self.col_dtype_dict[col] == 'int':
-                            astype_dict[rename_dict_2[subcols[2 * i]]] = int
-                    else: # FIXME weird behavior of t
-                        rename_dict_1['t21'] = 't11'
-                        rename_dict_1['t22'] = 't12'
-                        rename_dict_1['t11'] = 't21'
-                        rename_dict_1['t12'] = 't22'
-                        rename_dict_2['t11'] = 't1'
-                        rename_dict_2['t12'] = 't2'
-                        astype_dict['t1'] = int
-                        astype_dict['t2'] = int
-                        drops.append('t21')
-                        drops.append('t22')
-                    if subcols[2 * i] not in ['t11', 't21']: # FIXME weird behavior of t
-                        drops.append(subcols[2 * i + 1])
+                halfway = n_subcols // 2
+                for i in range(halfway):
+                    rename_dict_1[subcols[i]] = subcols[halfway + i]
+                    rename_dict_1[subcols[halfway + i]] = subcols[i]
+                    rename_dict_2[subcols[i]] = subcols[2 * i][: len(subcols[2 * i]) - 1] # Get rid of number, e.g. j1 to j
+                    if self.col_dtype_dict[col] == 'int':
+                        astype_dict[rename_dict_2[subcols[i]]] = int
+
+                    drops.append(subcols[halfway + i])
                     
             else:
                 # Check correct type for other columns
                 if self.col_dtype_dict[col] == 'int':
                     astype_dict[col] = int
 
-        print('rename dict 1:', rename_dict_1)
-        print('rename dict 2:', rename_dict_2)
-        print('astype dict:', astype_dict)
-        print('drops:', drops)
-
         # Append the last row if a mover (this is because the last observation is only given as an f2i, never as an f1i)
-        data_long = pd.DataFrame(self).groupby('i').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 else a) \
-            .reset_index(drop=True) \
+        last_obs_df = pd.DataFrame(self[self['m'] == 1]) \
+            .groupby('i').last() \
+            .rename(rename_dict_1, axis=1) \
+            .reset_index() # Get i out of index, return to column
+        data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
             .drop(drops, axis=1) \
             .rename(rename_dict_2, axis=1) \
             .astype(astype_dict)
+        # data_long = pd.DataFrame(self).groupby('i').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 else a) \
+        #     .reset_index(drop=True) \
+        #     .drop(drops, axis=1) \
+        #     .rename(rename_dict_2, axis=1) \
+        #     .astype(astype_dict)
 
-        # Sort columns
+        # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        data_long = data_long[sorted_cols]
+        data_long = data_long[sorted_cols].sort_values(['i'])
 
         long_frame = self._constructor_long(data_long)
         long_frame.set_attributes(self, no_dict=True)

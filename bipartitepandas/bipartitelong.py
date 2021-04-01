@@ -10,7 +10,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     Arguments:
         *args: arguments for Pandas DataFrame
-        col_dict (dict or None): make data columns readable (requires: wid (worker id), comp (compensation), fid (firm id), year). Keep None if column names already correct
+        col_dict (dict or None): make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (mover)). Keep None if column names already correct
         **kwargs: keyword arguments for Pandas DataFrame
     '''
 

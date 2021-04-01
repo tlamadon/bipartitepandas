@@ -10,7 +10,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
 
     Arguments:
         *args: arguments for Pandas DataFrame
-        col_dict (dict): make data columns readable (requires: i (worker id), j1 (firm id 1), j2 (firm id 2), y1 (compensation 1), y2 (compensation 2); optionally include: t1 (time of observation 1), t2 (time of observation 2), m (0 if stayer, 1 if mover)). Keep None if column names already correct
+        col_dict (dict): make data columns readable (requires: i (worker id), j1 (firm 1 id), j2 (firm 1 id), y1 (compensation 1), y2 (compensation 2); optionally include: t1 (time of observation 1), t2 (time of observation 2), g1 (firm 1 cluster), g2 (firm 2 cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct
         **kwargs: keyword arguments for Pandas DataFrame
     '''
 
