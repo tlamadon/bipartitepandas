@@ -216,20 +216,18 @@
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>Your data must be long, collapsed long, event study, or collapsed event study.
-Long data must include the following columns:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">wid</span></code>: the worker identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fid</span></code>: the firm identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year</span></code>: the time</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comp</span></code>: the outcome variable, in our case compensation</p></li>
-</ul>
-</div></blockquote>
+<p>Your data must be long, collapsed long, event study, or collapsed event study.</p>
 <dl class="simple">
+<dt>Long data must include the following columns:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span></code>: worker identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code>: firm identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code>: compensation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t</span></code>: time</p></li>
+</ul>
+</dd>
 <dt>Long data may optionally include the following columns:</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">m</span></code>: 1 if mover, 0 if stayer</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code>: firm cluster</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g</span></code>: firm cluster</p></li>
 </ul>
 </dd>
 </dl>
@@ -242,48 +240,48 @@ Long data must include the following columns:</p>
 <col style="width: 25%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>wid</p></th>
-<th class="head"><p>fid</p></th>
-<th class="head"><p>year</p></th>
-<th class="head"><p>comp</p></th>
+<tr class="row-odd"><th class="head"><p>i</p></th>
+<th class="head"><p>j</p></th>
+<th class="head"><p>y</p></th>
+<th class="head"><p>t</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>1</p></td>
 <td><p>1</p></td>
-<td><p>2019</p></td>
 <td><p>1000</p></td>
+<td><p>2019</p></td>
 </tr>
 <tr class="row-odd"><td><p>1</p></td>
 <td><p>2</p></td>
-<td><p>2020</p></td>
 <td><p>1500</p></td>
+<td><p>2020</p></td>
 </tr>
 <tr class="row-even"><td><p>2</p></td>
 <td><p>3</p></td>
-<td><p>2019</p></td>
 <td><p>500</p></td>
+<td><p>2019</p></td>
 </tr>
 <tr class="row-odd"><td><p>2</p></td>
 <td><p>3</p></td>
-<td><p>2020</p></td>
 <td><p>550</p></td>
+<td><p>2020</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="simple">
 <dt>Collapsed long data must include the following columns:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">wid</span></code>: the worker identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">fid</span></code>: the firm identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year_start</span></code>: first time in the spell</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year_end</span></code>: last time in the spell</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">comp</span></code>: the outcome variable averaged over the spell, in our case compensation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span></code>: worker identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code>: firm identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code>: compensation averaged over the spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t1</span></code>: first period in the spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t2</span></code>: last period in the spell</p></li>
 </ul>
 </dd>
 <dt>Collapsed long data may optionally include the following columns:</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">m</span></code>: 1 if mover, 0 if stayer</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code>: firm cluster</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">weight</span></code>: weight of observation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g</span></code>: firm cluster</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w</span></code>: weight of observation</p></li>
 </ul>
 </dd>
 </dl>
@@ -297,49 +295,49 @@ Long data must include the following columns:</p>
 <col style="width: 20%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>wid</p></th>
-<th class="head"><p>fid</p></th>
-<th class="head"><p>year_start</p></th>
-<th class="head"><p>year_end</p></th>
-<th class="head"><p>comp</p></th>
+<tr class="row-odd"><th class="head"><p>i</p></th>
+<th class="head"><p>j</p></th>
+<th class="head"><p>y</p></th>
+<th class="head"><p>t1</p></th>
+<th class="head"><p>t2</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>1</p></td>
 <td><p>1</p></td>
-<td><p>2019</p></td>
-<td><p>2019</p></td>
 <td><p>1000</p></td>
+<td><p>2019</p></td>
+<td><p>2019</p></td>
 </tr>
 <tr class="row-odd"><td><p>1</p></td>
 <td><p>2</p></td>
-<td><p>2020</p></td>
-<td><p>2020</p></td>
 <td><p>1500</p></td>
+<td><p>2020</p></td>
+<td><p>2020</p></td>
 </tr>
 <tr class="row-even"><td><p>2</p></td>
 <td><p>3</p></td>
+<td><p>525</p></td>
 <td><p>2019</p></td>
 <td><p>2020</p></td>
-<td><p>525</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="simple">
 <dt>Event study data must include the following columns:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">wid</span></code>: the worker identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">f1i</span></code>: the first firm identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">f2i</span></code>: the second firm identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">y1</span></code>: the outcome variable for the first observation, in our case compensation</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">y2</span></code>: the outcome variable for the second observation, in our case compensation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span></code>: worker identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j1</span></code>: first firm identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j2</span></code>: second firm identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y1</span></code>: compensation for the first observation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y2</span></code>: compensation for the second observation</p></li>
 </ul>
 </dd>
 <dt>Event study data may optionally include the following columns:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">year_1</span></code>: the time for the first observation</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year_2</span></code>: the time for the second observation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t1</span></code>: period of the first observation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t2</span></code>: period of the second observation</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">m</span></code>: 1 if mover, 0 if stayer</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">j1</span></code>: firm 1 cluster</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">j2</span></code>: firm 2 cluster</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g1</span></code>: firm 1 cluster</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g2</span></code>: firm 2 cluster</p></li>
 </ul>
 </dd>
 </dl>
@@ -355,51 +353,59 @@ Long data must include the following columns:</p>
 <col style="width: 14%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>wid</p></th>
-<th class="head"><p>f1i</p></th>
-<th class="head"><p>f2i</p></th>
-<th class="head"><p>year_1</p></th>
-<th class="head"><p>year_2</p></th>
+<tr class="row-odd"><th class="head"><p>i</p></th>
+<th class="head"><p>j1</p></th>
+<th class="head"><p>j2</p></th>
 <th class="head"><p>y1</p></th>
 <th class="head"><p>y2</p></th>
+<th class="head"><p>t1</p></th>
+<th class="head"><p>t2</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>1</p></td>
 <td><p>1</p></td>
 <td><p>2</p></td>
-<td><p>2019</p></td>
-<td><p>2020</p></td>
 <td><p>1000</p></td>
 <td><p>1500</p></td>
+<td><p>2019</p></td>
+<td><p>2020</p></td>
 </tr>
 <tr class="row-odd"><td><p>2</p></td>
 <td><p>3</p></td>
 <td><p>3</p></td>
-<td><p>2019</p></td>
-<td><p>2020</p></td>
 <td><p>500</p></td>
+<td><p>500</p></td>
+<td><p>2019</p></td>
+<td><p>2019</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>3</p></td>
+<td><p>3</p></td>
 <td><p>550</p></td>
+<td><p>550</p></td>
+<td><p>2020</p></td>
+<td><p>2020</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="simple">
 <dt>Collapsed event study data must include the following columns:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">wid</span></code>: the worker identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">f1i</span></code>: the first firm identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">f2i</span></code>: the second firm identifier</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">y1</span></code>: the outcome variable averaged over the spell for the first observation, in our case compensation</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">y2</span></code>: the outcome variable averaged over the spell for the second observation, in our case compensation</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span></code>: worker identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j1</span></code>: first firm identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j2</span></code>: second firm identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y1</span></code>: compensation averaged over the first spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y2</span></code>: compensation averaged over the second spell</p></li>
 </ul>
 </dd>
 <dt>Collapsed event study data may optionally include the following columns:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">year_start_1</span></code>: first time in the first spell</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year_end_1</span></code>: last time in the first spell</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year_start_2</span></code>: first time in the second spell</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">year_end_2</span></code>: last time in the second spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t11</span></code>: first period in the first spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t12</span></code>: last period in the first spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t21</span></code>: first period in the second spell</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t22</span></code>: last period in the second spell</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">m</span></code>: 1 if mover, 0 if stayer</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">j1</span></code>: firm 1 cluster</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">j2</span></code>: firm 2 cluster</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g1</span></code>: firm 1 cluster</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g2</span></code>: firm 2 cluster</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">w1</span></code>: weight of first spell</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">w2</span></code>: weight of second spell</p></li>
 </ul>
@@ -419,37 +425,37 @@ Long data must include the following columns:</p>
 <col style="width: 11%" />
 </colgroup>
 <thead>
-<tr class="row-odd"><th class="head"><p>wid</p></th>
-<th class="head"><p>f1i</p></th>
-<th class="head"><p>f2i</p></th>
-<th class="head"><p>year_start_1</p></th>
-<th class="head"><p>year_end_1</p></th>
-<th class="head"><p>year_start_2</p></th>
-<th class="head"><p>year_end_2</p></th>
+<tr class="row-odd"><th class="head"><p>i</p></th>
+<th class="head"><p>j1</p></th>
+<th class="head"><p>j2</p></th>
 <th class="head"><p>y1</p></th>
 <th class="head"><p>y2</p></th>
+<th class="head"><p>t11</p></th>
+<th class="head"><p>t12</p></th>
+<th class="head"><p>t21</p></th>
+<th class="head"><p>t22</p></th>
 </tr>
 </thead>
 <tbody>
 <tr class="row-even"><td><p>1</p></td>
 <td><p>1</p></td>
 <td><p>2</p></td>
-<td><p>2019</p></td>
-<td><p>2019</p></td>
-<td><p>2020</p></td>
-<td><p>2020</p></td>
 <td><p>1000</p></td>
 <td><p>1500</p></td>
+<td><p>2019</p></td>
+<td><p>2019</p></td>
+<td><p>2020</p></td>
+<td><p>2020</p></td>
 </tr>
 <tr class="row-odd"><td><p>2</p></td>
 <td><p>3</p></td>
 <td><p>3</p></td>
+<td><p>525</p></td>
+<td><p>525</p></td>
 <td><p>2019</p></td>
 <td><p>2020</p></td>
 <td><p>2019</p></td>
 <td><p>2020</p></td>
-<td><p>525</p></td>
-<td><p>525</p></td>
 </tr>
 </tbody>
 </table>
@@ -479,7 +485,7 @@ Long data must include the following columns:</p>
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Mar 31, 2021.
+        Last updated on Apr 01, 2021.
       </span>
 
     </p>

@@ -208,10 +208,10 @@
 </div>
 </div></blockquote>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code>: Class for formatting bipartite networks in long form.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code>: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code>: Class for formatting bipartite networks in event study form.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code>: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code>: Class for formatting bipartite networks in long form</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code>: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code>: Class for formatting bipartite networks in event study form</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code>: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation)</p></li>
 </ul>
 </div>
 <div class="section" id="modules-and-methods">
@@ -240,7 +240,7 @@
 <td><p>Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_es</span></code>()</p></td>
-<td><p>Return long form data reformatted into event study data.</p></td>
+<td><p>Return (collapsed) long form data reformatted into (collapsed) event study data.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
 <td><p>Merge two BipartiteBase objects.</p></td>
@@ -284,7 +284,7 @@
 <td><p>Drop indices along axis.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_es</span></code>()</p></td>
-<td><p>Return collapsed long form data reformatted into event study data.</p></td>
+<td><p>Return (collapsed) long form data reformatted into (collapsed) event study data.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
 <td><p>Merge two BipartiteBase objects.</p></td>
@@ -328,10 +328,10 @@
 <td><p>Drop indices along axis.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cs</span></code>()</p></td>
-<td><p>Return event study data reformatted into cross section data.</p></td>
+<td><p>Return (collapsed) event study data reformatted into cross section data.</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_long</span></code>()</p></td>
-<td><p>Return event study data reformatted into long form.</p></td>
+<td><p>Return (collapsed) event study data reformatted into (collapsed) long form.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
 <td><p>Merge two BipartiteBase objects.</p></td>
@@ -375,27 +375,24 @@
 <td><p>Drop indices along axis.</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cs</span></code>()</p></td>
-<td><p>Return event study data reformatted into cross section data.</p></td>
+<td><p>Return (collapsed) event study data reformatted into cross section data.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_collapsed_long</span></code>()</p></td>
-<td><p>Return collapsed event study data reformatted into collapsed long form.</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
 <td><p>Merge two BipartiteBase objects.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
 <td><p>Get the number of unique workers.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
 <td><p>Get the number of unique firms.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
 <td><p>Get the number of unique clusters.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, inplace])</p></td>
 <td><p>Rename a column.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
 <td><p>Print summary statistics.</p></td>
 </tr>
 </tbody>
@@ -427,7 +424,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Mar 31, 2021.
+        Last updated on Apr 01, 2021.
       </span>
 
     </p>

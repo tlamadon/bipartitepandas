@@ -198,7 +198,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
-<li><p><strong>col_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – make data columns readable (requires: wid (worker id), comp (compensation), fid (firm id), year). Keep None if column names already correct</p></li>
+<li><p><strong>col_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct</p></li>
 <li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
 </ul>
 </dd>
@@ -213,20 +213,6 @@
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>collapsed_frame (<a class="reference internal" href="class-bipartitelongcollapsed.html#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed" title="bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed">BipartiteLongCollapsed</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitelong.BipartiteLong.get_es">
-<code class="sig-name descname">get_es</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelong.BipartiteLong.get_es" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return long form data reformatted into event study data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>BipartiteEventStudy object generated from long data</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>es_frame (<a class="reference internal" href="class-bipartiteeventstudy.html#bipartitepandas.bipartiteeventstudy.BipartiteEventStudy" title="bipartitepandas.bipartiteeventstudy.BipartiteEventStudy">BipartiteEventStudy</a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -258,7 +244,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Mar 31, 2021.
+        Last updated on Apr 01, 2021.
       </span>
 
     </p>

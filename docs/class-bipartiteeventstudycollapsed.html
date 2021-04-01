@@ -197,25 +197,11 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
-<li><p><strong>col_dict</strong> (<em>dict</em>) – make data columns readable (requires: wid (worker id), y1 (compensation 1), y2 (compensation 2), f1i (firm id 1), f2i (firm id 2), m (0 if stayer, 1 if mover); optionally include: year_start_1 (first year of observation 1 spell), year_end_1 (last year of observation 1 spell), year_start_2 (first year of observation 2 spell), year_end_2 (last year of observation 2 spell)). Keep None if column names already correct</p></li>
+<li><p><strong>col_dict</strong> (<em>dict</em>) – make data columns readable (requires: i (worker id), j1 (firm 1 id), j2 (firm 1 id), y1 (compensation 1), y2 (compensation 2); optionally include: t11 (first period in observation 1 spell), t12 (last period in observation 1 spell), t21 (first period in observation 2 spell), t22 (last period in observation 2 spell), w1 (weight 1), w2 (weight 2), g1 (firm 1 cluster), g2 (firm 2 cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct</p></li>
 <li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py method">
-<dt id="bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed.get_collapsed_long">
-<code class="sig-name descname">get_collapsed_long</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed.get_collapsed_long" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return collapsed event study data reformatted into collapsed long form.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>BipartiteCollapsed object generated from event study data</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>collapsedlong_frame (BipartiteCollapsed)</p>
-</dd>
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 </div>
@@ -241,7 +227,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Mar 31, 2021.
+        Last updated on Apr 01, 2021.
       </span>
 
     </p>

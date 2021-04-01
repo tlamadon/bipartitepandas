@@ -30,129 +30,137 @@ To run in python:
 
 .. note::
    Your data must be long, collapsed long, event study, or collapsed event study.
+
    Long data must include the following columns:
-    - ``wid``: the worker identifier
-    - ``fid``: the firm identifier
-    - ``year``: the time
-    - ``comp``: the outcome variable, in our case compensation
+    - ``i``: worker identifier
+    - ``j``: firm identifier
+    - ``y``: compensation
+    - ``t``: time
    Long data may optionally include the following columns:
     - ``m``: 1 if mover, 0 if stayer
-    - ``j``: firm cluster
+    - ``g``: firm cluster
    .. list-table:: Example long data
       :widths: 25 25 25 25
       :header-rows: 1
       :align: center
 
-      * - wid
-        - fid
-        - year
-        - comp
+      * - i
+        - j
+        - y
+        - t
 
       * - 1
         - 1
-        - 2019
         - 1000
+        - 2019
       * - 1
         - 2
-        - 2020
         - 1500
-      * - 2
-        - 3
-        - 2019
-        - 500
-      * - 2
-        - 3
         - 2020
+      * - 2
+        - 3
+        - 500
+        - 2019
+      * - 2
+        - 3
         - 550
+        - 2020
    Collapsed long data must include the following columns:
-    - ``wid``: the worker identifier
-    - ``fid``: the firm identifier
-    - ``year_start``: first time in the spell
-    - ``year_end``: last time in the spell
-    - ``comp``: the outcome variable averaged over the spell, in our case compensation
+    - ``i``: worker identifier
+    - ``j``: firm identifier
+    - ``y``: compensation averaged over the spell
+    - ``t1``: first period in the spell
+    - ``t2``: last period in the spell
    Collapsed long data may optionally include the following columns:
     - ``m``: 1 if mover, 0 if stayer
-    - ``j``: firm cluster
-    - ``weight``: weight of observation
+    - ``g``: firm cluster
+    - ``w``: weight of observation
    .. list-table:: Example collapsed long data
       :widths: 20 20 20 20 20
       :header-rows: 1
       :align: center
 
-      * - wid
-        - fid
-        - year_start
-        - year_end
-        - comp
+      * - i
+        - j
+        - y
+        - t1
+        - t2
 
       * - 1
         - 1
-        - 2019
-        - 2019
         - 1000
+        - 2019
+        - 2019
       * - 1
         - 2
-        - 2020
-        - 2020
         - 1500
+        - 2020
+        - 2020
       * - 2
         - 3
+        - 525
         - 2019
         - 2020
-        - 525
    Event study data must include the following columns:
-    - ``wid``: the worker identifier
-    - ``f1i``: the first firm identifier
-    - ``f2i``: the second firm identifier
-    - ``y1``: the outcome variable for the first observation, in our case compensation
-    - ``y2``: the outcome variable for the second observation, in our case compensation
+    - ``i``: worker identifier
+    - ``j1``: first firm identifier
+    - ``j2``: second firm identifier
+    - ``y1``: compensation for the first observation
+    - ``y2``: compensation for the second observation
    Event study data may optionally include the following columns:
-    - ``year_1``: the time for the first observation
-    - ``year_2``: the time for the second observation
+    - ``t1``: period of the first observation
+    - ``t2``: period of the second observation
     - ``m``: 1 if mover, 0 if stayer
-    - ``j1``: firm 1 cluster
-    - ``j2``: firm 2 cluster
+    - ``g1``: firm 1 cluster
+    - ``g2``: firm 2 cluster
    .. list-table:: Example event study data
       :widths: 14 14 14 14 14 14 14
       :header-rows: 1
       :align: center
 
-      * - wid
-        - f1i
-        - f2i
-        - year_1
-        - year_2
+      * - i
+        - j1
+        - j2
         - y1
         - y2
+        - t1
+        - t2
 
       * - 1
         - 1
         - 2
-        - 2019
-        - 2020
         - 1000
         - 1500
+        - 2019
+        - 2020
       * - 2
         - 3
         - 3
-        - 2019
-        - 2020
         - 500
+        - 500
+        - 2019
+        - 2019
+      * - 2
+        - 3
+        - 3
         - 550
+        - 550
+        - 2020
+        - 2020
    Collapsed event study data must include the following columns:
-    - ``wid``: the worker identifier
-    - ``f1i``: the first firm identifier
-    - ``f2i``: the second firm identifier
-    - ``y1``: the outcome variable averaged over the spell for the first observation, in our case compensation
-    - ``y2``: the outcome variable averaged over the spell for the second observation, in our case compensation
+    - ``i``: worker identifier
+    - ``j1``: first firm identifier
+    - ``j2``: second firm identifier
+    - ``y1``: compensation averaged over the first spell
+    - ``y2``: compensation averaged over the second spell
    Collapsed event study data may optionally include the following columns:
-    - ``year_start_1``: first time in the first spell
-    - ``year_end_1``: last time in the first spell
-    - ``year_start_2``: first time in the second spell
-    - ``year_end_2``: last time in the second spell
+    - ``t11``: first period in the first spell
+    - ``t12``: last period in the first spell
+    - ``t21``: first period in the second spell
+    - ``t22``: last period in the second spell
     - ``m``: 1 if mover, 0 if stayer
-    - ``j1``: firm 1 cluster
-    - ``j2``: firm 2 cluster
+    - ``g1``: firm 1 cluster
+    - ``g2``: firm 2 cluster
     - ``w1``: weight of first spell
     - ``w2``: weight of second spell
    .. list-table:: Example collapsed event study data
@@ -160,31 +168,31 @@ To run in python:
       :header-rows: 1
       :align: center
 
-      * - wid
-        - f1i
-        - f2i
-        - year_start_1
-        - year_end_1
-        - year_start_2
-        - year_end_2
+      * - i
+        - j1
+        - j2
         - y1
         - y2
+        - t11
+        - t12
+        - t21
+        - t22
 
       * - 1
         - 1
         - 2
-        - 2019
-        - 2019
-        - 2020
-        - 2020
         - 1000
         - 1500
+        - 2019
+        - 2019
+        - 2020
+        - 2020
       * - 2
         - 3
         - 3
+        - 525
+        - 525
         - 2019
         - 2020
         - 2019
         - 2020
-        - 525
-        - 525

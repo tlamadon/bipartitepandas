@@ -98,6 +98,19 @@ class BipartiteBase(DataFrame):
         '''
         return BipartiteBase
 
+    def copy(self):
+        '''
+        Copy.
+
+        Returns:
+            bdf_copy (BipartiteBase): copy of instance
+        '''
+        df_copy = DataFrame(self, copy=True)
+        bdf_copy = self._constructor(df_copy)
+        bdf_copy.set_attributes(self) # This copies attribute dictionaries, default copy does not
+
+        return bdf_copy
+
     def summary(self):
         '''
         Print summary statistics.
