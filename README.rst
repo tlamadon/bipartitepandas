@@ -20,7 +20,7 @@ bipartitepandas
 
 If you want to give it a try, you can start the example notebook here: |binder|. This starts a fully interactive notebook with a simple example that generates data and demonstrates some useful functions.
 
-The package provides a python interface. Installation is handled by `pip` or `conda` (TBD). The source of the package is available on github at `bipartitepandas <https://github.com/tlamadon/bipartitepandas>`_. The online documentation is hosted  `here <https://tlamadon.github.io/bipartitepandas/>`_.
+The package provides a python interface. Installation is handled by `pip` or `conda`. The source of the package is available on github at `bipartitepandas <https://github.com/tlamadon/bipartitepandas>`_. The online documentation is hosted  `here <https://tlamadon.github.io/bipartitepandas/>`_.
 
 Quick Start
 -----------
