@@ -113,9 +113,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
             if n_subcols % 2 == 0:
-                for i in range(n_subcols / 2):
-                    rename_dict[subcols[2 * i]] = subcols[2 * i + 1]
-                    rename_dict[subcols[2 * i + 1]] = subcols[2 * i]
+                halfway = n_subcols // 2
+                for i in range(halfway):
+                    rename_dict[subcols[i]] = subcols[halfway + i]
+                    rename_dict[subcols[halfway + i]] = subcols[i]
 
         # Combine the 2 data-sets
         data_cs = pd.concat([
