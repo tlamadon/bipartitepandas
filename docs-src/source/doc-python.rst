@@ -37,8 +37,8 @@ To run in python:
     - ``y``: compensation
     - ``t``: time
    Long data may optionally include the following columns:
-    - ``m``: 1 if mover, 0 if stayer
     - ``g``: firm cluster
+    - ``m``: 1 if mover, 0 if stayer
    .. list-table:: Example long data
       :widths: 25 25 25 25
       :header-rows: 1
@@ -72,9 +72,9 @@ To run in python:
     - ``t1``: first period in the spell
     - ``t2``: last period in the spell
    Collapsed long data may optionally include the following columns:
-    - ``m``: 1 if mover, 0 if stayer
-    - ``g``: firm cluster
     - ``w``: weight of observation
+    - ``g``: firm cluster
+    - ``m``: 1 if mover, 0 if stayer
    .. list-table:: Example collapsed long data
       :widths: 20 20 20 20 20
       :header-rows: 1
@@ -110,9 +110,9 @@ To run in python:
    Event study data may optionally include the following columns:
     - ``t1``: period of the first observation
     - ``t2``: period of the second observation
-    - ``m``: 1 if mover, 0 if stayer
     - ``g1``: firm 1 cluster
     - ``g2``: firm 2 cluster
+    - ``m``: 1 if mover, 0 if stayer
    .. list-table:: Example event study data
       :widths: 14 14 14 14 14 14 14
       :header-rows: 1
@@ -158,11 +158,11 @@ To run in python:
     - ``t12``: last period in the first spell
     - ``t21``: first period in the second spell
     - ``t22``: last period in the second spell
-    - ``m``: 1 if mover, 0 if stayer
-    - ``g1``: firm 1 cluster
-    - ``g2``: firm 2 cluster
     - ``w1``: weight of first spell
     - ``w2``: weight of second spell
+    - ``g1``: firm 1 cluster
+    - ``g2``: firm 2 cluster
+    - ``m``: 1 if mover, 0 if stayer
    .. list-table:: Example collapsed event study data
       :widths: 11 11 11 11 11 11 11 11 11
       :header-rows: 1
