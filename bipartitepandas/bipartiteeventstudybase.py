@@ -179,7 +179,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
             .drop(drops, axis=1) \
             .rename(rename_dict_2, axis=1) \
-            .astype(astype_dict)
+            .astype(astype_dict) \
         # data_long = pd.DataFrame(self).groupby('i').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 else a) \
         #     .reset_index(drop=True) \
         #     .drop(drops, axis=1) \
@@ -188,7 +188,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        data_long = data_long[sorted_cols].sort_values(['i'])
+        try: # Long
+            data_long = data_long[sorted_cols].sort_values(['i', 't']).reset_index(drop=True)
+        except KeyError: # Collapsed long
+            data_long = data_long[sorted_cols].sort_values(['i', 't1']).reset_index(drop=True)
 
         long_frame = self._constructor_long(data_long)
         long_frame.set_attributes(self, no_dict=True)

@@ -90,7 +90,6 @@
 <p class="caption"><span class="caption-text">Notebook examples</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">BipartitePandas</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#Simulate-some-data">Simulate some data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#BipartitePandas">BipartitePandas</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Converting-formats">Converting formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Clustering">Clustering</a></li>
@@ -450,17 +449,14 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 </div>
-<div class="section" id="Simulate-some-data">
-<h2>Simulate some data<a class="headerlink" href="#Simulate-some-data" title="Permalink to this headline">¶</a></h2>
-<p>The package contains functions to simulate data. We use this here to keep things simple.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># For the example, we simulate data</span>
+<span></span><span class="c1"># For the example, we simulate bipartite labor data using the package pytwoway</span>
 <span class="kn">import</span> <span class="nn">pytwoway</span> <span class="k">as</span> <span class="nn">tw</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">display</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -487,46 +483,46 @@ div.rendered_html tbody tr:hover {
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
     </tr>
     <tr>
@@ -539,36 +535,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -576,11 +572,10 @@ div.rendered_html tbody tr:hover {
 <p>50000 rows × 4 columns</p>
 </div></div>
 </div>
-</div>
 <div class="section" id="BipartitePandas">
 <h2>BipartitePandas<a class="headerlink" href="#BipartitePandas" title="Permalink to this headline">¶</a></h2>
 <p>BipartitePandas includes 4 classes: - BipartiteLong - BipartiteLongCollapsed - BipartiteEventStudy - BipartiteEventStudyCollapsed</p>
-<p>For long data, each row gives a single observation. For collapsed long data, each row gives a single observation where employment spells at the same firm are collapsed into that observation. For event study data, each row gives the firms and salaries for a single employee over two consecutive years (this is created from BipartiteLong). For collapsed event study data, each row gives the firms and salaries for a single employee over two consecutive employment spells (this is created from
+<p>For long data, each row gives a single observation. For collapsed long data, each row gives a single observation where employment spells at the same firm are collapsed into that observation. For event study data, each row gives the firms and compensation for a single worker over two consecutive periods (this is created from BipartiteLong). For collapsed event study data, each row gives the firms and salaries for a single worker over two consecutive employment spells (this is created from
 BipartiteLongCollapsed).</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
@@ -588,10 +583,10 @@ BipartiteLongCollapsed).</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Our data is in long form (each row gives a single observation)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 <span class="c1"># Note the type</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bd</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bdf</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -617,46 +612,46 @@ BipartiteLongCollapsed).</p>
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
     </tr>
     <tr>
@@ -669,36 +664,36 @@ BipartiteLongCollapsed).</p>
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -720,9 +715,9 @@ BipartiteLongCollapsed).</p>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can check the number of workers, firms, and clusters (which is None because the data is not clustered)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bd</span><span class="o">.</span><span class="n">n_workers</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bd</span><span class="o">.</span><span class="n">n_firms</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bd</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_workers</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_firms</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -742,8 +737,8 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Whenever we want to use the data, we need to clean it</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -769,46 +764,46 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
     </tr>
     <tr>
@@ -821,36 +816,36 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -867,10 +862,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># While our original data is long, we might want it to be in event study form (each row gives two consecutive observations)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 <span class="c1"># Note the type</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bd</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bdf</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -896,68 +891,68 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>f1i</th>
-      <th>f2i</th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
       <th>y1</th>
       <th>y2</th>
-      <th>year_1</th>
-      <th>year_2</th>
+      <th>t1</th>
+      <th>t2</th>
       <th>m</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.314926</td>
-      <td>-0.314926</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>2.778039</td>
+      <td>2.778039</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.087387</td>
-      <td>-0.087387</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>2.454836</td>
+      <td>2.454836</td>
       <td>2</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>0.604528</td>
-      <td>0.604528</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>1.751138</td>
+      <td>1.751138</td>
       <td>3</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-1.167838</td>
-      <td>-1.167838</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>4.830395</td>
+      <td>4.830395</td>
       <td>4</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.541572</td>
-      <td>-0.541572</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>3.895506</td>
+      <td>3.895506</td>
       <td>5</td>
       <td>5</td>
       <td>0</td>
@@ -974,63 +969,63 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>40629</th>
+      <th>40643</th>
       <td>9998</td>
-      <td>51</td>
-      <td>51</td>
-      <td>0.641497</td>
-      <td>0.816121</td>
+      <td>67</td>
+      <td>67</td>
+      <td>1.595379</td>
+      <td>0.217236</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40630</th>
+      <th>40644</th>
       <td>9999</td>
-      <td>166</td>
-      <td>165</td>
-      <td>0.849830</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>63</td>
+      <td>-0.033429</td>
+      <td>-0.713182</td>
       <td>1</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40631</th>
+      <th>40645</th>
       <td>9999</td>
-      <td>165</td>
-      <td>153</td>
-      <td>1.280254</td>
-      <td>3.102403</td>
+      <td>63</td>
+      <td>168</td>
+      <td>-0.713182</td>
+      <td>0.905557</td>
       <td>2</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40632</th>
+      <th>40646</th>
       <td>9999</td>
-      <td>153</td>
-      <td>153</td>
-      <td>3.102403</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>168</td>
+      <td>0.905557</td>
+      <td>0.576497</td>
       <td>3</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40633</th>
+      <th>40647</th>
       <td>9999</td>
-      <td>153</td>
-      <td>153</td>
-      <td>2.136807</td>
-      <td>1.373066</td>
+      <td>168</td>
+      <td>88</td>
+      <td>0.576497</td>
+      <td>1.775734</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>40634 rows × 8 columns</p>
+<p>40648 rows × 8 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1046,8 +1041,8 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># We can also use event study data to retrive cross section data (cs=1 gives y1 as y1 for both stayers and movers; cs=0 gives y2 as y1 for only movers - this allows (almost) all income data to be accessed from the y1 column. Note that for movers, the last observation for each worker is not available without manipulation as it is shifted to the y2 column. Also note that the y1 row contains duplicates for all mover income, except for the first period.)</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="o">.</span><span class="n">get_cs</span><span class="p">())</span>
+<span></span><span class="c1"># We can also use event study data to retrive cross section data (cs=1 gives y1 as y1 for both stayers and movers; cs=0 gives y2 as y1 for only movers - this allows (almost) all income data to be accessed from the y1 column. Note that for movers, the last observation for each worker is not available without manipulation as it is shifted to the y2 column. Also note that the y1 row contains duplicates for all mover incomes, except for the first period.)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">get_cs</span><span class="p">())</span>
 </pre></div>
 </div>
 </div>
@@ -1073,13 +1068,13 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>f1i</th>
-      <th>f2i</th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
       <th>y1</th>
       <th>y2</th>
-      <th>year_1</th>
-      <th>year_2</th>
+      <th>t1</th>
+      <th>t2</th>
       <th>m</th>
       <th>cs</th>
     </tr>
@@ -1087,11 +1082,11 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.314926</td>
-      <td>-0.314926</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>2.778039</td>
+      <td>2.778039</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
@@ -1099,11 +1094,11 @@ None
     </tr>
     <tr>
       <th>1</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.087387</td>
-      <td>-0.087387</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>2.454836</td>
+      <td>2.454836</td>
       <td>2</td>
       <td>2</td>
       <td>0</td>
@@ -1111,11 +1106,11 @@ None
     </tr>
     <tr>
       <th>2</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>0.604528</td>
-      <td>0.604528</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>1.751138</td>
+      <td>1.751138</td>
       <td>3</td>
       <td>3</td>
       <td>0</td>
@@ -1123,11 +1118,11 @@ None
     </tr>
     <tr>
       <th>3</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-1.167838</td>
-      <td>-1.167838</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>4.830395</td>
+      <td>4.830395</td>
       <td>4</td>
       <td>4</td>
       <td>0</td>
@@ -1135,11 +1130,11 @@ None
     </tr>
     <tr>
       <th>4</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.541572</td>
-      <td>-0.541572</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>3.895506</td>
+      <td>3.895506</td>
       <td>5</td>
       <td>5</td>
       <td>0</td>
@@ -1158,60 +1153,60 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>78093</th>
+      <th>78051</th>
       <td>9998</td>
-      <td>51</td>
-      <td>51</td>
-      <td>0.816121</td>
-      <td>0.641497</td>
+      <td>67</td>
+      <td>67</td>
+      <td>0.217236</td>
+      <td>1.595379</td>
       <td>5</td>
       <td>4</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78094</th>
+      <th>78052</th>
       <td>9999</td>
-      <td>165</td>
-      <td>166</td>
-      <td>1.280254</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>63</td>
+      <td>-0.713182</td>
+      <td>-0.033429</td>
       <td>2</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78095</th>
+      <th>78053</th>
       <td>9999</td>
-      <td>153</td>
-      <td>165</td>
-      <td>3.102403</td>
-      <td>1.280254</td>
+      <td>168</td>
+      <td>63</td>
+      <td>0.905557</td>
+      <td>-0.713182</td>
       <td>3</td>
       <td>2</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78096</th>
+      <th>78054</th>
       <td>9999</td>
-      <td>153</td>
-      <td>153</td>
-      <td>2.136807</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>168</td>
+      <td>0.576497</td>
+      <td>0.905557</td>
       <td>4</td>
       <td>3</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78097</th>
+      <th>78055</th>
       <td>9999</td>
-      <td>153</td>
-      <td>153</td>
-      <td>1.373066</td>
-      <td>2.136807</td>
+      <td>88</td>
+      <td>168</td>
+      <td>1.775734</td>
+      <td>0.576497</td>
       <td>5</td>
       <td>4</td>
       <td>1</td>
@@ -1219,7 +1214,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>78098 rows × 9 columns</p>
+<p>78056 rows × 9 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1228,10 +1223,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Maybe we want to convert back into long form</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_long</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_long</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 <span class="c1"># Note the type</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bd</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bdf</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1257,10 +1252,10 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
       <th>m</th>
     </tr>
   </thead>
@@ -1268,40 +1263,40 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -1316,40 +1311,40 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -1372,10 +1367,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Now suppose we want to collapse by employment spells (so any consecutive observations with the same worker in the same firm are collapsed into 1 observation)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_collapsed_long</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_collapsed_long</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 <span class="c1"># Note the type</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bd</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bdf</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1401,12 +1396,12 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year_start</th>
-      <th>year_end</th>
-      <th>weight</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>w</th>
       <th>m</th>
     </tr>
   </thead>
@@ -1414,50 +1409,50 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.655954</td>
       <td>1</td>
-      <td>1</td>
-      <td>1</td>
+      <td>3</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.906614</td>
-      <td>2</td>
-      <td>3</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>0</td>
-      <td>160</td>
-      <td>0.618067</td>
+      <td>61</td>
+      <td>0.398841</td>
       <td>4</td>
       <td>5</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>3</th>
+      <th>2</th>
       <td>1</td>
-      <td>125</td>
-      <td>-0.301130</td>
+      <td>106</td>
+      <td>-0.300658</td>
       <td>1</td>
       <td>2</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>51</td>
+      <td>-0.884610</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
       <th>4</th>
       <td>1</td>
-      <td>53</td>
-      <td>-2.622984</td>
-      <td>3</td>
-      <td>3</td>
+      <td>123</td>
+      <td>-0.112075</td>
+      <td>5</td>
+      <td>5</td>
       <td>1</td>
       <td>1</td>
     </tr>
@@ -1472,58 +1467,58 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29808</th>
+      <th>29682</th>
       <td>9998</td>
-      <td>73</td>
-      <td>-0.232390</td>
-      <td>2</td>
+      <td>72</td>
+      <td>-0.496916</td>
       <td>3</td>
-      <td>2</td>
+      <td>3</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29809</th>
+      <th>29683</th>
       <td>9998</td>
-      <td>51</td>
-      <td>0.728809</td>
+      <td>67</td>
+      <td>0.906308</td>
       <td>4</td>
       <td>5</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29810</th>
+      <th>29684</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.373306</td>
       <td>1</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29811</th>
-      <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
       <td>2</td>
       <td>2</td>
       <td>1</td>
-      <td>1</td>
     </tr>
     <tr>
-      <th>29812</th>
+      <th>29685</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.204092</td>
+      <td>168</td>
+      <td>0.741027</td>
       <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29686</th>
+      <td>9999</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>3</td>
+      <td>5</td>
+      <td>1</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>29813 rows × 7 columns</p>
+<p>29687 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1540,10 +1535,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can then check out the event study using collapsed data</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 <span class="c1"># Note the type</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bd</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bdf</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1569,15 +1564,15 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>f1i</th>
-      <th>f2i</th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
       <th>y1</th>
       <th>y2</th>
-      <th>year_start_1</th>
-      <th>year_end_1</th>
-      <th>year_start_2</th>
-      <th>year_end_2</th>
+      <th>t11</th>
+      <th>t12</th>
+      <th>t21</th>
+      <th>t22</th>
       <th>w1</th>
       <th>w2</th>
       <th>m</th>
@@ -1586,76 +1581,76 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.301439</td>
-      <td>-0.301439</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>3.141983</td>
+      <td>3.141983</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
-      <td>5</td>
+      <td>5.0</td>
       <td>5</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>31</td>
-      <td>68</td>
-      <td>68</td>
-      <td>-0.488130</td>
-      <td>-0.488130</td>
+      <td>44</td>
+      <td>52</td>
+      <td>52</td>
+      <td>-0.677782</td>
+      <td>-0.677782</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
-      <td>5</td>
+      <td>5.0</td>
       <td>5</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>75</td>
-      <td>125</td>
-      <td>125</td>
-      <td>1.068005</td>
-      <td>1.068005</td>
+      <td>54</td>
+      <td>183</td>
+      <td>183</td>
+      <td>1.273355</td>
+      <td>1.273355</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
-      <td>5</td>
+      <td>5.0</td>
       <td>5</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>76</td>
-      <td>16</td>
-      <td>16</td>
-      <td>-1.903237</td>
-      <td>-1.903237</td>
+      <td>90</td>
+      <td>3</td>
+      <td>3</td>
+      <td>-0.021380</td>
+      <td>-0.021380</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
-      <td>5</td>
+      <td>5.0</td>
       <td>5</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>96</td>
-      <td>48</td>
-      <td>48</td>
-      <td>-0.350443</td>
-      <td>-0.350443</td>
+      <td>109</td>
+      <td>37</td>
+      <td>37</td>
+      <td>-1.164623</td>
+      <td>-1.164623</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
-      <td>5</td>
+      <td>5.0</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -1675,83 +1670,83 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>20442</th>
+      <th>20330</th>
       <td>9997</td>
-      <td>14</td>
-      <td>32</td>
-      <td>-2.454612</td>
-      <td>-2.196596</td>
+      <td>174</td>
+      <td>85</td>
+      <td>1.438711</td>
+      <td>0.985225</td>
+      <td>2</td>
+      <td>4</td>
+      <td>5</td>
+      <td>5</td>
+      <td>3.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20331</th>
+      <td>9998</td>
+      <td>83</td>
+      <td>72</td>
+      <td>0.110103</td>
+      <td>-0.496916</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20332</th>
+      <td>9998</td>
+      <td>72</td>
+      <td>67</td>
+      <td>-0.496916</td>
+      <td>0.906308</td>
       <td>3</td>
       <td>3</td>
       <td>4</td>
       <td>5</td>
-      <td>1</td>
+      <td>1.0</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20443</th>
-      <td>9998</td>
-      <td>22</td>
-      <td>73</td>
-      <td>1.073581</td>
-      <td>-0.232390</td>
+      <th>20333</th>
+      <td>9999</td>
+      <td>63</td>
+      <td>168</td>
+      <td>-0.373306</td>
+      <td>0.741027</td>
       <td>1</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>1</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20444</th>
-      <td>9998</td>
-      <td>73</td>
-      <td>51</td>
-      <td>-0.232390</td>
-      <td>0.728809</td>
       <td>2</td>
       <td>3</td>
       <td>4</td>
-      <td>5</td>
-      <td>2</td>
+      <td>2.0</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20445</th>
+      <th>20334</th>
       <td>9999</td>
-      <td>166</td>
-      <td>165</td>
-      <td>0.849830</td>
-      <td>1.280254</td>
-      <td>1</td>
-      <td>1</td>
-      <td>2</td>
-      <td>2</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20446</th>
-      <td>9999</td>
-      <td>165</td>
-      <td>153</td>
-      <td>1.280254</td>
-      <td>2.204092</td>
-      <td>2</td>
-      <td>2</td>
+      <td>168</td>
+      <td>88</td>
+      <td>0.741027</td>
+      <td>1.775734</td>
       <td>3</td>
+      <td>4</td>
       <td>5</td>
+      <td>5</td>
+      <td>2.0</td>
       <td>1</td>
-      <td>3</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20447 rows × 12 columns</p>
+<p>20335 rows × 12 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1768,10 +1763,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can then go back to collapsed long</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_collapsed_long</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_long</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 <span class="c1"># Note the type</span>
-<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bd</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">bdf</span><span class="p">))</span>
 </pre></div>
 </div>
 </div>
@@ -1797,12 +1792,12 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year_start</th>
-      <th>year_end</th>
-      <th>weight</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>w</th>
       <th>m</th>
     </tr>
   </thead>
@@ -1810,51 +1805,51 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.655954</td>
       <td>1</td>
-      <td>1</td>
-      <td>1</td>
+      <td>3</td>
+      <td>3.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.906614</td>
-      <td>2</td>
-      <td>3</td>
-      <td>2</td>
+      <td>61</td>
+      <td>0.398841</td>
+      <td>4</td>
+      <td>5</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0</td>
-      <td>160</td>
-      <td>0.618067</td>
-      <td>4</td>
-      <td>5</td>
+      <td>1</td>
+      <td>106</td>
+      <td>-0.300658</td>
+      <td>1</td>
       <td>2</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1</td>
-      <td>125</td>
-      <td>-0.301130</td>
-      <td>1</td>
-      <td>2</td>
-      <td>2</td>
+      <td>51</td>
+      <td>-0.884610</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1</td>
-      <td>53</td>
-      <td>-2.622984</td>
-      <td>3</td>
-      <td>3</td>
-      <td>1</td>
+      <td>123</td>
+      <td>-0.112075</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
@@ -1868,58 +1863,58 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29808</th>
+      <th>29682</th>
       <td>9998</td>
-      <td>73</td>
-      <td>-0.232390</td>
-      <td>2</td>
+      <td>72</td>
+      <td>-0.496916</td>
       <td>3</td>
-      <td>2</td>
+      <td>3</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29809</th>
+      <th>29683</th>
       <td>9998</td>
-      <td>51</td>
-      <td>0.728809</td>
+      <td>67</td>
+      <td>0.906308</td>
       <td>4</td>
       <td>5</td>
-      <td>2</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29810</th>
+      <th>29684</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.373306</td>
       <td>1</td>
-      <td>1</td>
-      <td>1</td>
+      <td>2</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29811</th>
+      <th>29685</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
-      <td>2</td>
-      <td>2</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29812</th>
-      <td>9999</td>
-      <td>153</td>
-      <td>2.204092</td>
+      <td>168</td>
+      <td>0.741027</td>
       <td>3</td>
+      <td>4</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29686</th>
+      <td>9999</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>3</td>
+      <td>5</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>29813 rows × 7 columns</p>
+<p>29687 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1939,9 +1934,9 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Starting over</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -1967,46 +1962,46 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
     </tr>
     <tr>
@@ -2019,36 +2014,36 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -2062,8 +2057,8 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can cluster from any format and clusters stay when reformatting</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">cluster</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -2089,53 +2084,53 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
       <td>4</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
-      <td>2</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
-      <td>2</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
-      <td>4</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
-      <td>4</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>...</th>
@@ -2148,42 +2143,42 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
-      <td>4</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
-      <td>4</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
-      <td>4</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
-      <td>4</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>4</td>
+      <td>0</td>
     </tr>
   </tbody>
 </table>
@@ -2195,8 +2190,8 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span></span><span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -2222,82 +2217,82 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>f1i</th>
-      <th>f2i</th>
-      <th>y1</th>
-      <th>y2</th>
-      <th>year_1</th>
-      <th>year_2</th>
+      <th>i</th>
       <th>j1</th>
       <th>j2</th>
+      <th>y1</th>
+      <th>y2</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>g1</th>
+      <th>g2</th>
       <th>m</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.314926</td>
-      <td>-0.314926</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>2.778039</td>
+      <td>2.778039</td>
       <td>1</td>
       <td>1</td>
-      <td>9</td>
-      <td>9</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.087387</td>
-      <td>-0.087387</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>2.454836</td>
+      <td>2.454836</td>
       <td>2</td>
       <td>2</td>
-      <td>9</td>
-      <td>9</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>0.604528</td>
-      <td>0.604528</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>1.751138</td>
+      <td>1.751138</td>
       <td>3</td>
       <td>3</td>
-      <td>9</td>
-      <td>9</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-1.167838</td>
-      <td>-1.167838</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>4.830395</td>
+      <td>4.830395</td>
       <td>4</td>
       <td>4</td>
-      <td>9</td>
-      <td>9</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.541572</td>
-      <td>-0.541572</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>3.895506</td>
+      <td>3.895506</td>
       <td>5</td>
       <td>5</td>
-      <td>9</td>
-      <td>9</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2314,73 +2309,73 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>40629</th>
+      <th>40643</th>
       <td>9998</td>
-      <td>51</td>
-      <td>51</td>
-      <td>0.641497</td>
-      <td>0.816121</td>
+      <td>67</td>
+      <td>67</td>
+      <td>1.595379</td>
+      <td>0.217236</td>
+      <td>4</td>
+      <td>5</td>
+      <td>8</td>
+      <td>8</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40644</th>
+      <td>9999</td>
+      <td>63</td>
+      <td>63</td>
+      <td>-0.033429</td>
+      <td>-0.713182</td>
+      <td>1</td>
+      <td>2</td>
+      <td>9</td>
+      <td>9</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40645</th>
+      <td>9999</td>
+      <td>63</td>
+      <td>168</td>
+      <td>-0.713182</td>
+      <td>0.905557</td>
+      <td>2</td>
+      <td>3</td>
+      <td>9</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40646</th>
+      <td>9999</td>
+      <td>168</td>
+      <td>168</td>
+      <td>0.905557</td>
+      <td>0.576497</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40647</th>
+      <td>9999</td>
+      <td>168</td>
+      <td>88</td>
+      <td>0.576497</td>
+      <td>1.775734</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40630</th>
-      <td>9999</td>
-      <td>166</td>
-      <td>165</td>
-      <td>0.849830</td>
-      <td>1.280254</td>
-      <td>1</td>
-      <td>2</td>
-      <td>4</td>
-      <td>4</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40631</th>
-      <td>9999</td>
-      <td>165</td>
-      <td>153</td>
-      <td>1.280254</td>
-      <td>3.102403</td>
-      <td>2</td>
-      <td>3</td>
-      <td>4</td>
-      <td>4</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40632</th>
-      <td>9999</td>
-      <td>153</td>
-      <td>153</td>
-      <td>3.102403</td>
-      <td>2.136807</td>
-      <td>3</td>
-      <td>4</td>
-      <td>4</td>
-      <td>4</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40633</th>
-      <td>9999</td>
-      <td>153</td>
-      <td>153</td>
-      <td>2.136807</td>
-      <td>1.373066</td>
-      <td>4</td>
-      <td>5</td>
-      <td>4</td>
-      <td>4</td>
+      <td>0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>40634 rows × 10 columns</p>
+<p>40648 rows × 10 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2388,9 +2383,9 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_long</span><span class="p">()</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_collapsed_long</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span></span><span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_long</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_collapsed_long</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -2416,13 +2411,13 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year_start</th>
-      <th>year_end</th>
-      <th>weight</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>w</th>
+      <th>g</th>
       <th>m</th>
     </tr>
   </thead>
@@ -2430,56 +2425,56 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.655954</td>
       <td>1</td>
-      <td>1</td>
-      <td>1</td>
+      <td>3</td>
+      <td>3</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.906614</td>
+      <td>61</td>
+      <td>0.398841</td>
+      <td>4</td>
+      <td>5</td>
       <td>2</td>
-      <td>3</td>
-      <td>2</td>
-      <td>2</td>
+      <td>9</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>0</td>
-      <td>160</td>
-      <td>0.618067</td>
-      <td>4</td>
-      <td>5</td>
+      <td>1</td>
+      <td>106</td>
+      <td>-0.300658</td>
+      <td>1</td>
       <td>2</td>
-      <td>4</td>
+      <td>2</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1</td>
-      <td>125</td>
-      <td>-0.301130</td>
-      <td>1</td>
+      <td>51</td>
+      <td>-0.884610</td>
+      <td>3</td>
+      <td>4</td>
       <td>2</td>
-      <td>2</td>
-      <td>7</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1</td>
-      <td>53</td>
-      <td>-2.622984</td>
-      <td>3</td>
-      <td>3</td>
+      <td>123</td>
+      <td>-0.112075</td>
+      <td>5</td>
+      <td>5</td>
       <td>1</td>
-      <td>1</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
@@ -2494,63 +2489,63 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29808</th>
+      <th>29682</th>
       <td>9998</td>
-      <td>73</td>
-      <td>-0.232390</td>
-      <td>2</td>
+      <td>72</td>
+      <td>-0.496916</td>
       <td>3</td>
-      <td>2</td>
-      <td>5</td>
+      <td>3</td>
+      <td>1</td>
+      <td>9</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29809</th>
+      <th>29683</th>
       <td>9998</td>
-      <td>51</td>
-      <td>0.728809</td>
+      <td>67</td>
+      <td>0.906308</td>
       <td>4</td>
       <td>5</td>
       <td>2</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29810</th>
-      <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-      <td>4</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29811</th>
+      <th>29684</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.373306</td>
+      <td>1</td>
       <td>2</td>
       <td>2</td>
-      <td>1</td>
-      <td>4</td>
+      <td>9</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29812</th>
+      <th>29685</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.204092</td>
+      <td>168</td>
+      <td>0.741027</td>
       <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29686</th>
+      <td>9999</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>3</td>
-      <td>4</td>
+      <td>5</td>
+      <td>1</td>
+      <td>0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>29813 rows × 8 columns</p>
+<p>29687 rows × 8 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2558,8 +2553,8 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span></span><span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_es</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -2585,106 +2580,106 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>f1i</th>
-      <th>f2i</th>
-      <th>y1</th>
-      <th>y2</th>
-      <th>year_start_1</th>
-      <th>year_end_1</th>
-      <th>year_start_2</th>
-      <th>year_end_2</th>
-      <th>w1</th>
-      <th>w2</th>
+      <th>i</th>
       <th>j1</th>
       <th>j2</th>
+      <th>y1</th>
+      <th>y2</th>
+      <th>t11</th>
+      <th>t12</th>
+      <th>t21</th>
+      <th>t22</th>
+      <th>w1</th>
+      <th>w2</th>
+      <th>g1</th>
+      <th>g2</th>
       <th>m</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.301439</td>
-      <td>-0.301439</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>3.141983</td>
+      <td>3.141983</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
-      <td>9</td>
-      <td>9</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>31</td>
-      <td>68</td>
-      <td>68</td>
-      <td>-0.488130</td>
-      <td>-0.488130</td>
+      <td>44</td>
+      <td>52</td>
+      <td>52</td>
+      <td>-0.677782</td>
+      <td>-0.677782</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
-      <td>5</td>
-      <td>5</td>
+      <td>8</td>
+      <td>8</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>75</td>
-      <td>125</td>
-      <td>125</td>
-      <td>1.068005</td>
-      <td>1.068005</td>
+      <td>54</td>
+      <td>183</td>
+      <td>183</td>
+      <td>1.273355</td>
+      <td>1.273355</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
-      <td>7</td>
-      <td>7</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>76</td>
-      <td>16</td>
-      <td>16</td>
-      <td>-1.903237</td>
-      <td>-1.903237</td>
+      <td>90</td>
+      <td>3</td>
+      <td>3</td>
+      <td>-0.021380</td>
+      <td>-0.021380</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
-      <td>6</td>
-      <td>6</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>96</td>
-      <td>48</td>
-      <td>48</td>
-      <td>-0.350443</td>
-      <td>-0.350443</td>
+      <td>109</td>
+      <td>37</td>
+      <td>37</td>
+      <td>-1.164623</td>
+      <td>-1.164623</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
-      <td>1</td>
-      <td>1</td>
+      <td>4</td>
+      <td>4</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2705,93 +2700,93 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>20442</th>
+      <th>20330</th>
       <td>9997</td>
-      <td>14</td>
-      <td>32</td>
-      <td>-2.454612</td>
-      <td>-2.196596</td>
-      <td>3</td>
-      <td>3</td>
+      <td>174</td>
+      <td>85</td>
+      <td>1.438711</td>
+      <td>0.985225</td>
+      <td>2</td>
       <td>4</td>
       <td>5</td>
+      <td>5</td>
+      <td>3.0</td>
+      <td>1</td>
+      <td>6</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20331</th>
+      <td>9998</td>
+      <td>83</td>
+      <td>72</td>
+      <td>0.110103</td>
+      <td>-0.496916</td>
       <td>1</td>
       <td>2</td>
-      <td>6</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>0</td>
       <td>9</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20443</th>
+      <th>20332</th>
       <td>9998</td>
-      <td>22</td>
-      <td>73</td>
-      <td>1.073581</td>
-      <td>-0.232390</td>
-      <td>1</td>
-      <td>1</td>
-      <td>2</td>
+      <td>72</td>
+      <td>67</td>
+      <td>-0.496916</td>
+      <td>0.906308</td>
       <td>3</td>
-      <td>1</td>
-      <td>2</td>
-      <td>6</td>
-      <td>5</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20444</th>
-      <td>9998</td>
-      <td>73</td>
-      <td>51</td>
-      <td>-0.232390</td>
-      <td>0.728809</td>
-      <td>2</td>
       <td>3</td>
       <td>4</td>
       <td>5</td>
+      <td>1.0</td>
       <td>2</td>
-      <td>2</td>
-      <td>5</td>
-      <td>1</td>
+      <td>9</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20445</th>
+      <th>20333</th>
       <td>9999</td>
-      <td>166</td>
-      <td>165</td>
-      <td>0.849830</td>
-      <td>1.280254</td>
-      <td>1</td>
+      <td>63</td>
+      <td>168</td>
+      <td>-0.373306</td>
+      <td>0.741027</td>
       <td>1</td>
       <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2.0</td>
       <td>2</td>
+      <td>9</td>
       <td>1</td>
-      <td>1</td>
-      <td>4</td>
-      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20446</th>
+      <th>20334</th>
       <td>9999</td>
-      <td>165</td>
-      <td>153</td>
-      <td>1.280254</td>
-      <td>2.204092</td>
-      <td>2</td>
-      <td>2</td>
+      <td>168</td>
+      <td>88</td>
+      <td>0.741027</td>
+      <td>1.775734</td>
       <td>3</td>
+      <td>4</td>
       <td>5</td>
+      <td>5</td>
+      <td>2.0</td>
       <td>1</td>
-      <td>3</td>
-      <td>4</td>
-      <td>4</td>
+      <td>1</td>
+      <td>0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20447 rows × 14 columns</p>
+<p>20335 rows × 14 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2799,9 +2794,18 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">bd</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">)</span>
+<span></span><span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+../../../bipartitepandas/bipartitebase.py:285: UserWarning: j is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
+  warnings.warn(&#34;{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)&#34;.format(col))
+</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
@@ -2826,94 +2830,106 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>f1i</th>
-      <th>f2i</th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
       <th>y1</th>
       <th>y2</th>
-      <th>year_start_1</th>
-      <th>year_end_1</th>
-      <th>year_start_2</th>
-      <th>year_end_2</th>
+      <th>t11</th>
+      <th>t12</th>
+      <th>t21</th>
+      <th>t22</th>
       <th>w1</th>
       <th>w2</th>
+      <th>g1</th>
+      <th>g2</th>
       <th>m</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>19</td>
-      <td>29</td>
-      <td>29</td>
-      <td>-0.301439</td>
-      <td>-0.301439</td>
+      <td>24</td>
+      <td>192</td>
+      <td>192</td>
+      <td>3.141983</td>
+      <td>3.141983</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>31</td>
-      <td>68</td>
-      <td>68</td>
-      <td>-0.488130</td>
-      <td>-0.488130</td>
+      <td>44</td>
+      <td>52</td>
+      <td>52</td>
+      <td>-0.677782</td>
+      <td>-0.677782</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
+      <td>8</td>
+      <td>8</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>75</td>
-      <td>125</td>
-      <td>125</td>
-      <td>1.068005</td>
-      <td>1.068005</td>
+      <td>54</td>
+      <td>183</td>
+      <td>183</td>
+      <td>1.273355</td>
+      <td>1.273355</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
+      <td>6</td>
+      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>76</td>
-      <td>16</td>
-      <td>16</td>
-      <td>-1.903237</td>
-      <td>-1.903237</td>
+      <td>90</td>
+      <td>3</td>
+      <td>3</td>
+      <td>-0.021380</td>
+      <td>-0.021380</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>96</td>
-      <td>48</td>
-      <td>48</td>
-      <td>-0.350443</td>
-      <td>-0.350443</td>
+      <td>109</td>
+      <td>37</td>
+      <td>37</td>
+      <td>-1.164623</td>
+      <td>-1.164623</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
+      <td>5.0</td>
       <td>5</td>
-      <td>5</td>
+      <td>4</td>
+      <td>4</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2930,85 +2946,97 @@ None
       <td>...</td>
       <td>...</td>
       <td>...</td>
+      <td>...</td>
+      <td>...</td>
     </tr>
     <tr>
-      <th>20442</th>
+      <th>20330</th>
       <td>9997</td>
-      <td>14</td>
-      <td>32</td>
-      <td>-2.454612</td>
-      <td>-2.196596</td>
+      <td>174</td>
+      <td>85</td>
+      <td>1.438711</td>
+      <td>0.985225</td>
+      <td>2</td>
+      <td>4</td>
+      <td>5</td>
+      <td>5</td>
+      <td>3.0</td>
+      <td>1</td>
+      <td>6</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20331</th>
+      <td>9998</td>
+      <td>83</td>
+      <td>72</td>
+      <td>0.110103</td>
+      <td>-0.496916</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>0</td>
+      <td>9</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20332</th>
+      <td>9998</td>
+      <td>72</td>
+      <td>67</td>
+      <td>-0.496916</td>
+      <td>0.906308</td>
       <td>3</td>
       <td>3</td>
       <td>4</td>
       <td>5</td>
-      <td>1</td>
+      <td>1.0</td>
       <td>2</td>
+      <td>9</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20443</th>
-      <td>9998</td>
-      <td>22</td>
-      <td>73</td>
-      <td>1.073581</td>
-      <td>-0.232390</td>
+      <th>20333</th>
+      <td>9999</td>
+      <td>63</td>
+      <td>168</td>
+      <td>-0.373306</td>
+      <td>0.741027</td>
       <td>1</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>1</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20444</th>
-      <td>9998</td>
-      <td>73</td>
-      <td>51</td>
-      <td>-0.232390</td>
-      <td>0.728809</td>
       <td>2</td>
       <td>3</td>
       <td>4</td>
-      <td>5</td>
+      <td>2.0</td>
       <td>2</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20445</th>
-      <td>9999</td>
-      <td>166</td>
-      <td>165</td>
-      <td>0.849830</td>
-      <td>1.280254</td>
-      <td>1</td>
-      <td>1</td>
-      <td>2</td>
-      <td>2</td>
-      <td>1</td>
+      <td>9</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20446</th>
+      <th>20334</th>
       <td>9999</td>
-      <td>165</td>
-      <td>153</td>
-      <td>1.280254</td>
-      <td>2.204092</td>
-      <td>2</td>
-      <td>2</td>
+      <td>168</td>
+      <td>88</td>
+      <td>0.741027</td>
+      <td>1.775734</td>
       <td>3</td>
+      <td>4</td>
       <td>5</td>
+      <td>5</td>
+      <td>2.0</td>
       <td>1</td>
-      <td>3</td>
+      <td>1</td>
+      <td>0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20447 rows × 12 columns</p>
+<p>20335 rows × 14 columns</p>
 </div></div>
 </div>
 </div>
@@ -3020,10 +3048,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can cluster on a specific year in long form</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;year&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;year&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3049,53 +3077,53 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
-      <td>8</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
-      <td>6</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
-      <td>6</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
-      <td>8</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
-      <td>8</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>...</th>
@@ -3108,42 +3136,42 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
-      <td>8</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
-      <td>8</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
-      <td>8</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
-      <td>8</td>
+      <td>7</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>8</td>
+      <td>9</td>
     </tr>
   </tbody>
 </table>
@@ -3157,10 +3185,10 @@ None
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can cluster on movers or stayers in any form</span>
 <span class="c1"># Note that not all firms are clustered, so some rows have NaNs</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;stayers_movers&#39;</span><span class="p">:</span> <span class="s1">&#39;stayers&#39;</span><span class="p">})</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;stayers_movers&#39;</span><span class="p">:</span> <span class="s1">&#39;stayers&#39;</span><span class="p">})</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3186,11 +3214,11 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
       <th>m</th>
     </tr>
   </thead>
@@ -3198,17 +3226,17 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
-      <td>6</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
       <td>7</td>
       <td>1</td>
@@ -3216,8 +3244,8 @@ None
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
       <td>7</td>
       <td>1</td>
@@ -3225,19 +3253,19 @@ None
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
-      <td>6</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
-      <td>6</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3252,46 +3280,46 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
-      <td>2</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
-      <td>3</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
-      <td>3</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
-      <td>3</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>3</td>
+      <td>6</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -3306,10 +3334,10 @@ None
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can cluster on movers or stayers in any form</span>
 <span class="c1"># Set &#39;dropna&#39;: True if you want to drop firms that don&#39;t get clustered (note that this fully resets firm and worker ids, since they must be contiguous for the FE/CRE/BLM estimators to work)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;stayers_movers&#39;</span><span class="p">:</span> <span class="s1">&#39;stayers&#39;</span><span class="p">,</span> <span class="s1">&#39;dropna&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;stayers_movers&#39;</span><span class="p">:</span> <span class="s1">&#39;stayers&#39;</span><span class="p">,</span> <span class="s1">&#39;dropna&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">})</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3335,11 +3363,11 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
       <th>m</th>
     </tr>
   </thead>
@@ -3347,46 +3375,46 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
-      <td>0</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
-      <td>5</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
-      <td>5</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
-      <td>0</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
-      <td>0</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3399,53 +3427,53 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>47601</th>
+      <th>47653</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
-      <td>4</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>47602</th>
+      <th>47654</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
       <td>6</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>47603</th>
+      <th>47655</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
-      <td>6</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>47604</th>
-      <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
       <td>4</td>
-      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>47605</th>
+      <th>47656</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>168</td>
+      <td>0.576497</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>47657</th>
+      <td>9999</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>6</td>
+      <td>8</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>47606 rows × 6 columns</p>
+<p>47658 rows × 6 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -3454,10 +3482,10 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can cluster on movers or stayers in any form</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;stayers_movers&#39;</span><span class="p">:</span> <span class="s1">&#39;movers&#39;</span><span class="p">})</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;stayers_movers&#39;</span><span class="p">:</span> <span class="s1">&#39;movers&#39;</span><span class="p">})</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3483,11 +3511,11 @@ None
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
       <th>m</th>
     </tr>
   </thead>
@@ -3495,8 +3523,8 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>149</td>
-      <td>-0.250370</td>
+      <td>31</td>
+      <td>0.952726</td>
       <td>1</td>
       <td>6</td>
       <td>1</td>
@@ -3504,37 +3532,37 @@ None
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>106</td>
-      <td>1.603378</td>
+      <td>31</td>
+      <td>0.474339</td>
       <td>2</td>
-      <td>7</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>106</td>
-      <td>0.209849</td>
+      <td>31</td>
+      <td>0.540798</td>
       <td>3</td>
-      <td>7</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.409478</td>
+      <td>61</td>
+      <td>1.086038</td>
       <td>4</td>
-      <td>6</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>160</td>
-      <td>0.826657</td>
+      <td>61</td>
+      <td>-0.288355</td>
       <td>5</td>
-      <td>6</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3549,46 +3577,46 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>166</td>
-      <td>0.849830</td>
+      <td>63</td>
+      <td>-0.033429</td>
       <td>1</td>
-      <td>6</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>165</td>
-      <td>1.280254</td>
+      <td>63</td>
+      <td>-0.713182</td>
       <td>2</td>
-      <td>6</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>153</td>
-      <td>3.102403</td>
+      <td>168</td>
+      <td>0.905557</td>
       <td>3</td>
-      <td>6</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>153</td>
-      <td>2.136807</td>
+      <td>168</td>
+      <td>0.576497</td>
       <td>4</td>
-      <td>6</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>153</td>
-      <td>1.373066</td>
+      <td>88</td>
+      <td>1.775734</td>
       <td>5</td>
-      <td>6</td>
+      <td>9</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -3605,11 +3633,11 @@ None
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can get some summary statistics by running .summary()</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">bd</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">bdf</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -3620,35 +3648,35 @@ None
 <div class="highlight"><pre>
 format: BipartiteLong
 number of workers: 10000
-number of firms: 196
+number of firms: 195
 number of observations: 50000
-mean wage: 0.4305822659373083
-max wage: 5.649529279188183
-min wage: -4.997248394769208
+mean wage: 0.4094721354395219
+max wage: 5.711858492858829
+min wage: -4.93382044356057
 connected: False
-contiguous firm ids: False
-contiguous worker ids: False
-contiguous cluster ids (None if not clustered): None
+contiguous i ids (None if not included): False
+contiguous j ids (None if not included): False
+contiguous g ids (None if not included): None
 correct column names and types: False
 no nans: False
 no duplicates: False
-worker-year observations unique (None if year column(s) not included): None
+i-t (worker-year) observations unique (None if t column(s) not included): False
 
 format: BipartiteLong
 number of workers: 10000
-number of firms: 196
+number of firms: 195
 number of observations: 50000
-mean wage: 0.4305822659373083
-max wage: 5.649529279188183
-min wage: -4.997248394769208
+mean wage: 0.4094721354395219
+max wage: 5.711858492858829
+min wage: -4.93382044356057
 connected: True
-contiguous firm ids: True
-contiguous worker ids: True
-contiguous cluster ids (None if not clustered): None
+contiguous i ids (None if not included): True
+contiguous j ids (None if not included): True
+contiguous g ids (None if not included): None
 correct column names and types: True
 no nans: True
 no duplicates: True
-worker-year observations unique (None if year column(s) not included): True
+i-t (worker-year) observations unique (None if t column(s) not included): True
 
 </pre></div></div>
 </div>
@@ -3659,11 +3687,11 @@ worker-year observations unique (None if year column(s) not included): True
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># BipartiteData does some nice column inference</span>
 <span class="c1"># Suppose some of our columns are mislabeled - create a col_dict to clarify which columns to correct</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;fid&#39;</span><span class="p">:</span> <span class="s1">&#39;f1i&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;fid&#39;</span><span class="p">:</span> <span class="s1">&#39;f1i&#39;</span><span class="p">})</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;i1&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;i1&#39;</span><span class="p">})</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3689,46 +3717,46 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>181</td>
-      <td>0.831754</td>
+      <td>151</td>
+      <td>2.793562</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>181</td>
-      <td>4.315214</td>
+      <td>185</td>
+      <td>2.759244</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>140</td>
-      <td>1.881233</td>
+      <td>148</td>
+      <td>1.670277</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>140</td>
-      <td>1.301585</td>
+      <td>148</td>
+      <td>1.550945</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>140</td>
-      <td>0.531036</td>
+      <td>148</td>
+      <td>4.409614</td>
       <td>5</td>
     </tr>
     <tr>
@@ -3741,36 +3769,36 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>115</td>
-      <td>0.736590</td>
+      <td>6</td>
+      <td>-0.514519</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>115</td>
-      <td>-1.319846</td>
+      <td>9</td>
+      <td>-1.789648</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>115</td>
-      <td>-0.186654</td>
+      <td>9</td>
+      <td>-1.024662</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>143</td>
-      <td>0.203191</td>
+      <td>83</td>
+      <td>-0.359822</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>143</td>
-      <td>0.046509</td>
+      <td>23</td>
+      <td>-0.533275</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -3784,11 +3812,11 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Suppose we have already clustered - the class determines this automatically</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
-<span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;j&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3814,51 +3842,51 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>57</td>
-      <td>-0.251159</td>
+      <td>13</td>
+      <td>-1.207671</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>68</td>
-      <td>1.640056</td>
+      <td>104</td>
+      <td>1.967847</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>84</td>
-      <td>2.161727</td>
+      <td>104</td>
+      <td>0.818615</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>84</td>
-      <td>0.559726</td>
+      <td>104</td>
+      <td>0.807060</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>84</td>
-      <td>-0.269855</td>
+      <td>104</td>
+      <td>-0.253553</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -3873,40 +3901,40 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>87</td>
-      <td>0.243181</td>
+      <td>144</td>
+      <td>1.376596</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>184</td>
-      <td>1.615108</td>
+      <td>144</td>
+      <td>-0.047536</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>184</td>
-      <td>0.842398</td>
+      <td>136</td>
+      <td>-0.161501</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>184</td>
-      <td>1.268923</td>
+      <td>168</td>
+      <td>0.465900</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>83</td>
-      <td>2.125625</td>
+      <td>8</td>
+      <td>-2.298033</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -3921,11 +3949,11 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Now suppose we mislabeled our clusters - the class drops this column</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
-<span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;j1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;g1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -3951,46 +3979,46 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>119</td>
-      <td>2.461837</td>
+      <td>21</td>
+      <td>0.062592</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>135</td>
-      <td>1.554679</td>
+      <td>21</td>
+      <td>-0.456544</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>135</td>
-      <td>1.851635</td>
+      <td>21</td>
+      <td>-2.770036</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>135</td>
-      <td>0.561719</td>
+      <td>21</td>
+      <td>-1.382892</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>46</td>
-      <td>0.447763</td>
+      <td>21</td>
+      <td>-0.825303</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4003,36 +4031,36 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>186</td>
-      <td>2.688897</td>
+      <td>5</td>
+      <td>-2.204360</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>24</td>
-      <td>-1.505509</td>
+      <td>5</td>
+      <td>-1.394854</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>22</td>
-      <td>-1.640232</td>
+      <td>5</td>
+      <td>-0.929210</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>22</td>
-      <td>-1.276076</td>
+      <td>5</td>
+      <td>-2.303955</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>22</td>
-      <td>-1.029415</td>
+      <td>5</td>
+      <td>-2.178099</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4046,11 +4074,11 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can make sure our columns are included by specifying the corrected labels in col_dict (note that if the variable of interest requires 2 columns, e.g. weight 1 and weight 2 for event study data, BOTH columns are required - if only one column is included, it is automatically dropped.)</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
-<span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;j1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;j&#39;</span><span class="p">:</span> <span class="s1">&#39;j1&#39;</span><span class="p">})</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;g1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;g&#39;</span><span class="p">:</span> <span class="s1">&#39;g1&#39;</span><span class="p">})</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -4076,51 +4104,51 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
       <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>g</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>130</td>
-      <td>1.611106</td>
+      <td>116</td>
+      <td>0.280961</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>169</td>
-      <td>1.171130</td>
+      <td>189</td>
+      <td>1.210483</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>175</td>
-      <td>3.524638</td>
+      <td>115</td>
+      <td>0.032939</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>93</td>
-      <td>2.029370</td>
+      <td>115</td>
+      <td>2.073132</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>52</td>
-      <td>-0.430157</td>
+      <td>115</td>
+      <td>1.847687</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4135,40 +4163,40 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>72</td>
-      <td>-2.077329</td>
+      <td>24</td>
+      <td>-0.868337</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>118</td>
-      <td>1.412297</td>
+      <td>24</td>
+      <td>-0.416034</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>47</td>
-      <td>0.098012</td>
+      <td>113</td>
+      <td>1.561720</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>47</td>
-      <td>-1.025332</td>
+      <td>26</td>
+      <td>0.621665</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>47</td>
-      <td>-0.172851</td>
+      <td>26</td>
+      <td>0.132576</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4183,12 +4211,12 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We may also specify a col_dict that overwrites a column label that would normally be inferred, and inference is skipped</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;wid&#39;</span><span class="p">,</span> <span class="s1">&#39;fid&#39;</span><span class="p">,</span> <span class="s1">&#39;comp&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">]]</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;fid&#39;</span><span class="p">:</span> <span class="s1">&#39;j&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;fid&#39;</span><span class="p">:</span> <span class="s1">&#39;j&#39;</span><span class="p">})</span>
-<span class="c1"># Note that even though we have a column named j, because we specify it is the &#39;fid&#39; column it is not inferred as the cluster values</span>
-<span class="n">bd</span> <span class="o">=</span> <span class="n">bd</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
-<span class="n">display</span><span class="p">(</span><span class="n">bd</span><span class="p">)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">})</span>
+<span class="c1"># Note that even though we have a column named g, because we specify it is the &#39;i&#39; column it is not inferred as the cluster values</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -4214,46 +4242,46 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>9</td>
-      <td>-1.445623</td>
+      <td>68</td>
+      <td>0.844533</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>9</td>
-      <td>-0.927028</td>
+      <td>68</td>
+      <td>1.041385</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>30</td>
-      <td>-0.674722</td>
+      <td>158</td>
+      <td>1.798281</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>30</td>
-      <td>-0.833840</td>
+      <td>158</td>
+      <td>0.685374</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>30</td>
-      <td>-1.636625</td>
+      <td>158</td>
+      <td>1.685144</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4266,36 +4294,36 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>106</td>
-      <td>1.718404</td>
+      <td>67</td>
+      <td>1.530783</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>106</td>
-      <td>1.643154</td>
+      <td>67</td>
+      <td>-0.473979</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>145</td>
-      <td>1.506689</td>
+      <td>67</td>
+      <td>0.289837</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>131</td>
-      <td>1.477217</td>
+      <td>67</td>
+      <td>0.113632</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>119</td>
-      <td>3.049216</td>
+      <td>125</td>
+      <td>1.904025</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4309,7 +4337,7 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Dropping an optional column</span>
-<span class="n">bd</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;j1&#39;</span><span class="p">)</span>
+<span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;g1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -4318,7 +4346,7 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-../../../bipartitepandas/bipartitebase.py:280: UserWarning: j1 is not in data columns
+../../../bipartitepandas/bipartitebase.py:287: UserWarning: g1 is not in data columns
   warnings.warn(&#39;{} is not in data columns&#39;.format(col))
 </pre></div></div>
 </div>
@@ -4345,46 +4373,46 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>9</td>
-      <td>-1.445623</td>
+      <td>68</td>
+      <td>0.844533</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>9</td>
-      <td>-0.927028</td>
+      <td>68</td>
+      <td>1.041385</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>30</td>
-      <td>-0.674722</td>
+      <td>158</td>
+      <td>1.798281</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>30</td>
-      <td>-0.833840</td>
+      <td>158</td>
+      <td>0.685374</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>30</td>
-      <td>-1.636625</td>
+      <td>158</td>
+      <td>1.685144</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4397,36 +4425,36 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>106</td>
-      <td>1.718404</td>
+      <td>67</td>
+      <td>1.530783</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>106</td>
-      <td>1.643154</td>
+      <td>67</td>
+      <td>-0.473979</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>145</td>
-      <td>1.506689</td>
+      <td>67</td>
+      <td>0.289837</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>131</td>
-      <td>1.477217</td>
+      <td>67</td>
+      <td>0.113632</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>119</td>
-      <td>3.049216</td>
+      <td>125</td>
+      <td>1.904025</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4440,7 +4468,7 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Dropping a required column is prevented</span>
-<span class="n">bd</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;wid&#39;</span><span class="p">)</span>
+<span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;i&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -4449,8 +4477,8 @@ worker-year observations unique (None if year column(s) not included): True
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-../../../bipartitepandas/bipartitebase.py:278: UserWarning: wid is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;j&#39; instead of &#39;j1&#39; or &#39;j2&#39;)
-  warnings.warn(&#34;{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;j&#39; instead of &#39;j1&#39; or &#39;j2&#39;)&#34;.format(col))
+../../../bipartitepandas/bipartitebase.py:285: UserWarning: i is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
+  warnings.warn(&#34;{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)&#34;.format(col))
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -4476,46 +4504,46 @@ worker-year observations unique (None if year column(s) not included): True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>wid</th>
-      <th>fid</th>
-      <th>comp</th>
-      <th>year</th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>9</td>
-      <td>-1.445623</td>
+      <td>68</td>
+      <td>0.844533</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>9</td>
-      <td>-0.927028</td>
+      <td>68</td>
+      <td>1.041385</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>30</td>
-      <td>-0.674722</td>
+      <td>158</td>
+      <td>1.798281</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>30</td>
-      <td>-0.833840</td>
+      <td>158</td>
+      <td>0.685374</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>30</td>
-      <td>-1.636625</td>
+      <td>158</td>
+      <td>1.685144</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4528,36 +4556,36 @@ worker-year observations unique (None if year column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>106</td>
-      <td>1.718404</td>
+      <td>67</td>
+      <td>1.530783</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>106</td>
-      <td>1.643154</td>
+      <td>67</td>
+      <td>-0.473979</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>145</td>
-      <td>1.506689</td>
+      <td>67</td>
+      <td>0.289837</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>131</td>
-      <td>1.477217</td>
+      <td>67</td>
+      <td>0.113632</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>119</td>
-      <td>3.049216</td>
+      <td>125</td>
+      <td>1.904025</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4591,7 +4619,7 @@ worker-year observations unique (None if year column(s) not included): True
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Apr 01, 2021.
+        Last updated on Apr 02, 2021.
       </span>
 
     </p>
