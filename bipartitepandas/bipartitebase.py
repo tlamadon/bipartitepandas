@@ -789,7 +789,7 @@ class BipartiteBase(DataFrame):
             cdf_resolution (int): how many values to use to approximate the cdf
             grouping (str): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
             stayers_movers (str or None): if None, uses entire dataset; if 'stayers', uses only stayers; if 'movers', uses only movers
-            t (int or None): if None, uses entire dataset; if int, gives time in data to consider (only valid for BipartiteLong)
+            t (int or None): if None, uses entire dataset; if int, gives time in data to consider (only valid for non-collapsed data)
             weighted (bool): if True, compute firm weights
 
         Returns:
@@ -909,13 +909,13 @@ class BipartiteBase(DataFrame):
 
                     stayers_movers (str or None): if None, uses entire dataset; if 'stayers', uses only stayers; if 'movers', uses only movers
 
-                    t (int or None): if None, uses entire dataset; if int, gives time in data to consider (only valid for BipartiteLong)
-
-                    dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
+                    t (int or None): if None, uses entire dataset; if int, gives time in data to consider (only valid for non-collapsed data)
 
                     weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
 
-                    user_KMeans (dict): use parameters defined in KMeans_dict for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html), and use default parameters defined in class attribute default_KMeans for any parameters not specified
+                    dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
+
+                    user_KMeans (dict): parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
 
         Returns:
             frame (BipartiteBase): BipartiteBase with clusters
