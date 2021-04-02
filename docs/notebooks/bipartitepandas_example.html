@@ -432,9 +432,10 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Add bipartitepandas to system path, do not run this</span>
-<span class="c1"># import sys</span>
-<span class="c1"># sys.path.append(&#39;../../..&#39;)</span>
+<span></span><span class="c1"># Add BipartitePandas to system path, do not run this</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../../..&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;/Users/adamalexanderoppenheimer/Desktop/pytwoway&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -443,7 +444,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># Import the bipartitepandas package</span>
+<span></span><span class="c1"># Import the BipartitePandas package</span>
 <span class="c1"># (Make sure you have installed it using pip install bipartitepandas)</span>
 <span class="kn">import</span> <span class="nn">bipartitepandas</span> <span class="k">as</span> <span class="nn">bpd</span>
 </pre></div>
@@ -454,7 +455,7 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># For the example, we simulate bipartite labor data using the package pytwoway</span>
+<span></span><span class="c1"># For the example, we simulate bipartite labor data using the package PyTwoWay</span>
 <span class="kn">import</span> <span class="nn">pytwoway</span> <span class="k">as</span> <span class="nn">tw</span>
 <span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">display</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
@@ -493,36 +494,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
     </tr>
     <tr>
@@ -535,36 +536,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -622,36 +623,36 @@ BipartiteLongCollapsed).</p>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
     </tr>
     <tr>
@@ -664,36 +665,36 @@ BipartiteLongCollapsed).</p>
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -727,7 +728,7 @@ BipartiteLongCollapsed).</p>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 10000
-194
+195
 None
 </pre></div></div>
 </div>
@@ -774,36 +775,36 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
     </tr>
     <tr>
@@ -816,36 +817,36 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -904,55 +905,55 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.778039</td>
-      <td>2.778039</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.278795</td>
+      <td>-2.278795</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.454836</td>
-      <td>2.454836</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.207067</td>
+      <td>-2.207067</td>
       <td>2</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>1.751138</td>
-      <td>1.751138</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.283169</td>
+      <td>-2.283169</td>
       <td>3</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>4.830395</td>
-      <td>4.830395</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.276438</td>
+      <td>-1.276438</td>
       <td>4</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>3.895506</td>
-      <td>3.895506</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.499829</td>
+      <td>-1.499829</td>
       <td>5</td>
       <td>5</td>
       <td>0</td>
@@ -969,63 +970,63 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>40643</th>
+      <th>40678</th>
       <td>9998</td>
-      <td>67</td>
-      <td>67</td>
-      <td>1.595379</td>
-      <td>0.217236</td>
+      <td>66</td>
+      <td>66</td>
+      <td>-0.116671</td>
+      <td>0.600787</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40644</th>
+      <th>40679</th>
       <td>9999</td>
-      <td>63</td>
-      <td>63</td>
-      <td>-0.033429</td>
-      <td>-0.713182</td>
+      <td>129</td>
+      <td>146</td>
+      <td>0.397837</td>
+      <td>0.182625</td>
       <td>1</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40645</th>
+      <th>40680</th>
       <td>9999</td>
-      <td>63</td>
-      <td>168</td>
-      <td>-0.713182</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>146</td>
+      <td>0.182625</td>
+      <td>0.979173</td>
       <td>2</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40646</th>
+      <th>40681</th>
       <td>9999</td>
-      <td>168</td>
-      <td>168</td>
-      <td>0.905557</td>
-      <td>0.576497</td>
+      <td>146</td>
+      <td>149</td>
+      <td>0.979173</td>
+      <td>0.382159</td>
       <td>3</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40647</th>
+      <th>40682</th>
       <td>9999</td>
-      <td>168</td>
-      <td>88</td>
-      <td>0.576497</td>
-      <td>1.775734</td>
+      <td>149</td>
+      <td>117</td>
+      <td>0.382159</td>
+      <td>-0.436842</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>40648 rows × 8 columns</p>
+<p>40683 rows × 8 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1082,11 +1083,11 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.778039</td>
-      <td>2.778039</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.278795</td>
+      <td>-2.278795</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
@@ -1094,11 +1095,11 @@ None
     </tr>
     <tr>
       <th>1</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.454836</td>
-      <td>2.454836</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.207067</td>
+      <td>-2.207067</td>
       <td>2</td>
       <td>2</td>
       <td>0</td>
@@ -1106,11 +1107,11 @@ None
     </tr>
     <tr>
       <th>2</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>1.751138</td>
-      <td>1.751138</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.283169</td>
+      <td>-2.283169</td>
       <td>3</td>
       <td>3</td>
       <td>0</td>
@@ -1118,11 +1119,11 @@ None
     </tr>
     <tr>
       <th>3</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>4.830395</td>
-      <td>4.830395</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.276438</td>
+      <td>-1.276438</td>
       <td>4</td>
       <td>4</td>
       <td>0</td>
@@ -1130,11 +1131,11 @@ None
     </tr>
     <tr>
       <th>4</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>3.895506</td>
-      <td>3.895506</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.499829</td>
+      <td>-1.499829</td>
       <td>5</td>
       <td>5</td>
       <td>0</td>
@@ -1153,60 +1154,60 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>78051</th>
+      <th>77946</th>
       <td>9998</td>
-      <td>67</td>
-      <td>67</td>
-      <td>0.217236</td>
-      <td>1.595379</td>
+      <td>66</td>
+      <td>66</td>
+      <td>0.600787</td>
+      <td>-0.116671</td>
       <td>5</td>
       <td>4</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78052</th>
+      <th>77947</th>
       <td>9999</td>
-      <td>63</td>
-      <td>63</td>
-      <td>-0.713182</td>
-      <td>-0.033429</td>
+      <td>146</td>
+      <td>129</td>
+      <td>0.182625</td>
+      <td>0.397837</td>
       <td>2</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78053</th>
+      <th>77948</th>
       <td>9999</td>
-      <td>168</td>
-      <td>63</td>
-      <td>0.905557</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>146</td>
+      <td>0.979173</td>
+      <td>0.182625</td>
       <td>3</td>
       <td>2</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78054</th>
+      <th>77949</th>
       <td>9999</td>
-      <td>168</td>
-      <td>168</td>
-      <td>0.576497</td>
-      <td>0.905557</td>
+      <td>149</td>
+      <td>146</td>
+      <td>0.382159</td>
+      <td>0.979173</td>
       <td>4</td>
       <td>3</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78055</th>
+      <th>77950</th>
       <td>9999</td>
-      <td>88</td>
-      <td>168</td>
-      <td>1.775734</td>
-      <td>0.576497</td>
+      <td>117</td>
+      <td>149</td>
+      <td>-0.436842</td>
+      <td>0.382159</td>
       <td>5</td>
       <td>4</td>
       <td>1</td>
@@ -1214,7 +1215,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>78056 rows × 9 columns</p>
+<p>77951 rows × 9 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1263,40 +1264,40 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -1311,40 +1312,40 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -1409,51 +1410,51 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.655954</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
-      <td>3</td>
-      <td>3</td>
+      <td>1</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>61</td>
-      <td>0.398841</td>
-      <td>4</td>
-      <td>5</td>
+      <td>51</td>
+      <td>-0.012235</td>
+      <td>2</td>
+      <td>3</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>1</td>
-      <td>106</td>
-      <td>-0.300658</td>
-      <td>1</td>
-      <td>2</td>
+      <td>0</td>
+      <td>44</td>
+      <td>-0.363884</td>
+      <td>4</td>
+      <td>5</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1</td>
-      <td>51</td>
-      <td>-0.884610</td>
-      <td>3</td>
-      <td>4</td>
-      <td>2</td>
+      <td>191</td>
+      <td>1.329782</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1</td>
-      <td>123</td>
-      <td>-0.112075</td>
+      <td>149</td>
+      <td>1.446614</td>
+      <td>2</td>
       <td>5</td>
-      <td>5</td>
-      <td>1</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
@@ -1467,50 +1468,50 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29682</th>
+      <th>29845</th>
       <td>9998</td>
-      <td>72</td>
-      <td>-0.496916</td>
-      <td>3</td>
-      <td>3</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29683</th>
-      <td>9998</td>
-      <td>67</td>
-      <td>0.906308</td>
-      <td>4</td>
+      <td>66</td>
+      <td>0.538122</td>
+      <td>2</td>
       <td>5</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29684</th>
-      <td>9999</td>
-      <td>63</td>
-      <td>-0.373306</td>
-      <td>1</td>
-      <td>2</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29685</th>
-      <td>9999</td>
-      <td>168</td>
-      <td>0.741027</td>
-      <td>3</td>
       <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29846</th>
+      <td>9999</td>
+      <td>129</td>
+      <td>0.397837</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29847</th>
+      <td>9999</td>
+      <td>146</td>
+      <td>0.580899</td>
+      <td>2</td>
+      <td>3</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29686</th>
+      <th>29848</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>149</td>
+      <td>0.382159</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29849</th>
+      <td>9999</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
       <td>5</td>
       <td>1</td>
@@ -1518,7 +1519,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>29687 rows × 7 columns</p>
+<p>29850 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1581,11 +1582,11 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>3.141983</td>
-      <td>3.141983</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.909060</td>
+      <td>-1.909060</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1596,11 +1597,11 @@ None
     </tr>
     <tr>
       <th>1</th>
-      <td>44</td>
-      <td>52</td>
-      <td>52</td>
-      <td>-0.677782</td>
-      <td>-0.677782</td>
+      <td>48</td>
+      <td>84</td>
+      <td>84</td>
+      <td>-0.705389</td>
+      <td>-0.705389</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1611,11 +1612,11 @@ None
     </tr>
     <tr>
       <th>2</th>
-      <td>54</td>
-      <td>183</td>
-      <td>183</td>
-      <td>1.273355</td>
-      <td>1.273355</td>
+      <td>57</td>
+      <td>142</td>
+      <td>142</td>
+      <td>1.312749</td>
+      <td>1.312749</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1626,11 +1627,11 @@ None
     </tr>
     <tr>
       <th>3</th>
-      <td>90</td>
-      <td>3</td>
-      <td>3</td>
-      <td>-0.021380</td>
-      <td>-0.021380</td>
+      <td>61</td>
+      <td>0</td>
+      <td>0</td>
+      <td>-0.878919</td>
+      <td>-0.878919</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1641,11 +1642,11 @@ None
     </tr>
     <tr>
       <th>4</th>
-      <td>109</td>
-      <td>37</td>
-      <td>37</td>
-      <td>-1.164623</td>
-      <td>-1.164623</td>
+      <td>62</td>
+      <td>74</td>
+      <td>74</td>
+      <td>0.111575</td>
+      <td>0.111575</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1670,83 +1671,83 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>20330</th>
+      <th>20528</th>
       <td>9997</td>
-      <td>174</td>
-      <td>85</td>
-      <td>1.438711</td>
-      <td>0.985225</td>
-      <td>2</td>
+      <td>24</td>
+      <td>27</td>
+      <td>-1.149961</td>
+      <td>-1.371562</td>
+      <td>1</td>
       <td>4</td>
       <td>5</td>
       <td>5</td>
-      <td>3.0</td>
+      <td>4.0</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20331</th>
+      <th>20529</th>
       <td>9998</td>
-      <td>83</td>
-      <td>72</td>
-      <td>0.110103</td>
-      <td>-0.496916</td>
+      <td>81</td>
+      <td>66</td>
+      <td>0.305160</td>
+      <td>0.538122</td>
+      <td>1</td>
       <td>1</td>
       <td>2</td>
-      <td>3</td>
-      <td>3</td>
-      <td>2.0</td>
-      <td>1</td>
+      <td>5</td>
+      <td>1.0</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20332</th>
-      <td>9998</td>
-      <td>72</td>
-      <td>67</td>
-      <td>-0.496916</td>
-      <td>0.906308</td>
+      <th>20530</th>
+      <td>9999</td>
+      <td>129</td>
+      <td>146</td>
+      <td>0.397837</td>
+      <td>0.580899</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
       <td>3</td>
-      <td>3</td>
-      <td>4</td>
-      <td>5</td>
       <td>1.0</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20333</th>
+      <th>20531</th>
       <td>9999</td>
-      <td>63</td>
-      <td>168</td>
-      <td>-0.373306</td>
-      <td>0.741027</td>
-      <td>1</td>
+      <td>146</td>
+      <td>149</td>
+      <td>0.580899</td>
+      <td>0.382159</td>
       <td>2</td>
       <td>3</td>
       <td>4</td>
+      <td>4</td>
       <td>2.0</td>
-      <td>2</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20334</th>
+      <th>20532</th>
       <td>9999</td>
-      <td>168</td>
-      <td>88</td>
-      <td>0.741027</td>
-      <td>1.775734</td>
-      <td>3</td>
+      <td>149</td>
+      <td>117</td>
+      <td>0.382159</td>
+      <td>-0.436842</td>
+      <td>4</td>
       <td>4</td>
       <td>5</td>
       <td>5</td>
-      <td>2.0</td>
+      <td>1.0</td>
       <td>1</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20335 rows × 12 columns</p>
+<p>20533 rows × 12 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1805,51 +1806,51 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.655954</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
-      <td>3</td>
-      <td>3.0</td>
+      <td>1</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>61</td>
-      <td>0.398841</td>
-      <td>4</td>
-      <td>5</td>
+      <td>51</td>
+      <td>-0.012235</td>
+      <td>2</td>
+      <td>3</td>
       <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>1</td>
-      <td>106</td>
-      <td>-0.300658</td>
-      <td>1</td>
-      <td>2</td>
+      <td>0</td>
+      <td>44</td>
+      <td>-0.363884</td>
+      <td>4</td>
+      <td>5</td>
       <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1</td>
-      <td>51</td>
-      <td>-0.884610</td>
-      <td>3</td>
-      <td>4</td>
-      <td>2.0</td>
+      <td>191</td>
+      <td>1.329782</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1</td>
-      <td>123</td>
-      <td>-0.112075</td>
+      <td>149</td>
+      <td>1.446614</td>
+      <td>2</td>
       <td>5</td>
-      <td>5</td>
-      <td>1.0</td>
+      <td>4.0</td>
       <td>1</td>
     </tr>
     <tr>
@@ -1863,50 +1864,50 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29682</th>
+      <th>29845</th>
       <td>9998</td>
-      <td>72</td>
-      <td>-0.496916</td>
-      <td>3</td>
-      <td>3</td>
+      <td>66</td>
+      <td>0.538122</td>
+      <td>2</td>
+      <td>5</td>
+      <td>4.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29846</th>
+      <td>9999</td>
+      <td>129</td>
+      <td>0.397837</td>
+      <td>1</td>
+      <td>1</td>
       <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29683</th>
-      <td>9998</td>
-      <td>67</td>
-      <td>0.906308</td>
-      <td>4</td>
-      <td>5</td>
-      <td>2.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29684</th>
+      <th>29847</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.373306</td>
-      <td>1</td>
+      <td>146</td>
+      <td>0.580899</td>
       <td>2</td>
-      <td>2.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29685</th>
-      <td>9999</td>
-      <td>168</td>
-      <td>0.741027</td>
       <td>3</td>
-      <td>4</td>
       <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29686</th>
+      <th>29848</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>149</td>
+      <td>0.382159</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29849</th>
+      <td>9999</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
       <td>5</td>
       <td>1.0</td>
@@ -1914,7 +1915,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>29687 rows × 7 columns</p>
+<p>29850 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1972,36 +1973,36 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
     </tr>
     <tr>
@@ -2014,36 +2015,36 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -2095,42 +2096,42 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
-      <td>4</td>
+      <td>3</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
-      <td>4</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
-      <td>4</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
-      <td>9</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
-      <td>9</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>...</th>
@@ -2143,42 +2144,42 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
-      <td>9</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
-      <td>9</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
-      <td>0</td>
+      <td>8</td>
     </tr>
   </tbody>
 </table>
@@ -2232,67 +2233,67 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.778039</td>
-      <td>2.778039</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.278795</td>
+      <td>-2.278795</td>
       <td>1</td>
       <td>1</td>
-      <td>6</td>
-      <td>6</td>
+      <td>9</td>
+      <td>9</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.454836</td>
-      <td>2.454836</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.207067</td>
+      <td>-2.207067</td>
       <td>2</td>
       <td>2</td>
-      <td>6</td>
-      <td>6</td>
+      <td>9</td>
+      <td>9</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>1.751138</td>
-      <td>1.751138</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-2.283169</td>
+      <td>-2.283169</td>
       <td>3</td>
       <td>3</td>
-      <td>6</td>
-      <td>6</td>
+      <td>9</td>
+      <td>9</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>4.830395</td>
-      <td>4.830395</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.276438</td>
+      <td>-1.276438</td>
       <td>4</td>
       <td>4</td>
-      <td>6</td>
-      <td>6</td>
+      <td>9</td>
+      <td>9</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>3.895506</td>
-      <td>3.895506</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.499829</td>
+      <td>-1.499829</td>
       <td>5</td>
       <td>5</td>
-      <td>6</td>
-      <td>6</td>
+      <td>9</td>
+      <td>9</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2309,73 +2310,73 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>40643</th>
+      <th>40678</th>
       <td>9998</td>
-      <td>67</td>
-      <td>67</td>
-      <td>1.595379</td>
-      <td>0.217236</td>
+      <td>66</td>
+      <td>66</td>
+      <td>-0.116671</td>
+      <td>0.600787</td>
       <td>4</td>
       <td>5</td>
-      <td>8</td>
-      <td>8</td>
+      <td>2</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40644</th>
+      <th>40679</th>
       <td>9999</td>
-      <td>63</td>
-      <td>63</td>
-      <td>-0.033429</td>
-      <td>-0.713182</td>
+      <td>129</td>
+      <td>146</td>
+      <td>0.397837</td>
+      <td>0.182625</td>
       <td>1</td>
       <td>2</td>
-      <td>9</td>
-      <td>9</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40645</th>
-      <td>9999</td>
-      <td>63</td>
-      <td>168</td>
-      <td>-0.713182</td>
-      <td>0.905557</td>
-      <td>2</td>
-      <td>3</td>
-      <td>9</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40646</th>
-      <td>9999</td>
-      <td>168</td>
-      <td>168</td>
-      <td>0.905557</td>
-      <td>0.576497</td>
-      <td>3</td>
-      <td>4</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>40647</th>
-      <td>9999</td>
-      <td>168</td>
-      <td>88</td>
-      <td>0.576497</td>
-      <td>1.775734</td>
-      <td>4</td>
-      <td>5</td>
-      <td>1</td>
+      <td>6</td>
       <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40680</th>
+      <td>9999</td>
+      <td>146</td>
+      <td>146</td>
+      <td>0.182625</td>
+      <td>0.979173</td>
+      <td>2</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40681</th>
+      <td>9999</td>
+      <td>146</td>
+      <td>149</td>
+      <td>0.979173</td>
+      <td>0.382159</td>
+      <td>3</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40682</th>
+      <td>9999</td>
+      <td>149</td>
+      <td>117</td>
+      <td>0.382159</td>
+      <td>-0.436842</td>
+      <td>4</td>
+      <td>5</td>
+      <td>0</td>
+      <td>8</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>40648 rows × 10 columns</p>
+<p>40683 rows × 10 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2425,56 +2426,56 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.655954</td>
+      <td>34</td>
+      <td>0.085399</td>
+      <td>1</td>
+      <td>1</td>
       <td>1</td>
       <td>3</td>
-      <td>3</td>
-      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>61</td>
-      <td>0.398841</td>
-      <td>4</td>
-      <td>5</td>
+      <td>51</td>
+      <td>-0.012235</td>
       <td>2</td>
-      <td>9</td>
+      <td>3</td>
+      <td>2</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>1</td>
-      <td>106</td>
-      <td>-0.300658</td>
-      <td>1</td>
+      <td>0</td>
+      <td>44</td>
+      <td>-0.363884</td>
+      <td>4</td>
+      <td>5</td>
       <td>2</td>
-      <td>2</td>
-      <td>3</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1</td>
-      <td>51</td>
-      <td>-0.884610</td>
-      <td>3</td>
+      <td>191</td>
+      <td>1.329782</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
       <td>4</td>
-      <td>2</td>
-      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1</td>
-      <td>123</td>
-      <td>-0.112075</td>
+      <td>149</td>
+      <td>1.446614</td>
+      <td>2</td>
       <td>5</td>
-      <td>5</td>
-      <td>1</td>
-      <td>5</td>
+      <td>4</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
@@ -2489,63 +2490,63 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29682</th>
+      <th>29845</th>
       <td>9998</td>
-      <td>72</td>
-      <td>-0.496916</td>
-      <td>3</td>
-      <td>3</td>
-      <td>1</td>
-      <td>9</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29683</th>
-      <td>9998</td>
-      <td>67</td>
-      <td>0.906308</td>
-      <td>4</td>
+      <td>66</td>
+      <td>0.538122</td>
+      <td>2</td>
       <td>5</td>
-      <td>2</td>
-      <td>8</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29684</th>
-      <td>9999</td>
-      <td>63</td>
-      <td>-0.373306</td>
-      <td>1</td>
-      <td>2</td>
-      <td>2</td>
-      <td>9</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29685</th>
-      <td>9999</td>
-      <td>168</td>
-      <td>0.741027</td>
-      <td>3</td>
       <td>4</td>
       <td>2</td>
       <td>1</td>
+    </tr>
+    <tr>
+      <th>29846</th>
+      <td>9999</td>
+      <td>129</td>
+      <td>0.397837</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29686</th>
+      <th>29847</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
-      <td>5</td>
-      <td>5</td>
+      <td>146</td>
+      <td>0.580899</td>
+      <td>2</td>
+      <td>3</td>
+      <td>2</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29848</th>
+      <td>9999</td>
+      <td>149</td>
+      <td>0.382159</td>
+      <td>4</td>
+      <td>4</td>
       <td>1</td>
       <td>0</td>
       <td>1</td>
     </tr>
+    <tr>
+      <th>29849</th>
+      <td>9999</td>
+      <td>117</td>
+      <td>-0.436842</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1</td>
+      <td>8</td>
+      <td>1</td>
+    </tr>
   </tbody>
 </table>
-<p>29687 rows × 8 columns</p>
+<p>29850 rows × 8 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2599,45 +2600,45 @@ None
   <tbody>
     <tr>
       <th>0</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>3.141983</td>
-      <td>3.141983</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.909060</td>
+      <td>-1.909060</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>6</td>
-      <td>6</td>
+      <td>9</td>
+      <td>9</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>44</td>
-      <td>52</td>
-      <td>52</td>
-      <td>-0.677782</td>
-      <td>-0.677782</td>
+      <td>48</td>
+      <td>84</td>
+      <td>84</td>
+      <td>-0.705389</td>
+      <td>-0.705389</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>8</td>
-      <td>8</td>
+      <td>2</td>
+      <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>54</td>
-      <td>183</td>
-      <td>183</td>
-      <td>1.273355</td>
-      <td>1.273355</td>
+      <td>57</td>
+      <td>142</td>
+      <td>142</td>
+      <td>1.312749</td>
+      <td>1.312749</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -2650,36 +2651,36 @@ None
     </tr>
     <tr>
       <th>3</th>
-      <td>90</td>
-      <td>3</td>
-      <td>3</td>
-      <td>-0.021380</td>
-      <td>-0.021380</td>
+      <td>61</td>
+      <td>0</td>
+      <td>0</td>
+      <td>-0.878919</td>
+      <td>-0.878919</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>7</td>
-      <td>7</td>
+      <td>5</td>
+      <td>5</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>109</td>
-      <td>37</td>
-      <td>37</td>
-      <td>-1.164623</td>
-      <td>-1.164623</td>
+      <td>62</td>
+      <td>74</td>
+      <td>74</td>
+      <td>0.111575</td>
+      <td>0.111575</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>4</td>
-      <td>4</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2700,93 +2701,93 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>20330</th>
+      <th>20528</th>
       <td>9997</td>
-      <td>174</td>
-      <td>85</td>
-      <td>1.438711</td>
-      <td>0.985225</td>
-      <td>2</td>
+      <td>24</td>
+      <td>27</td>
+      <td>-1.149961</td>
+      <td>-1.371562</td>
+      <td>1</td>
       <td>4</td>
       <td>5</td>
       <td>5</td>
-      <td>3.0</td>
+      <td>4.0</td>
       <td>1</td>
+      <td>9</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20529</th>
+      <td>9998</td>
+      <td>81</td>
+      <td>66</td>
+      <td>0.305160</td>
+      <td>0.538122</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>5</td>
+      <td>1.0</td>
+      <td>4</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20530</th>
+      <td>9999</td>
+      <td>129</td>
+      <td>146</td>
+      <td>0.397837</td>
+      <td>0.580899</td>
+      <td>1</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>1.0</td>
+      <td>2</td>
       <td>6</td>
       <td>0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20331</th>
-      <td>9998</td>
-      <td>83</td>
-      <td>72</td>
-      <td>0.110103</td>
-      <td>-0.496916</td>
-      <td>1</td>
+      <th>20531</th>
+      <td>9999</td>
+      <td>146</td>
+      <td>149</td>
+      <td>0.580899</td>
+      <td>0.382159</td>
       <td>2</td>
       <td>3</td>
-      <td>3</td>
+      <td>4</td>
+      <td>4</td>
       <td>2.0</td>
       <td>1</td>
       <td>0</td>
-      <td>9</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20332</th>
-      <td>9998</td>
-      <td>72</td>
-      <td>67</td>
-      <td>-0.496916</td>
-      <td>0.906308</td>
-      <td>3</td>
-      <td>3</td>
+      <th>20532</th>
+      <td>9999</td>
+      <td>149</td>
+      <td>117</td>
+      <td>0.382159</td>
+      <td>-0.436842</td>
       <td>4</td>
+      <td>4</td>
+      <td>5</td>
       <td>5</td>
       <td>1.0</td>
-      <td>2</td>
-      <td>9</td>
-      <td>8</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20333</th>
-      <td>9999</td>
-      <td>63</td>
-      <td>168</td>
-      <td>-0.373306</td>
-      <td>0.741027</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>4</td>
-      <td>2.0</td>
-      <td>2</td>
-      <td>9</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20334</th>
-      <td>9999</td>
-      <td>168</td>
-      <td>88</td>
-      <td>0.741027</td>
-      <td>1.775734</td>
-      <td>3</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>2.0</td>
-      <td>1</td>
       <td>1</td>
       <td>0</td>
+      <td>8</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20335 rows × 14 columns</p>
+<p>20533 rows × 14 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2794,18 +2795,9 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;j&#39;</span><span class="p">)</span>
+<span></span><span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;g&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-../../../bipartitepandas/bipartitebase.py:285: UserWarning: j is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
-  warnings.warn(&#34;{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)&#34;.format(col))
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[18]:
@@ -2841,95 +2833,83 @@ None
       <th>t22</th>
       <th>w1</th>
       <th>w2</th>
-      <th>g1</th>
-      <th>g2</th>
       <th>m</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
-      <td>24</td>
-      <td>192</td>
-      <td>192</td>
-      <td>3.141983</td>
-      <td>3.141983</td>
+      <td>6</td>
+      <td>12</td>
+      <td>12</td>
+      <td>-1.909060</td>
+      <td>-1.909060</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>6</td>
-      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>44</td>
-      <td>52</td>
-      <td>52</td>
-      <td>-0.677782</td>
-      <td>-0.677782</td>
+      <td>48</td>
+      <td>84</td>
+      <td>84</td>
+      <td>-0.705389</td>
+      <td>-0.705389</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>8</td>
-      <td>8</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>54</td>
-      <td>183</td>
-      <td>183</td>
-      <td>1.273355</td>
-      <td>1.273355</td>
+      <td>57</td>
+      <td>142</td>
+      <td>142</td>
+      <td>1.312749</td>
+      <td>1.312749</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>6</td>
-      <td>6</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>90</td>
-      <td>3</td>
-      <td>3</td>
-      <td>-0.021380</td>
-      <td>-0.021380</td>
+      <td>61</td>
+      <td>0</td>
+      <td>0</td>
+      <td>-0.878919</td>
+      <td>-0.878919</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>7</td>
-      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>109</td>
-      <td>37</td>
-      <td>37</td>
-      <td>-1.164623</td>
-      <td>-1.164623</td>
+      <td>62</td>
+      <td>74</td>
+      <td>74</td>
+      <td>0.111575</td>
+      <td>0.111575</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>4</td>
-      <td>4</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2946,97 +2926,85 @@ None
       <td>...</td>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
-      <td>...</td>
     </tr>
     <tr>
-      <th>20330</th>
+      <th>20528</th>
       <td>9997</td>
-      <td>174</td>
-      <td>85</td>
-      <td>1.438711</td>
-      <td>0.985225</td>
-      <td>2</td>
+      <td>24</td>
+      <td>27</td>
+      <td>-1.149961</td>
+      <td>-1.371562</td>
+      <td>1</td>
       <td>4</td>
       <td>5</td>
       <td>5</td>
-      <td>3.0</td>
+      <td>4.0</td>
       <td>1</td>
-      <td>6</td>
-      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20331</th>
+      <th>20529</th>
       <td>9998</td>
-      <td>83</td>
-      <td>72</td>
-      <td>0.110103</td>
-      <td>-0.496916</td>
+      <td>81</td>
+      <td>66</td>
+      <td>0.305160</td>
+      <td>0.538122</td>
+      <td>1</td>
       <td>1</td>
       <td>2</td>
-      <td>3</td>
-      <td>3</td>
-      <td>2.0</td>
-      <td>1</td>
-      <td>0</td>
-      <td>9</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20332</th>
-      <td>9998</td>
-      <td>72</td>
-      <td>67</td>
-      <td>-0.496916</td>
-      <td>0.906308</td>
-      <td>3</td>
-      <td>3</td>
-      <td>4</td>
       <td>5</td>
       <td>1.0</td>
-      <td>2</td>
-      <td>9</td>
-      <td>8</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20333</th>
+      <th>20530</th>
       <td>9999</td>
-      <td>63</td>
-      <td>168</td>
-      <td>-0.373306</td>
-      <td>0.741027</td>
+      <td>129</td>
+      <td>146</td>
+      <td>0.397837</td>
+      <td>0.580899</td>
+      <td>1</td>
       <td>1</td>
       <td>2</td>
       <td>3</td>
+      <td>1.0</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20531</th>
+      <td>9999</td>
+      <td>146</td>
+      <td>149</td>
+      <td>0.580899</td>
+      <td>0.382159</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
       <td>4</td>
       <td>2.0</td>
-      <td>2</td>
-      <td>9</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20334</th>
+      <th>20532</th>
       <td>9999</td>
-      <td>168</td>
-      <td>88</td>
-      <td>0.741027</td>
-      <td>1.775734</td>
-      <td>3</td>
+      <td>149</td>
+      <td>117</td>
+      <td>0.382159</td>
+      <td>-0.436842</td>
+      <td>4</td>
       <td>4</td>
       <td>5</td>
       <td>5</td>
-      <td>2.0</td>
+      <td>1.0</td>
       <td>1</td>
-      <td>1</td>
-      <td>0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20335 rows × 14 columns</p>
+<p>20533 rows × 12 columns</p>
 </div></div>
 </div>
 </div>
@@ -3047,7 +3015,7 @@ None
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># We can cluster on a specific year in long form</span>
+<span></span><span class="c1"># We can cluster on a specific year with non-collapsed data</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">({</span><span class="s1">&#39;year&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
@@ -3088,42 +3056,42 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
-      <td>0</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
-      <td>0</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
-      <td>5</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
-      <td>5</td>
+      <td>9</td>
     </tr>
     <tr>
       <th>...</th>
@@ -3136,42 +3104,42 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
-      <td>5</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
-      <td>5</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
-      <td>7</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
-      <td>7</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
-      <td>9</td>
+      <td>4</td>
     </tr>
   </tbody>
 </table>
@@ -3226,46 +3194,46 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
-      <td>7</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
-      <td>7</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
-      <td>7</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
-      <td>3</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
-      <td>3</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3280,35 +3248,35 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
-      <td>7</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
-      <td>7</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
-      <td>5</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
@@ -3316,10 +3284,10 @@ None
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
-      <td>6</td>
+      <td>4</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -3375,46 +3343,46 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
-      <td>6</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
-      <td>6</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
-      <td>6</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
-      <td>3</td>
+      <td>9</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
-      <td>3</td>
+      <td>9</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3427,53 +3395,53 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>47653</th>
+      <th>47972</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
-      <td>6</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>47654</th>
+      <th>47973</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
-      <td>6</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>47655</th>
+      <th>47974</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
-      <td>4</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>47656</th>
+      <th>47975</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
-      <td>4</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>47657</th>
-      <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
       <td>5</td>
-      <td>8</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>47976</th>
+      <td>9999</td>
+      <td>117</td>
+      <td>-0.436842</td>
+      <td>5</td>
+      <td>0</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>47658 rows × 6 columns</p>
+<p>47977 rows × 6 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -3523,46 +3491,46 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.952726</td>
+      <td>34</td>
+      <td>0.085399</td>
       <td>1</td>
-      <td>6</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.474339</td>
+      <td>51</td>
+      <td>0.272650</td>
       <td>2</td>
-      <td>6</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>0.540798</td>
+      <td>51</td>
+      <td>-0.297119</td>
       <td>3</td>
-      <td>6</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>61</td>
-      <td>1.086038</td>
+      <td>44</td>
+      <td>-1.042264</td>
       <td>4</td>
-      <td>0</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>61</td>
-      <td>-0.288355</td>
+      <td>44</td>
+      <td>0.314497</td>
       <td>5</td>
-      <td>0</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3577,8 +3545,8 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.033429</td>
+      <td>129</td>
+      <td>0.397837</td>
       <td>1</td>
       <td>0</td>
       <td>1</td>
@@ -3586,37 +3554,37 @@ None
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>63</td>
-      <td>-0.713182</td>
+      <td>146</td>
+      <td>0.182625</td>
       <td>2</td>
-      <td>0</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.905557</td>
+      <td>146</td>
+      <td>0.979173</td>
       <td>3</td>
-      <td>5</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.576497</td>
+      <td>149</td>
+      <td>0.382159</td>
       <td>4</td>
-      <td>5</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>88</td>
-      <td>1.775734</td>
+      <td>117</td>
+      <td>-0.436842</td>
       <td>5</td>
-      <td>9</td>
+      <td>5</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -3650,9 +3618,9 @@ format: BipartiteLong
 number of workers: 10000
 number of firms: 195
 number of observations: 50000
-mean wage: 0.4094721354395219
-max wage: 5.711858492858829
-min wage: -4.93382044356057
+mean wage: 0.3893386011808661
+max wage: 5.6953531568707865
+min wage: -5.072150043735375
 connected: False
 contiguous i ids (None if not included): False
 contiguous j ids (None if not included): False
@@ -3666,9 +3634,9 @@ format: BipartiteLong
 number of workers: 10000
 number of firms: 195
 number of observations: 50000
-mean wage: 0.4094721354395219
-max wage: 5.711858492858829
-min wage: -4.93382044356057
+mean wage: 0.3893386011808661
+max wage: 5.6953531568707865
+min wage: -5.072150043735375
 connected: True
 contiguous i ids (None if not included): True
 contiguous j ids (None if not included): True
@@ -3685,7 +3653,282 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># BipartiteData does some nice column inference</span>
+<span></span><span class="c1"># If you set include_id_reference_dict=True, BipartitePandas saves dataframes linking original column ids to contiguous column ids</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">id_reference_dict</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">])</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Notice this fails, as include_id_reference_dict has not been set to True&#39;</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">include_id_reference_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">id_reference_dict</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">])</span> <span class="c1"># Notice it&#39;s empty as the ids were originally contiguous</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="p">[</span><span class="n">bdf</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">200</span><span class="p">]</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">id_reference_dict</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">])</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="p">[</span><span class="n">bdf</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">99</span><span class="p">]</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">id_reference_dict</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">])</span> <span class="c1"># Now ids are approximately - 100 as we dropped the first 100 rows (but because some workers might no longer in the largest connected set of firms, more than 100 rows can be dropped)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">id_reference_dict</span><span class="p">[</span><span class="s1">&#39;j&#39;</span><span class="p">])</span> <span class="c1"># Notice firm ids adjusted from both steps</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Notice this fails, as include_id_reference_dict has not been set to True
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+</div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>original_ids</th>
+      <th>adjusted_ids_1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>100</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>101</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>103</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>104</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>105</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>87</th>
+      <td>195</td>
+      <td>87</td>
+    </tr>
+    <tr>
+      <th>88</th>
+      <td>196</td>
+      <td>88</td>
+    </tr>
+    <tr>
+      <th>89</th>
+      <td>197</td>
+      <td>89</td>
+    </tr>
+    <tr>
+      <th>90</th>
+      <td>198</td>
+      <td>90</td>
+    </tr>
+    <tr>
+      <th>91</th>
+      <td>199</td>
+      <td>91</td>
+    </tr>
+  </tbody>
+</table>
+<p>92 rows × 2 columns</p>
+</div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>original_ids</th>
+      <th>adjusted_ids_1</th>
+      <th>adjusted_ids_2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>2</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>3</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>4</td>
+      <td>4</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>181</th>
+      <td>190</td>
+      <td>181</td>
+      <td>137</td>
+    </tr>
+    <tr>
+      <th>182</th>
+      <td>191</td>
+      <td>182</td>
+      <td>138</td>
+    </tr>
+    <tr>
+      <th>183</th>
+      <td>192</td>
+      <td>183</td>
+      <td>139</td>
+    </tr>
+    <tr>
+      <th>184</th>
+      <td>193</td>
+      <td>184</td>
+      <td>140</td>
+    </tr>
+    <tr>
+      <th>185</th>
+      <td>194</td>
+      <td>185</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+  </tbody>
+</table>
+<p>186 rows × 3 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># BipartitePandas does some nice column inference</span>
 <span class="c1"># Suppose some of our columns are mislabeled - create a col_dict to clarify which columns to correct</span>
 <span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;i1&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -3727,36 +3970,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>151</td>
-      <td>2.793562</td>
+      <td>15</td>
+      <td>0.793047</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>185</td>
-      <td>2.759244</td>
+      <td>99</td>
+      <td>-2.602358</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>148</td>
-      <td>1.670277</td>
+      <td>21</td>
+      <td>-2.860965</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>148</td>
-      <td>1.550945</td>
+      <td>21</td>
+      <td>-2.464436</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>148</td>
-      <td>4.409614</td>
+      <td>21</td>
+      <td>-3.208799</td>
       <td>5</td>
     </tr>
     <tr>
@@ -3769,36 +4012,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>6</td>
-      <td>-0.514519</td>
+      <td>54</td>
+      <td>-0.113751</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>9</td>
-      <td>-1.789648</td>
+      <td>19</td>
+      <td>0.095793</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>9</td>
-      <td>-1.024662</td>
+      <td>19</td>
+      <td>-0.855997</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>83</td>
-      <td>-0.359822</td>
+      <td>120</td>
+      <td>-0.239286</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>23</td>
-      <td>-0.533275</td>
+      <td>90</td>
+      <td>-1.109910</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -3807,7 +4050,7 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3853,40 +4096,40 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>13</td>
-      <td>-1.207671</td>
+      <td>21</td>
+      <td>-1.754394</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>104</td>
-      <td>1.967847</td>
+      <td>13</td>
+      <td>-0.127063</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>104</td>
-      <td>0.818615</td>
+      <td>19</td>
+      <td>-1.565290</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>104</td>
-      <td>0.807060</td>
+      <td>50</td>
+      <td>-0.663289</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>104</td>
-      <td>-0.253553</td>
+      <td>50</td>
+      <td>-1.115333</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -3901,40 +4144,40 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>144</td>
-      <td>1.376596</td>
+      <td>95</td>
+      <td>-0.144884</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>144</td>
-      <td>-0.047536</td>
+      <td>155</td>
+      <td>0.435689</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>136</td>
-      <td>-0.161501</td>
+      <td>106</td>
+      <td>0.213675</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>168</td>
-      <td>0.465900</td>
+      <td>106</td>
+      <td>1.334241</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>8</td>
-      <td>-2.298033</td>
+      <td>106</td>
+      <td>-0.691502</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -3944,7 +4187,7 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -3989,36 +4232,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>21</td>
-      <td>0.062592</td>
+      <td>104</td>
+      <td>1.252429</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>21</td>
-      <td>-0.456544</td>
+      <td>104</td>
+      <td>0.595987</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>21</td>
-      <td>-2.770036</td>
+      <td>104</td>
+      <td>0.613011</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>21</td>
-      <td>-1.382892</td>
+      <td>104</td>
+      <td>0.844392</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>21</td>
-      <td>-0.825303</td>
+      <td>104</td>
+      <td>-0.077763</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4031,36 +4274,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>5</td>
-      <td>-2.204360</td>
+      <td>72</td>
+      <td>-1.722204</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>5</td>
-      <td>-1.394854</td>
+      <td>121</td>
+      <td>0.824762</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>5</td>
-      <td>-0.929210</td>
+      <td>121</td>
+      <td>-2.282874</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>5</td>
-      <td>-2.303955</td>
+      <td>149</td>
+      <td>0.605612</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>5</td>
-      <td>-2.178099</td>
+      <td>116</td>
+      <td>-1.082123</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4069,7 +4312,7 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -4115,40 +4358,40 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>116</td>
-      <td>0.280961</td>
+      <td>2</td>
+      <td>-1.237287</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>189</td>
-      <td>1.210483</td>
+      <td>11</td>
+      <td>-1.864289</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>115</td>
-      <td>0.032939</td>
+      <td>49</td>
+      <td>-0.371723</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>115</td>
-      <td>2.073132</td>
+      <td>67</td>
+      <td>-0.429302</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>115</td>
-      <td>1.847687</td>
+      <td>67</td>
+      <td>-0.468308</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4163,40 +4406,40 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>24</td>
-      <td>-0.868337</td>
+      <td>23</td>
+      <td>-2.008774</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>24</td>
-      <td>-0.416034</td>
+      <td>18</td>
+      <td>-0.961762</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>113</td>
-      <td>1.561720</td>
+      <td>18</td>
+      <td>-0.877630</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>26</td>
-      <td>0.621665</td>
+      <td>18</td>
+      <td>-0.144286</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>26</td>
-      <td>0.132576</td>
+      <td>18</td>
+      <td>0.529688</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4206,7 +4449,7 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -4252,36 +4495,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>68</td>
-      <td>0.844533</td>
+      <td>73</td>
+      <td>0.421496</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>68</td>
-      <td>1.041385</td>
+      <td>73</td>
+      <td>0.338802</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>158</td>
-      <td>1.798281</td>
+      <td>73</td>
+      <td>0.626823</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>158</td>
-      <td>0.685374</td>
+      <td>88</td>
+      <td>0.760244</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>158</td>
-      <td>1.685144</td>
+      <td>88</td>
+      <td>1.601247</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4294,36 +4537,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>67</td>
-      <td>1.530783</td>
+      <td>69</td>
+      <td>-0.788912</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>67</td>
-      <td>-0.473979</td>
+      <td>2</td>
+      <td>-3.008116</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>67</td>
-      <td>0.289837</td>
+      <td>2</td>
+      <td>0.535798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>67</td>
-      <td>0.113632</td>
+      <td>2</td>
+      <td>-1.091005</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>125</td>
-      <td>1.904025</td>
+      <td>2</td>
+      <td>-0.106400</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4332,26 +4575,142 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Dropping an optional column</span>
-<span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;g1&#39;</span><span class="p">)</span>
+<span class="n">bdf</span><span class="o">.</span><span class="n">gen_m</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
+<span class="n">bdf</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;m&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
 <div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area stderr docutils container">
-<div class="highlight"><pre>
-../../../bipartitepandas/bipartitebase.py:287: UserWarning: g1 is not in data columns
-  warnings.warn(&#39;{} is not in data columns&#39;.format(col))
-</pre></div></div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>73</td>
+      <td>0.421496</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>73</td>
+      <td>0.338802</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>73</td>
+      <td>0.626823</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>88</td>
+      <td>0.760244</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>88</td>
+      <td>1.601247</td>
+      <td>5</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49995</th>
+      <td>9999</td>
+      <td>69</td>
+      <td>-0.788912</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49996</th>
+      <td>9999</td>
+      <td>2</td>
+      <td>-3.008116</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49997</th>
+      <td>9999</td>
+      <td>2</td>
+      <td>0.535798</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49998</th>
+      <td>9999</td>
+      <td>2</td>
+      <td>-1.091005</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49999</th>
+      <td>9999</td>
+      <td>2</td>
+      <td>-0.106400</td>
+      <td>5</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>50000 rows × 5 columns</p>
+</div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -4383,36 +4742,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>68</td>
-      <td>0.844533</td>
+      <td>73</td>
+      <td>0.421496</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>68</td>
-      <td>1.041385</td>
+      <td>73</td>
+      <td>0.338802</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>158</td>
-      <td>1.798281</td>
+      <td>73</td>
+      <td>0.626823</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>158</td>
-      <td>0.685374</td>
+      <td>88</td>
+      <td>0.760244</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>158</td>
-      <td>1.685144</td>
+      <td>88</td>
+      <td>1.601247</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4425,36 +4784,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>67</td>
-      <td>1.530783</td>
+      <td>69</td>
+      <td>-0.788912</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>67</td>
-      <td>-0.473979</td>
+      <td>2</td>
+      <td>-3.008116</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>67</td>
-      <td>0.289837</td>
+      <td>2</td>
+      <td>0.535798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>67</td>
-      <td>0.113632</td>
+      <td>2</td>
+      <td>-1.091005</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>125</td>
-      <td>1.904025</td>
+      <td>2</td>
+      <td>-0.106400</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4463,7 +4822,7 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -4477,12 +4836,12 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-../../../bipartitepandas/bipartitebase.py:285: UserWarning: i is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
+../../../bipartitepandas/bipartitebase.py:298: UserWarning: i is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
   warnings.warn(&#34;{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)&#34;.format(col))
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -4514,36 +4873,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>68</td>
-      <td>0.844533</td>
+      <td>73</td>
+      <td>0.421496</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>68</td>
-      <td>1.041385</td>
+      <td>73</td>
+      <td>0.338802</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>158</td>
-      <td>1.798281</td>
+      <td>73</td>
+      <td>0.626823</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>158</td>
-      <td>0.685374</td>
+      <td>88</td>
+      <td>0.760244</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>158</td>
-      <td>1.685144</td>
+      <td>88</td>
+      <td>1.601247</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4556,36 +4915,36 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>67</td>
-      <td>1.530783</td>
+      <td>69</td>
+      <td>-0.788912</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>67</td>
-      <td>-0.473979</td>
+      <td>2</td>
+      <td>-3.008116</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>67</td>
-      <td>0.289837</td>
+      <td>2</td>
+      <td>0.535798</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>67</td>
-      <td>0.113632</td>
+      <td>2</td>
+      <td>-1.091005</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>125</td>
-      <td>1.904025</td>
+      <td>2</td>
+      <td>-0.106400</td>
       <td>5</td>
     </tr>
   </tbody>

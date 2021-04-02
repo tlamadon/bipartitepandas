@@ -11,15 +11,16 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
     Arguments:
         *args: arguments for Pandas DataFrame
         col_dict (dict): make data columns readable (requires: i (worker id), j (firm id), y (compensation), t1 (first period in spell), t2 (last period in spell); optionally include: w (weight), g (firm cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct
+        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
 
-    def __init__(self, *args, col_dict=None, **kwargs):
+    def __init__(self, *args, col_dict=None, include_id_reference_dict=False, **kwargs):
         columns_opt = ['w']
         reference_dict = {'t': ['t1', 't2'], 'w': 'w'}
         col_dtype_dict = {'w': 'float'}
         # Initialize DataFrame
-        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
+        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
         # self.logger.info('BipartiteLongCollapsed object initialized')
 

@@ -191,7 +191,7 @@
 <h1>BipartiteLong class<a class="headerlink" href="#bipartitelong-class" title="Permalink to this headline">¶</a></h1>
 <dl class="py class">
 <dt id="bipartitepandas.bipartitelong.BipartiteLong">
-<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartitelong.</code><code class="sig-name descname">BipartiteLong</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelong.BipartiteLong" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartitelong.</code><code class="sig-name descname">BipartiteLong</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_id_reference_dict</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelong.BipartiteLong" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">bipartitepandas.bipartitelongbase.BipartiteLongBase</span></code></p>
 <p>Class for bipartite networks of firms and workers in long form. Inherits from BipartiteLongBase.</p>
 <dl class="field-list simple">
@@ -199,6 +199,7 @@
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
 <li><p><strong>col_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct</p></li>
+<li><p><strong>include_id_reference_dict</strong> (<em>bool</em>) – if True, create dictionary of Pandas dataframes linking original id values to contiguous id values</p></li>
 <li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
 </ul>
 </dd>

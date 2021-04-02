@@ -16,15 +16,16 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}
         col_dtype_dict (dict): link column to datatype
         col_dict (dict or None): make data columns readable. Keep None if column names already correct
+        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
 
-    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig={}, reference_dict={}, col_dtype_dict={}, col_dict=None, **kwargs):
+    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig={}, reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
         if 't' not in columns_opt:
             columns_opt = ['t'] + columns_opt
         reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2']}, reference_dict)
         # Initialize DataFrame
-        super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, columns_contig=columns_contig, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, **kwargs)
+        super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, columns_contig=columns_contig, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
         # self.logger.info('BipartiteEventStudyBase object initialized')
 
@@ -133,12 +134,15 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return data_cs
 
-    def get_long(self):
+    def get_long(self, return_df=False):
         '''
         Return (collapsed) event study data reformatted into (collapsed) long form.
 
+        Arguments:
+            return_df (bool): if True, return a Pandas dataframe instead of a BipartiteLong(Collapsed) dataframe
+
         Returns:
-            long_frame (BipartiteLong(Collapsed)): BipartiteLong(Collapsed) object generated from (collapsed) event study data
+            long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
         # Generate m column (the function checks if it already exists)
         self.gen_m()
@@ -160,12 +164,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 for i in range(halfway):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
                     rename_dict_1[subcols[halfway + i]] = subcols[i]
-                    rename_dict_2[subcols[i]] = subcols[2 * i][: len(subcols[2 * i]) - 1] # Get rid of number, e.g. j1 to j
+                    subcol_number = subcols[i].strip(col) # E.g. j1 will give 1
+                    rename_dict_2[subcols[i]] = col + subcol_number[1:] # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
                     if self.col_dtype_dict[col] == 'int':
                         astype_dict[rename_dict_2[subcols[i]]] = int
 
                     drops.append(subcols[halfway + i])
-                    
+
             else:
                 # Check correct type for other columns
                 if self.col_dtype_dict[col] == 'int':
@@ -188,10 +193,16 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        try: # Long
+        try: # Long FIXME try to do this without try/except
             data_long = data_long[sorted_cols].sort_values(['i', 't']).reset_index(drop=True)
-        except KeyError: # Collapsed long
-            data_long = data_long[sorted_cols].sort_values(['i', 't1']).reset_index(drop=True)
+        except KeyError:
+            try: # Collapsed long
+                data_long = data_long[sorted_cols].sort_values(['i', 't1']).reset_index(drop=True)
+            except KeyError: # No time column
+                data_long = data_long[sorted_cols].sort_values(['i']).reset_index(drop=True)
+
+        if return_df:
+            return data_long
 
         long_frame = self._constructor_long(data_long)
         long_frame.set_attributes(self, no_dict=True)

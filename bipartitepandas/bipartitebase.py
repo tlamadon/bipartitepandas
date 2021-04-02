@@ -25,11 +25,12 @@ class BipartiteBase(DataFrame):
         reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}
         col_dtype_dict (dict): link column to datatype
         col_dict (dict or None): make data columns readable. Keep None if column names already correct
+        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
 
-    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, **kwargs):
+    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
         # Initialize DataFrame
         super().__init__(*args, **kwargs)
 
@@ -44,6 +45,10 @@ class BipartiteBase(DataFrame):
             self.columns_opt = ['g', 'm'] + columns_opt
             self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
             self.reference_dict = update_dict({'i': 'i', 'm': 'm'}, reference_dict)
+            if include_id_reference_dict:
+                self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()} # Link original id values to contiguous id values
+            else:
+                self.id_reference_dict = {}
             self.col_dtype_dict = update_dict({'i': 'int', 'j': 'int', 'y': 'float', 't': 'int', 'g': 'int', 'm': 'int'}, col_dtype_dict)
             default_col_dict = {}
             for col in to_list(self.columns_req):
@@ -80,6 +85,7 @@ class BipartiteBase(DataFrame):
             'stayers_movers': None,
             't': None,
             'dropna': False,
+            'weighted': True,
             'user_KMeans': self.default_KMeans
         }
 
@@ -186,6 +192,11 @@ class BipartiteBase(DataFrame):
             self.col_dtype_dict = frame.col_dtype_dict.copy()
             self.col_dict = frame.col_dict.copy()
         self.columns_contig = frame.columns_contig.copy() # Required, even if no_dict
+        self.id_reference_dict = {} # Required, even if no_dict
+        if frame.id_reference_dict:
+            # Must do a deep copy
+            for id_col, reference_df in frame.id_reference_dict.items():
+                self.id_reference_dict[id_col] = reference_df.copy()
         # Booleans
         self.connected = frame.connected # If True, all firms are connected by movers
         self.correct_cols = frame.correct_cols # If True, column names are correct
@@ -279,6 +290,8 @@ class BipartiteBase(DataFrame):
                             frame.col_dict[subcol] = None
                         if col in frame.columns_contig.keys(): # If column contiguous
                             frame.columns_contig[col] = None
+                            if frame.id_reference_dict: # If id_reference_dict has been initialized
+                                frame.id_reference_dict[col] = pd.DataFrame()
                     elif col not in frame.included_cols() and col not in frame.included_cols(flat=True): # If column is not pre-established
                         DataFrame.drop(frame, col, axis=1, inplace=True)
                     else:
@@ -320,6 +333,8 @@ class BipartiteBase(DataFrame):
                         frame.col_dict[col_cur] = None
                     if col_cur in frame.columns_contig.keys(): # If column contiguous
                             frame.columns_contig[col_cur] = None
+                            if frame.id_reference_dict: # If id_reference_dict has been initialized
+                                frame.id_reference_dict[col_cur] = pd.DataFrame()
                 elif col_cur not in frame.included_cols() and col_cur not in frame.included_cols(flat=True): # If column is not pre-established
                         DataFrame.rename(frame, {col_cur: col_new}, axis=1, inplace=True)
                 else:
@@ -366,6 +381,16 @@ class BipartiteBase(DataFrame):
 
         # Create list of adjusted ids
         adjusted_ids = np.arange(len(ids)).astype(int)
+
+        # Save id reference dataframe, so user can revert back to original ids
+        if frame.id_reference_dict: # If id_reference_dict has been initialized
+            if len(frame.id_reference_dict[id_col]) == 0: # If dataframe empty, start with original ids: adjusted ids
+                frame.id_reference_dict[id_col]['original_ids'] = ids
+                frame.id_reference_dict[id_col]['adjusted_ids_1'] = adjusted_ids
+            else: # Merge in new adjustment step
+                n_cols = len(frame.id_reference_dict[id_col].columns)
+                id_reference_df = pd.DataFrame({'adjusted_ids_' + str(n_cols - 1): ids, 'adjusted_ids_' + str(n_cols): adjusted_ids}, index=adjusted_ids).astype('Int64')
+                frame.id_reference_dict[id_col] = frame.id_reference_dict[id_col].merge(id_reference_df, how='left', on='adjusted_ids_' + str(n_cols - 1))
 
         # Update each fid one at a time
         for id in to_list(self.reference_dict[id_col]):
@@ -756,7 +781,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def approx_cdfs(self, cdf_resolution=10, grouping='quantile_all', stayers_movers=None, t=None):
+    def approx_cdfs(self, cdf_resolution=10, grouping='quantile_all', stayers_movers=None, t=None, weighted=True):
         '''
         Generate cdfs of compensation for firms.
 
@@ -765,36 +790,51 @@ class BipartiteBase(DataFrame):
             grouping (str): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
             stayers_movers (str or None): if None, uses entire dataset; if 'stayers', uses only stayers; if 'movers', uses only movers
             t (int or None): if None, uses entire dataset; if int, gives time in data to consider (only valid for BipartiteLong)
+            weighted (bool): if True, compute firm weights
 
         Returns:
             cdf_df (NumPy Array): NumPy array of firm cdfs
+            weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
             jids (NumPy Array): firm ids of firms in subset of data used to cluster
         '''
-        if stayers_movers is not None:
+        if stayers_movers is not None: # Note this condition is split into two sections, one prior to stacking event study data and one post
             # Generate m column (the function checks if it already exists)
             self.gen_m()
-            if stayers_movers == 'stayers':
-                data = pd.DataFrame(self[self['m'] == 0])
-            elif stayers_movers == 'movers':
-                data = pd.DataFrame(self[self['m'] == 1])
+
+        # Stack data if event study (need all data in 1 column)
+        if len(to_list(self.reference_dict['j'])) == 2:
+            frame = self.get_long(return_df=True) # Returns Pandas dataframe, not BipartiteLong(Collapsed)
         else:
-            data = pd.DataFrame(self)
+            frame = self
+
+        if stayers_movers is not None:
+            if stayers_movers == 'stayers':
+                data = pd.DataFrame(frame[frame['m'] == 0])
+            elif stayers_movers == 'movers':
+                data = pd.DataFrame(frame[frame['m'] == 1])
+        else:
+            data = pd.DataFrame(frame)
 
         # If period-level, then only use data for that particular period
         if t is not None:
             if len(to_list(self.reference_dict['t'])) == 1:
                 data = data[data['t'] == t]
             else:
-                warnings.warn('Cannot use data from a particular period on non-BipartiteLong data. Convert into BipartiteLong to cluster only on a particular period')
+                warnings.warn('Cannot use data from a particular period on collapsed data, proceeding to cluster on all data')
 
         # Create empty numpy array to fill with the cdfs
-        if len(to_list(self.reference_dict['j'])) == 2: # If Event Study
-            # n_firms = len(set(list(data['f1i'].unique()) + list(data['f2i'].unique()))) # Can't use self.n_firms() since data could be a subset of self.data
-            data = data.rename({'j1': 'j', 'y1': 'y'}, axis=1)
-            data = pd.concat([data, data[data['m'] == 1].rename({'j2': 'j', 'y2': 'y', 'j': 'j2', 'y': 'y2'}, axis=1).assign(j2 = - 1)], axis=0) # Include irrelevant columns and rename j1 to j2 to prevent nans, which convert columns from int into float # FIXME duplicating both movers and stayers, should probably only be duplicating movers
         jids = sorted(data['j'].unique()) # Must sort
         n_firms = len(jids) # Can't use self.n_firms() since data could be a subset of self.data
         cdfs = np.zeros([n_firms, cdf_resolution])
+
+        # Create weights
+        if weighted:
+            if self.col_included('w'):
+                weights = data.groupby('j')['w'].sum()
+            else:
+                weights = data.groupby('j').size()
+        else:
+            weights = None
 
         # Create quantiles of interest
         quantiles = np.linspace(1 / cdf_resolution, 1, cdf_resolution)
@@ -852,7 +892,7 @@ class BipartiteBase(DataFrame):
             data = data[data['j2'] >= 0]
             data = data.rename({'j': 'j1', 'y': 'y1'}, axis=1)
 
-        return cdfs, jids
+        return cdfs, weights, jids
 
     def cluster(self, user_cluster={}):
         '''
@@ -873,6 +913,8 @@ class BipartiteBase(DataFrame):
 
                     dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
 
+                    weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+
                     user_KMeans (dict): use parameters defined in KMeans_dict for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html), and use default parameters defined in class attribute default_KMeans for any parameters not specified
 
         Returns:
@@ -886,19 +928,21 @@ class BipartiteBase(DataFrame):
         # Unpack dictionary
         cdf_resolution = cluster_params['cdf_resolution']
         grouping = cluster_params['grouping']
-        t = cluster_params['t']
         stayers_movers = cluster_params['stayers_movers']
+        t = cluster_params['t']
+        weighted = cluster_params['weighted']
         user_KMeans = cluster_params['user_KMeans']
 
         # Compute cdfs
-        cdfs, jids = frame.approx_cdfs(cdf_resolution=cdf_resolution, grouping=grouping, stayers_movers=stayers_movers, t=t)
+        cdfs, weights, jids = frame.approx_cdfs(cdf_resolution=cdf_resolution, grouping=grouping, stayers_movers=stayers_movers, t=t, weighted=weighted)
         frame.logger.info('firm cdfs computed')
 
         # Compute firm clusters
         KMeans_params = update_dict(frame.default_KMeans, user_KMeans)
-        clusters = KMeans(**KMeans_params).fit(cdfs).labels_
+        frame.logger.info('computing firm clusters')
+        clusters = KMeans(**KMeans_params).fit(cdfs, sample_weight=weights).labels_
         frame.logger.info('firm clusters computed')
-        
+
         # Drop existing clusters
         if frame.col_included('g'):
             frame.drop('g')

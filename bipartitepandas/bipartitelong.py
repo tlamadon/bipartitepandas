@@ -11,13 +11,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
     Arguments:
         *args: arguments for Pandas DataFrame
         col_dict (dict or None): make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct
+        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
 
-    def __init__(self, *args, col_dict=None, **kwargs):
+    def __init__(self, *args, col_dict=None, include_id_reference_dict=False, **kwargs):
         # Initialize DataFrame
         reference_dict = {'t': 't'}
-        super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, **kwargs)
+        super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
         # self.logger.info('BipartiteLong object initialized')
 
