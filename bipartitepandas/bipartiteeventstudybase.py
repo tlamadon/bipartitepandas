@@ -176,10 +176,18 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 if self.col_dtype_dict[col] == 'int':
                     astype_dict[col] = int
 
+        # Sort by i, t if t included; otherwise sort by i
+        sort_order_1 = ['i']
+        sort_order_2 = ['i']
+        if self.col_included('t'):
+            sort_order_1.append(bpd.to_list(self.reference_dict['t'])[0]) # Pre-reformatting
+            sort_order_2.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
+
         # Append the last row if a mover (this is because the last observation is only given as an f2i, never as an f1i)
         last_obs_df = pd.DataFrame(self[self['m'] == 1]) \
+            .sort_values(sort_order_1) \
             .drop_duplicates(subset='i', keep='last') \
-            .rename(rename_dict_1, axis=1)
+            .rename(rename_dict_1, axis=1) # Sort by i, t to ensure last observation is actually last
 
         try:
             data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
@@ -201,13 +209,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        try: # Long FIXME try to do this without try/except
-            data_long = data_long[sorted_cols].sort_values(['i', 't']).reset_index(drop=True)
-        except KeyError:
-            try: # Collapsed long
-                data_long = data_long[sorted_cols].sort_values(['i', 't1']).reset_index(drop=True)
-            except KeyError: # No time column
-                data_long = data_long[sorted_cols].sort_values(['i']).reset_index(drop=True)
+        data_long = data_long[sorted_cols].sort_values(sort_order_2).reset_index(drop=True)
 
         if return_df:
             return data_long
