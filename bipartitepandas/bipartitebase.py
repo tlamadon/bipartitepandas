@@ -887,11 +887,6 @@ class BipartiteBase(DataFrame):
                     # Update cdfs with the firm-level cdf
                     cdfs[i, j] = y[index]
 
-        if len(to_list(self.reference_dict['j'])) == 2: # Unstack Event Study
-            # Drop rows that were appended earlier and rename columns
-            data = data[data['j2'] >= 0]
-            data = data.rename({'j': 'j1', 'y': 'y1'}, axis=1)
-
         return cdfs, weights, jids
 
     def cluster(self, user_cluster={}):
@@ -952,6 +947,8 @@ class BipartiteBase(DataFrame):
                 g_col = 'g'
             elif len(to_list(self.reference_dict['j'])) == 2:
                 g_col = 'g' + str(i + 1)
+            print('j_col:', j_col)
+            print('g_col:', g_col)
             clusters_dict = {j_col: jids, g_col: clusters}
             clusters_df = pd.DataFrame(clusters_dict, index=np.arange(len(jids)))
             frame.logger.info('dataframe linking fids to clusters generated')

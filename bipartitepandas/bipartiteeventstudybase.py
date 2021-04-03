@@ -178,13 +178,21 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Append the last row if a mover (this is because the last observation is only given as an f2i, never as an f1i)
         last_obs_df = pd.DataFrame(self[self['m'] == 1]) \
-            .groupby('i').last() \
-            .rename(rename_dict_1, axis=1) \
-            .reset_index() # Get i out of index, return to column
-        data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
-            .drop(drops, axis=1) \
-            .rename(rename_dict_2, axis=1) \
-            .astype(astype_dict) \
+            .drop_duplicates(subset='i', keep='last') \
+            .rename(rename_dict_1, axis=1)
+
+        try:
+            data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
+                .drop(drops, axis=1) \
+                .rename(rename_dict_2, axis=1) \
+                .astype(astype_dict)
+        except ValueError: # If nan values, use Int8
+            for col in astype_dict.keys():
+                astype_dict[col] = 'Int64'
+            data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
+                .drop(drops, axis=1) \
+                .rename(rename_dict_2, axis=1) \
+                .astype(astype_dict)
         # data_long = pd.DataFrame(self).groupby('i').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 else a) \
         #     .reset_index(drop=True) \
         #     .drop(drops, axis=1) \
