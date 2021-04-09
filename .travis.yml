@@ -4,10 +4,10 @@ python:
 cache: pip
 install:
   - pip install .
-  - pip install pytwoway
   - pip install pytest-cov
   - pip install codecov
+  - pip install pytwoway
 script:
-  - python -m pytest --cov-report term --cov=tests/
+  - python -m pytest --cov-report term --cov=bipartitepandas/
 after_success:
   - codecov
