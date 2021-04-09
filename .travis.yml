@@ -8,6 +8,6 @@ install:
   - pip install pytest-cov
   - pip install codecov
 script:
-  - python -m pytest --cov-report term --cov=app/test/
+  - python -m pytest --cov-report term --cov=tests/
 after_success:
   - codecov
