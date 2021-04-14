@@ -632,8 +632,8 @@ def test_col_dict_15():
     assert stayers.iloc[0]['y1'] == 1
     assert stayers.iloc[0]['y2'] == 1
 
-def test_worker_year_unique_16():
-    # Workers with multiple jobs in the same year, keep the highest paying.
+def test_worker_year_unique_16_1():
+    # Workers with multiple jobs in the same year, keep the highest paying. Testing 'max', 'sum', and 'mean' options, where options should not have an effect.
     worker_data = []
     worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'index': 0})
     worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'index': 1})
@@ -646,41 +646,99 @@ def test_worker_year_unique_16():
 
     df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
 
-    bdf = bpd.BipartiteLong(data=df)
-    bdf = bdf.clean_data().gen_m()
+    for how in ['max', 'sum', 'mean']:
+        bdf = bpd.BipartiteLong(data=df)
+        bdf = bdf.clean_data({'i_t_how': how}).gen_m()
 
-    stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+        stayers = bdf[bdf['m'] == 0]
+        movers = bdf[bdf['m'] == 1]
 
-    assert movers.iloc[0]['i'] == 0
-    assert movers.iloc[0]['j'] == 0
-    assert movers.iloc[0]['y'] == 2
-    assert movers.iloc[0]['t'] == 1
+        assert movers.iloc[0]['i'] == 0
+        assert movers.iloc[0]['j'] == 0
+        assert movers.iloc[0]['y'] == 2
+        assert movers.iloc[0]['t'] == 1
 
-    assert movers.iloc[1]['i'] == 0
-    assert movers.iloc[1]['j'] == 1
-    assert movers.iloc[1]['y'] == 1
-    assert movers.iloc[1]['t'] == 2
+        assert movers.iloc[1]['i'] == 0
+        assert movers.iloc[1]['j'] == 1
+        assert movers.iloc[1]['y'] == 1
+        assert movers.iloc[1]['t'] == 2
 
-    assert movers.iloc[2]['i'] == 1
-    assert movers.iloc[2]['j'] == 1
-    assert movers.iloc[2]['y'] == 1
-    assert movers.iloc[2]['t'] == 1
+        assert movers.iloc[2]['i'] == 1
+        assert movers.iloc[2]['j'] == 1
+        assert movers.iloc[2]['y'] == 1
+        assert movers.iloc[2]['t'] == 1
 
-    assert movers.iloc[3]['i'] == 1
-    assert movers.iloc[3]['j'] == 2
-    assert movers.iloc[3]['y'] == 1
-    assert movers.iloc[3]['t'] == 2
+        assert movers.iloc[3]['i'] == 1
+        assert movers.iloc[3]['j'] == 2
+        assert movers.iloc[3]['y'] == 1
+        assert movers.iloc[3]['t'] == 2
 
-    assert movers.iloc[4]['i'] == 2
-    assert movers.iloc[4]['j'] == 1
-    assert movers.iloc[4]['y'] == 1.5
-    assert movers.iloc[4]['t'] == 1
+        assert movers.iloc[4]['i'] == 2
+        assert movers.iloc[4]['j'] == 1
+        assert movers.iloc[4]['y'] == 1.5
+        assert movers.iloc[4]['t'] == 1
 
-    assert movers.iloc[5]['i'] == 2
-    assert movers.iloc[5]['j'] == 2
-    assert movers.iloc[5]['y'] == 1
-    assert movers.iloc[5]['t'] == 2
+        assert movers.iloc[5]['i'] == 2
+        assert movers.iloc[5]['j'] == 2
+        assert movers.iloc[5]['y'] == 1
+        assert movers.iloc[5]['t'] == 2
+
+def test_worker_year_unique_16_2():
+    # Workers with multiple jobs in the same year, keep the highest paying. Testing 'sum' and 'mean' options, where options should have an effect.
+    worker_data = []
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2.})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1.})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1.5})
+    worker_data.append({'j': 3, 't': 2, 'i': 1, 'y': 0.5})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1.})
+    worker_data.append({'j': 1, 't': 1, 'i': 3, 'y': 1.5})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1.})
+
+    df = pd.concat([pd.DataFrame(worker, index=np.arange(len(worker_data))) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    for how in ['max', 'sum', 'mean']:
+        bdf = bpd.BipartiteLong(data=df)
+        bdf = bdf.clean_data({'i_t_how': how}).gen_m()
+
+        stayers = bdf[bdf['m'] == 0]
+        movers = bdf[bdf['m'] == 1]
+
+        assert movers.iloc[0]['i'] == 0
+        assert movers.iloc[0]['j'] == 0
+        assert movers.iloc[0]['y'] == 2
+        assert movers.iloc[0]['t'] == 1
+
+        assert movers.iloc[1]['i'] == 0
+        assert movers.iloc[1]['j'] == 1
+        assert movers.iloc[1]['y'] == 1
+        assert movers.iloc[1]['t'] == 2
+
+        assert movers.iloc[2]['i'] == 1
+        assert movers.iloc[2]['j'] == 1
+        assert movers.iloc[2]['y'] == 1
+        assert movers.iloc[2]['t'] == 1
+
+        assert movers.iloc[3]['i'] == 1
+        assert movers.iloc[3]['j'] == 2
+        if how == 'max':
+            assert movers.iloc[3]['y'] == 1.5
+        elif how == 'sum':
+            assert movers.iloc[3]['y'] == 2.5
+        elif how == 'mean':
+            assert movers.iloc[3]['y'] == 1.25
+        assert movers.iloc[3]['t'] == 2
+
+        assert movers.iloc[4]['i'] == 2
+        assert movers.iloc[4]['j'] == 1
+        assert movers.iloc[4]['y'] == 1.5
+        assert movers.iloc[4]['t'] == 1
+
+        assert movers.iloc[5]['i'] == 2
+        assert movers.iloc[5]['j'] == 2
+        assert movers.iloc[5]['y'] == 1
+        assert movers.iloc[5]['t'] == 2
 
 def test_string_ids_17():
     # String worker and firm ids.
@@ -824,6 +882,312 @@ def test_save_19():
 
     assert 'm' in bdf2.included_cols() and 'm' not in bdf.included_cols()
 
+def test_id_reference_dict_20():
+    # String worker and firm ids, link with id_reference_dict.
+    worker_data = []
+    worker_data.append({'j': 'a', 't': 1, 'i': 'a', 'y': 2., 'index': 0})
+    worker_data.append({'j': 'b', 't': 2, 'i': 'a', 'y': 1., 'index': 1})
+    worker_data.append({'j': 'b', 't': 1, 'i': 'b', 'y': 1., 'index': 2})
+    worker_data.append({'j': 'c', 't': 2, 'i': 'b', 'y': 1., 'index': 3})
+    worker_data.append({'j': 'd', 't': 2, 'i': 'b', 'y': 0.5, 'index': 4})
+    worker_data.append({'j': 'c', 't': 1, 'i': 'd', 'y': 1., 'index': 5})
+    worker_data.append({'j': 'b', 't': 1, 'i': 'd', 'y': 1.5, 'index': 6})
+    worker_data.append({'j': 'c', 't': 2, 'i': 'd', 'y': 1., 'index': 7})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bdf.clean_data().gen_m()
+
+    id_reference_dict = bdf.id_reference_dict
+
+    merge_df = bdf.merge(id_reference_dict['i'], how='left', left_on='i', right_on='adjusted_ids_1').rename({'original_ids': 'original_i'})
+    merge_df = merge_df.merge(id_reference_dict['j'], how='left', left_on='j', right_on='adjusted_ids_1').rename({'original_ids': 'original_j'})
+
+    stayers = merge_df[merge_df['m'] == 0]
+    movers = merge_df[merge_df['m'] == 1]
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['original_i'] == 'a'
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['original_j'] == 'a'
+    assert movers.iloc[0]['y'] == 2
+    assert movers.iloc[0]['t'] == 1
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['original_i'] == 'a'
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['original_j'] == 'b'
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 2
+
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['original_i'] == 'b'
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['original_j'] == 'b'
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['t'] == 1
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['original_i'] == 'b'
+    assert movers.iloc[3]['j'] == 2
+    assert movers.iloc[3]['original_j'] == 'c'
+    assert movers.iloc[3]['y'] == 1
+    assert movers.iloc[3]['t'] == 2
+
+    assert movers.iloc[4]['i'] == 2
+    assert movers.iloc[4]['original_i'] == 'd'
+    assert movers.iloc[4]['j'] == 1
+    assert movers.iloc[4]['original_j'] == 'b'
+    assert movers.iloc[4]['y'] == 1.5
+    assert movers.iloc[4]['t'] == 1
+
+    assert movers.iloc[5]['i'] == 2
+    assert movers.iloc[5]['original_i'] == 'd'
+    assert movers.iloc[5]['j'] == 2
+    assert movers.iloc[5]['original_j'] == 'c'
+    assert movers.iloc[5]['y'] == 1
+    assert movers.iloc[5]['t'] == 2
+
+def test_id_reference_dict_22():
+    # String worker and firm ids, link with id_reference_dict. Testing original_ids() method.
+    worker_data = []
+    worker_data.append({'j': 'a', 't': 1, 'i': 'a', 'y': 2., 'index': 0})
+    worker_data.append({'j': 'b', 't': 2, 'i': 'a', 'y': 1., 'index': 1})
+    worker_data.append({'j': 'b', 't': 1, 'i': 'b', 'y': 1., 'index': 2})
+    worker_data.append({'j': 'c', 't': 2, 'i': 'b', 'y': 1., 'index': 3})
+    worker_data.append({'j': 'd', 't': 2, 'i': 'b', 'y': 0.5, 'index': 4})
+    worker_data.append({'j': 'c', 't': 1, 'i': 'd', 'y': 1., 'index': 5})
+    worker_data.append({'j': 'b', 't': 1, 'i': 'd', 'y': 1.5, 'index': 6})
+    worker_data.append({'j': 'c', 't': 2, 'i': 'd', 'y': 1., 'index': 7})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bdf.clean_data().gen_m()
+
+    merge_df = bdf.original_ids()
+
+    stayers = merge_df[merge_df['m'] == 0]
+    movers = merge_df[merge_df['m'] == 1]
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['original_i'] == 'a'
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['original_j'] == 'a'
+    assert movers.iloc[0]['y'] == 2
+    assert movers.iloc[0]['t'] == 1
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['original_i'] == 'a'
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['original_j'] == 'b'
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 2
+
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['original_i'] == 'b'
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['original_j'] == 'b'
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['t'] == 1
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['original_i'] == 'b'
+    assert movers.iloc[3]['j'] == 2
+    assert movers.iloc[3]['original_j'] == 'c'
+    assert movers.iloc[3]['y'] == 1
+    assert movers.iloc[3]['t'] == 2
+
+    assert movers.iloc[4]['i'] == 2
+    assert movers.iloc[4]['original_i'] == 'd'
+    assert movers.iloc[4]['j'] == 1
+    assert movers.iloc[4]['original_j'] == 'b'
+    assert movers.iloc[4]['y'] == 1.5
+    assert movers.iloc[4]['t'] == 1
+
+    assert movers.iloc[5]['i'] == 2
+    assert movers.iloc[5]['original_i'] == 'd'
+    assert movers.iloc[5]['j'] == 2
+    assert movers.iloc[5]['original_j'] == 'c'
+    assert movers.iloc[5]['y'] == 1
+    assert movers.iloc[5]['t'] == 2
+
+def test_id_reference_dict_23():
+    # String worker and firm ids, link with id_reference_dict. Testing original_ids() method where there are multiple steps of references.
+    worker_data = []
+    worker_data.append({'j': 'a', 't': 1, 'i': 'a', 'y': 2., 'index': 0})
+    worker_data.append({'j': 'b', 't': 2, 'i': 'a', 'y': 1., 'index': 1})
+    worker_data.append({'j': 'b', 't': 1, 'i': 'b', 'y': 1., 'index': 2})
+    worker_data.append({'j': 'c', 't': 2, 'i': 'b', 'y': 1., 'index': 3})
+    worker_data.append({'j': 'd', 't': 2, 'i': 'b', 'y': 0.5, 'index': 4})
+    worker_data.append({'j': 'c', 't': 1, 'i': 'd', 'y': 1., 'index': 5})
+    worker_data.append({'j': 'b', 't': 1, 'i': 'd', 'y': 1.5, 'index': 6})
+    worker_data.append({'j': 'c', 't': 2, 'i': 'd', 'y': 1., 'index': 7})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bdf.clean_data().gen_m()
+    bdf = bdf[bdf['j'] == 1]
+    bdf = bdf.clean_data()
+
+    merge_df = bdf.original_ids()
+
+    stayers = merge_df[merge_df['m'] == 0]
+    movers = merge_df[merge_df['m'] == 1]
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['original_i'] == 'a'
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['original_j'] == 'b'
+    assert movers.iloc[0]['y'] == 1
+    assert movers.iloc[0]['t'] == 2
+
+    assert movers.iloc[1]['i'] == 1
+    assert movers.iloc[1]['original_i'] == 'b'
+    assert movers.iloc[1]['j'] == 0
+    assert movers.iloc[1]['original_j'] == 'b'
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 1
+
+    assert movers.iloc[2]['i'] == 2
+    assert movers.iloc[2]['original_i'] == 'd'
+    assert movers.iloc[2]['j'] == 0
+    assert movers.iloc[2]['original_j'] == 'b'
+    assert movers.iloc[2]['y'] == 1.5
+    assert movers.iloc[2]['t'] == 1
+
+def test_fill_time_24_1():
+    # Test .fill_time() method for long format, with no data to fill in.
+    worker_data = []
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'index': 0})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'index': 1})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1., 'index': 2})
+    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1., 'index': 3})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1., 'index': 4})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1., 'index': 5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data().gen_m()
+    new_df = bdf.fill_periods()
+
+    stayers = new_df[new_df['m'] == 0]
+    movers = new_df[new_df['m'] == 1]
+
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['y'] == 2
+
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['y'] == 1
+
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['y'] == 1
+
+    assert movers.iloc[3]['j'] == 2
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['y'] == 1
+
+    assert stayers.iloc[0]['j'] == 2
+    assert stayers.iloc[0]['i'] == 2
+    assert stayers.iloc[0]['y'] == 1
+
+def test_fill_time_24_2():
+    # Test .fill_time() method for long format, with 1 row of data to fill in.
+    worker_data = []
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'index': 0})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'index': 1})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1., 'index': 2})
+    worker_data.append({'j': 2, 't': 3, 'i': 1, 'y': 1., 'index': 3})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1., 'index': 4})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1., 'index': 5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data().gen_m()
+    new_df = bdf.fill_periods()
+
+    stayers = new_df[new_df['m'] == 0]
+    movers = new_df[new_df['m'] == 1]
+
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['y'] == 2
+
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['y'] == 1
+
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['y'] == 1
+
+    assert movers.iloc[3]['j'] == - 1
+    assert movers.iloc[3]['i'] == 1
+    assert np.isnan(movers.iloc[3]['y'])
+
+    assert movers.iloc[4]['j'] == 2
+    assert movers.iloc[4]['i'] == 1
+    assert movers.iloc[4]['y'] == 1
+
+    assert stayers.iloc[0]['j'] == 2
+    assert stayers.iloc[0]['i'] == 2
+    assert stayers.iloc[0]['y'] == 1
+
+def test_fill_time_24_3():
+    # Test .fill_time() method for long format, with 2 rows of data to fill in.
+    worker_data = []
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'index': 0})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'index': 1})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1., 'index': 2})
+    worker_data.append({'j': 2, 't': 4, 'i': 1, 'y': 1., 'index': 3})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1., 'index': 4})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1., 'index': 5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data().gen_m()
+    new_df = bdf.fill_periods()
+
+    stayers = new_df[new_df['m'] == 0]
+    movers = new_df[new_df['m'] == 1]
+
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['y'] == 2
+
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['y'] == 1
+
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['y'] == 1
+
+    assert movers.iloc[3]['j'] == - 1
+    assert movers.iloc[3]['i'] == 1
+    assert np.isnan(movers.iloc[3]['y'])
+    assert movers.iloc[3]['m'] == 1
+
+    assert movers.iloc[4]['j'] == - 1
+    assert movers.iloc[4]['i'] == 1
+    assert np.isnan(movers.iloc[4]['y'])
+    assert movers.iloc[4]['m'] == 1
+
+    assert movers.iloc[5]['j'] == 2
+    assert movers.iloc[5]['i'] == 1
+    assert movers.iloc[5]['y'] == 1
+
+    assert stayers.iloc[0]['j'] == 2
+    assert stayers.iloc[0]['i'] == 2
+    assert stayers.iloc[0]['y'] == 1
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####
@@ -1207,9 +1571,9 @@ def test_reformatting_1():
     assert stayers.iloc[1]['t2'] == 1
     assert stayers.iloc[1]['g'] == 0
 
-#####################################
-##### Tests for Clustering #####
-#####################################
+# ################################
+# ##### Tests for Clustering #####
+# ################################
 
 def test_cluster_1():
     # Test cluster function is working correctly for long format.

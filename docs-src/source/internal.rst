@@ -31,6 +31,7 @@ Modules and Methods
    ~bipartitepandas.BipartiteLong.clean_data
    ~bipartitepandas.BipartiteLong.cluster
    ~bipartitepandas.BipartiteLong.drop
+   ~bipartitepandas.BipartiteLong.fill_periods
    ~bipartitepandas.BipartiteLong.get_collapsed_long
    ~bipartitepandas.BipartiteLong.get_es
    ~bipartitepandas.BipartiteLong.merge

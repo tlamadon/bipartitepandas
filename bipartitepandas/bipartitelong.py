@@ -104,3 +104,36 @@ class BipartiteLong(bpd.BipartiteLongBase):
         collapsed_frame.set_attributes(self, no_dict=True)
 
         return collapsed_frame
+
+    def fill_periods(self, fill_j=- 1, fill_y=pd.NA):
+        '''
+        Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1 and y is filled in as pd.NA, but these values can be specified.
+
+        Arguments:
+            fill_j (value): value to fill in for missing j
+            fill_y (value): value to fill in for missing y
+
+        Returns:
+            fill_frame (Pandas DataFrame): Pandas DataFrame with missing periods filled in as unemployed
+        '''
+        import numpy as np
+        m = self.col_included('m') # Check whether m column included
+        fill_frame = pd.DataFrame(self, copy=True).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
+        fill_frame['i_l1'] = fill_frame['i'].shift(periods=1) # Lagged value
+        fill_frame['t_l1'] = fill_frame['t'].shift(periods=1) # Lagged value
+        missing_periods = (fill_frame['i'] == fill_frame['i_l1']) & (fill_frame['t'] != fill_frame['t_l1'] + 1)
+        if np.sum(missing_periods) > 0: # If have data to fill in
+            fill_data = []
+            for index in fill_frame[missing_periods].index:
+                row = fill_frame.iloc[index]
+                # Only iterate over missing years
+                for t in range(int(row['t_l1']) + 1, int(row['t'])):
+                    new_row = {'i': int(row['i']), 'j': fill_j, 'y': fill_y, 't': t}
+                    if m: # If m column included
+                        new_row['m'] = int(row['m'])
+                    fill_data.append(new_row)
+            fill_df = pd.concat([pd.DataFrame(fill_row, index=[i]) for i, fill_row in enumerate(fill_data)])
+            fill_frame = pd.concat([fill_frame, fill_df]).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
+        fill_frame.drop(['i_l1', 't_l1'], axis=1, inplace=True)
+
+        return fill_frame

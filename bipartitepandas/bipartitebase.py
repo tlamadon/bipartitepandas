@@ -28,7 +28,7 @@ class BipartiteBase(DataFrame):
         include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_KMeans', 'default_cluster', 'dtype_dict', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_KMeans', 'default_cluster', 'dtype_dict', 'default_clean', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
         # Initialize DataFrame
@@ -93,6 +93,10 @@ class BipartiteBase(DataFrame):
             'int': ['int', 'int8', 'int16', 'int32', 'int64', 'Int64'],
             'float': ['float', 'float8', 'float16', 'float32', 'float64', 'float128', 'int', 'int8', 'int16', 'int32', 'int64', 'Int64'],
             'str': 'str'
+        }
+
+        self.default_clean = {
+            'i_t_how': 'max'
         }
 
         # self.logger.info('BipartiteBase object initialized')
@@ -175,6 +179,26 @@ class BipartiteBase(DataFrame):
         for g_col in to_list(self.reference_dict['g']):
             cid_lst += list(self[g_col].unique())
         return len(set(cid_lst))
+
+    def original_ids(self):
+        '''
+        Return copy of self merged with original column ids.
+
+        Returns:
+            (BipartiteBase): copy of self merged with original column ids
+        '''
+        frame = pd.DataFrame(self, copy=True)
+        if self.id_reference_dict:
+            for id_col, reference_df in self.id_reference_dict.items():
+                if len(reference_df) > 0: # Make sure non-empty
+                    try:
+                        frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_col}, axis=1), how='left', on=id_col)
+                    except TypeError: # Int64 error with NaNs
+                        frame[id_col] = frame[id_col].astype('Int64')
+                        frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_col}, axis=1), how='left', on=id_col)
+            return frame
+        else:
+            warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
 
     def set_attributes(self, frame, no_dict=False):
         '''
@@ -449,9 +473,16 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def clean_data(self):
+    def clean_data(self, user_clean={}):
         '''
         Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
+
+        Arguments:
+            user_clean (dict): dictionary of parameters for cleaning
+
+                Dictionary parameters:
+
+                    i_t_how (str): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
 
         Returns:
             frame (BipartiteBase): BipartiteBase with cleaned data
@@ -459,6 +490,8 @@ class BipartiteBase(DataFrame):
         frame = self.copy()
 
         frame.logger.info('beginning BipartiteBase data cleaning')
+
+        clean_params = update_dict(frame.default_clean, user_clean)
 
         # First, correct columns
         # Note this must be done before data_validity(), otherwise certain checks are not guaranteed to work
@@ -488,7 +521,7 @@ class BipartiteBase(DataFrame):
         # Next, make sure i-t (worker-year) observations are unique
         if frame.i_t_unique is not None and not frame.i_t_unique:
             frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
-            frame.drop_i_t_duplicates()
+            frame.drop_i_t_duplicates(how=clean_params['i_t_how'])
 
         # Next, find largest set of firms connected by movers
         if not frame.connected:
@@ -663,11 +696,12 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def drop_i_t_duplicates(self, inplace=True):
+    def drop_i_t_duplicates(self, how='max', inplace=True):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
+            how (str): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
             inplace (bool): if True, modify in-place
 
         Returns:
@@ -680,9 +714,31 @@ class BipartiteBase(DataFrame):
 
         if frame.col_included('t'):
             t_cols = to_list(frame.reference_dict['t'])
-            frame.sort_values(['i'] + t_cols + to_list(frame.reference_dict['y']), inplace=True)
-            for t_col in t_cols:
-                frame.drop_duplicates(subset=['i', t_col], keep='last', inplace=True)
+            j_cols = to_list(frame.reference_dict['j'])
+
+            if how == 'max':
+                # Sort by worker id, time, and compensation
+                frame.sort_values(['i'] + t_cols + to_list(frame.reference_dict['y']), inplace=True)
+                for t_col in t_cols:
+                    # For each time column, take max compensation
+                    frame.drop_duplicates(subset=['i', t_col], keep='last', inplace=True)
+            elif how in ['sum', 'mean']:
+                for t_col in t_cols:
+                    for j_col in j_cols:
+                        # Group by worker id, time, and firm id
+                        frame_groupby = frame.groupby(['i', t_col, j_col])
+                        for y_col in to_list(frame.reference_dict['y']):
+                            # For each compensation column, take sum/mean
+                            frame[y_col] = frame_groupby[y_col].transform(how)
+                        del frame_groupby
+                # Sort by worker id, time, and compensation
+                frame.sort_values(['i'] + t_cols + to_list(frame.reference_dict['y']), inplace=True)
+                for t_col in t_cols:
+                    # For each time column, take max compensation
+                    frame.drop_duplicates(subset=['i', t_col], keep='last', inplace=True)
+            else:
+                warnings.warn('{} is not a valid method for dropping i-t duplicates'.format(how))
+                
         frame = frame.reset_index(drop=True)
         frame.i_t_unique = True
 
