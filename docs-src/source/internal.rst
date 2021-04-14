@@ -38,6 +38,7 @@ Modules and Methods
    ~bipartitepandas.BipartiteLong.n_workers
    ~bipartitepandas.BipartiteLong.n_firms
    ~bipartitepandas.BipartiteLong.n_clusters
+   ~bipartitepandas.BipartiteLong.original_ids
    ~bipartitepandas.BipartiteLong.rename
    ~bipartitepandas.BipartiteLong.summary
 
@@ -55,6 +56,7 @@ Modules and Methods
    ~bipartitepandas.BipartiteLongCollapsed.n_workers
    ~bipartitepandas.BipartiteLongCollapsed.n_firms
    ~bipartitepandas.BipartiteLongCollapsed.n_clusters
+   ~bipartitepandas.BipartiteLongCollapsed.original_ids
    ~bipartitepandas.BipartiteLongCollapsed.rename
    ~bipartitepandas.BipartiteLongCollapsed.summary
 
@@ -73,6 +75,7 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudy.n_workers
    ~bipartitepandas.BipartiteEventStudy.n_firms
    ~bipartitepandas.BipartiteEventStudy.n_clusters
+   ~bipartitepandas.BipartiteEventStudy.original_ids
    ~bipartitepandas.BipartiteEventStudy.rename
    ~bipartitepandas.BipartiteEventStudy.summary
 
@@ -91,5 +94,6 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudyCollapsed.n_workers
    ~bipartitepandas.BipartiteEventStudyCollapsed.n_firms
    ~bipartitepandas.BipartiteEventStudyCollapsed.n_clusters
+   ~bipartitepandas.BipartiteEventStudyCollapsed.original_ids
    ~bipartitepandas.BipartiteEventStudyCollapsed.rename
    ~bipartitepandas.BipartiteEventStudyCollapsed.summary
