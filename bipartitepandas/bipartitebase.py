@@ -521,7 +521,7 @@ class BipartiteBase(DataFrame):
         # Next, make sure i-t (worker-year) observations are unique
         if frame.i_t_unique is not None and not frame.i_t_unique:
             frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
-            frame.drop_i_t_duplicates(how=clean_params['i_t_how'])
+            frame = frame.drop_i_t_duplicates(how=clean_params['i_t_how'])
 
         # Next, find largest set of firms connected by movers
         if not frame.connected:
@@ -696,51 +696,51 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def drop_i_t_duplicates(self, how='max', inplace=True):
+    def drop_i_t_duplicates(self, how='max'):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
             how (str): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
-            inplace (bool): if True, modify in-place
 
         Returns:
             frame (BipartiteBase): BipartiteBase that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self.copy()
 
         if frame.col_included('t'):
-            t_cols = to_list(frame.reference_dict['t'])
-            j_cols = to_list(frame.reference_dict['j'])
+            try: # If BipartiteEventStudy or BipartiteEventStudyCollapsed
+                frame = frame.get_long()
+                convert_1 = True
+            except AttributeError:
+                convert_1 = False
+            try: # If BipartiteLongCollapsed
+                frame = frame.uncollapse()
+                convert_2 = True
+            except AttributeError:
+                convert_2 = False
 
             if how == 'max':
                 # Sort by worker id, time, and compensation
-                frame.sort_values(['i'] + t_cols + to_list(frame.reference_dict['y']), inplace=True)
-                for t_col in t_cols:
-                    # For each time column, take max compensation
-                    frame.drop_duplicates(subset=['i', t_col], keep='last', inplace=True)
+                frame.sort_values(['i', 't', 'y'], inplace=True)
+                frame.drop_duplicates(subset=['i', 't'], keep='last', inplace=True)
             elif how in ['sum', 'mean']:
-                for t_col in t_cols:
-                    for j_col in j_cols:
-                        # Group by worker id, time, and firm id
-                        frame_groupby = frame.groupby(['i', t_col, j_col])
-                        for y_col in to_list(frame.reference_dict['y']):
-                            # For each compensation column, take sum/mean
-                            frame[y_col] = frame_groupby[y_col].transform(how)
-                        del frame_groupby
+                # Group by worker id, time, and firm id, and take sum/mean of compensation
+                frame['y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
                 # Sort by worker id, time, and compensation
-                frame.sort_values(['i'] + t_cols + to_list(frame.reference_dict['y']), inplace=True)
-                for t_col in t_cols:
-                    # For each time column, take max compensation
-                    frame.drop_duplicates(subset=['i', t_col], keep='last', inplace=True)
+                frame.sort_values(['i', 't', 'y'], inplace=True)
+                # For each i-t group, take max compensation
+                frame.drop_duplicates(subset=['i', 't'], keep='last', inplace=True)
             else:
                 warnings.warn('{} is not a valid method for dropping i-t duplicates'.format(how))
                 
         frame = frame.reset_index(drop=True)
         frame.i_t_unique = True
+
+        if convert_2: # If data was collapsed
+            frame = frame.get_collapsed_long()
+        if convert_1: # If data was event study
+            frame = frame.get_es()
 
         return frame
 

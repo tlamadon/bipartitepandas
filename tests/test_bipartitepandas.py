@@ -633,7 +633,7 @@ def test_col_dict_15():
     assert stayers.iloc[0]['y2'] == 1
 
 def test_worker_year_unique_16_1():
-    # Workers with multiple jobs in the same year, keep the highest paying. Testing 'max', 'sum', and 'mean' options, where options should not have an effect.
+    # Workers with multiple jobs in the same year, keep the highest paying, with long format. Testing 'max', 'sum', and 'mean' options, where options should not have an effect.
     worker_data = []
     worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'index': 0})
     worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'index': 1})
@@ -684,7 +684,7 @@ def test_worker_year_unique_16_1():
         assert movers.iloc[5]['t'] == 2
 
 def test_worker_year_unique_16_2():
-    # Workers with multiple jobs in the same year, keep the highest paying. Testing 'sum' and 'mean' options, where options should have an effect.
+    # Workers with multiple jobs in the same year, keep the highest paying, with long format. Testing 'max', 'sum' and 'mean' options, where options should have an effect.
     worker_data = []
     worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2.})
     worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1.})
@@ -739,6 +739,122 @@ def test_worker_year_unique_16_2():
         assert movers.iloc[5]['j'] == 2
         assert movers.iloc[5]['y'] == 1
         assert movers.iloc[5]['t'] == 2
+
+def test_worker_year_unique_16_3():
+    # Workers with multiple jobs in the same year, keep the highest paying, with collapsed long format. Testing 'max', 'sum', and 'mean' options, where options should have an effect.
+    worker_data = []
+    worker_data.append({'j': 0, 't1': 1, 't2': 1, 'i': 0, 'y': 2.})
+    worker_data.append({'j': 1, 't1': 2, 't2': 2, 'i': 0, 'y': 1.})
+    worker_data.append({'j': 1, 't1': 1, 't2': 2, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't1': 2, 't2': 2, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't1': 2, 't2': 2, 'i': 1, 'y': 1.5})
+    worker_data.append({'j': 3, 't1': 2, 't2': 2, 'i': 1, 'y': 0.5})
+    worker_data.append({'j': 2, 't1': 1, 't2': 2, 'i': 3, 'y': 1.})
+    worker_data.append({'j': 1, 't1': 1, 't2': 2, 'i': 3, 'y': 1.5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j', 'y', 't1', 't2']]
+
+    for how in ['max', 'sum', 'mean']:
+        bdf = bpd.BipartiteLongCollapsed(data=df)
+        bdf = bdf.clean_data({'i_t_how': how}).gen_m()
+
+        stayers = bdf[bdf['m'] == 0]
+        movers = bdf[bdf['m'] == 1]
+
+        assert movers.iloc[0]['i'] == 0
+        assert movers.iloc[0]['j'] == 0
+        assert movers.iloc[0]['y'] == 2
+        assert movers.iloc[0]['t1'] == 1
+        assert movers.iloc[0]['t2'] == 1
+
+        assert movers.iloc[1]['i'] == 0
+        assert movers.iloc[1]['j'] == 1
+        assert movers.iloc[1]['y'] == 1
+        assert movers.iloc[1]['t1'] == 2
+        assert movers.iloc[1]['t2'] == 2
+
+        assert movers.iloc[2]['i'] == 1
+        assert movers.iloc[2]['j'] == 1
+        assert movers.iloc[2]['y'] == 1
+        assert movers.iloc[2]['t1'] == 1
+        assert movers.iloc[2]['t2'] == 1
+
+        assert movers.iloc[3]['i'] == 1
+        assert movers.iloc[3]['j'] == 2
+        if how == 'max':
+            assert movers.iloc[3]['y'] == 1.5
+        elif how == 'sum':
+            assert movers.iloc[3]['y'] == 2.5
+        elif how == 'mean':
+            assert movers.iloc[3]['y'] == 1.25
+        assert movers.iloc[3]['t1'] == 2
+        assert movers.iloc[3]['t2'] == 2
+
+        assert stayers.iloc[0]['i'] == 2
+        assert stayers.iloc[0]['j'] == 1
+        assert stayers.iloc[0]['y'] == 1.5
+        assert stayers.iloc[0]['t1'] == 1
+        assert stayers.iloc[0]['t2'] == 2
+
+def test_worker_year_unique_16_4():
+    # Workers with multiple jobs in the same year, keep the highest paying, with event study format. Testing 'max', 'sum', and 'mean' options, where options should have an effect. NOTE: because of how data converts from event study to long (it only shifts period 2 (e.g. j2, y2) for the last row, as it assumes observations zigzag), it will only correct duplicates for period 1
+    worker_data = []
+    worker_data.append({'j1': 0, 'j2': 1, 't1': 1, 't2': 2, 'i': 0, 'y1': 2., 'y2': 1.})
+    worker_data.append({'j1': 1, 'j2': 2, 't1': 1, 't2': 2, 'i': 1, 'y1': 0.5, 'y2': 1.5})
+    worker_data.append({'j1': 1, 'j2': 2, 't1': 1, 't2': 2, 'i': 1, 'y1': 0.75, 'y2': 1.})
+    worker_data.append({'j1': 2, 'j2': 1, 't1': 1, 't2': 2, 'i': 1, 'y1': 1., 'y2': 2.})
+    worker_data.append({'j1': 2, 'j2': 2, 't1': 1, 't2': 1, 'i': 3, 'y1': 1., 'y2': 1.})
+    worker_data.append({'j1': 2, 'j2': 2, 't1': 2, 't2': 2, 'i': 3, 'y1': 1., 'y2': 1.})
+    worker_data.append({'j1': 1, 'j2': 1, 't1': 1, 't2': 1, 'i': 3, 'y1': 1.5, 'y2': 1.5})
+    worker_data.append({'j1': 1, 'j2': 1, 't1': 2, 't2': 2, 'i': 3, 'y1': 1.5, 'y2': 1.5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j1', 'j2', 'y1', 'y2', 't1', 't2']]
+
+    for how in ['max', 'sum', 'mean']:
+        bdf = bpd.BipartiteEventStudy(data=df)
+        bdf = bdf.clean_data({'i_t_how': how}).gen_m()
+
+        stayers = bdf[bdf['m'] == 0]
+        movers = bdf[bdf['m'] == 1]
+
+        assert movers.iloc[0]['i'] == 0
+        assert movers.iloc[0]['j1'] == 0
+        assert movers.iloc[0]['j2'] == 1
+        assert movers.iloc[0]['y1'] == 2
+        assert movers.iloc[0]['y2'] == 1
+        assert movers.iloc[0]['t1'] == 1
+        assert movers.iloc[0]['t2'] == 2
+
+        assert movers.iloc[1]['i'] == 1
+        if how == 'max':
+            assert movers.iloc[1]['j1'] == 2
+            assert movers.iloc[1]['y1'] == 1
+        elif how == 'sum':
+            assert movers.iloc[1]['j1'] == 1
+            assert movers.iloc[1]['y1'] == 1.25
+        elif how == 'mean':
+            assert movers.iloc[1]['j1'] == 2
+            assert movers.iloc[1]['y1'] == 1
+        assert movers.iloc[1]['j2'] == 1
+        assert movers.iloc[1]['y2'] == 2
+        assert movers.iloc[1]['t1'] == 1
+        assert movers.iloc[1]['t2'] == 2
+
+        assert stayers.iloc[0]['i'] == 2
+        assert stayers.iloc[0]['j1'] == 1
+        assert stayers.iloc[0]['j2'] == 1
+        assert stayers.iloc[0]['y1'] == 1.5
+        assert stayers.iloc[0]['y2'] == 1.5
+        assert stayers.iloc[0]['t1'] == 1
+        assert stayers.iloc[0]['t2'] == 1
+
+        assert stayers.iloc[1]['i'] == 2
+        assert stayers.iloc[1]['j1'] == 1
+        assert stayers.iloc[1]['j2'] == 1
+        assert stayers.iloc[1]['y1'] == 1.5
+        assert stayers.iloc[1]['y2'] == 1.5
+        assert stayers.iloc[1]['t1'] == 2
+        assert stayers.iloc[1]['t2'] == 2
 
 def test_string_ids_17():
     # String worker and firm ids.
@@ -1188,6 +1304,77 @@ def test_fill_time_24_3():
     assert stayers.iloc[0]['j'] == 2
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['y'] == 1
+
+def test_uncollapse_25():
+    # Convert from collapsed long to long format.
+    worker_data = []
+    worker_data.append({'j': 0, 't1': 1, 't2': 1, 'i': 0, 'y': 2.})
+    worker_data.append({'j': 1, 't1': 2, 't2': 2, 'i': 0, 'y': 1.})
+    worker_data.append({'j': 1, 't1': 1, 't2': 2, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't1': 2, 't2': 2, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't1': 2, 't2': 2, 'i': 1, 'y': 1.5})
+    worker_data.append({'j': 3, 't1': 2, 't2': 2, 'i': 1, 'y': 0.5})
+    worker_data.append({'j': 2, 't1': 1, 't2': 2, 'i': 3, 'y': 1.})
+    worker_data.append({'j': 1, 't1': 1, 't2': 2, 'i': 3, 'y': 1.5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j', 'y', 't1', 't2']]
+
+    bdf = bpd.BipartiteLongCollapsed(data=df).uncollapse()
+
+    assert bdf.iloc[0]['i'] == 0
+    assert bdf.iloc[0]['j'] == 0
+    assert bdf.iloc[0]['y'] == 2
+    assert bdf.iloc[0]['t'] == 1
+
+    assert bdf.iloc[1]['i'] == 0
+    assert bdf.iloc[1]['j'] == 1
+    assert bdf.iloc[1]['y'] == 1
+    assert bdf.iloc[1]['t'] == 2
+
+    assert bdf.iloc[2]['i'] == 1
+    assert bdf.iloc[2]['j'] == 1
+    assert bdf.iloc[2]['y'] == 1
+    assert bdf.iloc[2]['t'] == 1
+
+    assert bdf.iloc[3]['i'] == 1
+    assert bdf.iloc[3]['j'] == 1
+    assert bdf.iloc[3]['y'] == 1
+    assert bdf.iloc[3]['t'] == 2
+
+    assert bdf.iloc[4]['i'] == 1
+    assert bdf.iloc[4]['j'] == 2
+    assert bdf.iloc[4]['y'] == 1
+    assert bdf.iloc[4]['t'] == 2
+
+    assert bdf.iloc[5]['i'] == 1
+    assert bdf.iloc[5]['j'] == 2
+    assert bdf.iloc[5]['y'] == 1.5
+    assert bdf.iloc[5]['t'] == 2
+
+    assert bdf.iloc[6]['i'] == 1
+    assert bdf.iloc[6]['j'] == 3
+    assert bdf.iloc[6]['y'] == 0.5
+    assert bdf.iloc[6]['t'] == 2
+
+    assert bdf.iloc[7]['i'] == 3
+    assert bdf.iloc[7]['j'] == 2
+    assert bdf.iloc[7]['y'] == 1
+    assert bdf.iloc[7]['t'] == 1
+
+    assert bdf.iloc[8]['i'] == 3
+    assert bdf.iloc[8]['j'] == 2
+    assert bdf.iloc[8]['y'] == 1
+    assert bdf.iloc[8]['t'] == 2
+
+    assert bdf.iloc[9]['i'] == 3
+    assert bdf.iloc[9]['j'] == 1
+    assert bdf.iloc[9]['y'] == 1.5
+    assert bdf.iloc[9]['t'] == 1
+
+    assert bdf.iloc[10]['i'] == 3
+    assert bdf.iloc[10]['j'] == 1
+    assert bdf.iloc[10]['y'] == 1.5
+    assert bdf.iloc[10]['t'] == 2
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####

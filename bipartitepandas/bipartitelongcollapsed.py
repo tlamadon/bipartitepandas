@@ -40,3 +40,43 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             (BipartiteEventStudyCollapsed): class
         '''
         return bpd.BipartiteEventStudyCollapsed
+
+    def uncollapse(self):
+        '''
+        Return collapsed long data reformatted into long data, by assuming variables constant over spells.
+
+        Returns:
+            long_frame (BipartiteLong): collapsed long data reformatted as BipartiteLong data
+        '''
+        all_cols = self.included_cols(flat=True)
+        # Skip t1 and t2
+        all_cols.remove('t1')
+        all_cols.remove('t2')
+        long_dict = {'t': []} # Dictionary of lists of each column's data
+        for col in all_cols:
+            long_dict[col] = []
+
+        # Iterate over all data
+        for i in range(len(self)):
+            row = self.iloc[i]
+            for t in range(int(row['t1']), int(row['t2']) + 1):
+                long_dict['t'].append(t)
+                for col in all_cols: # Add variables other than period
+                    long_dict[col].append(row[col])
+
+        # Convert to Pandas dataframe
+        data_long = pd.DataFrame(long_dict)
+        # Correct datatypes
+        data_long['t'] = data_long['t'].astype(int)
+        data_long = data_long.astype({col: self.col_dtype_dict[col] for col in all_cols})
+
+        # Sort columns
+        sorted_cols = sorted(data_long.columns, key=bpd.col_order)
+        data_long = data_long[sorted_cols]
+
+        self.logger.info('data uncollapsed to long format')
+
+        long_frame = bpd.BipartiteLong(data_long)
+        long_frame.set_attributes(self, no_dict=True)
+
+        return long_frame

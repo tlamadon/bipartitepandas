@@ -59,6 +59,7 @@ Modules and Methods
    ~bipartitepandas.BipartiteLongCollapsed.original_ids
    ~bipartitepandas.BipartiteLongCollapsed.rename
    ~bipartitepandas.BipartiteLongCollapsed.summary
+   ~bipartitepandas.BipartiteLongCollapsed.uncollapse
 
 ``bipartitepandas.BipartiteEventStudy``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
