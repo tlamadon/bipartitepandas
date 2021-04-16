@@ -79,6 +79,7 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudy.original_ids
    ~bipartitepandas.BipartiteEventStudy.rename
    ~bipartitepandas.BipartiteEventStudy.summary
+   ~bipartitepandas.BipartiteEventStudy.unstack_es
 
 ``bipartitepandas.BipartiteEventStudyCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -98,3 +99,4 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudyCollapsed.original_ids
    ~bipartitepandas.BipartiteEventStudyCollapsed.rename
    ~bipartitepandas.BipartiteEventStudyCollapsed.summary
+   ~bipartitepandas.BipartiteEventStudyCollapsed.unstack_es
