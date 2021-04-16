@@ -225,3 +225,75 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         long_frame.set_attributes(self, no_dict=True)
 
         return long_frame
+
+    def unstack_es(self, return_df=False):
+        '''
+        Unstack (collapsed) event study data by stacking (and renaming) period 2 data below period 1 data for movers, then dropping period 2 columns, returning a (collapsed) long dataframe. Duplicates created from unstacking are dropped.
+
+        Returns:
+            long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
+        '''
+        # Generate m column (the function checks if it already exists)
+        self.gen_m()
+
+        # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
+        rename_dict_1 = {}
+        # Dictionary to reformat names into (collapsed) long form
+        rename_dict_2 = {}
+        # For casting column types
+        astype_dict = {}
+        # Columns to drop
+        drops = []
+        for col in self.included_cols():
+            subcols = bpd.to_list(self.reference_dict[col])
+            n_subcols = len(subcols)
+            # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
+            if n_subcols % 2 == 0:
+                halfway = n_subcols // 2
+                for i in range(halfway):
+                    rename_dict_1[subcols[i]] = subcols[halfway + i]
+                    rename_dict_1[subcols[halfway + i]] = subcols[i]
+                    subcol_number = subcols[i].strip(col) # E.g. j1 will give 1
+                    rename_dict_2[subcols[i]] = col + subcol_number[1:] # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
+                    if self.col_dtype_dict[col] == 'int':
+                        astype_dict[rename_dict_2[subcols[i]]] = int
+
+                    drops.append(subcols[halfway + i])
+
+            else:
+                # Check correct type for other columns
+                if self.col_dtype_dict[col] == 'int':
+                    astype_dict[col] = int
+
+        # Sort by i, t if t included; otherwise sort by i
+        sort_order = ['i']
+        if self.col_included('t'):
+            sort_order.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
+
+        # Stack period 2 data if a mover (this is because the last observation is only given as an f2i, never as an f1i)
+        stacked_df = pd.DataFrame(self[self['m'] == 1]).rename(rename_dict_1, axis=1)
+
+        try:
+            data_long = pd.concat([pd.DataFrame(self), stacked_df], ignore_index=True) \
+                .drop(drops, axis=1) \
+                .rename(rename_dict_2, axis=1) \
+                .astype(astype_dict)
+        except ValueError: # If nan values, use Int8
+            for col in astype_dict.keys():
+                astype_dict[col] = 'Int64'
+            data_long = pd.concat([pd.DataFrame(self), stacked_df], ignore_index=True) \
+                .drop(drops, axis=1) \
+                .rename(rename_dict_2, axis=1) \
+                .astype(astype_dict)
+
+        # Sort columns and rows
+        sorted_cols = sorted(data_long.columns, key=bpd.col_order)
+        data_long = data_long[sorted_cols].sort_values(sort_order).reset_index(drop=True)
+
+        if return_df:
+            return data_long
+
+        long_frame = self._constructor_long(data_long)
+        long_frame.set_attributes(self, no_dict=True)
+
+        return long_frame

@@ -710,7 +710,7 @@ class BipartiteBase(DataFrame):
 
         if frame.col_included('t'):
             try: # If BipartiteEventStudy or BipartiteEventStudyCollapsed
-                frame = frame.get_long()
+                frame = frame.unstack_es().drop('m').drop_duplicates()
                 convert_1 = True
             except AttributeError:
                 convert_1 = False
@@ -738,7 +738,7 @@ class BipartiteBase(DataFrame):
         frame.i_t_unique = True
 
         if convert_2: # If data was collapsed
-            frame = frame.get_collapsed_long()
+            frame = frame.get_collapsed_long().drop('m')
         if convert_1: # If data was event study
             frame = frame.get_es()
 

@@ -829,14 +829,18 @@ def test_worker_year_unique_16_4():
         if how == 'max':
             assert movers.iloc[1]['j1'] == 2
             assert movers.iloc[1]['y1'] == 1
+            assert movers.iloc[1]['j2'] == 1
+            assert movers.iloc[1]['y2'] == 2
         elif how == 'sum':
             assert movers.iloc[1]['j1'] == 1
             assert movers.iloc[1]['y1'] == 1.25
+            assert movers.iloc[1]['j2'] == 2
+            assert movers.iloc[1]['y2'] == 2.5
         elif how == 'mean':
             assert movers.iloc[1]['j1'] == 2
             assert movers.iloc[1]['y1'] == 1
-        assert movers.iloc[1]['j2'] == 1
-        assert movers.iloc[1]['y2'] == 2
+            assert movers.iloc[1]['j2'] == 1
+            assert movers.iloc[1]['y2'] == 2
         assert movers.iloc[1]['t1'] == 1
         assert movers.iloc[1]['t2'] == 2
 
