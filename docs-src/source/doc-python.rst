@@ -1,11 +1,11 @@
 Using from Python
 =================
 
-To install from pip, from the command line run::
+To install with pip, from the command line run::
 
    pip install bipartitepandas
 
-To install from conda, from the command line run::
+To install with Conda, from the command line run::
 
    conda install -c tlamadon bipartitepandas
 
