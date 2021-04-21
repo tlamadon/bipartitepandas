@@ -28,7 +28,7 @@ The package provides a Python interface. Installation is handled by `pip` or `co
 Quick Start
 -----------
 
-To install from pip, run::
+To install from pip, from the command line run::
 
     pip install bipartitepandas
 
