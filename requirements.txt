@@ -4,5 +4,4 @@ bipartitepandas
 scipy
 scikit-learn
 networkx
-pytwoway
 tqdm
