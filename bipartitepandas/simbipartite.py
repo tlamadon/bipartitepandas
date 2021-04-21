@@ -12,7 +12,7 @@ from bipartitepandas import update_dict, logger_init
 
 class SimBipartite:
     '''
-    Class of SimBipartite, where SimBipartite simulates a network of firms and workers.
+    Class of SimBipartite, where SimBipartite simulates a bipartite network of firms and workers.
 
     Arguments:
         sim_params (dict): parameters for simulated data
