@@ -5,7 +5,7 @@
   :maxdepth: 2
 
   Home <self>
-  From python <doc-python>
+  From Python <doc-python>
 
 .. toctree::
   :caption: Notebook examples
