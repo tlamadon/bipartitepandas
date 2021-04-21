@@ -22,3 +22,4 @@
   BipartiteLongCollapsed <class-bipartitelongcollapsed>
   BipartiteEventStudy <class-bipartiteeventstudy>
   BipartiteEventStudyCollapsed <class-bipartiteeventstudycollapsed>
+  SimBipartite <class-simbipartite>

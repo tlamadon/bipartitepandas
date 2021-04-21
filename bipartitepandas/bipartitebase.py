@@ -65,7 +65,8 @@ class BipartiteBase(DataFrame):
             self.reset_attributes()
 
         # Define default parameter dictionaries
-        self.default_KMeans = {
+        self.default_KMeans = { # These parameters are specifically for the KMeans algorithm
+                                # Read more at https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
             'n_clusters': 10,
             'init': 'k-means++',
             'n_init': 500,
@@ -80,13 +81,13 @@ class BipartiteBase(DataFrame):
         }
 
         self.default_cluster = {
-            'cdf_resolution': 10,
-            'grouping': 'quantile_all',
-            'stayers_movers': None,
-            't': None,
-            'dropna': False,
-            'weighted': True,
-            'user_KMeans': self.default_KMeans
+            'cdf_resolution': 10, # How many values to use to approximate the cdfs
+            'grouping': 'quantile_all', # How to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
+            'stayers_movers': None, # If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            't': None, # If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
+            'weighted': True, # If True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+            'dropna': False, # If True, drop observations where firms aren't clustered; if False, keep all observations
+            'user_KMeans': self.default_KMeans # Parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
         }
 
         self.dtype_dict = {
@@ -96,7 +97,7 @@ class BipartiteBase(DataFrame):
         }
 
         self.default_clean = {
-            'i_t_how': 'max'
+            'i_t_how': 'max' # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
         }
 
         # self.logger.info('BipartiteBase object initialized')
@@ -482,7 +483,7 @@ class BipartiteBase(DataFrame):
 
                 Dictionary parameters:
 
-                    i_t_how (str): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
+                    i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
 
         Returns:
             frame (BipartiteBase): BipartiteBase with cleaned data
@@ -954,17 +955,17 @@ class BipartiteBase(DataFrame):
 
                 Dictionary parameters:
 
-                    cdf_resolution (int): how many values to use to approximate the cdfs
+                    cdf_resolution (int, default=10): how many values to use to approximate the cdfs
 
-                    grouping (str): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
+                    grouping (str, default='quantile_all'): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
 
-                    stayers_movers (str or None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+                    stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
 
-                    t (int or None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
+                    t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
 
-                    weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+                    weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
 
-                    dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
+                    dropna (bool, default=False): if True, drop observations where firms aren't clustered; if False, keep all observations
 
                     user_KMeans (dict): parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
 

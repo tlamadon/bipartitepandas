@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Index &mdash; bipartitepandas 0.0.2 documentation</title>
+  <title>SimBipartite class &mdash; bipartitepandas 0.0.2 documentation</title>
   
 
   
@@ -34,8 +34,9 @@
     <script type="text/javascript" src="_static/js/theme.js"></script>
 
     
-    <link rel="index" title="Index" href="#" />
-    <link rel="search" title="Search" href="search.html" /> 
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="BipartiteEventStudyCollapsed class" href="class-bipartiteeventstudycollapsed.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -90,13 +91,13 @@
 <li class="toctree-l1"><a class="reference internal" href="notebooks/bipartitepandas_example.html">BipartitePandas</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Under the hood</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="internal.html">Python API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitelong.html">BipartiteLong</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
-<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">SimBipartite</a></li>
 </ul>
 
             
@@ -143,12 +144,14 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Index</li>
+      <li>SimBipartite class</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
+            <a href="_sources/class-simbipartite.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
     
@@ -160,75 +163,88 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
 
-<h1 id="index">Index</h1>
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
 
-<div class="genindex-jumpbox">
- <a href="#B"><strong>B</strong></a>
- | <a href="#F"><strong>F</strong></a>
- | <a href="#G"><strong>G</strong></a>
- | <a href="#S"><strong>S</strong></a>
- | <a href="#U"><strong>U</strong></a>
- 
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="simbipartite-class">
+<h1>SimBipartite class<a class="headerlink" href="#simbipartite-class" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="bipartitepandas.simbipartite.SimBipartite">
+<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.simbipartite.</code><code class="sig-name descname">SimBipartite</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">sim_params</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.simbipartite.SimBipartite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class of SimBipartite, where SimBipartite simulates a network of firms and workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>sim_params</strong> (<em>dict</em>) – <p>parameters for simulated data</p>
+<p>Dictionary parameters:</p>
+<blockquote>
+<div><p>num_ind (int, default=10000): number of workers</p>
+<p>num_time (int, default=5): time length of panel</p>
+<p>firm_size (int, default=50): max number of individuals per firm</p>
+<p>nk (int, default=10): number of firm types</p>
+<p>nl (int, default=5): number of worker types</p>
+<p>alpha_sig (float, default=1): standard error of individual fixed effect (volatility of worker effects)</p>
+<p>psi_sig (float, default=1): standard error of firm fixed effect (volatility of firm effects)</p>
+<p>w_sig (float, default=1): standard error of residual in AKM wage equation (volatility of wage shocks)</p>
+<p>csort (float, default=1): sorting effect</p>
+<p>cnetw (float, default=1): network effect</p>
+<p>csig (float, default=1): standard error of sorting/network effects</p>
+<p>p_move (float, default=0.5): probability a worker moves firms in any period</p>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="bipartitepandas.simbipartite.SimBipartite.sim_network">
+<code class="sig-name descname">sim_network</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.simbipartite.SimBipartite.sim_network" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simulate panel data corresponding to the calibrated model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>simulated network</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>data (Pandas DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </div>
-<h2 id="B">B</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-bipartiteeventstudy.html#bipartitepandas.bipartiteeventstudy.BipartiteEventStudy">BipartiteEventStudy (class in bipartitepandas.bipartiteeventstudy)</a>
-</li>
-      <li><a href="class-bipartiteeventstudycollapsed.html#bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed">BipartiteEventStudyCollapsed (class in bipartitepandas.bipartiteeventstudycollapsed)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-bipartitelong.html#bipartitepandas.bipartitelong.BipartiteLong">BipartiteLong (class in bipartitepandas.bipartitelong)</a>
-</li>
-      <li><a href="class-bipartitelongcollapsed.html#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed">BipartiteLongCollapsed (class in bipartitepandas.bipartitelongcollapsed)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="F">F</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-bipartitelong.html#bipartitepandas.bipartitelong.BipartiteLong.fill_periods">fill_periods() (bipartitepandas.bipartitelong.BipartiteLong method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="G">G</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-bipartitelong.html#bipartitepandas.bipartitelong.BipartiteLong.get_collapsed_long">get_collapsed_long() (bipartitepandas.bipartitelong.BipartiteLong method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="S">S</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-simbipartite.html#bipartitepandas.simbipartite.SimBipartite.sim_network">sim_network() (bipartitepandas.simbipartite.SimBipartite method)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-simbipartite.html#bipartitepandas.simbipartite.SimBipartite">SimBipartite (class in bipartitepandas.simbipartite)</a>
-</li>
-  </ul></td>
-</tr></table>
-
-<h2 id="U">U</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="class-bipartitelongcollapsed.html#bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed.uncollapse">uncollapse() (bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed method)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 
 
            </div>
            
           </div>
           <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="class-bipartiteeventstudycollapsed.html" class="btn btn-neutral float-left" title="BipartiteEventStudyCollapsed class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
   
 
   <hr/>

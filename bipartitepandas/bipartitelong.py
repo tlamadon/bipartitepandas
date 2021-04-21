@@ -105,7 +105,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def fill_periods(self, fill_j=- 1, fill_y=pd.NA):
+    def fill_periods(self, fill_j=-1, fill_y=pd.NA):
         '''
         Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1 and y is filled in as pd.NA, but these values can be specified.
 

@@ -37,7 +37,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Python API" href="../internal.html" />
-    <link rel="prev" title="Using from python" href="../doc-python.html" /> 
+    <link rel="prev" title="Using from Python" href="../doc-python.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -94,7 +94,14 @@
 <li class="toctree-l2"><a class="reference internal" href="#Converting-formats">Converting formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Clustering">Clustering</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Clustering-options">Clustering options</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#Some-extra-features">Some extra features</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Some-extra-features">Some extra features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Summary-statistics">Summary statistics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Original-worker-and-firm-ids">Original worker and firm ids</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Filling-in-missing-years-as-unemployed">Filling in missing years as unemployed</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Converting-from-collapsed-long-to-long">Converting from collapsed long to long</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Column-inference">Column inference</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -105,6 +112,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-simbipartite.html">SimBipartite</a></li>
 </ul>
 
             
@@ -435,7 +443,6 @@ div.rendered_html tbody tr:hover {
 <span></span><span class="c1"># Add BipartitePandas to system path, do not run this</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;../../..&#39;</span><span class="p">)</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;/Users/adamalexanderoppenheimer/Desktop/pytwoway&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -455,9 +462,8 @@ div.rendered_html tbody tr:hover {
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># For the example, we simulate bipartite labor data using the package PyTwoWay</span>
-<span class="kn">import</span> <span class="nn">pytwoway</span> <span class="k">as</span> <span class="nn">tw</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span></span><span class="c1"># For the example, we simulate bipartite labor data</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">display</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -494,36 +500,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
     </tr>
     <tr>
@@ -536,36 +542,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -623,36 +629,36 @@ BipartiteLongCollapsed).</p>
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
     </tr>
     <tr>
@@ -665,36 +671,36 @@ BipartiteLongCollapsed).</p>
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -775,36 +781,36 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
     </tr>
     <tr>
@@ -817,36 +823,36 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -905,55 +911,55 @@ None
   <tbody>
     <tr>
       <th>0</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.455400</td>
-      <td>1.455400</td>
+      <td>3</td>
+      <td>-1.369417</td>
+      <td>-1.369417</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.234752</td>
-      <td>1.234752</td>
+      <td>3</td>
+      <td>-1.624812</td>
+      <td>-1.624812</td>
       <td>2</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>-0.297542</td>
-      <td>-0.297542</td>
+      <td>3</td>
+      <td>-1.693311</td>
+      <td>-1.693311</td>
       <td>3</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.131995</td>
-      <td>1.131995</td>
+      <td>3</td>
+      <td>-0.408243</td>
+      <td>-0.408243</td>
       <td>4</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>2.194565</td>
-      <td>2.194565</td>
+      <td>3</td>
+      <td>-1.329051</td>
+      <td>-1.329051</td>
       <td>5</td>
       <td>5</td>
       <td>0</td>
@@ -970,63 +976,63 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>40642</th>
+      <th>40583</th>
       <td>9998</td>
-      <td>142</td>
-      <td>139</td>
-      <td>1.599754</td>
-      <td>0.183777</td>
+      <td>193</td>
+      <td>72</td>
+      <td>0.789785</td>
+      <td>1.739216</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40643</th>
+      <th>40584</th>
       <td>9999</td>
-      <td>192</td>
-      <td>192</td>
-      <td>1.571552</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>45</td>
+      <td>-1.562082</td>
+      <td>0.146220</td>
       <td>1</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40644</th>
+      <th>40585</th>
       <td>9999</td>
-      <td>192</td>
-      <td>148</td>
-      <td>2.921278</td>
-      <td>2.560094</td>
+      <td>45</td>
+      <td>164</td>
+      <td>0.146220</td>
+      <td>-0.522033</td>
       <td>2</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40645</th>
+      <th>40586</th>
       <td>9999</td>
-      <td>148</td>
-      <td>191</td>
-      <td>2.560094</td>
-      <td>2.961787</td>
+      <td>164</td>
+      <td>138</td>
+      <td>-0.522033</td>
+      <td>0.275431</td>
       <td>3</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40646</th>
+      <th>40587</th>
       <td>9999</td>
-      <td>191</td>
-      <td>191</td>
-      <td>2.961787</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>138</td>
+      <td>0.275431</td>
+      <td>-0.627312</td>
       <td>4</td>
       <td>5</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>40647 rows × 8 columns</p>
+<p>40588 rows × 8 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1083,11 +1089,11 @@ None
   <tbody>
     <tr>
       <th>0</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.455400</td>
-      <td>1.455400</td>
+      <td>3</td>
+      <td>-1.369417</td>
+      <td>-1.369417</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
@@ -1095,11 +1101,11 @@ None
     </tr>
     <tr>
       <th>1</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.234752</td>
-      <td>1.234752</td>
+      <td>3</td>
+      <td>-1.624812</td>
+      <td>-1.624812</td>
       <td>2</td>
       <td>2</td>
       <td>0</td>
@@ -1107,11 +1113,11 @@ None
     </tr>
     <tr>
       <th>2</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>-0.297542</td>
-      <td>-0.297542</td>
+      <td>3</td>
+      <td>-1.693311</td>
+      <td>-1.693311</td>
       <td>3</td>
       <td>3</td>
       <td>0</td>
@@ -1119,11 +1125,11 @@ None
     </tr>
     <tr>
       <th>3</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.131995</td>
-      <td>1.131995</td>
+      <td>3</td>
+      <td>-0.408243</td>
+      <td>-0.408243</td>
       <td>4</td>
       <td>4</td>
       <td>0</td>
@@ -1131,11 +1137,11 @@ None
     </tr>
     <tr>
       <th>4</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>2.194565</td>
-      <td>2.194565</td>
+      <td>3</td>
+      <td>-1.329051</td>
+      <td>-1.329051</td>
       <td>5</td>
       <td>5</td>
       <td>0</td>
@@ -1154,60 +1160,60 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>78054</th>
+      <th>78231</th>
       <td>9998</td>
-      <td>139</td>
-      <td>142</td>
-      <td>0.183777</td>
-      <td>1.599754</td>
+      <td>72</td>
+      <td>193</td>
+      <td>1.739216</td>
+      <td>0.789785</td>
       <td>5</td>
       <td>4</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78055</th>
+      <th>78232</th>
       <td>9999</td>
-      <td>192</td>
-      <td>192</td>
-      <td>2.921278</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>45</td>
+      <td>0.146220</td>
+      <td>-1.562082</td>
       <td>2</td>
       <td>1</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78056</th>
+      <th>78233</th>
       <td>9999</td>
-      <td>148</td>
-      <td>192</td>
-      <td>2.560094</td>
-      <td>2.921278</td>
+      <td>164</td>
+      <td>45</td>
+      <td>-0.522033</td>
+      <td>0.146220</td>
       <td>3</td>
       <td>2</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78057</th>
+      <th>78234</th>
       <td>9999</td>
-      <td>191</td>
-      <td>148</td>
-      <td>2.961787</td>
-      <td>2.560094</td>
+      <td>138</td>
+      <td>164</td>
+      <td>0.275431</td>
+      <td>-0.522033</td>
       <td>4</td>
       <td>3</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
-      <th>78058</th>
+      <th>78235</th>
       <td>9999</td>
-      <td>191</td>
-      <td>191</td>
-      <td>2.470586</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>138</td>
+      <td>-0.627312</td>
+      <td>0.275431</td>
       <td>5</td>
       <td>4</td>
       <td>1</td>
@@ -1215,7 +1221,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>78059 rows × 9 columns</p>
+<p>78236 rows × 9 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1264,40 +1270,40 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -1312,40 +1318,40 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -1410,8 +1416,8 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
       <td>1</td>
       <td>1</td>
@@ -1420,40 +1426,40 @@ None
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.613993</td>
-      <td>2</td>
-      <td>5</td>
-      <td>4</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1</td>
-      <td>102</td>
-      <td>1.583504</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1</td>
-      <td>91</td>
-      <td>0.746015</td>
+      <td>192</td>
+      <td>2.901256</td>
       <td>2</td>
       <td>3</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>4</th>
-      <td>1</td>
-      <td>52</td>
-      <td>1.098845</td>
+      <th>2</th>
+      <td>0</td>
+      <td>139</td>
+      <td>2.002890</td>
       <td>4</td>
       <td>5</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>137</td>
+      <td>2.308677</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>189</td>
+      <td>2.463648</td>
+      <td>3</td>
+      <td>4</td>
       <td>2</td>
       <td>1</td>
     </tr>
@@ -1468,50 +1474,50 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29694</th>
+      <th>30012</th>
       <td>9998</td>
-      <td>142</td>
-      <td>0.449995</td>
+      <td>193</td>
+      <td>0.789785</td>
+      <td>4</td>
+      <td>4</td>
       <td>1</td>
-      <td>4</td>
-      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29695</th>
+      <th>30013</th>
       <td>9998</td>
-      <td>139</td>
-      <td>0.183777</td>
+      <td>72</td>
+      <td>1.739216</td>
       <td>5</td>
       <td>5</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29696</th>
+      <th>30014</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.246415</td>
+      <td>45</td>
+      <td>-0.707931</td>
       <td>1</td>
       <td>2</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29697</th>
+      <th>30015</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
       <td>3</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29698</th>
+      <th>30016</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.716187</td>
+      <td>138</td>
+      <td>-0.175941</td>
       <td>4</td>
       <td>5</td>
       <td>2</td>
@@ -1519,7 +1525,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>29699 rows × 7 columns</p>
+<p>30017 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1582,11 +1588,11 @@ None
   <tbody>
     <tr>
       <th>0</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.143834</td>
-      <td>1.143834</td>
+      <td>3</td>
+      <td>-1.284967</td>
+      <td>-1.284967</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1597,11 +1603,11 @@ None
     </tr>
     <tr>
       <th>1</th>
-      <td>4</td>
-      <td>59</td>
-      <td>59</td>
-      <td>-0.255627</td>
-      <td>-0.255627</td>
+      <td>64</td>
+      <td>158</td>
+      <td>158</td>
+      <td>2.728429</td>
+      <td>2.728429</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1612,11 +1618,11 @@ None
     </tr>
     <tr>
       <th>2</th>
-      <td>24</td>
-      <td>2</td>
-      <td>2</td>
-      <td>-1.767906</td>
-      <td>-1.767906</td>
+      <td>81</td>
+      <td>5</td>
+      <td>5</td>
+      <td>-1.866741</td>
+      <td>-1.866741</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1627,11 +1633,11 @@ None
     </tr>
     <tr>
       <th>3</th>
-      <td>41</td>
-      <td>51</td>
-      <td>51</td>
-      <td>-0.797700</td>
-      <td>-0.797700</td>
+      <td>84</td>
+      <td>96</td>
+      <td>96</td>
+      <td>-0.206177</td>
+      <td>-0.206177</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1642,11 +1648,11 @@ None
     </tr>
     <tr>
       <th>4</th>
-      <td>91</td>
-      <td>160</td>
-      <td>160</td>
-      <td>1.281019</td>
-      <td>1.281019</td>
+      <td>102</td>
+      <td>26</td>
+      <td>26</td>
+      <td>-1.140468</td>
+      <td>-1.140468</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -1671,57 +1677,12 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>20341</th>
-      <td>9997</td>
-      <td>56</td>
-      <td>124</td>
-      <td>-1.317392</td>
-      <td>0.139719</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>4</td>
-      <td>2.0</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20342</th>
-      <td>9997</td>
-      <td>124</td>
-      <td>154</td>
-      <td>0.139719</td>
-      <td>1.623252</td>
-      <td>3</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>2.0</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20343</th>
+      <th>20600</th>
       <td>9998</td>
-      <td>142</td>
-      <td>139</td>
-      <td>0.449995</td>
-      <td>0.183777</td>
-      <td>1</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>4.0</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20344</th>
-      <td>9999</td>
-      <td>192</td>
-      <td>148</td>
-      <td>2.246415</td>
-      <td>2.560094</td>
+      <td>165</td>
+      <td>136</td>
+      <td>0.603650</td>
+      <td>0.206698</td>
       <td>1</td>
       <td>2</td>
       <td>3</td>
@@ -1731,12 +1692,57 @@ None
       <td>1</td>
     </tr>
     <tr>
-      <th>20345</th>
+      <th>20601</th>
+      <td>9998</td>
+      <td>136</td>
+      <td>193</td>
+      <td>0.206698</td>
+      <td>0.789785</td>
+      <td>3</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20602</th>
+      <td>9998</td>
+      <td>193</td>
+      <td>72</td>
+      <td>0.789785</td>
+      <td>1.739216</td>
+      <td>4</td>
+      <td>4</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20603</th>
       <td>9999</td>
-      <td>148</td>
-      <td>191</td>
-      <td>2.560094</td>
-      <td>2.716187</td>
+      <td>45</td>
+      <td>164</td>
+      <td>-0.707931</td>
+      <td>-0.522033</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20604</th>
+      <td>9999</td>
+      <td>164</td>
+      <td>138</td>
+      <td>-0.522033</td>
+      <td>-0.175941</td>
       <td>3</td>
       <td>3</td>
       <td>4</td>
@@ -1747,7 +1753,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>20346 rows × 12 columns</p>
+<p>20605 rows × 12 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1806,8 +1812,8 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
       <td>1</td>
       <td>1.0</td>
@@ -1816,40 +1822,40 @@ None
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.613993</td>
-      <td>2</td>
-      <td>5</td>
-      <td>4.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>1</td>
-      <td>102</td>
-      <td>1.583504</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1.0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>1</td>
-      <td>91</td>
-      <td>0.746015</td>
+      <td>192</td>
+      <td>2.901256</td>
       <td>2</td>
       <td>3</td>
       <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>4</th>
-      <td>1</td>
-      <td>52</td>
-      <td>1.098845</td>
+      <th>2</th>
+      <td>0</td>
+      <td>139</td>
+      <td>2.002890</td>
       <td>4</td>
       <td>5</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>137</td>
+      <td>2.308677</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>189</td>
+      <td>2.463648</td>
+      <td>3</td>
+      <td>4</td>
       <td>2.0</td>
       <td>1</td>
     </tr>
@@ -1864,50 +1870,50 @@ None
       <td>...</td>
     </tr>
     <tr>
-      <th>29694</th>
+      <th>30012</th>
       <td>9998</td>
-      <td>142</td>
-      <td>0.449995</td>
-      <td>1</td>
+      <td>193</td>
+      <td>0.789785</td>
       <td>4</td>
-      <td>4.0</td>
+      <td>4</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29695</th>
+      <th>30013</th>
       <td>9998</td>
-      <td>139</td>
-      <td>0.183777</td>
+      <td>72</td>
+      <td>1.739216</td>
       <td>5</td>
       <td>5</td>
       <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29696</th>
+      <th>30014</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.246415</td>
+      <td>45</td>
+      <td>-0.707931</td>
       <td>1</td>
       <td>2</td>
       <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29697</th>
+      <th>30015</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
       <td>3</td>
       <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29698</th>
+      <th>30016</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.716187</td>
+      <td>138</td>
+      <td>-0.175941</td>
       <td>4</td>
       <td>5</td>
       <td>2.0</td>
@@ -1915,7 +1921,7 @@ None
     </tr>
   </tbody>
 </table>
-<p>29699 rows × 7 columns</p>
+<p>30017 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1973,36 +1979,36 @@ None
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
     </tr>
     <tr>
@@ -2015,36 +2021,36 @@ None
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -2062,15 +2068,6 @@ None
 <span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-j_col: j
-g_col: g
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -2105,42 +2102,42 @@ g_col: g
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
-      <td>7</td>
+      <td>8</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
-      <td>7</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
-      <td>7</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
-      <td>7</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>...</th>
@@ -2153,40 +2150,40 @@ g_col: g
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
-      <td>4</td>
+      <td>3</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
-      <td>4</td>
+      <td>3</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
-      <td>0</td>
+      <td>5</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
       <td>4</td>
     </tr>
@@ -2242,67 +2239,67 @@ g_col: g
   <tbody>
     <tr>
       <th>0</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.455400</td>
-      <td>1.455400</td>
+      <td>3</td>
+      <td>-1.369417</td>
+      <td>-1.369417</td>
       <td>1</td>
       <td>1</td>
-      <td>8</td>
-      <td>8</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.234752</td>
-      <td>1.234752</td>
+      <td>3</td>
+      <td>-1.624812</td>
+      <td>-1.624812</td>
       <td>2</td>
       <td>2</td>
-      <td>8</td>
-      <td>8</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>-0.297542</td>
-      <td>-0.297542</td>
+      <td>35</td>
       <td>3</td>
       <td>3</td>
-      <td>8</td>
-      <td>8</td>
+      <td>-1.693311</td>
+      <td>-1.693311</td>
+      <td>3</td>
+      <td>3</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.131995</td>
-      <td>1.131995</td>
+      <td>3</td>
+      <td>-0.408243</td>
+      <td>-0.408243</td>
       <td>4</td>
       <td>4</td>
-      <td>8</td>
-      <td>8</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>2.194565</td>
-      <td>2.194565</td>
+      <td>3</td>
+      <td>-1.329051</td>
+      <td>-1.329051</td>
       <td>5</td>
       <td>5</td>
-      <td>8</td>
-      <td>8</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2319,64 +2316,64 @@ g_col: g
       <td>...</td>
     </tr>
     <tr>
-      <th>40642</th>
+      <th>40583</th>
       <td>9998</td>
-      <td>142</td>
-      <td>139</td>
-      <td>1.599754</td>
-      <td>0.183777</td>
+      <td>193</td>
+      <td>72</td>
+      <td>0.789785</td>
+      <td>1.739216</td>
       <td>4</td>
       <td>5</td>
-      <td>7</td>
-      <td>7</td>
+      <td>2</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40643</th>
+      <th>40584</th>
       <td>9999</td>
-      <td>192</td>
-      <td>192</td>
-      <td>1.571552</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>45</td>
+      <td>-1.562082</td>
+      <td>0.146220</td>
       <td>1</td>
       <td>2</td>
-      <td>4</td>
-      <td>4</td>
+      <td>3</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40644</th>
+      <th>40585</th>
       <td>9999</td>
-      <td>192</td>
-      <td>148</td>
-      <td>2.921278</td>
-      <td>2.560094</td>
+      <td>45</td>
+      <td>164</td>
+      <td>0.146220</td>
+      <td>-0.522033</td>
       <td>2</td>
       <td>3</td>
-      <td>4</td>
-      <td>0</td>
+      <td>3</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40645</th>
+      <th>40586</th>
       <td>9999</td>
-      <td>148</td>
-      <td>191</td>
-      <td>2.560094</td>
-      <td>2.961787</td>
+      <td>164</td>
+      <td>138</td>
+      <td>-0.522033</td>
+      <td>0.275431</td>
       <td>3</td>
       <td>4</td>
-      <td>0</td>
+      <td>5</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>40646</th>
+      <th>40587</th>
       <td>9999</td>
-      <td>191</td>
-      <td>191</td>
-      <td>2.961787</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>138</td>
+      <td>0.275431</td>
+      <td>-0.627312</td>
       <td>4</td>
       <td>5</td>
       <td>4</td>
@@ -2385,7 +2382,7 @@ g_col: g
     </tr>
   </tbody>
 </table>
-<p>40647 rows × 10 columns</p>
+<p>40588 rows × 10 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2435,56 +2432,56 @@ g_col: g
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
       <td>1</td>
       <td>1</td>
-      <td>7</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.613993</td>
+      <td>192</td>
+      <td>2.901256</td>
       <td>2</td>
-      <td>5</td>
-      <td>4</td>
-      <td>7</td>
+      <td>3</td>
+      <td>2</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>1</td>
-      <td>102</td>
-      <td>1.583504</td>
-      <td>1</td>
-      <td>1</td>
-      <td>1</td>
-      <td>3</td>
+      <td>0</td>
+      <td>139</td>
+      <td>2.002890</td>
+      <td>4</td>
+      <td>5</td>
+      <td>2</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>1</td>
-      <td>91</td>
-      <td>0.746015</td>
+      <td>137</td>
+      <td>2.308677</td>
+      <td>1</td>
       <td>2</td>
-      <td>3</td>
       <td>2</td>
-      <td>5</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>1</td>
-      <td>52</td>
-      <td>1.098845</td>
+      <td>189</td>
+      <td>2.463648</td>
+      <td>3</td>
       <td>4</td>
-      <td>5</td>
       <td>2</td>
-      <td>1</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
@@ -2499,54 +2496,54 @@ g_col: g
       <td>...</td>
     </tr>
     <tr>
-      <th>29694</th>
+      <th>30012</th>
       <td>9998</td>
-      <td>142</td>
-      <td>0.449995</td>
+      <td>193</td>
+      <td>0.789785</td>
+      <td>4</td>
+      <td>4</td>
       <td>1</td>
-      <td>4</td>
-      <td>4</td>
-      <td>7</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29695</th>
+      <th>30013</th>
       <td>9998</td>
-      <td>139</td>
-      <td>0.183777</td>
+      <td>72</td>
+      <td>1.739216</td>
       <td>5</td>
       <td>5</td>
       <td>1</td>
-      <td>7</td>
+      <td>6</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29696</th>
+      <th>30014</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.246415</td>
+      <td>45</td>
+      <td>-0.707931</td>
       <td>1</td>
       <td>2</td>
       <td>2</td>
-      <td>4</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29697</th>
+      <th>30015</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
       <td>3</td>
       <td>1</td>
-      <td>0</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29698</th>
+      <th>30016</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.716187</td>
+      <td>138</td>
+      <td>-0.175941</td>
       <td>4</td>
       <td>5</td>
       <td>2</td>
@@ -2555,7 +2552,7 @@ g_col: g
     </tr>
   </tbody>
 </table>
-<p>29699 rows × 8 columns</p>
+<p>30017 rows × 8 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2609,87 +2606,87 @@ g_col: g
   <tbody>
     <tr>
       <th>0</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.143834</td>
-      <td>1.143834</td>
+      <td>3</td>
+      <td>-1.284967</td>
+      <td>-1.284967</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>8</td>
-      <td>8</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
-      <td>4</td>
-      <td>59</td>
-      <td>59</td>
-      <td>-0.255627</td>
-      <td>-0.255627</td>
+      <td>64</td>
+      <td>158</td>
+      <td>158</td>
+      <td>2.728429</td>
+      <td>2.728429</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>1</td>
-      <td>1</td>
+      <td>5</td>
+      <td>5</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>24</td>
-      <td>2</td>
-      <td>2</td>
-      <td>-1.767906</td>
-      <td>-1.767906</td>
+      <td>81</td>
+      <td>5</td>
+      <td>5</td>
+      <td>-1.866741</td>
+      <td>-1.866741</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>2</td>
-      <td>2</td>
+      <td>7</td>
+      <td>7</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>41</td>
-      <td>51</td>
-      <td>51</td>
-      <td>-0.797700</td>
-      <td>-0.797700</td>
+      <td>84</td>
+      <td>96</td>
+      <td>96</td>
+      <td>-0.206177</td>
+      <td>-0.206177</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>1</td>
-      <td>1</td>
+      <td>0</td>
+      <td>0</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>91</td>
-      <td>160</td>
-      <td>160</td>
-      <td>1.281019</td>
-      <td>1.281019</td>
+      <td>102</td>
+      <td>26</td>
+      <td>26</td>
+      <td>-1.140468</td>
+      <td>-1.140468</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
       <td>5</td>
       <td>5.0</td>
       <td>5</td>
-      <td>0</td>
-      <td>0</td>
+      <td>1</td>
+      <td>1</td>
       <td>0</td>
     </tr>
     <tr>
@@ -2710,93 +2707,93 @@ g_col: g
       <td>...</td>
     </tr>
     <tr>
-      <th>20341</th>
-      <td>9997</td>
-      <td>56</td>
-      <td>124</td>
-      <td>-1.317392</td>
-      <td>0.139719</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>4</td>
-      <td>2.0</td>
-      <td>2</td>
-      <td>1</td>
-      <td>7</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20342</th>
-      <td>9997</td>
-      <td>124</td>
-      <td>154</td>
-      <td>0.139719</td>
-      <td>1.623252</td>
-      <td>3</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>2.0</td>
-      <td>1</td>
-      <td>7</td>
-      <td>0</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20343</th>
+      <th>20600</th>
       <td>9998</td>
-      <td>142</td>
-      <td>139</td>
-      <td>0.449995</td>
-      <td>0.183777</td>
-      <td>1</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>4.0</td>
-      <td>1</td>
-      <td>7</td>
-      <td>7</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20344</th>
-      <td>9999</td>
-      <td>192</td>
-      <td>148</td>
-      <td>2.246415</td>
-      <td>2.560094</td>
+      <td>165</td>
+      <td>136</td>
+      <td>0.603650</td>
+      <td>0.206698</td>
       <td>1</td>
       <td>2</td>
       <td>3</td>
       <td>3</td>
       <td>2.0</td>
       <td>1</td>
+      <td>5</td>
       <td>4</td>
-      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>20345</th>
+      <th>20601</th>
+      <td>9998</td>
+      <td>136</td>
+      <td>193</td>
+      <td>0.206698</td>
+      <td>0.789785</td>
+      <td>3</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20602</th>
+      <td>9998</td>
+      <td>193</td>
+      <td>72</td>
+      <td>0.789785</td>
+      <td>1.739216</td>
+      <td>4</td>
+      <td>4</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>6</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20603</th>
       <td>9999</td>
-      <td>148</td>
-      <td>191</td>
-      <td>2.560094</td>
-      <td>2.716187</td>
+      <td>45</td>
+      <td>164</td>
+      <td>-0.707931</td>
+      <td>-0.522033</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>3</td>
+      <td>5</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20604</th>
+      <td>9999</td>
+      <td>164</td>
+      <td>138</td>
+      <td>-0.522033</td>
+      <td>-0.175941</td>
       <td>3</td>
       <td>3</td>
       <td>4</td>
       <td>5</td>
       <td>1.0</td>
       <td>2</td>
-      <td>0</td>
+      <td>5</td>
       <td>4</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>20346 rows × 14 columns</p>
+<p>20605 rows × 14 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -2848,11 +2845,11 @@ g_col: g
   <tbody>
     <tr>
       <th>0</th>
+      <td>35</td>
       <td>3</td>
-      <td>75</td>
-      <td>75</td>
-      <td>1.143834</td>
-      <td>1.143834</td>
+      <td>3</td>
+      <td>-1.284967</td>
+      <td>-1.284967</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -2863,11 +2860,11 @@ g_col: g
     </tr>
     <tr>
       <th>1</th>
-      <td>4</td>
-      <td>59</td>
-      <td>59</td>
-      <td>-0.255627</td>
-      <td>-0.255627</td>
+      <td>64</td>
+      <td>158</td>
+      <td>158</td>
+      <td>2.728429</td>
+      <td>2.728429</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -2878,11 +2875,11 @@ g_col: g
     </tr>
     <tr>
       <th>2</th>
-      <td>24</td>
-      <td>2</td>
-      <td>2</td>
-      <td>-1.767906</td>
-      <td>-1.767906</td>
+      <td>81</td>
+      <td>5</td>
+      <td>5</td>
+      <td>-1.866741</td>
+      <td>-1.866741</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -2893,11 +2890,11 @@ g_col: g
     </tr>
     <tr>
       <th>3</th>
-      <td>41</td>
-      <td>51</td>
-      <td>51</td>
-      <td>-0.797700</td>
-      <td>-0.797700</td>
+      <td>84</td>
+      <td>96</td>
+      <td>96</td>
+      <td>-0.206177</td>
+      <td>-0.206177</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -2908,11 +2905,11 @@ g_col: g
     </tr>
     <tr>
       <th>4</th>
-      <td>91</td>
-      <td>160</td>
-      <td>160</td>
-      <td>1.281019</td>
-      <td>1.281019</td>
+      <td>102</td>
+      <td>26</td>
+      <td>26</td>
+      <td>-1.140468</td>
+      <td>-1.140468</td>
       <td>1</td>
       <td>5</td>
       <td>1</td>
@@ -2937,57 +2934,12 @@ g_col: g
       <td>...</td>
     </tr>
     <tr>
-      <th>20341</th>
-      <td>9997</td>
-      <td>56</td>
-      <td>124</td>
-      <td>-1.317392</td>
-      <td>0.139719</td>
-      <td>1</td>
-      <td>2</td>
-      <td>3</td>
-      <td>4</td>
-      <td>2.0</td>
-      <td>2</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20342</th>
-      <td>9997</td>
-      <td>124</td>
-      <td>154</td>
-      <td>0.139719</td>
-      <td>1.623252</td>
-      <td>3</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>2.0</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20343</th>
+      <th>20600</th>
       <td>9998</td>
-      <td>142</td>
-      <td>139</td>
-      <td>0.449995</td>
-      <td>0.183777</td>
-      <td>1</td>
-      <td>4</td>
-      <td>5</td>
-      <td>5</td>
-      <td>4.0</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>20344</th>
-      <td>9999</td>
-      <td>192</td>
-      <td>148</td>
-      <td>2.246415</td>
-      <td>2.560094</td>
+      <td>165</td>
+      <td>136</td>
+      <td>0.603650</td>
+      <td>0.206698</td>
       <td>1</td>
       <td>2</td>
       <td>3</td>
@@ -2997,12 +2949,57 @@ g_col: g
       <td>1</td>
     </tr>
     <tr>
-      <th>20345</th>
+      <th>20601</th>
+      <td>9998</td>
+      <td>136</td>
+      <td>193</td>
+      <td>0.206698</td>
+      <td>0.789785</td>
+      <td>3</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20602</th>
+      <td>9998</td>
+      <td>193</td>
+      <td>72</td>
+      <td>0.789785</td>
+      <td>1.739216</td>
+      <td>4</td>
+      <td>4</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20603</th>
       <td>9999</td>
-      <td>148</td>
-      <td>191</td>
-      <td>2.560094</td>
-      <td>2.716187</td>
+      <td>45</td>
+      <td>164</td>
+      <td>-0.707931</td>
+      <td>-0.522033</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20604</th>
+      <td>9999</td>
+      <td>164</td>
+      <td>138</td>
+      <td>-0.522033</td>
+      <td>-0.175941</td>
       <td>3</td>
       <td>3</td>
       <td>4</td>
@@ -3013,7 +3010,7 @@ g_col: g
     </tr>
   </tbody>
 </table>
-<p>20346 rows × 12 columns</p>
+<p>20605 rows × 12 columns</p>
 </div></div>
 </div>
 </div>
@@ -3031,15 +3028,6 @@ g_col: g
 <span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-j_col: j
-g_col: g
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -3074,42 +3062,42 @@ g_col: g
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
-      <td>9</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
-      <td>9</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
-      <td>9</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
-      <td>9</td>
+      <td>8</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
-      <td>9</td>
+      <td>8</td>
     </tr>
     <tr>
       <th>...</th>
@@ -3122,42 +3110,42 @@ g_col: g
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
-      <td>4</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
-      <td>4</td>
+      <td>6</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
-      <td>0</td>
+      <td>4</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
-      <td>4</td>
+      <td>8</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
-      <td>4</td>
+      <td>8</td>
     </tr>
   </tbody>
 </table>
@@ -3177,15 +3165,6 @@ g_col: g
 <span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
 </pre></div>
 </div>
-</div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-j_col: j
-g_col: g
-</pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
@@ -3221,46 +3200,46 @@ g_col: g
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
-      <td>9</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
-      <td>9</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
-      <td>9</td>
+      <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
-      <td>9</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
-      <td>9</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3275,46 +3254,46 @@ g_col: g
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
-      <td>7</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
-      <td>7</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
-      <td>7</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
-      <td>6</td>
+      <td>5</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
-      <td>6</td>
+      <td>5</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -3336,15 +3315,6 @@ g_col: g
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-j_col: j
-g_col: g
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
@@ -3379,35 +3349,35 @@ g_col: g
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
-      <td>7</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
-      <td>7</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
-      <td>7</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
       <td>7</td>
       <td>1</td>
@@ -3415,8 +3385,8 @@ g_col: g
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
       <td>7</td>
       <td>1</td>
@@ -3431,53 +3401,53 @@ g_col: g
       <td>...</td>
     </tr>
     <tr>
-      <th>48211</th>
+      <th>47762</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
-      <td>4</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>48212</th>
+      <th>47763</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
-      <td>4</td>
+      <td>0</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>48213</th>
+      <th>47764</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
-      <td>3</td>
-      <td>4</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>48214</th>
-      <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
-      <td>4</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
       <td>1</td>
+      <td>1</td>
     </tr>
     <tr>
-      <th>48215</th>
+      <th>47765</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>0.275431</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>47766</th>
+      <td>9999</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
-      <td>3</td>
+      <td>1</td>
       <td>1</td>
     </tr>
   </tbody>
 </table>
-<p>48216 rows × 6 columns</p>
+<p>47767 rows × 6 columns</p>
 </div></div>
 </div>
 <div class="nbinput docutils container">
@@ -3493,15 +3463,6 @@ g_col: g
 </pre></div>
 </div>
 </div>
-<div class="nboutput docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-j_col: j
-g_col: g
-</pre></div></div>
-</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
@@ -3536,17 +3497,17 @@ g_col: g
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>131</td>
-      <td>0.102940</td>
+      <td>100</td>
+      <td>1.045472</td>
       <td>1</td>
-      <td>3</td>
+      <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.322699</td>
+      <td>192</td>
+      <td>3.443872</td>
       <td>2</td>
       <td>3</td>
       <td>1</td>
@@ -3554,8 +3515,8 @@ g_col: g
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>110</td>
-      <td>2.017430</td>
+      <td>192</td>
+      <td>2.358640</td>
       <td>3</td>
       <td>3</td>
       <td>1</td>
@@ -3563,19 +3524,19 @@ g_col: g
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>110</td>
-      <td>1.359005</td>
+      <td>139</td>
+      <td>1.338202</td>
       <td>4</td>
-      <td>3</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>110</td>
-      <td>0.756835</td>
+      <td>139</td>
+      <td>2.667578</td>
       <td>5</td>
-      <td>3</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
@@ -3590,46 +3551,46 @@ g_col: g
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>192</td>
-      <td>1.571552</td>
+      <td>45</td>
+      <td>-1.562082</td>
       <td>1</td>
-      <td>1</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>192</td>
-      <td>2.921278</td>
+      <td>45</td>
+      <td>0.146220</td>
       <td>2</td>
-      <td>1</td>
+      <td>7</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>148</td>
-      <td>2.560094</td>
+      <td>164</td>
+      <td>-0.522033</td>
       <td>3</td>
-      <td>8</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.961787</td>
+      <td>138</td>
+      <td>0.275431</td>
       <td>4</td>
-      <td>1</td>
+      <td>8</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>191</td>
-      <td>2.470586</td>
+      <td>138</td>
+      <td>-0.627312</td>
       <td>5</td>
-      <td>1</td>
+      <td>8</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -3640,13 +3601,15 @@ g_col: g
 </div>
 <div class="section" id="Some-extra-features">
 <h2>Some extra features<a class="headerlink" href="#Some-extra-features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="Summary-statistics">
+<h3>Summary statistics<a class="headerlink" href="#Summary-statistics" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[23]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can get some summary statistics by running .summary()</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
 <span class="n">bdf</span><span class="o">.</span><span class="n">summary</span><span class="p">()</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
@@ -3661,11 +3624,11 @@ g_col: g
 <div class="highlight"><pre>
 format: BipartiteLong
 number of workers: 10000
-number of firms: 196
+number of firms: 195
 number of observations: 50000
-mean wage: 0.39388549929038724
-max wage: 6.0922966187009475
-min wage: -5.246779958940952
+mean wage: 0.4084342661945652
+max wage: 6.179656051552453
+min wage: -5.015109565036468
 connected: False
 contiguous i ids (None if not included): False
 contiguous j ids (None if not included): False
@@ -3677,11 +3640,11 @@ i-t (worker-year) observations unique (None if t column(s) not included): False
 
 format: BipartiteLong
 number of workers: 10000
-number of firms: 196
+number of firms: 195
 number of observations: 50000
-mean wage: 0.39388549929038724
-max wage: 6.0922966187009475
-min wage: -5.246779958940952
+mean wage: 0.4084342661945652
+max wage: 6.179656051552453
+min wage: -5.015109565036468
 connected: True
 contiguous i ids (None if not included): True
 contiguous j ids (None if not included): True
@@ -3693,6 +3656,9 @@ i-t (worker-year) observations unique (None if t column(s) not included): True
 
 </pre></div></div>
 </div>
+</div>
+<div class="section" id="Original-worker-and-firm-ids">
+<h3>Original worker and firm ids<a class="headerlink" href="#Original-worker-and-firm-ids" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[24]:
 </pre></div>
@@ -3777,69 +3743,11 @@ Notice this fails, as include_id_reference_dict has not been set to True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>original_ids</th>
-      <th>adjusted_ids_1</th>
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <th>0</th>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4</td>
-      <td>4</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>194</th>
-      <td>195</td>
-      <td>194</td>
-    </tr>
-    <tr>
-      <th>195</th>
-      <td>196</td>
-      <td>195</td>
-    </tr>
-    <tr>
-      <th>196</th>
-      <td>197</td>
-      <td>196</td>
-    </tr>
-    <tr>
-      <th>197</th>
-      <td>198</td>
-      <td>197</td>
-    </tr>
-    <tr>
-      <th>198</th>
-      <td>199</td>
-      <td>198</td>
-    </tr>
   </tbody>
 </table>
-<p>199 rows × 2 columns</p>
 </div></div>
 </div>
 <div class="nboutput docutils container">
@@ -3866,79 +3774,67 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <th></th>
       <th>original_ids</th>
       <th>adjusted_ids_1</th>
-      <th>adjusted_ids_2</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
+      <td>100</td>
       <td>0</td>
-      <td>0</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>101</td>
       <td>1</td>
-      <td>1</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>2</th>
+      <td>102</td>
       <td>2</td>
-      <td>2</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>3</th>
+      <td>103</td>
       <td>3</td>
-      <td>3</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>4</th>
+      <td>104</td>
       <td>4</td>
-      <td>4</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>...</th>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
     </tr>
     <tr>
-      <th>194</th>
-      <td>195</td>
+      <th>88</th>
+      <td>193</td>
+      <td>88</td>
+    </tr>
+    <tr>
+      <th>89</th>
       <td>194</td>
+      <td>89</td>
+    </tr>
+    <tr>
+      <th>90</th>
+      <td>195</td>
+      <td>90</td>
+    </tr>
+    <tr>
+      <th>91</th>
+      <td>196</td>
       <td>91</td>
     </tr>
     <tr>
-      <th>195</th>
-      <td>196</td>
-      <td>195</td>
+      <th>92</th>
+      <td>198</td>
       <td>92</td>
-    </tr>
-    <tr>
-      <th>196</th>
-      <td>197</td>
-      <td>196</td>
-      <td>93</td>
-    </tr>
-    <tr>
-      <th>197</th>
-      <td>198</td>
-      <td>197</td>
-      <td>94</td>
-    </tr>
-    <tr>
-      <th>198</th>
-      <td>199</td>
-      <td>198</td>
-      <td>95</td>
     </tr>
   </tbody>
 </table>
-<p>199 rows × 3 columns</p>
+<p>93 rows × 2 columns</p>
 </div></div>
 </div>
 <div class="nboutput docutils container">
@@ -3973,31 +3869,31 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <th>0</th>
       <td>0</td>
       <td>0</td>
-      <td>0</td>
+      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>1</th>
       <td>1</td>
       <td>1</td>
-      <td>1</td>
+      <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>2</td>
       <td>2</td>
-      <td>2</td>
+      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>3</th>
       <td>3</td>
       <td>3</td>
-      <td>3</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>4</td>
       <td>4</td>
-      <td>4</td>
+      <td>2</td>
     </tr>
     <tr>
       <th>...</th>
@@ -4006,38 +3902,38 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <td>...</td>
     </tr>
     <tr>
-      <th>183</th>
+      <th>176</th>
+      <td>190</td>
+      <td>176</td>
+      <td>144</td>
+    </tr>
+    <tr>
+      <th>177</th>
       <td>191</td>
-      <td>183</td>
-      <td>&lt;NA&gt;</td>
+      <td>177</td>
+      <td>145</td>
     </tr>
     <tr>
-      <th>184</th>
+      <th>178</th>
       <td>192</td>
-      <td>184</td>
-      <td>137</td>
+      <td>178</td>
+      <td>146</td>
     </tr>
     <tr>
-      <th>185</th>
+      <th>179</th>
       <td>193</td>
-      <td>185</td>
-      <td>138</td>
+      <td>179</td>
+      <td>147</td>
     </tr>
     <tr>
-      <th>186</th>
+      <th>180</th>
       <td>194</td>
-      <td>186</td>
-      <td>139</td>
-    </tr>
-    <tr>
-      <th>187</th>
-      <td>195</td>
-      <td>187</td>
-      <td>140</td>
+      <td>180</td>
+      <td>148</td>
     </tr>
   </tbody>
 </table>
-<p>188 rows × 3 columns</p>
+<p>181 rows × 3 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -4074,47 +3970,47 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>103</td>
-      <td>1.098224</td>
+      <td>135</td>
+      <td>1.867158</td>
       <td>1</td>
       <td>100</td>
-      <td>144</td>
+      <td>178</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>121</td>
-      <td>1.818459</td>
+      <td>136</td>
+      <td>2.495314</td>
       <td>2</td>
       <td>100</td>
-      <td>168</td>
+      <td>179</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>116</td>
-      <td>3.843713</td>
+      <td>111</td>
+      <td>0.517400</td>
       <td>3</td>
       <td>100</td>
-      <td>162</td>
+      <td>149</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>27</td>
-      <td>-0.634020</td>
+      <td>89</td>
+      <td>-0.453684</td>
       <td>4</td>
       <td>100</td>
-      <td>43</td>
+      <td>122</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>33</td>
-      <td>-1.179505</td>
+      <td>86</td>
+      <td>1.085938</td>
       <td>5</td>
       <td>100</td>
-      <td>52</td>
+      <td>119</td>
     </tr>
     <tr>
       <th>...</th>
@@ -4126,63 +4022,494 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <td>...</td>
     </tr>
     <tr>
-      <th>475</th>
-      <td>95</td>
-      <td>139</td>
-      <td>1.857150</td>
-      <td>1</td>
-      <td>199</td>
-      <td>194</td>
-    </tr>
-    <tr>
-      <th>476</th>
-      <td>95</td>
-      <td>139</td>
-      <td>2.908010</td>
-      <td>2</td>
-      <td>199</td>
-      <td>194</td>
-    </tr>
-    <tr>
-      <th>477</th>
-      <td>95</td>
+      <th>460</th>
+      <td>92</td>
       <td>64</td>
-      <td>-0.998152</td>
+      <td>0.749281</td>
+      <td>1</td>
+      <td>198</td>
+      <td>94</td>
+    </tr>
+    <tr>
+      <th>461</th>
+      <td>92</td>
+      <td>64</td>
+      <td>1.723441</td>
+      <td>2</td>
+      <td>198</td>
+      <td>94</td>
+    </tr>
+    <tr>
+      <th>462</th>
+      <td>92</td>
+      <td>116</td>
+      <td>1.002659</td>
       <td>3</td>
-      <td>199</td>
-      <td>93</td>
+      <td>198</td>
+      <td>156</td>
     </tr>
     <tr>
-      <th>478</th>
-      <td>95</td>
-      <td>25</td>
-      <td>-1.170371</td>
+      <th>463</th>
+      <td>92</td>
+      <td>116</td>
+      <td>2.106092</td>
       <td>4</td>
-      <td>199</td>
-      <td>39</td>
+      <td>198</td>
+      <td>156</td>
     </tr>
     <tr>
-      <th>479</th>
-      <td>95</td>
-      <td>32</td>
-      <td>0.910412</td>
+      <th>464</th>
+      <td>92</td>
+      <td>96</td>
+      <td>2.451591</td>
       <td>5</td>
-      <td>199</td>
-      <td>51</td>
+      <td>198</td>
+      <td>131</td>
     </tr>
   </tbody>
 </table>
-<p>480 rows × 6 columns</p>
+<p>465 rows × 6 columns</p>
 </div></div>
 </div>
+</div>
+<div class="section" id="Filling-in-missing-years-as-unemployed">
+<h3>Filling in missing years as unemployed<a class="headerlink" href="#Filling-in-missing-years-as-unemployed" title="Permalink to this headline">¶</a></h3>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[25]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># BipartitePandas can fill in missing years as unemployed (j=-1) for long data</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="p">[(</span><span class="n">bdf</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="p">(</span><span class="n">bdf</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">5</span><span class="p">)]</span> <span class="c1"># Drop periods 2-4</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">fill_periods</span><span class="p">())</span> <span class="c1"># Can specify fill_j=x instead of -1 and fill_y=y instead of NaN</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>4</td>
+      <td>-2.228706</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>-1</td>
+      <td>NaN</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>-1</td>
+      <td>NaN</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>-1</td>
+      <td>NaN</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>4</td>
+      <td>-2.228579</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49995</th>
+      <td>9999</td>
+      <td>50</td>
+      <td>1.840798</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49996</th>
+      <td>9999</td>
+      <td>-1</td>
+      <td>NaN</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>49997</th>
+      <td>9999</td>
+      <td>-1</td>
+      <td>NaN</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>49998</th>
+      <td>9999</td>
+      <td>-1</td>
+      <td>NaN</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>49999</th>
+      <td>9999</td>
+      <td>79</td>
+      <td>1.123699</td>
+      <td>5</td>
+    </tr>
+  </tbody>
+</table>
+<p>50000 rows × 4 columns</p>
+</div></div>
+</div>
+</div>
+<div class="section" id="Converting-from-collapsed-long-to-long">
+<h3>Converting from collapsed long to long<a class="headerlink" href="#Converting-from-collapsed-long-to-long" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># BipartitePandas allows you to un-collapse collapsed long data (variables assumed constant over spells)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span><span class="o">.</span><span class="n">get_collapsed_long</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">uncollapse</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>w</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>73</td>
+      <td>0.430585</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>59</td>
+      <td>-1.316796</td>
+      <td>2</td>
+      <td>3</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>37</td>
+      <td>-0.384960</td>
+      <td>4</td>
+      <td>5</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>8</td>
+      <td>-4.182365</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>1</td>
+      <td>-0.890193</td>
+      <td>2</td>
+      <td>3</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>29718</th>
+      <td>9997</td>
+      <td>187</td>
+      <td>2.536145</td>
+      <td>4</td>
+      <td>5</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29719</th>
+      <td>9998</td>
+      <td>167</td>
+      <td>-0.374760</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29720</th>
+      <td>9998</td>
+      <td>83</td>
+      <td>0.033904</td>
+      <td>2</td>
+      <td>4</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29721</th>
+      <td>9998</td>
+      <td>45</td>
+      <td>-0.637796</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29722</th>
+      <td>9999</td>
+      <td>167</td>
+      <td>1.568023</td>
+      <td>1</td>
+      <td>5</td>
+      <td>5</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>29723 rows × 7 columns</p>
+</div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>w</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>73</td>
+      <td>0.430585</td>
+      <td>1</td>
+      <td>1.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>59</td>
+      <td>-1.316796</td>
+      <td>2</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>59</td>
+      <td>-1.316796</td>
+      <td>3</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>37</td>
+      <td>-0.384960</td>
+      <td>4</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>37</td>
+      <td>-0.384960</td>
+      <td>5</td>
+      <td>2.0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49995</th>
+      <td>9999</td>
+      <td>167</td>
+      <td>1.568023</td>
+      <td>1</td>
+      <td>5.0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>49996</th>
+      <td>9999</td>
+      <td>167</td>
+      <td>1.568023</td>
+      <td>2</td>
+      <td>5.0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>49997</th>
+      <td>9999</td>
+      <td>167</td>
+      <td>1.568023</td>
+      <td>3</td>
+      <td>5.0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>49998</th>
+      <td>9999</td>
+      <td>167</td>
+      <td>1.568023</td>
+      <td>4</td>
+      <td>5.0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>49999</th>
+      <td>9999</td>
+      <td>167</td>
+      <td>1.568023</td>
+      <td>5</td>
+      <td>5.0</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>50000 rows × 6 columns</p>
+</div></div>
+</div>
+</div>
+<div class="section" id="Column-inference">
+<h3>Column inference<a class="headerlink" href="#Column-inference" title="Permalink to this headline">¶</a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># BipartitePandas does some nice column inference</span>
 <span class="c1"># Suppose some of our columns are mislabeled - create a col_dict to clarify which columns to correct</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;i1&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;i1&#39;</span><span class="p">})</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
@@ -4222,36 +4549,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>10</td>
-      <td>-1.367498</td>
+      <td>81</td>
+      <td>1.363625</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>10</td>
-      <td>0.192847</td>
+      <td>119</td>
+      <td>-0.392986</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>49</td>
-      <td>-0.691945</td>
+      <td>119</td>
+      <td>0.659958</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>49</td>
-      <td>-1.184096</td>
+      <td>119</td>
+      <td>0.614302</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>49</td>
-      <td>-0.640486</td>
+      <td>119</td>
+      <td>-1.772981</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4264,36 +4591,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>104</td>
-      <td>2.105793</td>
+      <td>27</td>
+      <td>-1.339647</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>104</td>
-      <td>1.559547</td>
+      <td>27</td>
+      <td>-2.297288</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>104</td>
-      <td>1.122902</td>
+      <td>27</td>
+      <td>-2.201213</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>117</td>
-      <td>0.362952</td>
+      <td>27</td>
+      <td>0.043493</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>117</td>
-      <td>1.763707</td>
+      <td>27</td>
+      <td>0.488157</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4302,12 +4629,12 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[26]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Suppose we have already clustered - the class determines this automatically</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
@@ -4348,40 +4675,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>156</td>
-      <td>1.198125</td>
+      <td>100</td>
+      <td>-0.778511</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>123</td>
-      <td>0.822076</td>
+      <td>100</td>
+      <td>0.623544</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>136</td>
-      <td>-0.299292</td>
+      <td>100</td>
+      <td>1.504189</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>136</td>
-      <td>1.228660</td>
+      <td>100</td>
+      <td>0.417201</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>28</td>
-      <td>0.017417</td>
+      <td>100</td>
+      <td>0.815521</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4396,40 +4723,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>126</td>
-      <td>0.383488</td>
+      <td>145</td>
+      <td>1.709034</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>158</td>
-      <td>1.078747</td>
+      <td>76</td>
+      <td>0.400052</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>158</td>
-      <td>2.452902</td>
+      <td>76</td>
+      <td>-0.279819</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>113</td>
-      <td>1.477752</td>
+      <td>76</td>
+      <td>0.697103</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>113</td>
-      <td>0.507107</td>
+      <td>76</td>
+      <td>0.315717</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4439,12 +4766,12 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[27]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># Now suppose we mislabeled our clusters - the class drops this column</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;g1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
@@ -4484,36 +4811,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>140</td>
-      <td>-0.072048</td>
+      <td>71</td>
+      <td>-0.645977</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>74</td>
-      <td>-0.557236</td>
+      <td>71</td>
+      <td>-0.155972</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>97</td>
-      <td>-0.481013</td>
+      <td>31</td>
+      <td>-1.842681</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>32</td>
-      <td>1.914307</td>
+      <td>11</td>
+      <td>-2.042563</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
       <td>11</td>
-      <td>-2.375369</td>
+      <td>-2.003368</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4526,36 +4853,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>18</td>
-      <td>-1.069742</td>
+      <td>133</td>
+      <td>1.609957</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>18</td>
-      <td>-1.866303</td>
+      <td>133</td>
+      <td>2.470820</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>17</td>
-      <td>-1.312107</td>
+      <td>153</td>
+      <td>1.221049</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>54</td>
-      <td>0.314176</td>
+      <td>61</td>
+      <td>0.431387</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>54</td>
-      <td>-1.712365</td>
+      <td>66</td>
+      <td>0.662537</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4564,12 +4891,12 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[28]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We can make sure our columns are included by specifying the corrected labels in col_dict (note that if the variable of interest requires 2 columns, e.g. weight 1 and weight 2 for event study data, BOTH columns are required - if only one column is included, it is automatically dropped.)</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">sim_data</span><span class="p">[</span><span class="s1">&#39;g1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;g&#39;</span><span class="p">:</span> <span class="s1">&#39;g1&#39;</span><span class="p">})</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
@@ -4610,40 +4937,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>114</td>
-      <td>2.268529</td>
+      <td>57</td>
+      <td>0.809769</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>185</td>
-      <td>1.525799</td>
+      <td>29</td>
+      <td>-0.141215</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>185</td>
-      <td>2.591183</td>
+      <td>29</td>
+      <td>0.759826</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>134</td>
-      <td>0.252506</td>
+      <td>99</td>
+      <td>1.460329</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>184</td>
-      <td>2.338831</td>
+      <td>99</td>
+      <td>0.570457</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4658,40 +4985,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>188</td>
-      <td>3.491523</td>
+      <td>72</td>
+      <td>0.815213</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>188</td>
-      <td>-0.196890</td>
+      <td>72</td>
+      <td>0.454112</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>189</td>
-      <td>1.269097</td>
+      <td>72</td>
+      <td>0.967715</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>180</td>
-      <td>1.814381</td>
+      <td>72</td>
+      <td>1.363655</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>180</td>
-      <td>3.824533</td>
+      <td>72</td>
+      <td>0.726504</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -4701,12 +5028,12 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[29]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
 <span></span><span class="c1"># We may also specify a col_dict that overwrites a column label that would normally be inferred, and inference is skipped</span>
-<span class="n">sim_data</span> <span class="o">=</span> <span class="n">tw</span><span class="o">.</span><span class="n">SimTwoWay</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
 <span class="n">sim_data</span> <span class="o">=</span> <span class="n">sim_data</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">},</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">,</span> <span class="n">col_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;i&#39;</span><span class="p">:</span> <span class="s1">&#39;g&#39;</span><span class="p">})</span>
 <span class="c1"># Note that even though we have a column named g, because we specify it is the &#39;i&#39; column it is not inferred as the cluster values</span>
@@ -4747,36 +5074,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>52</td>
-      <td>-0.598215</td>
+      <td>1</td>
+      <td>-1.017465</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>52</td>
-      <td>-2.086378</td>
+      <td>155</td>
+      <td>1.657103</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>7</td>
-      <td>-1.509708</td>
+      <td>155</td>
+      <td>-0.132770</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>16</td>
-      <td>-1.303785</td>
+      <td>155</td>
+      <td>1.264348</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>41</td>
-      <td>-0.394243</td>
+      <td>155</td>
+      <td>1.573516</td>
       <td>5</td>
     </tr>
     <tr>
@@ -4789,36 +5116,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-2.366534</td>
+      <td>194</td>
+      <td>1.551082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-0.708666</td>
+      <td>142</td>
+      <td>-0.425500</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>162</td>
-      <td>1.520011</td>
+      <td>142</td>
+      <td>0.769030</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>25</td>
-      <td>0.539825</td>
+      <td>122</td>
+      <td>0.213462</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>25</td>
-      <td>-0.510469</td>
+      <td>122</td>
+      <td>0.556521</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -4827,7 +5154,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -4871,40 +5198,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>52</td>
-      <td>-0.598215</td>
+      <td>1</td>
+      <td>-1.017465</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>52</td>
-      <td>-2.086378</td>
+      <td>155</td>
+      <td>1.657103</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>7</td>
-      <td>-1.509708</td>
+      <td>155</td>
+      <td>-0.132770</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>16</td>
-      <td>-1.303785</td>
+      <td>155</td>
+      <td>1.264348</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>41</td>
-      <td>-0.394243</td>
+      <td>155</td>
+      <td>1.573516</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -4919,40 +5246,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-2.366534</td>
+      <td>194</td>
+      <td>1.551082</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-0.708666</td>
+      <td>142</td>
+      <td>-0.425500</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>162</td>
-      <td>1.520011</td>
+      <td>142</td>
+      <td>0.769030</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>25</td>
-      <td>0.539825</td>
+      <td>122</td>
+      <td>0.213462</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>25</td>
-      <td>-0.510469</td>
+      <td>122</td>
+      <td>0.556521</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -4962,7 +5289,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[30]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[32]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -4994,36 +5321,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>52</td>
-      <td>-0.598215</td>
+      <td>1</td>
+      <td>-1.017465</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>52</td>
-      <td>-2.086378</td>
+      <td>155</td>
+      <td>1.657103</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>7</td>
-      <td>-1.509708</td>
+      <td>155</td>
+      <td>-0.132770</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>16</td>
-      <td>-1.303785</td>
+      <td>155</td>
+      <td>1.264348</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>41</td>
-      <td>-0.394243</td>
+      <td>155</td>
+      <td>1.573516</td>
       <td>5</td>
     </tr>
     <tr>
@@ -5036,36 +5363,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-2.366534</td>
+      <td>194</td>
+      <td>1.551082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-0.708666</td>
+      <td>142</td>
+      <td>-0.425500</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>162</td>
-      <td>1.520011</td>
+      <td>142</td>
+      <td>0.769030</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>25</td>
-      <td>0.539825</td>
+      <td>122</td>
+      <td>0.213462</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>25</td>
-      <td>-0.510469</td>
+      <td>122</td>
+      <td>0.556521</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -5074,7 +5401,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -5088,12 +5415,12 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-../../../bipartitepandas/bipartitebase.py:318: UserWarning: i is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
+../../../bipartitepandas/bipartitebase.py:323: UserWarning: i is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)
   warnings.warn(&#34;{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use &#39;g&#39; instead of &#39;g1&#39; or &#39;g2&#39;)&#34;.format(col))
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[31]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[33]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -5125,36 +5452,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>52</td>
-      <td>-0.598215</td>
+      <td>1</td>
+      <td>-1.017465</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>52</td>
-      <td>-2.086378</td>
+      <td>155</td>
+      <td>1.657103</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>7</td>
-      <td>-1.509708</td>
+      <td>155</td>
+      <td>-0.132770</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>16</td>
-      <td>-1.303785</td>
+      <td>155</td>
+      <td>1.264348</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>41</td>
-      <td>-0.394243</td>
+      <td>155</td>
+      <td>1.573516</td>
       <td>5</td>
     </tr>
     <tr>
@@ -5167,42 +5494,43 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-2.366534</td>
+      <td>194</td>
+      <td>1.551082</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>93</td>
-      <td>-0.708666</td>
+      <td>142</td>
+      <td>-0.425500</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>162</td>
-      <td>1.520011</td>
+      <td>142</td>
+      <td>0.769030</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>25</td>
-      <td>0.539825</td>
+      <td>122</td>
+      <td>0.213462</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>25</td>
-      <td>-0.510469</td>
+      <td>122</td>
+      <td>0.556521</td>
       <td>5</td>
     </tr>
   </tbody>
 </table>
 <p>50000 rows × 4 columns</p>
 </div></div>
+</div>
 </div>
 </div>
 </div>
@@ -5218,7 +5546,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
         <a href="../internal.html" class="btn btn-neutral float-right" title="Python API" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../doc-python.html" class="btn btn-neutral float-left" title="Using from python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../doc-python.html" class="btn btn-neutral float-left" title="Using from Python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -5230,7 +5558,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Apr 15, 2021.
+        Last updated on Apr 21, 2021.
       </span>
 
     </p>

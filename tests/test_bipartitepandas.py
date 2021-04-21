@@ -7,7 +7,6 @@ import pytest
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
-from pytwoway import SimTwoWay
 
 ###################################
 ##### Tests for BipartiteBase #####
@@ -1769,7 +1768,7 @@ def test_reformatting_1():
 def test_cluster_1():
     # Test cluster function is working correctly for long format.
     nk = 10
-    sim_data = SimTwoWay({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
@@ -1832,7 +1831,7 @@ def test_cluster_1():
 def test_cluster_2():
     # Test cluster function is working correctly for event study format.
     nk = 10
-    sim_data = SimTwoWay({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
     bdf = bdf.get_es()
@@ -1897,7 +1896,7 @@ def test_cluster_2():
 def test_cluster_3():
     # Test cluster function is working correctly for collapsed long format.
     nk = 10
-    sim_data = SimTwoWay({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long()
@@ -1968,7 +1967,7 @@ def test_cluster_3():
 def test_cluster_4():
     # Test cluster function is working correctly for collapsed event study format.
     nk = 10
-    sim_data = SimTwoWay({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long().get_es()

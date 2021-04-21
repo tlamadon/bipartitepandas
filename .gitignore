@@ -2,18 +2,19 @@
 ###########
 .vscode/
 docs-src/build/
-pytwoway/__pycache__/
+bipartitepandas/__pycache__/
 tests/__pycache__/
 .pytest_cache/
 .eggs
 tests/__pycache__/
-pytwoway/config.txt
+bipartitepandas/config.txt
 dist/
-pytwoway.egg-info/
+bipartitepandas.egg-info/
 docs/_sources/
 docs/_static/**.rst
 docs/_static/conf.py
 build/
+.ipynb_checkpoints/
 
 # Compiled source #
 ###################
@@ -52,4 +53,3 @@ build/
 .Trashes
 ehthumbs.db
 Thumbs.db
-tests/notebooks/.ipynb_checkpoints/testing_blm-checkpoint.ipynb

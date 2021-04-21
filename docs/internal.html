@@ -100,6 +100,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitelongcollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudy"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudycollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-simbipartite"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.SimBipartite</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -108,6 +109,7 @@
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
 </ul>
 
             
@@ -201,7 +203,7 @@
 <h1>Python API<a class="headerlink" href="#python-api" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="overview">
 <h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
-<p>The main bipartitepandas API is split into four classes. bipartitepandas is canonically imported using</p>
+<p>The main BipartitePandas API is split into five classes. BipartitePandas is canonically imported using</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bipartitepandas</span> <span class="k">as</span> <span class="nn">bpd</span>
 </pre></div>
@@ -212,6 +214,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code>: Class for formatting bipartite networks in collapsed long form (i.e. employment spells are collapsed into a single observation)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code>: Class for formatting bipartite networks in event study form</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code>: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.SimBipartite</span></code>: Class for simulating bipartite networks</p></li>
 </ul>
 </div>
 <div class="section" id="modules-and-methods">
@@ -422,6 +425,20 @@
 </tbody>
 </table>
 </div>
+<div class="section" id="bipartitepandas-simbipartite">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.SimBipartite</span></code><a class="headerlink" href="#bipartitepandas-simbipartite" title="Permalink to this headline">¶</a></h3>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimBipartite</span></code>([sim_params])</p></td>
+<td><p>Class of SimBipartite, where SimBipartite simulates a network of firms and workers.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 </div>
 
@@ -448,7 +465,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon
       <span class="lastupdated">
-        Last updated on Apr 16, 2021.
+        Last updated on Apr 21, 2021.
       </span>
 
     </p>

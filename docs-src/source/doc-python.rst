@@ -1,4 +1,4 @@
-Using from python
+Using from Python
 =================
 
 To install from pip, from the command line run::
@@ -11,9 +11,9 @@ To install from conda, from the command line run::
 
 Sample data: :download:`download <twoway_sample_data.csv>`
 
-To run in python:
+To run in Python:
 
-- If you want to create a bipartitepandas object:
+- If you want to create a BipartitePandas object:
 
 .. code-block:: python
 

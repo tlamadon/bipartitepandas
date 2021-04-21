@@ -7,3 +7,4 @@ from .bipartitelongcollapsed import BipartiteLongCollapsed
 from .bipartiteeventstudybase import BipartiteEventStudyBase
 from .bipartiteeventstudy import BipartiteEventStudy
 from .bipartiteeventstudycollapsed import BipartiteEventStudyCollapsed
+from .simbipartite import SimBipartite

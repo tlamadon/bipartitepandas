@@ -5,7 +5,7 @@ Python API
 Overview
 ---------
 
-The main bipartitepandas API is split into four classes. bipartitepandas is canonically imported using
+The main BipartitePandas API is split into five classes. BipartitePandas is canonically imported using
 
   .. code-block:: python
 
@@ -18,6 +18,8 @@ The main bipartitepandas API is split into four classes. bipartitepandas is cano
 * ``bipartitepandas.BipartiteEventStudy``: Class for formatting bipartite networks in event study form
 
 * ``bipartitepandas.BipartiteEventStudyCollapsed``: Class for formatting bipartite networks in collapsed event study form (i.e. employment spells are collapsed into a single observation)
+
+* ``bipartitepandas.SimBipartite``: Class for simulating bipartite networks
 
 Modules and Methods
 -------------------
@@ -100,3 +102,11 @@ Modules and Methods
    ~bipartitepandas.BipartiteEventStudyCollapsed.rename
    ~bipartitepandas.BipartiteEventStudyCollapsed.summary
    ~bipartitepandas.BipartiteEventStudyCollapsed.unstack_es
+
+``bipartitepandas.SimBipartite``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.SimBipartite
+   ~bipartitepandas.SimBipartite.sim_network()

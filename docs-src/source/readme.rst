@@ -1,4 +1,4 @@
-bipartitepandas
+BipartitePandas
 ---------------
 
 .. image:: https://badge.fury.io/py/bipartitepandas.svg
@@ -16,7 +16,7 @@ bipartitepandas
 .. image:: https://img.shields.io/badge/doc-latest-blue
     :target: https://tlamadon.github.io/bipartitepandas/
 
-`bipartitepandas` is a python package for handling bipartite labor data.
+`BipartitePandas` is a python package for handling bipartite labor data.
 
 .. |binder| image:: https://mybinder.org/badge_logo.svg 
     :target: https://mybinder.org/v2/gh/tlamadon/bipartitepandas/HEAD?filepath=docs%2Fnotebooks%2Fbipartitepandas_example.ipynb
