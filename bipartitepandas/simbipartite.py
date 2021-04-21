@@ -41,7 +41,7 @@ class SimBipartite:
 
                 csig (float, default=1): standard error of sorting/network effects
 
-                p_move (float, default=0.5): probability a worker moves firms in any period
+                p_move (float, default=0.5): probability a worker moves firms in each period
     '''
 
     def __init__(self, sim_params={}):
