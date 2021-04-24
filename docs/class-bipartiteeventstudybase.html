@@ -1,0 +1,360 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>BipartiteEventStudyBase class &mdash; BipartitePandas 0.1.0 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BipartiteEventStudy class" href="class-bipartiteeventstudy.html" />
+    <link rel="prev" title="BipartiteLongCollapsed class" href="class-bipartitelongcollapsed.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> BipartitePandas
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">User documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc-python.html">From Python</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Notebook examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/bipartitepandas_example.html">BipartitePandas</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Under the hood</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="internal.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitebase.html">BipartiteBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongbase.html">BipartiteLongBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelong.html">BipartiteLong</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BipartiteEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BipartitePandas</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>BipartiteEventStudyBase class</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/class-bipartiteeventstudybase.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<div class="section" id="bipartiteeventstudybase-class">
+<h1>BipartiteEventStudyBase class<a class="headerlink" href="#bipartiteeventstudybase-class" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt id="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase">
+<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartiteeventstudybase.</code><code class="sig-name descname">BipartiteEventStudyBase</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">columns_req</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">columns_opt</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">columns_contig</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">reference_dict</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">col_dtype_dict</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_id_reference_dict</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="class-bipartitebase.html#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">bipartitepandas.bipartitebase.BipartiteBase</span></code></a></p>
+<p>Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed, where BipartiteEventStudy and BipartiteEventStudyCollapsed give a bipartite network of firms and workers in event study and collapsed event study form, respectively. Contains generalized methods. Inherits from BipartiteBase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
+<li><p><strong>columns_req</strong> (<em>list</em>) – required columns (only put general column names for joint columns, e.g. put ‘fid’ instead of ‘f1i’, ‘f2i’; then put the joint columns in reference_dict)</p></li>
+<li><p><strong>columns_opt</strong> (<em>list</em>) – optional columns (only put general column names for joint columns, e.g. put ‘g’ instead of ‘g1’, ‘g2’; then put the joint columns in reference_dict)</p></li>
+<li><p><strong>columns_contig</strong> (<em>dictionary</em>) – columns requiring contiguous ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {‘i’: False, ‘j’: False, ‘g’: None} (only put general column names for joint columns)</p></li>
+<li><p><strong>reference_dict</strong> (<em>dict</em>) – clarify which columns are associated with a general column name, e.g. {‘i’: ‘i’, ‘j’: [‘j1’, ‘j2’]}</p></li>
+<li><p><strong>col_dtype_dict</strong> (<em>dict</em>) – link column to datatype</p></li>
+<li><p><strong>col_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – make data columns readable. Keep None if column names already correct</p></li>
+<li><p><strong>include_id_reference_dict</strong> (<em>bool</em>) – if True, create dictionary of Pandas dataframes linking original id values to contiguous id values</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt id="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.clean_data">
+<code class="sig-name descname">clean_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user_clean</span><span class="o">=</span><span class="default_value">{}</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.clean_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>user_clean</strong> (<em>dict</em>) – <p>dictionary of parameters for cleaning</p>
+<p>Dictionary parameters:</p>
+<blockquote>
+<div><p>i_t_how (str, default=’max’): if ‘max’, keep max paying job; if ‘sum’, sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if ‘mean’, average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids</p>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>BipartiteEventStudyBase with cleaned data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase" title="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase">BipartiteEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.data_validity">
+<code class="sig-name descname">data_validity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.data_validity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks that data is formatted correctly and updates relevant attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>BipartiteEventStudyBase with corrected columns and attributes</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase" title="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase">BipartiteEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.get_cs">
+<code class="sig-name descname">get_cs</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.get_cs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return (collapsed) event study data reformatted into cross section data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>cross section data</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>data_cs (Pandas DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.get_long">
+<code class="sig-name descname">get_long</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_df</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.get_long" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return (collapsed) event study data reformatted into (collapsed) long form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>return_df</strong> (<em>bool</em>) – if True, return a Pandas dataframe instead of a BipartiteLong(Collapsed) dataframe</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>long_frame (<a class="reference internal" href="class-bipartitelong.html#bipartitepandas.bipartitelong.BipartiteLong" title="bipartitepandas.bipartitelong.BipartiteLong">BipartiteLong</a>(Collapsed) or Pandas DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.unstack_es">
+<code class="sig-name descname">unstack_es</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_df</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase.unstack_es" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unstack (collapsed) event study data by stacking (and renaming) period 2 data below period 1 data for movers, then dropping period 2 columns, returning a (collapsed) long dataframe. Duplicates created from unstacking are dropped.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>long_frame (<a class="reference internal" href="class-bipartitelong.html#bipartitepandas.bipartitelong.BipartiteLong" title="bipartitepandas.bipartitelong.BipartiteLong">BipartiteLong</a>(Collapsed) or Pandas DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="class-bipartiteeventstudy.html" class="btn btn-neutral float-right" title="BipartiteEventStudy class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="class-bipartitelongcollapsed.html" class="btn btn-neutral float-left" title="BipartiteLongCollapsed class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2021, Thibaut Lamadon.
+      <span class="lastupdated">
+        Last updated on Apr 24, 2021.
+      </span>
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

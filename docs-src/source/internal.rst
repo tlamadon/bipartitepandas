@@ -5,11 +5,14 @@ Python API
 Overview
 ---------
 
-The main BipartitePandas API is split into five classes. BipartitePandas is canonically imported using
+The main BipartitePandas API is split into 8 classes, 3 of which are base classes. BipartitePandas is canonically imported using
 
   .. code-block:: python
 
     import bipartitepandas as bpd
+
+Main classes
+~~~~~~~~~~~~
 
 * ``bipartitepandas.BipartiteLong``: Class for formatting bipartite networks in long form
 
@@ -21,8 +24,43 @@ The main BipartitePandas API is split into five classes. BipartitePandas is cano
 
 * ``bipartitepandas.SimBipartite``: Class for simulating bipartite networks
 
+Base classes
+~~~~~~~~~~~~
+
+* ``bipartitepandas.BipartiteBase``: Base class for BipartiteLongBase and BipartiteEventStudyBase. All methods are usable by any class that inherits from BipartiteBase.
+
+* ``bipartitepandas.BipartiteLongBase``: Base class for BipartiteLong and BipartiteLongCollapsed. All methods are usable by any class that inherits from BipartiteLongBase.
+
+* ``bipartitepandas.BipartiteEventStudyBase``: Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed. All methods are usable by any class that inherits from BipartiteEventStudyBase.
+
+
 Modules and Methods
 -------------------
+
+``bipartitepandas.BipartiteBase``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.BipartiteBase
+   ~bipartitepandas.BipartiteBase.clean_data
+   ~bipartitepandas.BipartiteBase.cluster
+   ~bipartitepandas.BipartiteBase.drop
+   ~bipartitepandas.BipartiteBase.merge
+   ~bipartitepandas.BipartiteBase.n_workers
+   ~bipartitepandas.BipartiteBase.n_firms
+   ~bipartitepandas.BipartiteBase.n_clusters
+   ~bipartitepandas.BipartiteBase.original_ids
+   ~bipartitepandas.BipartiteBase.rename
+   ~bipartitepandas.BipartiteBase.summary
+
+``bipartitepandas.BipartiteLongBase``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.BipartiteLongBase
+   ~bipartitepandas.BipartiteLong.get_es
 
 ``bipartitepandas.BipartiteLong``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -30,19 +68,8 @@ Modules and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteLong
-   ~bipartitepandas.BipartiteLong.clean_data
-   ~bipartitepandas.BipartiteLong.cluster
-   ~bipartitepandas.BipartiteLong.drop
    ~bipartitepandas.BipartiteLong.fill_periods
    ~bipartitepandas.BipartiteLong.get_collapsed_long
-   ~bipartitepandas.BipartiteLong.get_es
-   ~bipartitepandas.BipartiteLong.merge
-   ~bipartitepandas.BipartiteLong.n_workers
-   ~bipartitepandas.BipartiteLong.n_firms
-   ~bipartitepandas.BipartiteLong.n_clusters
-   ~bipartitepandas.BipartiteLong.original_ids
-   ~bipartitepandas.BipartiteLong.rename
-   ~bipartitepandas.BipartiteLong.summary
 
 ``bipartitepandas.BipartiteLongCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -50,18 +77,17 @@ Modules and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteLongCollapsed
-   ~bipartitepandas.BipartiteLongCollapsed.clean_data
-   ~bipartitepandas.BipartiteLongCollapsed.cluster
-   ~bipartitepandas.BipartiteLongCollapsed.drop
-   ~bipartitepandas.BipartiteLongCollapsed.get_es
-   ~bipartitepandas.BipartiteLongCollapsed.merge
-   ~bipartitepandas.BipartiteLongCollapsed.n_workers
-   ~bipartitepandas.BipartiteLongCollapsed.n_firms
-   ~bipartitepandas.BipartiteLongCollapsed.n_clusters
-   ~bipartitepandas.BipartiteLongCollapsed.original_ids
-   ~bipartitepandas.BipartiteLongCollapsed.rename
-   ~bipartitepandas.BipartiteLongCollapsed.summary
    ~bipartitepandas.BipartiteLongCollapsed.uncollapse
+
+``bipartitepandas.BipartiteEventStudyBase``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.BipartiteEventStudy
+   ~bipartitepandas.BipartiteEventStudy.get_cs
+   ~bipartitepandas.BipartiteEventStudy.get_long
+   ~bipartitepandas.BipartiteEventStudy.unstack_es
 
 ``bipartitepandas.BipartiteEventStudy``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -69,19 +95,6 @@ Modules and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteEventStudy
-   ~bipartitepandas.BipartiteEventStudy.clean_data
-   ~bipartitepandas.BipartiteEventStudy.cluster
-   ~bipartitepandas.BipartiteEventStudy.drop
-   ~bipartitepandas.BipartiteEventStudy.get_cs
-   ~bipartitepandas.BipartiteEventStudy.get_long
-   ~bipartitepandas.BipartiteEventStudy.merge
-   ~bipartitepandas.BipartiteEventStudy.n_workers
-   ~bipartitepandas.BipartiteEventStudy.n_firms
-   ~bipartitepandas.BipartiteEventStudy.n_clusters
-   ~bipartitepandas.BipartiteEventStudy.original_ids
-   ~bipartitepandas.BipartiteEventStudy.rename
-   ~bipartitepandas.BipartiteEventStudy.summary
-   ~bipartitepandas.BipartiteEventStudy.unstack_es
 
 ``bipartitepandas.BipartiteEventStudyCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,19 +102,6 @@ Modules and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteEventStudyCollapsed
-   ~bipartitepandas.BipartiteEventStudyCollapsed.clean_data
-   ~bipartitepandas.BipartiteEventStudyCollapsed.cluster
-   ~bipartitepandas.BipartiteEventStudyCollapsed.drop
-   ~bipartitepandas.BipartiteEventStudyCollapsed.get_cs
-   ~bipartitepandas.BipartiteEventStudyCollapsed.get_collapsed_long
-   ~bipartitepandas.BipartiteEventStudyCollapsed.merge
-   ~bipartitepandas.BipartiteEventStudyCollapsed.n_workers
-   ~bipartitepandas.BipartiteEventStudyCollapsed.n_firms
-   ~bipartitepandas.BipartiteEventStudyCollapsed.n_clusters
-   ~bipartitepandas.BipartiteEventStudyCollapsed.original_ids
-   ~bipartitepandas.BipartiteEventStudyCollapsed.rename
-   ~bipartitepandas.BipartiteEventStudyCollapsed.summary
-   ~bipartitepandas.BipartiteEventStudyCollapsed.unstack_es
 
 ``bipartitepandas.SimBipartite``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -109,4 +109,4 @@ Modules and Methods
 .. autosummary::
 
    ~bipartitepandas.SimBipartite
-   ~bipartitepandas.SimBipartite.sim_network()
+   ~bipartitepandas.SimBipartite.sim_network

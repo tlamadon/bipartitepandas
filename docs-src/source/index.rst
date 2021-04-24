@@ -18,8 +18,11 @@
   :maxdepth: 2
 
   internal
+  BipartiteBase <class-bipartitebase>
+  BipartiteLongBase <class-bipartitelongbase>
   BipartiteLong <class-bipartitelong>
   BipartiteLongCollapsed <class-bipartitelongcollapsed>
+  BipartiteEventStudyBase <class-bipartiteeventstudybase>
   BipartiteEventStudy <class-bipartiteeventstudy>
   BipartiteEventStudyCollapsed <class-bipartiteeventstudycollapsed>
   SimBipartite <class-simbipartite>
