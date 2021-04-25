@@ -1433,7 +1433,7 @@ def test_long_get_es_extended_2():
 
     es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2)
 
-    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
+    assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####
