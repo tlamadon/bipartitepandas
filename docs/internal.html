@@ -318,6 +318,9 @@
 <tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_collapsed_long</span></code>()</p></td>
 <td><p>Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).</p></td>
 </tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_es_extended</span></code>([periods_pre, periods_post])</p></td>
+<td><p>Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -432,7 +435,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon.
       <span class="lastupdated">
-        Last updated on Apr 24, 2021.
+        Last updated on Apr 25, 2021.
       </span>
 
     </p>

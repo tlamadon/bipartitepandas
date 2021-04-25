@@ -1379,6 +1379,62 @@ def test_uncollapse_25():
     assert bdf.iloc[10]['y'] == 1.5
     assert bdf.iloc[10]['t'] == 2
 
+###################################
+##### Tests for BipartiteLong #####
+###################################
+
+def test_long_get_es_extended_1():
+    # Test get_es_extended() by making sure it is generating the event study correctly for periods_pre=2 and periods_post=1
+    worker_data = []
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2.})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1.})
+    worker_data.append({'j': 1, 't': 3, 'i': 0, 'y': 1.})
+    worker_data.append({'j': 0, 't': 4, 'i': 0, 'y': 1.})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't': 3, 'i': 1, 'y': 2.})
+    worker_data.append({'j': 5, 't': 3, 'i': 1, 'y': 1.})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1.})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1.})
+    worker_data.append({'j': 3, 't': 3, 'i': 3, 'y': 1.5})
+    worker_data.append({'j': 0, 't': 1, 'i': 4, 'y': 1.})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j', 'y', 't']]
+    df['g'] = df['j'] # Fill in g column as j
+
+    bdf = bpd.BipartiteLong(df)
+    bdf = bdf.clean_data()
+
+    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=1)
+
+    assert es_extended.iloc[0]['i'] == 0
+    assert es_extended.iloc[0]['t'] == 4
+    assert es_extended.iloc[0]['g_l2'] == 1
+    assert es_extended.iloc[0]['g_l1'] == 1
+    assert es_extended.iloc[0]['g_f1'] == 0
+    assert es_extended.iloc[0]['y_l2'] == 1
+    assert es_extended.iloc[0]['y_l1'] == 1
+    assert es_extended.iloc[0]['y_f1'] == 1
+
+    assert es_extended.iloc[1]['i'] == 2
+    assert es_extended.iloc[1]['t'] == 3
+    assert es_extended.iloc[1]['g_l2'] == 2
+    assert es_extended.iloc[1]['g_l1'] == 2
+    assert es_extended.iloc[1]['g_f1'] == 3
+    assert es_extended.iloc[1]['y_l2'] == 1
+    assert es_extended.iloc[1]['y_l1'] == 1
+    assert es_extended.iloc[1]['y_f1'] == 1.5
+
+def test_long_get_es_extended_2():
+    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study
+    sim_data = bpd.SimBipartite().sim_network()
+    bdf = bpd.BipartiteLong(sim_data)
+    bdf = bdf.clean_data()
+
+    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2)
+
+    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
+
 ############################################
 ##### Tests for BipartiteLongCollapsed #####
 ############################################

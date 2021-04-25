@@ -242,6 +242,26 @@
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt id="bipartitepandas.bipartitelong.BipartiteLong.get_es_extended">
+<code class="sig-name descname">get_es_extended</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">periods_pre</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">periods_post</span><span class="o">=</span><span class="default_value">3</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelong.BipartiteLong.get_es_extended" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>periods_pre</strong> (<em>int</em>) – number of periods before the transition</p></li>
+<li><p><strong>periods_post</strong> (<em>int</em>) – number of periods after the transition</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>extended event study generated from long data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>es_extended_frame (Pandas DataFrame)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </dd></dl>
 
 </div>
@@ -269,7 +289,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon.
       <span class="lastupdated">
-        Last updated on Apr 24, 2021.
+        Last updated on Apr 25, 2021.
       </span>
 
     </p>

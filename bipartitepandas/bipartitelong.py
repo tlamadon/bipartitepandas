@@ -137,3 +137,85 @@ class BipartiteLong(bpd.BipartiteLongBase):
         fill_frame.drop(['i_l1', 't_l1'], axis=1, inplace=True)
 
         return fill_frame
+
+    def get_es_extended(self, periods_pre=3, periods_post=3):
+        '''
+        Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
+
+        Arguments:
+            periods_pre (int): number of periods before the transition
+            periods_post (int): number of periods after the transition
+
+        Returns:
+            es_extended_frame (Pandas DataFrame): extended event study generated from long data
+        '''
+        if not self.col_included('g'):
+            # Cluster if no cluster column
+            es_extended_frame = pd.DataFrame(self.cluster(), copy=True)
+        else:
+            es_extended_frame = pd.DataFrame(self, copy=True)
+
+        # Generate how many periods each worker worked
+        es_extended_frame['one'] = 1
+        es_extended_frame['worker_total_periods'] = es_extended_frame.groupby('i')['one'].transform(sum) # Must faster to use .transform(sum) than to use .transform(len)
+
+        # Keep workers with enough periods (must have at least periods_pre + periods_post periods)
+        es_extended_frame = es_extended_frame[es_extended_frame['worker_total_periods'] >= periods_pre + periods_post].reset_index(drop=True)
+
+        # Sort by worker-period
+        es_extended_frame.sort_values(['i', 't'])
+
+        # For each worker-period, generate (how many total years - 1) they have worked at that point (e.g. if a worker started in 2005, and had data each year, then 2008 would give 3, 2009 would give 4, etc.)
+        es_extended_frame['worker_periods_worked'] = es_extended_frame.groupby('i')['one'].cumsum() - 1
+        es_extended_frame.drop('one', axis=1, inplace=True)
+
+        # Find periods where the worker moved firms, which can serve as fulcrums for the event study
+        es_extended_frame['moved_firms'] = ((es_extended_frame['i'] == es_extended_frame['i'].shift(periods=1)) & (es_extended_frame['j'] != es_extended_frame['j'].shift(periods=1))).astype(int)
+
+        # Compute valid moves - periods where the worker moved firms, and they also have periods_pre periods before the move, and periods_post periods after (and including) the move
+        es_extended_frame['valid_move'] = \
+                                es_extended_frame['moved_firms'] & \
+                                (es_extended_frame['worker_periods_worked'] >= periods_pre) & \
+                                ((es_extended_frame['worker_total_periods'] - es_extended_frame['worker_periods_worked']) >= periods_post)
+
+        # Drop irrelevant columns
+        es_extended_frame.drop(['worker_total_periods', 'worker_periods_worked', 'moved_firms'], axis=1, inplace=True)
+
+        # Only keep workers who have a valid move
+        es_extended_frame = es_extended_frame[es_extended_frame.groupby('i')['valid_move'].transform(max) > 0]
+
+        # Compute lagged values
+        lagged_g = [] # For column order
+        lagged_y = [] # For column order
+        for i in range(1, periods_pre + 1):
+            es_extended_frame['g_l{}'.format(i)] = es_extended_frame['g'].shift(periods=i)
+            es_extended_frame['y_l{}'.format(i)] = es_extended_frame['y'].shift(periods=i)
+            lagged_g.insert(0, 'g_l{}'.format(i))
+            lagged_y.insert(0, 'y_l{}'.format(i))
+
+        # Compute lead values
+        lead_g = ['g_f1'] # For column order
+        lead_y = ['y_f1'] # For column order
+        for i in range(1, periods_post): # No + 1 because y has no shift (i.e. y becomes y_f1)
+            es_extended_frame['g_f{}'.format(i + 1)] = es_extended_frame['g'].shift(periods=-i)
+            es_extended_frame['y_f{}'.format(i + 1)] = es_extended_frame['y'].shift(periods=-i)
+            lead_g.append('g_f{}'.format(i + 1))
+            lead_y.append('y_f{}'.format(i + 1))
+
+        # Rename g to g_f1 and y to y_f1
+        es_extended_frame.rename({'g': 'g_f1', 'y': 'y_f1'}, axis=1, inplace=True)
+
+        # Keep rows with valid moves
+        es_extended_frame = es_extended_frame[es_extended_frame['valid_move'] == 1].reset_index(drop=True)
+
+        # Drop irrelevant columns
+        es_extended_frame.drop('valid_move', axis=1, inplace=True)
+
+        # Correct g-column datatypes
+        es_extended_frame[lagged_g + lead_g] = es_extended_frame[lagged_g + lead_g].astype(int)
+
+        # Reorder columns
+        es_extended_frame = es_extended_frame[['i', 't'] + lagged_g + lead_g + lagged_y + lead_y]
+
+        # Return es_extended_frame
+        return es_extended_frame
