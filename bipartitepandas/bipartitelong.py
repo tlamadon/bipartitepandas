@@ -140,7 +140,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     def get_es_extended(self, periods_pre=3, periods_post=3):
         '''
-        Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
+        Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
 
         Arguments:
             periods_pre (int): number of periods before the transition
