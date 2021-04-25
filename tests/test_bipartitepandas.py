@@ -1428,6 +1428,7 @@ def test_long_get_es_extended_1():
 def test_long_get_es_extended_2():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study
     sim_data = bpd.SimBipartite().sim_network()
+    sim_data['g'] = sim_data['j'] # Fill in g column as j
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
