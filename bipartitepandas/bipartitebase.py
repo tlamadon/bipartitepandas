@@ -82,7 +82,7 @@ class BipartiteBase(DataFrame):
 
         self.default_cluster = {
             'cdf_resolution': 10, # How many values to use to approximate the cdfs
-            'grouping': 'quantile_all', # How to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
+            'grouping': 'quantile_all', # How to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
             'stayers_movers': None, # If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
             't': None, # If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
             'weighted': True, # If True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
@@ -843,8 +843,8 @@ class BipartiteBase(DataFrame):
         Generate cdfs of compensation for firms.
 
         Arguments:
-            cdf_resolution (int): how many values to use to approximate the cdfs
-            grouping (str): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
+            cdf_resolution (int): how many values to use to approximate the cdfs (when grouping by 'mean', this gives the number of quantiles to compute)
+            grouping (str): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
             stayers_movers (str or None): if None, uses entire dataset; if 'stayers', uses only stayers; if 'movers', uses only movers
             t (int or None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
             weighted (bool): if True, compute firm weights
@@ -879,70 +879,100 @@ class BipartiteBase(DataFrame):
             else:
                 warnings.warn('Cannot use data from a particular period on collapsed data, proceeding to cluster on all data')
 
-        # Create empty numpy array to fill with the cdfs
+        # Create return variables
         jids = sorted(data['j'].unique()) # Must sort
         n_firms = len(jids) # Can't use self.n_firms() since data could be a subset of self.data
-        cdfs = np.zeros([n_firms, cdf_resolution])
-
-        # Create weights
-        if weighted:
-            if self.col_included('w'):
-                weights = data.groupby('j')['w'].sum()
-            else:
-                weights = data.groupby('j').size()
+        if grouping == 'mean':
+            cdfs = np.zeros(n_firms)
         else:
-            weights = None
+            cdfs = np.zeros([n_firms, cdf_resolution])
 
         # Create quantiles of interest
         quantiles = np.linspace(1 / cdf_resolution, 1, cdf_resolution)
 
-        if grouping == 'quantile_all':
-            # Get quantiles from all data
-            quantile_groups = data['y'].quantile(quantiles)
+        if grouping == 'mean':
+            # Group by mean income
+            weights = None
+            if weighted and self.col_included('w'):
+                data['weighted_y'] = data['y'] * data['w']
+                data['weighted_w'] = data['w']
+            else:
+                data['weighted_y'] = data['y']
+                data['weighted_w'] = 1
+            firm_mean = data.groupby('j')['weighted_y'].sum() / data.groupby('j')['weighted_w'].sum()
+            # Drop columns
+            data.drop(['weighted_y', 'weighted_w'], axis=1, inplace=True)
+            self.drop(['weighted_y', 'weighted_w']) # Because data is not a copy, must also drop from self
+            # Get quantiles for average firm income
+            quantile_groups = firm_mean.quantile(quantiles)
+            for i, mean_income in enumerate(firm_mean):
+                # Find quantile for each firm
+                quantile_group = 0
+                for quantile in quantile_groups:
+                    if mean_income > quantile:
+                        quantile_group += 1
+                    else:
+                        break
+                cdfs[i] = quantile_group
 
-            # Generate firm-level cdfs
-            data.sort_values('j', inplace=True) # Required for aggregate_transform
-            for i, quant in enumerate(quantile_groups):
-                data['quant'] = (data['y'] <= quant).astype(int)
-                cdfs_col = aggregate_transform(data, col_groupby='j', col_grouped='quant', func='sum', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
-                cdfs[:, i] = cdfs_col[cdfs_col >= 0]
-            data.drop('quant', axis=1, inplace=True)
-            del cdfs_col
+        else:
+            # Group by income cdfs
+            # Create weights
+            if weighted:
+                if self.col_included('w'):
+                    weights = data.groupby('j')['w'].sum()
+                else:
+                    weights = data.groupby('j').size()
+            else:
+                weights = None
 
-            # Normalize by firm size (convert to cdf)
-            jsize = data.groupby('j').size().to_numpy()
-            cdfs = (cdfs.T / jsize.T).T
+            if grouping == 'quantile_all':
+                # Get quantiles from all data
+                quantile_groups = data['y'].quantile(quantiles)
 
-        elif grouping in ['quantile_firm_small', 'quantile_firm_large']:
-            # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
-            data = data.sort_values(['y'])
+                # Generate firm-level cdfs
+                data.sort_values('j', inplace=True) # Required for aggregate_transform
+                for i, quant in enumerate(quantile_groups):
+                    data['quant'] = (data['y'] <= quant).astype(int)
+                    cdfs_col = aggregate_transform(data, col_groupby='j', col_grouped='quant', func='sum', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
+                    cdfs[:, i] = cdfs_col[cdfs_col >= 0]
+                data.drop('quant', axis=1, inplace=True)
+                del cdfs_col
 
-            if grouping == 'quantile_firm_small':
-                # Convert pandas dataframe into a dictionary to access data faster
-                # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
-                # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
-                # data_dict = data['y'].groupby(level=0).agg(list).to_dict()
-                data_dict = data.groupby('j')['y'].agg(list).to_dict()
-                # data.sort_values(['j', 'y'], inplace=True) # Required for aggregate_transform
-                # data_dict = pd.Series(aggregate_transform(data, col_groupby='j', col_grouped='y', func='array', merge=False), index=np.unique(data['j'])).to_dict()
-                # with warnings.catch_warnings():
-                #     warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-                #     data_dict = pd.Series(aggregate(data['j'], data['y'], func='array', fill_value=[]), index=np.unique(data['j'])).to_dict()
+                # Normalize by firm size (convert to cdf)
+                jsize = data.groupby('j').size().to_numpy()
+                cdfs = (cdfs.T / jsize.T).T
 
-            # Generate the cdfs
-            for i, jid in enumerate(jids):
-                # Get the firm-level compensation data (don't need to sort because already sorted)
+            elif grouping in ['quantile_firm_small', 'quantile_firm_large']:
+                # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
+                data = data.sort_values(['y'])
+
                 if grouping == 'quantile_firm_small':
-                    y = data_dict[jid]
-                elif grouping == 'quantile_firm_large':
-                    y = data.loc[data['j'] == jid, 'y'].to_numpy()
-                # Generate the firm-level cdf
-                # Note: update numpy array element by element
-                # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
-                for j in range(cdf_resolution):
-                    index = max(len(y) * (j + 1) // cdf_resolution - 1, 0) # Don't want negative index
-                    # Update cdfs with the firm-level cdf
-                    cdfs[i, j] = y[index]
+                    # Convert pandas dataframe into a dictionary to access data faster
+                    # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
+                    # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
+                    # data_dict = data['y'].groupby(level=0).agg(list).to_dict()
+                    data_dict = data.groupby('j')['y'].agg(list).to_dict()
+                    # data.sort_values(['j', 'y'], inplace=True) # Required for aggregate_transform
+                    # data_dict = pd.Series(aggregate_transform(data, col_groupby='j', col_grouped='y', func='array', merge=False), index=np.unique(data['j'])).to_dict()
+                    # with warnings.catch_warnings():
+                    #     warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+                    #     data_dict = pd.Series(aggregate(data['j'], data['y'], func='array', fill_value=[]), index=np.unique(data['j'])).to_dict()
+
+                # Generate the cdfs
+                for i, jid in enumerate(jids):
+                    # Get the firm-level compensation data (don't need to sort because already sorted)
+                    if grouping == 'quantile_firm_small':
+                        y = data_dict[jid]
+                    elif grouping == 'quantile_firm_large':
+                        y = data.loc[data['j'] == jid, 'y'].to_numpy()
+                    # Generate the firm-level cdf
+                    # Note: update numpy array element by element
+                    # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
+                    for j in range(cdf_resolution):
+                        index = max(len(y) * (j + 1) // cdf_resolution - 1, 0) # Don't want negative index
+                        # Update cdfs with the firm-level cdf
+                        cdfs[i, j] = y[index]
 
         return cdfs, weights, jids
 
@@ -955,9 +985,9 @@ class BipartiteBase(DataFrame):
 
                 Dictionary parameters:
 
-                    cdf_resolution (int, default=10): how many values to use to approximate the cdfs
+                    cdf_resolution (int, default=10): how many values to use to approximate the cdfs (when grouping by 'mean', this gives the number of quantiles to compute)
 
-                    grouping (str, default='quantile_all'): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary)
+                    grouping (str, default='quantile_all'): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
 
                     stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
 
@@ -989,11 +1019,15 @@ class BipartiteBase(DataFrame):
         cdfs, weights, jids = frame.approx_cdfs(cdf_resolution=cdf_resolution, grouping=grouping, stayers_movers=stayers_movers, t=t, weighted=weighted)
         frame.logger.info('firm cdfs computed')
 
-        # Compute firm clusters
-        KMeans_params = update_dict(frame.default_KMeans, user_KMeans)
-        frame.logger.info('computing firm clusters')
-        clusters = KMeans(**KMeans_params).fit(cdfs, sample_weight=weights).labels_
-        frame.logger.info('firm clusters computed')
+        if grouping == 'mean':
+            # No KMeans needed
+            clusters = cdfs
+        else:
+            # Compute firm clusters
+            KMeans_params = update_dict(frame.default_KMeans, user_KMeans)
+            frame.logger.info('computing firm clusters')
+            clusters = KMeans(**KMeans_params).fit(cdfs, sample_weight=weights).labels_
+            frame.logger.info('firm clusters computed')
 
         # Drop existing clusters
         if frame.col_included('g'):

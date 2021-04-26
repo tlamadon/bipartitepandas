@@ -1748,17 +1748,17 @@ def test_get_cs_2():
 def test_reformatting_1():
     # Convert from long --> event study --> long --> collapsed long --> collapsed event study --> collapsed long to ensure conversion maintains data properly.
     worker_data = []
-    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'g': 1, 'index': 0})
-    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'g': 2, 'index': 1})
-    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1., 'g': 2, 'index': 2})
-    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1., 'g': 1, 'index': 3})
-    worker_data.append({'j': 2, 't': 3, 'i': 1, 'y': 2., 'g': 1, 'index': 4})
-    worker_data.append({'j': 5, 't': 3, 'i': 1, 'y': 1., 'g': 3, 'index': 5})
-    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1., 'g': 1, 'index': 6})
-    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1., 'g': 1, 'index': 7})
-    worker_data.append({'j': 0, 't': 1, 'i': 4, 'y': 1., 'g': 1, 'index': 8})
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'g': 1})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'g': 2})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1., 'g': 2})
+    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1., 'g': 1})
+    worker_data.append({'j': 2, 't': 3, 'i': 1, 'y': 2., 'g': 1})
+    worker_data.append({'j': 5, 't': 3, 'i': 1, 'y': 1., 'g': 3})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1., 'g': 1})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1., 'g': 1})
+    worker_data.append({'j': 0, 't': 1, 'i': 4, 'y': 1., 'g': 1})
 
-    df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't', 'g']]
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j', 'y', 't', 'g']]
 
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
@@ -2093,3 +2093,37 @@ def test_cluster_4():
                 bound = 35000 # 70% error
 
             assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
+
+def test_cluster_5():
+    # Test cluster function works with 'mean' grouping option.
+    worker_data = []
+    worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'g': 1})
+    worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'g': 2})
+    worker_data.append({'j': 1, 't': 1, 'i': 1, 'y': 1., 'g': 2})
+    worker_data.append({'j': 2, 't': 2, 'i': 1, 'y': 1., 'g': 1})
+    worker_data.append({'j': 2, 't': 3, 'i': 1, 'y': 2., 'g': 1})
+    worker_data.append({'j': 5, 't': 4, 'i': 1, 'y': 1., 'g': 3})
+    worker_data.append({'j': 2, 't': 1, 'i': 3, 'y': 1., 'g': 1})
+    worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1., 'g': 1})
+    worker_data.append({'j': 0, 't': 1, 'i': 4, 'y': 1., 'g': 1})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j', 'y', 't', 'g']]
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data()
+
+    bdf = bdf.cluster(user_cluster={'grouping': 'mean', 'cdf_resolution': 3})
+
+    # Clusters:
+    # j 0 1 2 3
+    # g 2 0 1 0
+
+    assert bdf.iloc[0]['g'] == 2
+    assert bdf.iloc[1]['g'] == 0
+    assert bdf.iloc[2]['g'] == 0
+    assert bdf.iloc[3]['g'] == 1
+    assert bdf.iloc[4]['g'] == 1
+    assert bdf.iloc[5]['g'] == 0
+    assert bdf.iloc[6]['g'] == 1
+    assert bdf.iloc[7]['g'] == 1
+    assert bdf.iloc[8]['g'] == 2
