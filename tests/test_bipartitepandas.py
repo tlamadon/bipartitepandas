@@ -1833,7 +1833,7 @@ def test_cluster_1():
         for stayers_movers in [None, 'stayers', 'movers']:
             print('grouping:', grouping)
             print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'grouping': grouping, 'stayers_movers': stayers_movers, 'user_KMeans': {'n_clusters': nk}})
+            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
 
             clusters_true = sim_data[~bdf['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
             clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
@@ -1897,7 +1897,7 @@ def test_cluster_2():
         for stayers_movers in [None, 'stayers', 'movers']:
             print('grouping:', grouping)
             print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'grouping': grouping, 'stayers_movers': stayers_movers, 'user_KMeans': {'n_clusters': nk}})
+            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
 
             to_long = bdf.get_long()
             clusters_true = sim_data[~to_long['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -1968,7 +1968,7 @@ def test_cluster_3():
         for stayers_movers in [None, 'stayers', 'movers']:
             print('grouping:', grouping)
             print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'grouping': grouping, 'stayers_movers': stayers_movers, 'user_KMeans': {'n_clusters': nk}})
+            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
             remaining_jids = bdf.dropna()['j'].unique()
 
             clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -2039,7 +2039,7 @@ def test_cluster_4():
         for stayers_movers in [None, 'stayers', 'movers']:
             print('grouping:', grouping)
             print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'grouping': grouping, 'stayers_movers': stayers_movers, 'user_KMeans': {'n_clusters': nk}})
+            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
 
             to_collapsed_long = bdf.get_long()
             remaining_jids = to_collapsed_long.dropna()['j'].unique()
@@ -2095,7 +2095,7 @@ def test_cluster_4():
             assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
 
 def test_cluster_5():
-    # Test cluster function works with 'mean' grouping option.
+    # Test cluster function works with moments-quantiles options.
     worker_data = []
     worker_data.append({'j': 0, 't': 1, 'i': 0, 'y': 2., 'g': 1})
     worker_data.append({'j': 1, 't': 2, 'i': 0, 'y': 1., 'g': 2})
@@ -2112,7 +2112,7 @@ def test_cluster_5():
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
 
-    bdf = bdf.cluster(user_cluster={'grouping': 'mean', 'cdf_resolution': 3})
+    bdf = bdf.cluster(user_cluster={'measure_moments': True, 'cluster_quantiles': True}, user_measure_moments={'measures': 'mean'}, user_quantile={'n_quantiles': 3})
 
     # Clusters:
     # j 0 1 2 3

@@ -6,6 +6,7 @@ from pathlib import Path
 # from numpy_groupies.aggregate_numpy import aggregate
 import numpy as np
 import pandas as pd
+from statsmodels.stats.weightstats import DescrStatsW
 import warnings
 
 col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'w', 'w1', 'w2', 'g', 'g1', 'g2', 'm', 'cs'].index
@@ -112,7 +113,7 @@ def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_
                 new_col_dict[col] = None
     return new_col_dict
 
-def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None, merge=True):
+def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col_name=None, merge=True):
     '''
     Adds transform to the numpy_groupies function aggregate. Source: https://stackoverflow.com/a/65967344.
 
@@ -129,6 +130,9 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None, me
             min: min value
 
             sum: sum
+
+            var: variance
+        weights (str or None): weight column. Note that weights only work for 'sum' and 'var' options
         col_name (str or None): specify what to name the new column. If None and func is a string, sets col_name=func. If None and func is a function, sets col_name=m. If col_name is in frame's columns, adds 'm' until it will not overwrite an existing column
         merge (bool): if True, merge into dataframe
 
@@ -142,7 +146,7 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None, me
     col2 = frame[col_grouped].to_numpy()
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-        agg_array = np.split(col2, np.unique(col1, return_index = True)[1])[1:] # aggregate(col1, col2, 'array', fill_value=[])
+        agg_array = np.split(col2, np.unique(col1, return_index=True)[1])[1:] # aggregate(col1, col2, 'array', fill_value=[])
     if isinstance(func, str):
         if col_name is None:
             col_name = func
@@ -157,8 +161,16 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, col_name=None, me
             agg_array = np.array([np.max(np.array(vals)) for vals in agg_array])
         elif func == 'min':
             agg_array = np.array([np.min(np.array(vals)) for vals in agg_array])
-        elif func == 'sum':
-            agg_array = np.array([np.sum(np.array(vals)) for vals in agg_array])
+        elif func in ['sum', 'var']:
+            if weights is not None:
+                col_weights = frame[weights].to_numpy()
+                agg_weights = np.split(col_weights, np.unique(col1, return_index=True)[1])[1:]
+            else:
+                agg_weights = np.ones(shape=len(agg_array))
+            if func == 'sum':
+                agg_array = np.array([np.sum(np.array(vals) * np.array(agg_weights[i])) for i, vals in enumerate(agg_array)])
+            elif func == 'var':
+                agg_array = np.array([DescrStatsW(np.array(vals), weights=np.array(agg_weights[i])).var for i, vals in enumerate(agg_array)])
         else:
             warnings.warn('Invalid function name, returning groupby with no function applied')
     else:

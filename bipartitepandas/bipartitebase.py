@@ -7,6 +7,7 @@ import numpy as np
 # from numpy_groupies.aggregate_numpy import aggregate
 import pandas as pd
 from pandas import DataFrame, Int64Dtype
+from statsmodels.stats.weightstats import DescrStatsW
 import networkx as nx
 from sklearn.cluster import KMeans
 from scipy.sparse.csgraph import connected_components
@@ -28,7 +29,7 @@ class BipartiteBase(DataFrame):
         include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_KMeans', 'default_cluster', 'dtype_dict', 'default_clean', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
         # Initialize DataFrame
@@ -64,30 +65,11 @@ class BipartiteBase(DataFrame):
             # Set attributes
             self.reset_attributes()
 
-        # Define default parameter dictionaries
-        self.default_KMeans = { # These parameters are specifically for the KMeans algorithm
-                                # Read more at https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
-            'n_clusters': 10,
-            'init': 'k-means++',
-            'n_init': 500,
-            'max_iter': 300,
-            'tol': 0.0001,
-            'precompute_distances': 'deprecated',
-            'verbose': 0,
-            'random_state': None,
-            'copy_x': True,
-            'n_jobs': 'deprecated',
-            'algorithm': 'auto'
-        }
-
         self.default_cluster = {
-            'cdf_resolution': 10, # How many values to use to approximate the cdfs
-            'grouping': 'quantile_all', # How to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
-            'stayers_movers': None, # If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
-            't': None, # If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
-            'weighted': True, # If True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-            'dropna': False, # If True, drop observations where firms aren't clustered; if False, keep all observations
-            'user_KMeans': self.default_KMeans # Parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
+            'measure_cdf': False, # If True, approximate firm-level income cdfs
+            'measure_moments': False, # (bool, default=False): if True, approximate firm-level moments
+            'cluster_KMeans': False, # (bool, default=False): if True, cluster using KMeans. Valid only if cluster_quantiles=False.
+            'cluster_quantiles': False # If True, cluster using quantiles. Valid only if cluster_KMeans=False, measure_cdf=False, and measure_moments=True, and measuring only a single moment.
         }
 
         self.dtype_dict = {
@@ -838,30 +820,143 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def approx_cdfs(self, cdf_resolution=10, grouping='quantile_all', stayers_movers=None, t=None, weighted=True):
+    def compute_measure_cdfs(self, data, jids, cdf_resolution=10, measure='quantile_all'):
         '''
-        Generate cdfs of compensation for firms.
+        Generate cdfs of compensation for firms. Used for clustering.
 
         Arguments:
-            cdf_resolution (int): how many values to use to approximate the cdfs (when grouping by 'mean', this gives the number of quantiles to compute)
-            grouping (str): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
-            stayers_movers (str or None): if None, uses entire dataset; if 'stayers', uses only stayers; if 'movers', uses only movers
-            t (int or None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
-            weighted (bool): if True, compute firm weights
+            data (Pandas DataFrame): data to use
+            jids (list): sorted list of firm ids in data (since data could be a subset of self, this is not necessarily all firms in self)
+            cdf_resolution (int): how many values to use to approximate the cdfs
+            measure (str): how to compute the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary
 
         Returns:
-            cdf_df (NumPy Array): NumPy array of firm cdfs
+            cdfs (NumPy Array): NumPy array of firm cdfs
+        '''
+        # Initialize cdf array
+        n_firms = len(jids) # Can't use self.n_firms() since data could be a subset of self
+        cdfs = np.zeros([n_firms, cdf_resolution])
+
+        # Create quantiles of interest
+        quantiles = np.linspace(1 / cdf_resolution, 1, cdf_resolution)
+
+        # Group by income cdfs
+        if measure == 'quantile_all':
+            # Get quantiles from all data
+            quantile_groups = DescrStatsW(data['y'], weights=data['row_weights']).quantile(quantiles, return_pandas=False)
+
+            # Generate firm-level cdfs
+            data.sort_values('j', inplace=True) # Required for aggregate_transform
+            for i, quant in enumerate(quantile_groups):
+                data['quant'] = (data['y'] <= quant).astype(int)
+                cdfs_col = aggregate_transform(data, col_groupby='j', col_grouped='quant', func='sum', weights='row_weights', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
+                cdfs[:, i] = cdfs_col[cdfs_col >= 0]
+            data.drop('quant', axis=1, inplace=True)
+            del cdfs_col
+
+            # Normalize by firm size (convert to cdf)
+            jsize = data.groupby('j')['row_weights'].sum().to_numpy()
+            cdfs = (cdfs.T / jsize.T).T
+
+        elif measure in ['quantile_firm_small', 'quantile_firm_large']:
+            # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
+            data = data.sort_values(['y'])
+
+            if measure == 'quantile_firm_small':
+                # Convert pandas dataframe into a dictionary to access data faster
+                # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
+                # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
+                # data_dict = data['y'].groupby(level=0).agg(list).to_dict()
+                data_dict = data.groupby('j')['y'].agg(list).to_dict()
+                weights_dict = data.groupby('j')['row_weights'].agg(list).to_dict()
+                # data.sort_values(['j', 'y'], inplace=True) # Required for aggregate_transform
+                # data_dict = pd.Series(aggregate_transform(data, col_groupby='j', col_grouped='y', func='array', merge=False), index=np.unique(data['j'])).to_dict()
+                # with warnings.catch_warnings():
+                #     warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
+                #     data_dict = pd.Series(aggregate(data['j'], data['y'], func='array', fill_value=[]), index=np.unique(data['j'])).to_dict()
+
+            # Generate the cdfs
+            for i, jid in enumerate(jids):
+                # Get the firm-level compensation data (don't need to sort because already sorted)
+                if measure == 'quantile_firm_small':
+                    y = np.array(data_dict[jid])
+                    w = np.array(weights_dict[jid])
+                elif measure == 'quantile_firm_large':
+                    y = data.loc[data['j'] == jid, 'y'].to_numpy()
+                    w = data.loc[data['j'] == jid, 'row_weights'].to_numpy()
+                cum_w = w.cumsum() # Cumulative weight
+                weighted_n = w.sum() # Weighted number of observations
+                # Generate the firm-level cdf
+                # Note: update numpy array element by element
+                # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
+                for j, quantile in enumerate(quantiles):
+                    # index = max(len(y) * (j + 1) // cdf_resolution - 1, 0) # Don't want negative index
+                    index = 0 # Income index at particular quantile
+                    for cum_w_val in cum_w[1:]: # Skip first weight because it is always true
+                        if cum_w_val / weighted_n <= quantile:
+                            index += 1
+                        else:
+                            break
+                    # Update cdfs with the firm-level cdf
+                    cdfs[i, j] = y[index]
+
+        return cdfs
+
+    def compute_measure_moments(self, data, jids, measures='mean'):
+        '''
+        Generate compensation moments for firms. Used for clustering.
+
+        Arguments:
+            data (Pandas DataFrame): data to use
+            jids (list): sorted list of firm ids in data (since data could be a subset of self, this is not necessarily all firms in self)
+            measures (str or list of str): how to compute the measures ('mean' to compute average income within each firm; 'var' to compute variance of income within each firm; 'max' to compute max income within each firm; 'min' to compute min income within each firm)
+
+        Returns:
+            moments (NumPy Array): NumPy array of firm moments
+        '''
+        n_firms = len(jids) # Can't use self.n_firms() since data could be a subset of self
+        n_measures = len(to_list(measures))
+        moments = np.zeros([n_firms, n_measures])
+
+        data.sort_values('j', inplace=True) # Required for aggregate_transform
+
+        for j, measure in enumerate(to_list(measures)):
+            if measure == 'mean':
+                # Group by mean income
+                data['one'] = 1
+                moments[:, j] = aggregate_transform(data, 'j', 'y', 'sum', weights='row_weights', merge=False) / aggregate_transform(data, 'j', 'one', 'sum', weights='row_weights', merge=False)
+            elif measure == 'var':
+                # Group by variance of income
+                moments[:, j] = aggregate_transform(data, 'j', 'y', 'var', weights='row_weights', merge=False)
+            elif measure == 'max':
+                moments[:, j] = data.groupby('j')['y'].max().to_numpy()
+            elif measure == 'min':
+                moments[:, j] = data.groupby('j')['y'].min().to_numpy()
+
+        return moments
+
+    def prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
+        '''
+        Prepare data for clustering.
+
+        Arguments:
+            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
+            weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+        Returns:
+            data (Pandas DataFrame): data prepared for clustering
             weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
             jids (NumPy Array): firm ids of firms in subset of data used to cluster
         '''
+        # Prepare data
         if stayers_movers is not None: # Note this condition is split into two sections, one prior to stacking event study data and one post
             # Generate m column (the function checks if it already exists)
             self.gen_m()
 
         # Stack data if event study (need all data in 1 column)
-        if len(to_list(self.reference_dict['j'])) == 2:
+        try:
             frame = self.get_long(return_df=True) # Returns Pandas dataframe, not BipartiteLong(Collapsed)
-        else:
+        except AttributeError:
             frame = self
 
         if stayers_movers is not None:
@@ -879,125 +974,94 @@ class BipartiteBase(DataFrame):
             else:
                 warnings.warn('Cannot use data from a particular period on collapsed data, proceeding to cluster on all data')
 
-        # Create return variables
-        jids = sorted(data['j'].unique()) # Must sort
-        n_firms = len(jids) # Can't use self.n_firms() since data could be a subset of self.data
-        if grouping == 'mean':
-            cdfs = np.zeros(n_firms)
+        # Create weights
+        if weighted:
+            if self.col_included('w'):
+                data['row_weights'] = data['w']
+                weights = data.groupby('j')['w'].sum().to_numpy()
+            else:
+                data['row_weights'] = 1
+                weights = data.groupby('j').size().to_numpy()
         else:
-            cdfs = np.zeros([n_firms, cdf_resolution])
-
-        # Create quantiles of interest
-        quantiles = np.linspace(1 / cdf_resolution, 1, cdf_resolution)
-
-        if grouping == 'mean':
-            # Group by mean income
+            data['row_weights'] = 1
             weights = None
-            if weighted and self.col_included('w'):
-                data['weighted_y'] = data['y'] * data['w']
-                data['weighted_w'] = data['w']
-            else:
-                data['weighted_y'] = data['y']
-                data['weighted_w'] = 1
-            firm_mean = data.groupby('j')['weighted_y'].sum() / data.groupby('j')['weighted_w'].sum()
-            # Drop columns
-            data.drop(['weighted_y', 'weighted_w'], axis=1, inplace=True)
-            self.drop(['weighted_y', 'weighted_w']) # Because data is not a copy, must also drop from self
-            # Get quantiles for average firm income
-            quantile_groups = firm_mean.quantile(quantiles)
-            for i, mean_income in enumerate(firm_mean):
-                # Find quantile for each firm
-                quantile_group = 0
-                for quantile in quantile_groups:
-                    if mean_income > quantile:
-                        quantile_group += 1
-                    else:
-                        break
-                cdfs[i] = quantile_group
 
-        else:
-            # Group by income cdfs
-            # Create weights
-            if weighted:
-                if self.col_included('w'):
-                    weights = data.groupby('j')['w'].sum()
+        # Get unique firm ids
+        jids = sorted(data['j'].unique()) # Must sort
+
+        return data, weights, jids
+
+    def compute_quantiles(self, data, n_quantiles=10):
+        '''
+        Compute quantiles groups for data.
+
+        Arguments:
+            data (NumPy Array): data to compute quantiles for
+            n_quantiles (int): number of quantiles to compute for groups
+
+        Returns:
+            groups (NumPy Array): quantile groups for data
+        '''
+        groups = np.zeros(shape=len(data))
+        quantiles = np.linspace(1 / n_quantiles, 1, n_quantiles)
+        quantile_groups = np.quantile(data, quantiles)
+        for i, mean_income in enumerate(data):
+            # Find quantile for each firm
+            quantile_group = 0
+            for quantile in quantile_groups:
+                if mean_income > quantile:
+                    quantile_group += 1
                 else:
-                    weights = data.groupby('j').size()
-            else:
-                weights = None
+                    break
+            groups[i] = quantile_group
+        return groups
 
-            if grouping == 'quantile_all':
-                # Get quantiles from all data
-                quantile_groups = data['y'].quantile(quantiles)
-
-                # Generate firm-level cdfs
-                data.sort_values('j', inplace=True) # Required for aggregate_transform
-                for i, quant in enumerate(quantile_groups):
-                    data['quant'] = (data['y'] <= quant).astype(int)
-                    cdfs_col = aggregate_transform(data, col_groupby='j', col_grouped='quant', func='sum', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
-                    cdfs[:, i] = cdfs_col[cdfs_col >= 0]
-                data.drop('quant', axis=1, inplace=True)
-                del cdfs_col
-
-                # Normalize by firm size (convert to cdf)
-                jsize = data.groupby('j').size().to_numpy()
-                cdfs = (cdfs.T / jsize.T).T
-
-            elif grouping in ['quantile_firm_small', 'quantile_firm_large']:
-                # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
-                data = data.sort_values(['y'])
-
-                if grouping == 'quantile_firm_small':
-                    # Convert pandas dataframe into a dictionary to access data faster
-                    # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
-                    # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
-                    # data_dict = data['y'].groupby(level=0).agg(list).to_dict()
-                    data_dict = data.groupby('j')['y'].agg(list).to_dict()
-                    # data.sort_values(['j', 'y'], inplace=True) # Required for aggregate_transform
-                    # data_dict = pd.Series(aggregate_transform(data, col_groupby='j', col_grouped='y', func='array', merge=False), index=np.unique(data['j'])).to_dict()
-                    # with warnings.catch_warnings():
-                    #     warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-                    #     data_dict = pd.Series(aggregate(data['j'], data['y'], func='array', fill_value=[]), index=np.unique(data['j'])).to_dict()
-
-                # Generate the cdfs
-                for i, jid in enumerate(jids):
-                    # Get the firm-level compensation data (don't need to sort because already sorted)
-                    if grouping == 'quantile_firm_small':
-                        y = data_dict[jid]
-                    elif grouping == 'quantile_firm_large':
-                        y = data.loc[data['j'] == jid, 'y'].to_numpy()
-                    # Generate the firm-level cdf
-                    # Note: update numpy array element by element
-                    # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
-                    for j in range(cdf_resolution):
-                        index = max(len(y) * (j + 1) // cdf_resolution - 1, 0) # Don't want negative index
-                        # Update cdfs with the firm-level cdf
-                        cdfs[i, j] = y[index]
-
-        return cdfs, weights, jids
-
-    def cluster(self, user_cluster={}):
+    def cluster(self, user_cluster={}, user_prep_cluster={}, user_measure_cdfs={}, user_measure_moments={}, user_KMeans={}, user_quantile={}, dropna=False):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
 
         Arguments:
-            user_cluster (dict): dictionary of parameters for clustering
+            user_cluster (dict): dictionary of parameters specifying how to cluster the data. If measure_cdf=False and measure_moments=False, overwrites measure_cdf=True. If cluster_KMeans=False and cluster_quantiles=False, overwrites cluster_KMeans=True.
 
                 Dictionary parameters:
 
-                    cdf_resolution (int, default=10): how many values to use to approximate the cdfs (when grouping by 'mean', this gives the number of quantiles to compute)
+                    measure_cdf (bool, default=False): if True, approximate firm-level income cdfs
 
-                    grouping (str, default='quantile_all'): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
+                    measure_moments (bool, default=False): if True, approximate firm-level moments
+
+                    cluster_KMeans (bool, default=False): if True, cluster using KMeans. Valid only if cluster_quantiles=False.
+
+                    cluster_quantiles (bool, default=False): if True, cluster using quantiles. Valid only if cluster_KMeans=False, measure_cdf=False, and measure_moments=True, and measuring only a single moment.
+            user_prep_cluster (dict): dictionary of parameters for preparing data for clustering
+
+                Dictionary parameters:
 
                     stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
 
                     t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
 
                     weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+            user_measure_cdfs (dict): dictionary of parameters for computing the CDF measure
 
-                    dropna (bool, default=False): if True, drop observations where firms aren't clustered; if False, keep all observations
+                Dictionary parameters:
 
-                    user_KMeans (dict): parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
+                    cdf_resolution (int, default=10): how many values to use to approximate the cdfs (when grouping by 'mean', this gives the number of quantiles to compute)
+
+                    measure (str, default='quantile_all'): how to group the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary; 'mean' to group firms by average income within the firm)
+
+            user_measure_moments (dict): dictionary of parameters for computing moment measures
+
+                Dictionary parameters:
+
+                    measures (str or list of str): how to compute the measures ('mean' to compute average income within each firm; 'var' to compute variance of income within each firm; 'max' to compute max income within each firm; 'min' to compute min income within each firm)
+
+            user_KMeans (dict): dictionary of parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
+            user_quantile (dict): dictionary of parameters for quantile grouping
+
+                Dictionary parameters:
+
+                    n_quantiles (int, default=4): number of quantiles to compute for groups
+            dropna (bool, default=False): if True, drop observations where firms aren't clustered; if False, keep all observations
 
         Returns:
             frame (BipartiteBase): BipartiteBase with clusters
@@ -1007,27 +1071,50 @@ class BipartiteBase(DataFrame):
         # Update dictionary
         cluster_params = update_dict(frame.default_cluster, user_cluster)
 
-        # Unpack dictionary
-        cdf_resolution = cluster_params['cdf_resolution']
-        grouping = cluster_params['grouping']
-        stayers_movers = cluster_params['stayers_movers']
-        t = cluster_params['t']
-        weighted = cluster_params['weighted']
-        user_KMeans = cluster_params['user_KMeans']
+        # Prepare data for clustering
+        cluster_data, weights, jids = self.prep_cluster_data(**user_prep_cluster)
 
-        # Compute cdfs
-        cdfs, weights, jids = frame.approx_cdfs(cdf_resolution=cdf_resolution, grouping=grouping, stayers_movers=stayers_movers, t=t, weighted=weighted)
-        frame.logger.info('firm cdfs computed')
+        # Overwrite cluster_params values
+        if not cluster_params['measure_cdf'] and not cluster_params['measure_moments']:
+            cluster_params['measure_cdf'] = True
+        if not cluster_params['cluster_KMeans'] and not cluster_params['cluster_quantiles']:
+            cluster_params['cluster_KMeans'] = True
 
-        if grouping == 'mean':
-            # No KMeans needed
-            clusters = cdfs
-        else:
-            # Compute firm clusters
-            KMeans_params = update_dict(frame.default_KMeans, user_KMeans)
-            frame.logger.info('computing firm clusters')
-            clusters = KMeans(**KMeans_params).fit(cdfs, sample_weight=weights).labels_
-            frame.logger.info('firm clusters computed')
+        # Compute measures
+        if cluster_params['measure_cdf']:
+            measures = self.compute_measure_cdfs(cluster_data, jids, **user_measure_cdfs)
+            frame.logger.info('firm cdfs computed')
+        if cluster_params['measure_moments']:
+            if cluster_params['measure_cdf']:
+                measures = np.concatenate([measures, self.compute_measure_moments(cluster_data, jids, **user_measure_moments)], axis=1) # Save both cdfs and moments
+            else:
+                measures = self.compute_measure_moments(cluster_data, jids, **user_measure_moments)
+            frame.logger.info('firm moments computed')
+
+        # Drop columns (because prepared data is not always a copy, must drop from self)
+        for col in ['row_weights', 'one']:
+            if col in self.columns:
+                self.drop(col)
+
+        # Can't cluster using quantiles if more than 1 column
+        if cluster_params['cluster_quantiles']:
+            if measures.shape[1] > 1:
+                print('measures:', measures.shape)
+                cluster_params['cluster_quantiles'] = False
+                cluster_params['cluster_KMeans'] = True
+                warnings.warn('Cannot cluster using quantiles if multiple measures computed. Defaulting to KMeans.')
+        # Can't cluster using both KMeans and quantiles
+        if cluster_params['cluster_KMeans'] and cluster_params['cluster_quantiles']:
+            warnings.warn('Cannot cluster using both KMeans and quantiles. Defaulting to KMeans.')
+            cluster_params['cluster_quantiles'] = False
+
+        # Compute firm clusters
+        frame.logger.info('computing firm clusters')
+        if cluster_params['cluster_KMeans']:
+            clusters = KMeans(**user_KMeans).fit(measures, sample_weight=weights).labels_
+        else: # Cluster on quantiles
+            clusters = self.compute_quantiles(measures, **user_quantile)
+        frame.logger.info('firm clusters computed')
 
         # Drop existing clusters
         if frame.col_included('g'):
@@ -1052,7 +1139,7 @@ class BipartiteBase(DataFrame):
         sorted_cols = sorted(frame.columns, key=col_order)
         frame = frame[sorted_cols]
 
-        if cluster_params['dropna']:
+        if dropna:
             # Drop firms that don't get clustered
             frame = frame.dropna().reset_index(drop=True)
             frame[frame.reference_dict['g']] = frame[frame.reference_dict['g']].astype(int)
