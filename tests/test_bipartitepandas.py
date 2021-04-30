@@ -1436,6 +1436,30 @@ def test_long_get_es_extended_2():
 
     assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
 
+def test_long_get_es_extended_3_1():
+    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_pre works
+    sim_data = bpd.SimBipartite().sim_network()
+    sim_data['g'] = sim_data['j'] # Fill in g column as j
+    bdf = bpd.BipartiteLong(sim_data)
+    bdf = bdf.clean_data()
+
+    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=3, stable_pre=True)
+
+    assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
+    assert np.sum(es_extended['g_l2'] != es_extended['g_l1']) == 0
+
+def test_long_get_es_extended_3_2():
+    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post works
+    sim_data = bpd.SimBipartite().sim_network()
+    sim_data['g'] = sim_data['j'] # Fill in g column as j
+    bdf = bpd.BipartiteLong(sim_data)
+    bdf = bdf.clean_data()
+
+    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_post=True)
+
+    assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
+    assert np.sum(es_extended['g_f1'] != es_extended['g_f2']) == 0
+
 ############################################
 ##### Tests for BipartiteLongCollapsed #####
 ############################################

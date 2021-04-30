@@ -138,13 +138,15 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return fill_frame
 
-    def get_es_extended(self, periods_pre=3, periods_post=3):
+    def get_es_extended(self, periods_pre=3, periods_post=3, stable_pre=False, stable_post=False):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
 
         Arguments:
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
+            stable_pre (bool): if True, keep only workers who stay at a single firm before the transition
+            stable_post (bool): if True, keep only workers who stay at a single firm after the transition
 
         Returns:
             es_extended_frame (Pandas DataFrame): extended event study generated from long data
@@ -196,11 +198,20 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Compute lead values
         lead_g = ['g_f1'] # For column order
         lead_y = ['y_f1'] # For column order
-        for i in range(1, periods_post): # No + 1 because y has no shift (i.e. y becomes y_f1)
+        for i in range(1, periods_post): # No + 1 because base period has no shift (i.e. y becomes y_f1)
             es_extended_frame['g_f{}'.format(i + 1)] = es_extended_frame['g'].shift(periods=-i)
             es_extended_frame['y_f{}'.format(i + 1)] = es_extended_frame['y'].shift(periods=-i)
             lead_g.append('g_f{}'.format(i + 1))
             lead_y.append('y_f{}'.format(i + 1))
+
+        # Stable pre-trend
+        if stable_pre:
+            for i in range(2, periods_pre + 1): # Shift 1 is baseline
+                es_extended_frame = es_extended_frame[es_extended_frame['j'].shift(periods=1) == es_extended_frame['j'].shift(periods=i)]
+        # Stable post-trend
+        if stable_post:
+            for i in range(1, periods_post): # Shift 0 is baseline
+                es_extended_frame = es_extended_frame[es_extended_frame['j'] == es_extended_frame['j'].shift(periods=-i)]
 
         # Rename g to g_f1 and y to y_f1
         es_extended_frame.rename({'g': 'g_f1', 'y': 'y_f1'}, axis=1, inplace=True)
