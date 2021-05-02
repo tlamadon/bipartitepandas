@@ -19,7 +19,7 @@ BipartitePandas
 `BipartitePandas` is a Python package for handling bipartite labor data.
 
 .. |binder| image:: https://mybinder.org/badge_logo.svg 
-    :target: https://mybinder.org/v2/gh/tlamadon/bipartitepandas/HEAD?filepath=docs%2Fnotebooks%2Fbipartitepandas_example.ipynb
+    :target: https://mybinder.org/v2/gh/tlamadon/bipartitepandas/HEAD?filepath=docs%2Fnotebooks%2Fsimple_example.ipynb
 
 If you want to give it a try, you can start the example notebook here: |binder|. This starts a fully interactive notebook with a simple example that generates data and demonstrates some useful functions.
 
