@@ -1968,7 +1968,7 @@ def test_cluster_2():
             elif measure == 'quantile_firm_small':
                 bound = 10000 # 20% error
             elif measure == 'quantile_firm_large':
-                bound = 10000 # 20% error
+                bound = 10500 # 21% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
