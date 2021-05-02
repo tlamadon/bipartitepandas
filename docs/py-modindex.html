@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>BipartiteEventStudyCollapsed class &mdash; BipartitePandas 0.1.0 documentation</title>
+  <title>Python Module Index &mdash; BipartitePandas 0.1.0 documentation</title>
   
 
   
@@ -36,8 +36,9 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="SimBipartite class" href="class-simbipartite.html" />
-    <link rel="prev" title="BipartiteEventStudy class" href="class-bipartiteeventstudy.html" /> 
+ 
+
+
 </head>
 
 <body class="wy-body-for-nav">
@@ -92,7 +93,7 @@
 <li class="toctree-l1"><a class="reference internal" href="notebooks/bipartitepandas_example.html">BipartitePandas</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Under the hood</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="internal.html">Python API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitebase.html">BipartiteBase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitelongbase.html">BipartiteLongBase</a></li>
@@ -100,7 +101,7 @@
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
@@ -150,14 +151,10 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>BipartiteEventStudyCollapsed class</li>
+      <li>Python Module Index</li>
     
     
       <li class="wy-breadcrumbs-aside">
-        
-            
-            <a href="_sources/class-bipartiteeventstudycollapsed.rst.txt" rel="nofollow"> View page source</a>
-          
         
       </li>
     
@@ -169,65 +166,40 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
 
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
+   <h1>Python Module Index</h1>
 
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
+   <div class="modindex-jumpbox">
+   <a href="#cap-b"><strong>b</strong></a>
+   </div>
 
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<div class="section" id="bipartiteeventstudycollapsed-class">
-<h1>BipartiteEventStudyCollapsed class<a class="headerlink" href="#bipartiteeventstudycollapsed-class" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed">
-<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartiteeventstudycollapsed.</code><code class="sig-name descname">BipartiteEventStudyCollapsed</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_id_reference_dict</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="class-bipartiteeventstudybase.html#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase" title="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase</span></code></a></p>
-<p>Class for bipartite networks of firms and workers in collapsed event study form (i.e. employment spells are collapsed into a single observation). Inherits from BipartiteEventStudyBase.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
-<li><p><strong>col_dict</strong> (<em>dict</em>) – make data columns readable (requires: i (worker id), j1 (firm 1 id), j2 (firm 1 id), y1 (compensation 1), y2 (compensation 2); optionally include: t11 (first period in observation 1 spell), t12 (last period in observation 1 spell), t21 (first period in observation 2 spell), t22 (last period in observation 2 spell), w1 (weight 1), w2 (weight 2), g1 (firm 1 cluster), g2 (firm 2 cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct</p></li>
-<li><p><strong>include_id_reference_dict</strong> (<em>bool</em>) – if True, create dictionary of Pandas dataframes linking original id values to contiguous id values</p></li>
-<li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</div>
+   <table class="indextable modindextable">
+     <tr class="pcap"><td></td><td>&#160;</td><td></td></tr>
+     <tr class="cap" id="cap-b"><td></td><td>
+       <strong>b</strong></td><td></td></tr>
+     <tr>
+       <td><img src="_static/minus.png" class="toggler"
+              id="toggle-1" style="display: none" alt="-" /></td>
+       <td>
+       <code class="xref">bipartitepandas</code></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="module-grouping.html#module-bipartitepandas.grouping.grouping"><code class="xref">bipartitepandas.grouping.grouping</code></a></td><td>
+       <em></em></td></tr>
+     <tr class="cg-1">
+       <td></td>
+       <td>&#160;&#160;&#160;
+       <a href="module-measures.html#module-bipartitepandas.measures.measures"><code class="xref">bipartitepandas.measures.measures</code></a></td><td>
+       <em></em></td></tr>
+   </table>
 
 
            </div>
            
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="class-simbipartite.html" class="btn btn-neutral float-right" title="SimBipartite class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="class-bipartiteeventstudy.html" class="btn btn-neutral float-left" title="BipartiteEventStudy class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

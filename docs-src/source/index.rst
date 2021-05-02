@@ -26,3 +26,5 @@
   BipartiteEventStudy <class-bipartiteeventstudy>
   BipartiteEventStudyCollapsed <class-bipartiteeventstudycollapsed>
   SimBipartite <class-simbipartite>
+  Measures <module-measures>
+  Grouping <module-grouping>

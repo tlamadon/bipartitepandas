@@ -51,7 +51,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         self.logger.info('workers split by movers and stayers')
 
         # Add lagged values
-        all_cols = self.included_cols()
+        all_cols = self._included_cols()
         movers = movers.sort_values(['i', bpd.to_list(self.reference_dict['t'])[0]]) # Sort by i, t
         keep_cols = ['i'] # Columns to keep
         for col in all_cols:
@@ -101,6 +101,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
         self.logger.info('data reformatted as event study')
 
         es_frame = self._constructor_es(data_es)
-        es_frame.set_attributes(self, no_dict=True)
+        es_frame._set_attributes(self, no_dict=True)
 
         return es_frame

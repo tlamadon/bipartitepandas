@@ -39,7 +39,7 @@ class BipartiteBase(DataFrame):
         # self.logger.info('initializing BipartiteBase object')
 
         if len(args) > 0 and isinstance(args[0], BipartiteBase): # Note that isinstance works for subclasses
-            self.set_attributes(args[0])
+            self._set_attributes(args[0])
         else:
             self.columns_req = ['i', 'j', 'y'] + columns_req
             self.columns_opt = ['g', 'm'] + columns_opt
@@ -62,7 +62,7 @@ class BipartiteBase(DataFrame):
             self.col_dict = col_dict_optional_cols(default_col_dict, col_dict, self.columns, optional_cols=[self.reference_dict[col] for col in self.columns_opt])
 
             # Set attributes
-            self.reset_attributes()
+            self._reset_attributes()
 
         self.default_cluster = {
             'measure_cdf': False, # If True, approximate firm-level income cdfs
@@ -99,7 +99,7 @@ class BipartiteBase(DataFrame):
         '''
         df_copy = DataFrame(self, copy=True)
         bdf_copy = self._constructor(df_copy)
-        bdf_copy.set_attributes(self) # This copies attribute dictionaries, default copy does not
+        bdf_copy._set_attributes(self) # This copies attribute dictionaries, default copy does not
 
         return bdf_copy
 
@@ -155,7 +155,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int or None): number of unique clusters, None if not clustered
         '''
-        if not self.col_included('g'): # If cluster column not in dataframe
+        if not self._col_included('g'): # If cluster column not in dataframe
             return None
         cid_lst = []
         for g_col in to_list(self.reference_dict['g']):
@@ -182,7 +182,7 @@ class BipartiteBase(DataFrame):
         else:
             warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
 
-    def set_attributes(self, frame, no_dict=False):
+    def _set_attributes(self, frame, no_dict=False):
         '''
         Set class attributes to equal those of another BipartitePandas object.
 
@@ -210,12 +210,12 @@ class BipartiteBase(DataFrame):
         self.no_duplicates = frame.no_duplicates # If True, no duplicate rows in the data
         self.i_t_unique = frame.i_t_unique # If True, each worker has at most one observation per period
 
-    def reset_attributes(self):
+    def _reset_attributes(self):
         '''
         Reset class attributes conditions to be False/None.
         '''
         for contig_col in self.columns_contig.keys():
-            if self.col_included(contig_col):
+            if self._col_included(contig_col):
                 self.columns_contig[contig_col] = False
             else:
                 self.columns_contig[contig_col] = None
@@ -226,10 +226,10 @@ class BipartiteBase(DataFrame):
         self.i_t_unique = None # If True, each worker has at most one observation per period; if None, t column not included (set to False later in method if t column included)
 
         # Verify whether period included
-        if self.col_included('t'):
+        if self._col_included('t'):
             self.i_t_unique = False
 
-    def col_included(self, col):
+    def _col_included(self, col):
         '''
         Check whether a column from the pre-established required/optional lists is included.
 
@@ -246,7 +246,7 @@ class BipartiteBase(DataFrame):
             return True
         return False
 
-    def included_cols(self, flat=False):
+    def _included_cols(self, flat=False):
         '''
         Get all columns included from the pre-established required/optional lists.
         
@@ -298,7 +298,7 @@ class BipartiteBase(DataFrame):
                             frame.columns_contig[col] = None
                             if frame.id_reference_dict: # If id_reference_dict has been initialized
                                 frame.id_reference_dict[col] = pd.DataFrame()
-                    elif col not in frame.included_cols() and col not in frame.included_cols(flat=True): # If column is not pre-established
+                    elif col not in frame._included_cols() and col not in frame._included_cols(flat=True): # If column is not pre-established
                         DataFrame.drop(frame, col, axis=1, inplace=True)
                     else:
                         warnings.warn("{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col))
@@ -306,7 +306,7 @@ class BipartiteBase(DataFrame):
                     warnings.warn('{} is not in data columns'.format(col))
         elif axis == 0:
             DataFrame.drop(frame, indices, axis=0, inplace=True)
-            frame.reset_attributes()
+            frame._reset_attributes()
             frame.clean_data()
 
         return frame
@@ -341,7 +341,7 @@ class BipartiteBase(DataFrame):
                             frame.columns_contig[col_cur] = None
                             if frame.id_reference_dict: # If id_reference_dict has been initialized
                                 frame.id_reference_dict[col_cur] = pd.DataFrame()
-                elif col_cur not in frame.included_cols() and col_cur not in frame.included_cols(flat=True): # If column is not pre-established
+                elif col_cur not in frame._included_cols() and col_cur not in frame._included_cols(flat=True): # If column is not pre-established
                         DataFrame.rename(frame, {col_cur: col_new}, axis=1, inplace=True)
                 else:
                     warnings.warn("{} is either (a) a required column and cannot be renamed or (b) a subcolumn that can be renamed, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col_cur))
@@ -364,10 +364,10 @@ class BipartiteBase(DataFrame):
         frame = DataFrame.merge(self, *args, **kwargs)
         frame = self._constructor(frame) # Use correct constructor
         if kwargs['how'] == 'left': # Non-left merge could cause issues with data, by default resets attributes
-            frame.set_attributes(self)
+            frame._set_attributes(self)
         return frame
 
-    def contiguous_ids(self, id_col):
+    def _contiguous_ids(self, id_col):
         '''
         Make column of ids contiguous.
 
@@ -420,7 +420,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def update_cols(self, inplace=True):
+    def _update_cols(self, inplace=True):
         '''
         Rename columns and keep only relevant columns.
 
@@ -476,13 +476,13 @@ class BipartiteBase(DataFrame):
         clean_params = update_dict(frame.default_clean, user_clean)
 
         # First, correct columns
-        # Note this must be done before data_validity(), otherwise certain checks are not guaranteed to work
+        # Note this must be done before _data_validity(), otherwise certain checks are not guaranteed to work
         frame.logger.info('correcting columns')
-        frame.update_cols()
+        frame._update_cols()
 
         frame.logger.info('checking quality of data')
-        # Make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in data_validity() if all columns are in the data)
-        frame = BipartiteBase.data_validity(frame) # Shared data_validity
+        # Make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in _data_validity() if all columns are in the data)
+        frame = BipartiteBase._data_validity(frame) # Shared _data_validity
 
         # Next, drop NaN observations
         if not frame.no_na:
@@ -503,23 +503,23 @@ class BipartiteBase(DataFrame):
         # Next, make sure i-t (worker-year) observations are unique
         if frame.i_t_unique is not None and not frame.i_t_unique:
             frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
-            frame = frame.drop_i_t_duplicates(how=clean_params['i_t_how'])
+            frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'])
 
         # Next, find largest set of firms connected by movers
         if not frame.connected:
             # Generate largest connected set
             frame.logger.info('generating largest connected set')
-            frame = frame.conset()
+            frame = frame._conset()
 
         # Next, check contiguous ids
         for contig_col, is_contig in frame.columns_contig.items():
             if is_contig is not None and not is_contig:
                 frame.logger.info('making {} ids contiguous'.format(contig_col))
-                frame = frame.contiguous_ids(contig_col)
+                frame = frame._contiguous_ids(contig_col)
 
         # Using contiguous fids, get NetworkX Graph of largest connected set (note that this must be done even if firms already connected and contiguous)
         # frame.logger.info('generating NetworkX Graph of largest connected set')
-        # _, frame.G = frame.conset(return_G=True) # FIXME currently not used
+        # _, frame.G = frame._conset(return_G=True) # FIXME currently not used
 
         # Sort columns
         frame.logger.info('sorting columns')
@@ -530,7 +530,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def data_validity(self):
+    def _data_validity(self):
         '''
         Checks that data is formatted correctly and updates relevant attributes.
 
@@ -542,7 +542,7 @@ class BipartiteBase(DataFrame):
         success = True
 
         frame.logger.info('--- checking columns ---')
-        all_cols = frame.included_cols()
+        all_cols = frame._included_cols()
         cols = True
         frame.logger.info('--- checking column datatypes ---')
         col_dtypes = True
@@ -559,7 +559,7 @@ class BipartiteBase(DataFrame):
                         frame.logger.info('{} has wrong dtype, should be {} but is {}'.format(frame.col_dict[subcol], frame.col_dtype_dict[col], col_type))
                         if col in frame.columns_contig.keys(): # If column contiguous
                             frame.logger.info('{} has wrong dtype, converting to contiguous integers'.format(frame.col_dict[subcol]))
-                            frame = frame.contiguous_ids(col)
+                            frame = frame._contiguous_ids(col)
                         else:
                             frame.logger.info('{} has wrong dtype. Please check that this is the correct column (it is supposed to give {}), and if it is, cast it to a valid datatype (these include: {})'.format(frame.col_dict[subcol], subcol, valid_types))
                             col_dtypes = False
@@ -584,7 +584,7 @@ class BipartiteBase(DataFrame):
             success = False
 
         frame.logger.info('--- checking non-pre-established columns ---')
-        all_cols = frame.included_cols(flat=True)
+        all_cols = frame._included_cols(flat=True)
         for col in frame.columns:
             if col not in all_cols:
                 cols = False
@@ -616,7 +616,7 @@ class BipartiteBase(DataFrame):
         else:
             frame.no_duplicates = True
 
-        if frame.col_included('t'):
+        if frame._col_included('t'):
             frame.logger.info('--- checking i-t (worker-year) observations ---')
             max_obs = 1
             for t_col in to_list(frame.reference_dict['t']):
@@ -656,7 +656,7 @@ class BipartiteBase(DataFrame):
 
         # Check contiguous columns
         for contig_col, is_contig in frame.columns_contig.items():
-            if frame.col_included(contig_col):
+            if frame._col_included(contig_col):
                 frame.logger.info('--- checking contiguous {} ids ---'.format(contig_col))
                 id_max = - np.inf
                 ids_unique = []
@@ -678,7 +678,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def drop_i_t_duplicates(self, how='max'):
+    def _drop_i_t_duplicates(self, how='max'):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
@@ -690,7 +690,7 @@ class BipartiteBase(DataFrame):
         '''
         frame = self.copy()
 
-        if frame.col_included('t'):
+        if frame._col_included('t'):
             try: # If BipartiteEventStudy or BipartiteEventStudyCollapsed
                 frame = frame.unstack_es().drop('m').drop_duplicates()
                 convert_1 = True
@@ -726,7 +726,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def conset(self, return_G=False):
+    def _conset(self, return_G=False):
         '''
         Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
 
@@ -802,7 +802,7 @@ class BipartiteBase(DataFrame):
         else:
             frame = self.copy()
 
-        if not frame.col_included('m'):
+        if not frame._col_included('m'):
             if len(to_list(frame.reference_dict['j'])) == 1:
                 frame['m'] = (aggregate_transform(frame, col_groupby='i', col_grouped='j', func='n_unique', col_name='m') > 1).astype(int)
             elif len(to_list(frame.reference_dict['j'])) == 2:
@@ -819,7 +819,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
+    def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
         '''
         Prepare data for clustering.
 
@@ -860,7 +860,7 @@ class BipartiteBase(DataFrame):
 
         # Create weights
         if weighted:
-            if self.col_included('w'):
+            if self._col_included('w'):
                 data['row_weights'] = data['w']
                 weights = data.groupby('j')['w'].sum().to_numpy()
             else:
@@ -893,7 +893,7 @@ class BipartiteBase(DataFrame):
         frame = self.copy()
 
         # Prepare data for clustering
-        cluster_data, weights, jids = self.prep_cluster_data(stayers_movers=stayers_movers, t=t, weighted=weighted)
+        cluster_data, weights, jids = self._prep_cluster_data(stayers_movers=stayers_movers, t=t, weighted=weighted)
 
         # Compute measures
         for i, measure in enumerate(to_list(measures)):
@@ -920,7 +920,7 @@ class BipartiteBase(DataFrame):
         frame.logger.info('firm groups computed')
 
         # Drop existing clusters
-        if frame.col_included('g'):
+        if frame._col_included('g'):
             frame.drop('g')
 
         for i, j_col in enumerate(to_list(frame.reference_dict['j'])):

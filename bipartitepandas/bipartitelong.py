@@ -78,7 +78,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             w=pd.NamedAgg(column='i', aggfunc='size')
         )
         # Next, aggregate optional columns
-        all_cols = self.included_cols()
+        all_cols = self._included_cols()
         for col in all_cols:
             if col in self.columns_opt:
                 if self.col_dtype_dict[col] == 'int':
@@ -89,7 +89,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                         data_spell[subcol] = spell[subcol].mean()
 
         # # Classify movers and stayers
-        # if not self.col_included('m'):
+        # if not self._col_included('m'):
         #     spell_count = data_spell.groupby(['i']).transform('count')['j'] # Choice of j arbitrary
         #     data_spell['m'] = (spell_count > 1).astype(int)
         collapsed_data = data_spell.reset_index(drop=True)
@@ -101,7 +101,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         self.logger.info('data aggregated at the spell level')
 
         collapsed_frame = bpd.BipartiteLongCollapsed(collapsed_data)
-        collapsed_frame.set_attributes(self, no_dict=True)
+        collapsed_frame._set_attributes(self, no_dict=True)
 
         return collapsed_frame
 
@@ -117,7 +117,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             fill_frame (Pandas DataFrame): Pandas DataFrame with missing periods filled in as unemployed
         '''
         import numpy as np
-        m = self.col_included('m') # Check whether m column included
+        m = self._col_included('m') # Check whether m column included
         fill_frame = pd.DataFrame(self, copy=True).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
         fill_frame['i_l1'] = fill_frame['i'].shift(periods=1) # Lagged value
         fill_frame['t_l1'] = fill_frame['t'].shift(periods=1) # Lagged value
@@ -151,7 +151,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             es_extended_frame or None (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
         '''
-        if not self.col_included('g'):
+        if not self._col_included('g'):
             return None
         else:
             es_extended_frame = pd.DataFrame(self, copy=True)

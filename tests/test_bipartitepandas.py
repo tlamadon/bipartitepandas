@@ -931,7 +931,7 @@ def test_general_methods_18():
     assert bdf.n_clusters() == 2
 
     correct_cols = True
-    all_cols = bdf.included_cols()
+    all_cols = bdf._included_cols()
     for col in ['j', 't', 'i', 'y', 'g']:
         if col not in all_cols:
             correct_cols = False
@@ -975,7 +975,7 @@ def test_save_19():
     bdf2 = bdf.copy()
     bdf2.gen_m()
 
-    assert 'm' in bdf2.included_cols() and 'm' not in bdf.included_cols()
+    assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
     # Event study
     bdf = bdf.get_es()
@@ -983,7 +983,7 @@ def test_save_19():
     bdf2 = bdf.copy()
     bdf2.gen_m()
 
-    assert 'm' in bdf2.included_cols() and 'm' not in bdf.included_cols()
+    assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
     # Collapsed long
     bdf = bdf.get_long().get_collapsed_long()
@@ -991,7 +991,7 @@ def test_save_19():
     bdf2 = bdf.copy()
     bdf2.gen_m()
 
-    assert 'm' in bdf2.included_cols() and 'm' not in bdf.included_cols()
+    assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
     # Collapsed event study
     bdf = bdf.get_es()
@@ -999,7 +999,7 @@ def test_save_19():
     bdf2 = bdf.copy()
     bdf2.gen_m()
 
-    assert 'm' in bdf2.included_cols() and 'm' not in bdf.included_cols()
+    assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
 def test_id_reference_dict_20():
     # String worker and firm ids, link with id_reference_dict.

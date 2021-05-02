@@ -54,13 +54,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
         frame.logger.info('checking quality of data')
-        frame = frame.data_validity()
+        frame = frame._data_validity()
 
         frame.logger.info('BipartiteEventStudyBase data cleaning complete')
 
         return frame
 
-    def data_validity(self):
+    def _data_validity(self):
         '''
         Checks that data is formatted correctly and updates relevant attributes.
 
@@ -112,11 +112,11 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         jdata = pd.DataFrame(self[self['m'] == 1])
 
         # Columns used for constructing cross section
-        cs_cols = self.included_cols(flat=True)
+        cs_cols = self._included_cols(flat=True)
 
         # Dictionary to swap names for cs=0 (these rows contain period-2 data for movers, so must swap columns for all relevant information to be contained in the same column (e.g. must move y2 into y1, otherwise bottom rows are just duplicates))
         rename_dict = {}
-        for col in self.included_cols():
+        for col in self._included_cols():
             subcols = bpd.to_list(self.reference_dict[col])
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
@@ -162,7 +162,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         astype_dict = {}
         # Columns to drop
         drops = []
-        for col in self.included_cols():
+        for col in self._included_cols():
             subcols = bpd.to_list(self.reference_dict[col])
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
@@ -186,7 +186,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Sort by i, t if t included; otherwise sort by i
         sort_order_1 = ['i']
         sort_order_2 = ['i']
-        if self.col_included('t'):
+        if self._col_included('t'):
             sort_order_1.append(bpd.to_list(self.reference_dict['t'])[0]) # Pre-reformatting
             sort_order_2.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
 
@@ -222,7 +222,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             return data_long
 
         long_frame = self._constructor_long(data_long)
-        long_frame.set_attributes(self, no_dict=True)
+        long_frame._set_attributes(self, no_dict=True)
 
         return long_frame
 
@@ -244,7 +244,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         astype_dict = {}
         # Columns to drop
         drops = []
-        for col in self.included_cols():
+        for col in self._included_cols():
             subcols = bpd.to_list(self.reference_dict[col])
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
@@ -267,7 +267,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort by i, t if t included; otherwise sort by i
         sort_order = ['i']
-        if self.col_included('t'):
+        if self._col_included('t'):
             sort_order.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
 
         # Stack period 2 data if a mover (this is because the last observation is only given as an f2i, never as an f1i)
@@ -294,6 +294,6 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             return data_long
 
         long_frame = self._constructor_long(data_long)
-        long_frame.set_attributes(self, no_dict=True)
+        long_frame._set_attributes(self, no_dict=True)
 
         return long_frame

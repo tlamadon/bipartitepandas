@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>BipartiteEventStudyCollapsed class &mdash; BipartitePandas 0.1.0 documentation</title>
+  <title>Measures module &mdash; BipartitePandas 0.1.0 documentation</title>
   
 
   
@@ -36,8 +36,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="SimBipartite class" href="class-simbipartite.html" />
-    <link rel="prev" title="BipartiteEventStudy class" href="class-bipartiteeventstudy.html" /> 
+    <link rel="next" title="Grouping module" href="module-grouping.html" />
+    <link rel="prev" title="SimBipartite class" href="class-simbipartite.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -100,9 +100,9 @@
 <li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
-<li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Measures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
 </ul>
 
@@ -150,13 +150,13 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>BipartiteEventStudyCollapsed class</li>
+      <li>Measures module</li>
     
     
       <li class="wy-breadcrumbs-aside">
         
             
-            <a href="_sources/class-bipartiteeventstudycollapsed.rst.txt" rel="nofollow"> View page source</a>
+            <a href="_sources/module-measures.rst.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -193,21 +193,42 @@
     text-align: unset;
 }
 </style>
-<div class="section" id="bipartiteeventstudycollapsed-class">
-<h1>BipartiteEventStudyCollapsed class<a class="headerlink" href="#bipartiteeventstudycollapsed-class" title="Permalink to this headline">¶</a></h1>
-<dl class="py class">
-<dt id="bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed">
-<em class="property">class </em><code class="sig-prename descclassname">bipartitepandas.bipartiteeventstudycollapsed.</code><code class="sig-name descname">BipartiteEventStudyCollapsed</code><span class="sig-paren">(</span><em class="sig-param"><span class="o">*</span><span class="n">args</span></em>, <em class="sig-param"><span class="n">col_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">include_id_reference_dict</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="o">**</span><span class="n">kwargs</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="class-bipartiteeventstudybase.html#bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase" title="bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">bipartitepandas.bipartiteeventstudybase.BipartiteEventStudyBase</span></code></a></p>
-<p>Class for bipartite networks of firms and workers in collapsed event study form (i.e. employment spells are collapsed into a single observation). Inherits from BipartiteEventStudyBase.</p>
+<div class="section" id="module-bipartitepandas.measures.measures">
+<span id="measures-module"></span><h1>Measures module<a class="headerlink" href="#module-bipartitepandas.measures.measures" title="Permalink to this headline">¶</a></h1>
+<p>Functions for computing cluster measures</p>
+<dl class="py function">
+<dt id="bipartitepandas.measures.measures.cdfs">
+<code class="sig-prename descclassname">bipartitepandas.measures.measures.</code><code class="sig-name descname">cdfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cdf_resolution</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">measure</span><span class="o">=</span><span class="default_value">'quantile_all'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.measures.measures.cdfs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate cdfs of compensation for firms. Used for clustering.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
-<li><p><strong>col_dict</strong> (<em>dict</em>) – make data columns readable (requires: i (worker id), j1 (firm 1 id), j2 (firm 1 id), y1 (compensation 1), y2 (compensation 2); optionally include: t11 (first period in observation 1 spell), t12 (last period in observation 1 spell), t21 (first period in observation 2 spell), t22 (last period in observation 2 spell), w1 (weight 1), w2 (weight 2), g1 (firm 1 cluster), g2 (firm 2 cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct</p></li>
-<li><p><strong>include_id_reference_dict</strong> (<em>bool</em>) – if True, create dictionary of Pandas dataframes linking original id values to contiguous id values</p></li>
-<li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
+<li><p><strong>cdf_resolution</strong> (<em>int</em>) – how many values to use to approximate the cdfs</p></li>
+<li><p><strong>measure</strong> (<em>str</em>) – how to compute the cdfs (‘quantile_all’ to get quantiles from entire set of data, then have firm-level values between 0 and 1; ‘quantile_firm_small’ to get quantiles at the firm-level and have values be compensations if small data; ‘quantile_firm_large’ to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than ‘quantile_firm_small’ and should only be used if the dataset is too large to copy into a dictionary</p></li>
 </ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>subfunction</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>compute_measures_cdfs (function)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="bipartitepandas.measures.measures.moments">
+<code class="sig-prename descclassname">bipartitepandas.measures.measures.</code><code class="sig-name descname">moments</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">measures</span><span class="o">=</span><span class="default_value">'mean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.measures.measures.moments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate compensation moments for firms. Used for clustering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>measures</strong> (<em>str</em><em> or </em><em>list of str</em>) – how to compute the measures (‘mean’ to compute average income within each firm; ‘var’ to compute variance of income within each firm; ‘max’ to compute max income within each firm; ‘min’ to compute min income within each firm)</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>subfunction</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>compute_measures_moments (function)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -222,10 +243,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="class-simbipartite.html" class="btn btn-neutral float-right" title="SimBipartite class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="module-grouping.html" class="btn btn-neutral float-right" title="Grouping module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="class-bipartiteeventstudy.html" class="btn btn-neutral float-left" title="BipartiteEventStudy class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="class-simbipartite.html" class="btn btn-neutral float-left" title="SimBipartite class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

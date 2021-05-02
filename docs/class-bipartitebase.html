@@ -102,6 +102,8 @@
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
 <li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
 </ul>
 
             
@@ -237,174 +239,21 @@
 
 <dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.cluster">
-<code class="sig-name descname">cluster</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">user_cluster</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">user_prep_cluster</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">user_measure_cdfs</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">user_measure_moments</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">user_KMeans</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">user_quantile</span><span class="o">=</span><span class="default_value">{}</span></em>, <em class="sig-param"><span class="n">dropna</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cluster</code><span class="sig-paren">(</span><em class="sig-param">measures=&lt;function cdfs.&lt;locals&gt;.compute_measures_cdfs&gt;</em>, <em class="sig-param">grouping=&lt;function kmeans.&lt;locals&gt;.compute_kmeans&gt;</em>, <em class="sig-param">stayers_movers=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">weighted=True</em>, <em class="sig-param">dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cluster data and assign a new column giving the cluster for each firm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>user_cluster</strong> (<em>dict</em>) – <p>dictionary of parameters specifying how to cluster the data. If measure_cdf=False and measure_moments=False, overwrites measure_cdf=True. If cluster_KMeans=False and cluster_quantiles=False, overwrites cluster_KMeans=True.</p>
-<p>Dictionary parameters:</p>
-<blockquote>
-<div><p>measure_cdf (bool, default=False): if True, approximate firm-level income cdfs</p>
-<p>measure_moments (bool, default=False): if True, approximate firm-level moments</p>
-<p>cluster_KMeans (bool, default=False): if True, cluster using KMeans. Valid only if cluster_quantiles=False.</p>
-<p>cluster_quantiles (bool, default=False): if True, cluster using quantiles. Valid only if cluster_KMeans=False, measure_cdf=False, and measure_moments=True, and measuring only a single moment.</p>
-</div></blockquote>
-</p></li>
-<li><p><strong>user_prep_cluster</strong> (<em>dict</em>) – <p>dictionary of parameters for preparing data for clustering</p>
-<p>Dictionary parameters:</p>
-<blockquote>
-<div><p>stayers_movers (str or None, default=None): if None, clusters on entire dataset; if ‘stayers’, clusters on only stayers; if ‘movers’, clusters on only movers</p>
-<p>t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)</p>
-<p>weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)</p>
-</div></blockquote>
-</p></li>
-<li><p><strong>user_measure_cdfs</strong> (<em>dict</em>) – <p>dictionary of parameters for computing the CDF measure</p>
-<p>Dictionary parameters:</p>
-<blockquote>
-<div><p>cdf_resolution (int, default=10): how many values to use to approximate the cdfs (when grouping by ‘mean’, this gives the number of quantiles to compute)</p>
-<p>measure (str, default=’quantile_all’): how to group the cdfs (‘quantile_all’ to get quantiles from entire set of data, then have firm-level values between 0 and 1; ‘quantile_firm_small’ to get quantiles at the firm-level and have values be compensations if small data; ‘quantile_firm_large’ to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than ‘quantile_firm_small’ and should only be used if the dataset is too large to copy into a dictionary; ‘mean’ to group firms by average income within the firm)</p>
-</div></blockquote>
-</p></li>
-<li><p><strong>user_measure_moments</strong> (<em>dict</em>) – <p>dictionary of parameters for computing moment measures</p>
-<p>Dictionary parameters:</p>
-<blockquote>
-<div><p>measures (str or list of str): how to compute the measures (‘mean’ to compute average income within each firm; ‘var’ to compute variance of income within each firm; ‘max’ to compute max income within each firm; ‘min’ to compute min income within each firm)</p>
-</div></blockquote>
-</p></li>
-<li><p><strong>user_KMeans</strong> (<em>dict</em>) – dictionary of parameters for KMeans estimation (for more information on what parameters can be used, visit <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html">https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html</a>)</p></li>
-<li><p><strong>user_quantile</strong> (<em>dict</em>) – <p>dictionary of parameters for quantile grouping</p>
-<p>Dictionary parameters:</p>
-<blockquote>
-<div><p>n_quantiles (int, default=4): number of quantiles to compute for groups</p>
-</div></blockquote>
-</p></li>
+<li><p><strong>measures</strong> (<em>function</em><em> or </em><em>list of functions</em>) – how to compute measures for clustering. Options can be seen in bipartitepandas.measures.</p></li>
+<li><p><strong>grouping</strong> (<em>function</em>) – how to group firms based on measures. Options can be seen in bipartitepandas.grouping.</p></li>
+<li><p><strong>stayers_movers</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – if None, clusters on entire dataset; if ‘stayers’, clusters on only stayers; if ‘movers’, clusters on only movers</p></li>
+<li><p><strong>t</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)</p></li>
+<li><p><strong>weighted</strong> (<em>bool</em><em>, </em><em>default=True</em>) – if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)</p></li>
 <li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>default=False</em>) – if True, drop observations where firms aren’t clustered; if False, keep all observations</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>BipartiteBase with clusters</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.col_included">
-<code class="sig-name descname">col_included</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">col</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.col_included" title="Permalink to this definition">¶</a></dt>
-<dd><p>Check whether a column from the pre-established required/optional lists is included.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col</strong> (<em>str</em>) – column to check. Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>if True, column is included</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>(bool)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.compute_measure_cdfs">
-<code class="sig-name descname">compute_measure_cdfs</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">jids</span></em>, <em class="sig-param"><span class="n">cdf_resolution</span><span class="o">=</span><span class="default_value">10</span></em>, <em class="sig-param"><span class="n">measure</span><span class="o">=</span><span class="default_value">'quantile_all'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.compute_measure_cdfs" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate cdfs of compensation for firms. Used for clustering.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Pandas DataFrame</em>) – data to use</p></li>
-<li><p><strong>jids</strong> (<em>list</em>) – sorted list of firm ids in data (since data could be a subset of self, this is not necessarily all firms in self)</p></li>
-<li><p><strong>cdf_resolution</strong> (<em>int</em>) – how many values to use to approximate the cdfs</p></li>
-<li><p><strong>measure</strong> (<em>str</em>) – how to compute the cdfs (‘quantile_all’ to get quantiles from entire set of data, then have firm-level values between 0 and 1; ‘quantile_firm_small’ to get quantiles at the firm-level and have values be compensations if small data; ‘quantile_firm_large’ to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than ‘quantile_firm_small’ and should only be used if the dataset is too large to copy into a dictionary</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>NumPy array of firm cdfs</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>cdfs (NumPy Array)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.compute_measure_moments">
-<code class="sig-name descname">compute_measure_moments</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">jids</span></em>, <em class="sig-param"><span class="n">measures</span><span class="o">=</span><span class="default_value">'mean'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.compute_measure_moments" title="Permalink to this definition">¶</a></dt>
-<dd><p>Generate compensation moments for firms. Used for clustering.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>Pandas DataFrame</em>) – data to use</p></li>
-<li><p><strong>jids</strong> (<em>list</em>) – sorted list of firm ids in data (since data could be a subset of self, this is not necessarily all firms in self)</p></li>
-<li><p><strong>measures</strong> (<em>str</em><em> or </em><em>list of str</em>) – how to compute the measures (‘mean’ to compute average income within each firm; ‘var’ to compute variance of income within each firm; ‘max’ to compute max income within each firm; ‘min’ to compute min income within each firm)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>NumPy array of firm moments</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>moments (NumPy Array)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.compute_quantiles">
-<code class="sig-name descname">compute_quantiles</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">data</span></em>, <em class="sig-param"><span class="n">n_quantiles</span><span class="o">=</span><span class="default_value">10</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.compute_quantiles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Compute quantiles groups for data.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>data</strong> (<em>NumPy Array</em>) – data to compute quantiles for</p></li>
-<li><p><strong>n_quantiles</strong> (<em>int</em>) – number of quantiles to compute for groups</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>quantile groups for data</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>groups (NumPy Array)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.conset">
-<code class="sig-name descname">conset</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">return_G</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.conset" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>return_G</strong> (<em>bool</em>) – if True, return a tuple of (frame, G)</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p><p>BipartiteBase with connected set of movers
-ALTERNATIVELY
-(tuple):</p>
-<blockquote>
-<div><p>frame (BipartiteBase): BipartiteBase with connected set of movers
-G (NetworkX Graph): largest connected set of movers (only returns if firm ids are contiguous, otherwise returns None)</p>
-</div></blockquote>
-</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.contiguous_ids">
-<code class="sig-name descname">contiguous_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">id_col</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.contiguous_ids" title="Permalink to this definition">¶</a></dt>
-<dd><p>Make column of ids contiguous.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>id_col</strong> (<em>str</em>) – column to make contiguous (‘fid’, ‘wid’, or ‘j’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’. Only optional columns may be renamed</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>BipartiteBase with contiguous ids</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
@@ -422,20 +271,6 @@ G (NetworkX Graph): largest connected set of movers (only returns if firm ids ar
 </dd>
 <dt class="field-even">Return type</dt>
 <dd class="field-even"><p>bdf_copy (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.data_validity">
-<code class="sig-name descname">data_validity</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.data_validity" title="Permalink to this definition">¶</a></dt>
-<dd><p>Checks that data is formatted correctly and updates relevant attributes.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>BipartiteBase with corrected attributes</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -462,23 +297,6 @@ G (NetworkX Graph): largest connected set of movers (only returns if firm ids ar
 </dd></dl>
 
 <dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.drop_i_t_duplicates">
-<code class="sig-name descname">drop_i_t_duplicates</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">how</span><span class="o">=</span><span class="default_value">'max'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.drop_i_t_duplicates" title="Permalink to this definition">¶</a></dt>
-<dd><p>Keep only the highest paying job for i-t (worker-year) duplicates.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>how</strong> (<em>str</em>) – if ‘max’, keep max paying job; if ‘sum’, sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if ‘mean’, average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>BipartiteBase that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.gen_m">
 <code class="sig-name descname">gen_m</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.gen_m" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate m column for data (m == 0 if stayer, m == 1 if mover).</p>
@@ -491,23 +309,6 @@ G (NetworkX Graph): largest connected set of movers (only returns if firm ids ar
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.included_cols">
-<code class="sig-name descname">included_cols</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">flat</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.included_cols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get all columns included from the pre-established required/optional lists.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>flat</strong> (<em>bool</em>) – if False, uses general column names for joint columns, e.g. returns ‘j’ instead of ‘j1’, ‘j2’.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>included columns</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>all_cols (list)</p>
 </dd>
 </dl>
 </dd></dl>
@@ -589,29 +390,6 @@ G (NetworkX Graph): largest connected set of movers (only returns if firm ids ar
 </dd></dl>
 
 <dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.prep_cluster_data">
-<code class="sig-name descname">prep_cluster_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">stayers_movers</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">t</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">weighted</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.prep_cluster_data" title="Permalink to this definition">¶</a></dt>
-<dd><p>Prepare data for clustering.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>stayers_movers</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – if None, clusters on entire dataset; if ‘stayers’, clusters on only stayers; if ‘movers’, clusters on only movers</p></li>
-<li><p><strong>t</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)</p></li>
-<li><p><strong>weighted</strong> (<em>bool</em><em>, </em><em>default=True</em>) – if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>data prepared for clustering
-weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
-jids (NumPy Array): firm ids of firms in subset of data used to cluster</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>data (Pandas DataFrame)</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.rename">
 <code class="sig-name descname">rename</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rename_dict</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.rename" title="Permalink to this definition">¶</a></dt>
 <dd><p>Rename a column.</p>
@@ -632,46 +410,9 @@ jids (NumPy Array): firm ids of firms in subset of data used to cluster</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.reset_attributes">
-<code class="sig-name descname">reset_attributes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.reset_attributes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset class attributes conditions to be False/None.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.set_attributes">
-<code class="sig-name descname">set_attributes</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">frame</span></em>, <em class="sig-param"><span class="n">no_dict</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.set_attributes" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set class attributes to equal those of another BipartitePandas object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>frame</strong> (<em>BipartitePandas</em>) – BipartitePandas object whose attributes to use</p></li>
-<li><p><strong>no_dict</strong> (<em>bool</em>) – if True, only set booleans, no dictionaries</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.summary">
 <code class="sig-name descname">summary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.summary" title="Permalink to this definition">¶</a></dt>
 <dd><p>Print summary statistics.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt id="bipartitepandas.bipartitebase.BipartiteBase.update_cols">
-<code class="sig-name descname">update_cols</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.update_cols" title="Permalink to this definition">¶</a></dt>
-<dd><p>Rename columns and keep only relevant columns.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>inplace</strong> (<em>bool</em>) – if True, modify in-place</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>BipartiteBase with updated columns</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>frame (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
@@ -701,7 +442,7 @@ jids (NumPy Array): firm ids of firms in subset of data used to cluster</p>
         
         &copy; Copyright 2021, Thibaut Lamadon.
       <span class="lastupdated">
-        Last updated on Apr 29, 2021.
+        Last updated on May 02, 2021.
       </span>
 
     </p>

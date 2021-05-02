@@ -31,7 +31,7 @@ def kmeans(**kwargs):
 
 def quantiles(n_quantiles=4):
     '''
-    Compute quantiles groups for data. Used for clustering.
+    Compute quantile groups for data. Used for clustering.
 
     Arguments:
         n_quantiles (int): number of quantiles to compute for groups

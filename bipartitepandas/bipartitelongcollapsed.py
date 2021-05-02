@@ -48,7 +48,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Returns:
             long_frame (BipartiteLong): collapsed long data reformatted as BipartiteLong data
         '''
-        all_cols = self.included_cols(flat=True)
+        all_cols = self._included_cols(flat=True)
         # Skip t1 and t2
         all_cols.remove('t1')
         all_cols.remove('t2')
@@ -77,6 +77,6 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         self.logger.info('data uncollapsed to long format')
 
         long_frame = bpd.BipartiteLong(data_long)
-        long_frame.set_attributes(self, no_dict=True)
+        long_frame._set_attributes(self, no_dict=True)
 
         return long_frame

@@ -5,7 +5,7 @@ Python API
 Overview
 ---------
 
-The main BipartitePandas API is split into 8 classes, 3 of which are base classes. BipartitePandas is canonically imported using
+The main BipartitePandas API is split into 8 classes, 3 of which are base classes. It also has 2 modules for clustering: one for computing measures and one for grouping on measures. BipartitePandas is canonically imported using
 
   .. code-block:: python
 
@@ -33,8 +33,14 @@ Base classes
 
 * ``bipartitepandas.BipartiteEventStudyBase``: Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed. All methods are usable by any class that inherits from BipartiteEventStudyBase.
 
+Clustering modules
+~~~~~~~~~~~~~~~~~~
 
-Modules and Methods
+* ``bipartitepandas.measures``: Module for computing measures
+
+* ``bipartitepandas.grouping``: Module for grouping on measures
+
+Classes and Methods
 -------------------
 
 ``bipartitepandas.BipartiteBase``
@@ -45,11 +51,13 @@ Modules and Methods
    ~bipartitepandas.BipartiteBase
    ~bipartitepandas.BipartiteBase.clean_data
    ~bipartitepandas.BipartiteBase.cluster
+   ~bipartitepandas.BipartiteBase.copy
    ~bipartitepandas.BipartiteBase.drop
+   ~bipartitepandas.BipartiteBase.gen_m
    ~bipartitepandas.BipartiteBase.merge
-   ~bipartitepandas.BipartiteBase.n_workers
-   ~bipartitepandas.BipartiteBase.n_firms
    ~bipartitepandas.BipartiteBase.n_clusters
+   ~bipartitepandas.BipartiteBase.n_firms
+   ~bipartitepandas.BipartiteBase.n_workers
    ~bipartitepandas.BipartiteBase.original_ids
    ~bipartitepandas.BipartiteBase.rename
    ~bipartitepandas.BipartiteBase.summary
@@ -85,10 +93,11 @@ Modules and Methods
 
 .. autosummary::
 
-   ~bipartitepandas.BipartiteEventStudy
-   ~bipartitepandas.BipartiteEventStudy.get_cs
-   ~bipartitepandas.BipartiteEventStudy.get_long
-   ~bipartitepandas.BipartiteEventStudy.unstack_es
+   ~bipartitepandas.BipartiteEventStudyBase
+   ~bipartitepandas.BipartiteEventStudyBase.clean_data
+   ~bipartitepandas.BipartiteEventStudyBase.get_cs
+   ~bipartitepandas.BipartiteEventStudyBase.get_long
+   ~bipartitepandas.BipartiteEventStudyBase.unstack_es
 
 ``bipartitepandas.BipartiteEventStudy``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,3 +120,22 @@ Modules and Methods
 
    ~bipartitepandas.SimBipartite
    ~bipartitepandas.SimBipartite.sim_network
+
+Modules and Methods
+-------------------
+
+``bipartitepandas.measures``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.measures.cdfs
+   ~bipartitepandas.measures.moments
+
+``bipartitepandas.grouping``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.grouping.kmeans
+   ~bipartitepandas.grouping.quantiles
