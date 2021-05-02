@@ -149,11 +149,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
             stable_post (bool): if True, keep only workers who stay at a single firm after the transition
 
         Returns:
-            es_extended_frame (Pandas DataFrame): extended event study generated from long data
+            es_extended_frame or None (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
         '''
         if not self.col_included('g'):
-            # Cluster if no cluster column
-            es_extended_frame = pd.DataFrame(self.cluster(), copy=True)
+            return None
         else:
             es_extended_frame = pd.DataFrame(self, copy=True)
 
@@ -165,7 +164,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame = es_extended_frame[es_extended_frame['worker_total_periods'] >= periods_pre + periods_post].reset_index(drop=True)
 
         # Sort by worker-period
-        es_extended_frame.sort_values(['i', 't'])
+        es_extended_frame.sort_values(['i', 't'], inplace=True)
 
         # For each worker-period, generate (how many total years - 1) they have worked at that point (e.g. if a worker started in 2005, and had data each year, then 2008 would give 3, 2009 would give 4, etc.)
         es_extended_frame['worker_periods_worked'] = es_extended_frame.groupby('i')['one'].cumsum() - 1

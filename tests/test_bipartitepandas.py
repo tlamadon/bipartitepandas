@@ -1853,11 +1853,11 @@ def test_cluster_1():
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
-    for grouping in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            print('grouping:', grouping)
-            print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
+            measures = bpd.measures.cdfs(measure=measure)
+            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
 
             clusters_true = sim_data[~bdf['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
             clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
@@ -1898,16 +1898,16 @@ def test_cluster_1():
             clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
-            if grouping == 'quantile_all':
+            if measure == 'quantile_all':
                 bound = 5000 # 10% error
-            elif grouping == 'quantile_firm_small':
+            elif measure == 'quantile_firm_small':
                 bound = 10000 # 20% error
-            elif grouping == 'quantile_firm_large':
+            elif measure == 'quantile_firm_large':
                 bound = 10000 # 20% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
-            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
+            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, measure)
 
 def test_cluster_2():
     # Test cluster function is working correctly for event study format.
@@ -1917,11 +1917,11 @@ def test_cluster_2():
     bdf = bdf.clean_data()
     bdf = bdf.get_es()
 
-    for grouping in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            print('grouping:', grouping)
-            print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
+            measures = bpd.measures.cdfs(measure=measure)
+            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
 
             to_long = bdf.get_long()
             clusters_true = sim_data[~to_long['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -1963,16 +1963,16 @@ def test_cluster_2():
             clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
-            if grouping == 'quantile_all':
+            if measure == 'quantile_all':
                 bound = 5000 # 10% error
-            elif grouping == 'quantile_firm_small':
+            elif measure == 'quantile_firm_small':
                 bound = 10000 # 20% error
-            elif grouping == 'quantile_firm_large':
+            elif measure == 'quantile_firm_large':
                 bound = 10000 # 20% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
-            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
+            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, measure)
 
 def test_cluster_3():
     # Test cluster function is working correctly for collapsed long format.
@@ -1988,11 +1988,11 @@ def test_cluster_3():
     sim_data['spell'] = sim_data['new_spell'].cumsum()
     sim_data_spell = sim_data.groupby('spell').first()
 
-    for grouping in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            print('grouping:', grouping)
-            print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
+            measures = bpd.measures.cdfs(measure=measure)
+            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
             remaining_jids = bdf.dropna()['j'].unique()
 
             clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -2034,16 +2034,16 @@ def test_cluster_3():
             clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
-            if grouping == 'quantile_all':
+            if measure == 'quantile_all':
                 bound = 5000 # 10% error
-            elif grouping == 'quantile_firm_small':
+            elif measure == 'quantile_firm_small':
                 bound = 10000 # 20% error
-            elif grouping == 'quantile_firm_large':
+            elif measure == 'quantile_firm_large':
                 bound = 10000 # 20% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
-            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
+            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, measure)
 
 def test_cluster_4():
     # Test cluster function is working correctly for collapsed event study format.
@@ -2059,11 +2059,11 @@ def test_cluster_4():
     sim_data['spell'] = sim_data['new_spell'].cumsum()
     sim_data_spell = sim_data.groupby('spell').first()
 
-    for grouping in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            print('grouping:', grouping)
-            print('stayers_movers:', stayers_movers)
-            bdf = bdf.cluster(user_cluster={'measure_cdf': True, 'cluster_KMeans': True}, user_prep_cluster={'stayers_movers': stayers_movers}, user_KMeans={'n_clusters': nk})
+            measures = bpd.measures.cdfs(measure=measure)
+            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
 
             to_collapsed_long = bdf.get_long()
             remaining_jids = to_collapsed_long.dropna()['j'].unique()
@@ -2107,16 +2107,16 @@ def test_cluster_4():
             clusters_merged = pd.merge(pd.DataFrame({'psi': clusters_true}), match_df, how='left', on='psi')
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
-            if grouping == 'quantile_all':
+            if measure == 'quantile_all':
                 bound = 5000 # 10% error
-            elif grouping == 'quantile_firm_small':
+            elif measure == 'quantile_firm_small':
                 bound = 10000 # 20% error
-            elif grouping == 'quantile_firm_large':
+            elif measure == 'quantile_firm_large':
                 bound = 10000 # 20% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
-            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, grouping)
+            assert wrong_cluster < bound, 'error is {} for {}'.format(wrong_cluster, measure)
 
 def test_cluster_5():
     # Test cluster function works with moments-quantiles options.
@@ -2136,7 +2136,9 @@ def test_cluster_5():
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
 
-    bdf = bdf.cluster(user_cluster={'measure_moments': True, 'cluster_quantiles': True}, user_measure_moments={'measures': 'mean'}, user_quantile={'n_quantiles': 3})
+    measures = bpd.measures.moments(measures='mean')
+    grouping = bpd.grouping.quantiles(n_quantiles=3)
+    bdf = bdf.cluster(measures=measures, grouping=grouping)
 
     # Clusters:
     # j 0 1 2 3
