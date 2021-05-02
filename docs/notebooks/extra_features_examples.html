@@ -96,6 +96,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#Summary-statistics">Summary statistics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Original-worker-and-firm-ids">Original worker and firm ids</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Filling-in-missing-years-as-unemployed">Filling in missing years as unemployed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Getting-extended-event-studies">Getting extended event studies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Uncollapsing-data-(converting-from-collapsed-long-to-long)">Uncollapsing data (converting from collapsed long to long)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#Column-inference">Column inference</a></li>
 </ul>
@@ -503,36 +504,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>100</td>
-      <td>0.850212</td>
+      <td>95</td>
+      <td>-0.475259</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>185</td>
-      <td>3.109079</td>
+      <td>157</td>
+      <td>2.036083</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>185</td>
-      <td>1.150882</td>
+      <td>157</td>
+      <td>0.662234</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>185</td>
-      <td>2.288035</td>
+      <td>157</td>
+      <td>4.144825</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>185</td>
-      <td>2.180009</td>
+      <td>177</td>
+      <td>1.571732</td>
       <td>5</td>
     </tr>
     <tr>
@@ -545,36 +546,36 @@ div.rendered_html tbody tr:hover {
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>83</td>
-      <td>0.567736</td>
+      <td>173</td>
+      <td>3.390882</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>119</td>
-      <td>0.761244</td>
+      <td>173</td>
+      <td>2.714062</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>75</td>
-      <td>2.361000</td>
+      <td>173</td>
+      <td>2.291981</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>75</td>
-      <td>0.027062</td>
+      <td>173</td>
+      <td>2.192866</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>59</td>
-      <td>-1.277107</td>
+      <td>176</td>
+      <td>2.334262</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -586,28 +587,6 @@ div.rendered_html tbody tr:hover {
 <h2>Summary statistics<a class="headerlink" href="#Summary-statistics" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
-</pre></div>
-</div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
-<span></span><span class="c1"># We can check the number of workers, firms, and clusters (which is None because the data is not clustered)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_workers</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_firms</span><span class="p">())</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">())</span>
-</pre></div>
-</div>
-</div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-10000
-194
-None
-</pre></div></div>
-</div>
-<div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -627,11 +606,11 @@ None
 <div class="highlight"><pre>
 format: BipartiteLong
 number of workers: 10000
-number of firms: 194
+number of firms: 196
 number of observations: 50000
-mean wage: 0.3940152205683422
-max wage: 5.776081530258098
-min wage: -5.890310737959243
+mean wage: 0.4106874263360842
+max wage: 5.59122351830557
+min wage: -6.6439909931722205
 connected: False
 contiguous i ids (None if not included): False
 contiguous j ids (None if not included): False
@@ -643,11 +622,11 @@ i-t (worker-year) observations unique (None if t column(s) not included): False
 
 format: BipartiteLong
 number of workers: 10000
-number of firms: 194
+number of firms: 196
 number of observations: 50000
-mean wage: 0.3940152205683422
-max wage: 5.776081530258098
-min wage: -5.890310737959243
+mean wage: 0.4106874263360842
+max wage: 5.59122351830557
+min wage: -6.6439909931722205
 connected: True
 contiguous i ids (None if not included): True
 contiguous j ids (None if not included): True
@@ -657,6 +636,28 @@ no nans: True
 no duplicates: True
 i-t (worker-year) observations unique (None if t column(s) not included): True
 
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># We can easily retrieve the number of workers, firms, and clusters (which is None because the data is not clustered)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_workers</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_firms</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">bdf</span><span class="o">.</span><span class="n">n_clusters</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+10000
+196
+None
 </pre></div></div>
 </div>
 </div>
@@ -746,69 +747,11 @@ Notice this fails, as include_id_reference_dict has not been set to True
   <thead>
     <tr style="text-align: right;">
       <th></th>
-      <th>original_ids</th>
-      <th>adjusted_ids_1</th>
     </tr>
   </thead>
   <tbody>
-    <tr>
-      <th>0</th>
-      <td>0</td>
-      <td>0</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>2</td>
-      <td>2</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>3</td>
-      <td>3</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>4</td>
-      <td>4</td>
-    </tr>
-    <tr>
-      <th>...</th>
-      <td>...</td>
-      <td>...</td>
-    </tr>
-    <tr>
-      <th>194</th>
-      <td>195</td>
-      <td>194</td>
-    </tr>
-    <tr>
-      <th>195</th>
-      <td>196</td>
-      <td>195</td>
-    </tr>
-    <tr>
-      <th>196</th>
-      <td>197</td>
-      <td>196</td>
-    </tr>
-    <tr>
-      <th>197</th>
-      <td>198</td>
-      <td>197</td>
-    </tr>
-    <tr>
-      <th>198</th>
-      <td>199</td>
-      <td>198</td>
-    </tr>
   </tbody>
 </table>
-<p>199 rows × 2 columns</p>
 </div></div>
 </div>
 <div class="nboutput docutils container">
@@ -835,79 +778,67 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <th></th>
       <th>original_ids</th>
       <th>adjusted_ids_1</th>
-      <th>adjusted_ids_2</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <th>0</th>
+      <td>100</td>
       <td>0</td>
-      <td>0</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>1</th>
+      <td>101</td>
       <td>1</td>
-      <td>1</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>2</th>
+      <td>102</td>
       <td>2</td>
-      <td>2</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>3</th>
+      <td>103</td>
       <td>3</td>
-      <td>3</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>4</th>
+      <td>104</td>
       <td>4</td>
-      <td>4</td>
-      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>...</th>
       <td>...</td>
       <td>...</td>
-      <td>...</td>
     </tr>
     <tr>
-      <th>194</th>
-      <td>195</td>
-      <td>194</td>
-      <td>91</td>
-    </tr>
-    <tr>
-      <th>195</th>
-      <td>196</td>
+      <th>92</th>
       <td>195</td>
       <td>92</td>
     </tr>
     <tr>
-      <th>196</th>
-      <td>197</td>
+      <th>93</th>
       <td>196</td>
       <td>93</td>
     </tr>
     <tr>
-      <th>197</th>
-      <td>198</td>
+      <th>94</th>
       <td>197</td>
-      <td>&lt;NA&gt;</td>
+      <td>94</td>
     </tr>
     <tr>
-      <th>198</th>
-      <td>199</td>
+      <th>95</th>
       <td>198</td>
-      <td>94</td>
+      <td>95</td>
+    </tr>
+    <tr>
+      <th>96</th>
+      <td>199</td>
+      <td>96</td>
     </tr>
   </tbody>
 </table>
-<p>199 rows × 3 columns</p>
+<p>97 rows × 2 columns</p>
 </div></div>
 </div>
 <div class="nboutput docutils container">
@@ -960,13 +891,13 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <th>3</th>
       <td>3</td>
       <td>3</td>
-      <td>3</td>
+      <td>&lt;NA&gt;</td>
     </tr>
     <tr>
       <th>4</th>
       <td>4</td>
       <td>4</td>
-      <td>&lt;NA&gt;</td>
+      <td>3</td>
     </tr>
     <tr>
       <th>...</th>
@@ -975,38 +906,38 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <td>...</td>
     </tr>
     <tr>
-      <th>183</th>
-      <td>189</td>
-      <td>183</td>
-      <td>139</td>
-    </tr>
-    <tr>
-      <th>184</th>
-      <td>190</td>
-      <td>184</td>
-      <td>140</td>
-    </tr>
-    <tr>
-      <th>185</th>
-      <td>191</td>
-      <td>185</td>
-      <td>&lt;NA&gt;</td>
-    </tr>
-    <tr>
       <th>186</th>
-      <td>192</td>
+      <td>191</td>
       <td>186</td>
-      <td>&lt;NA&gt;</td>
+      <td>143</td>
     </tr>
     <tr>
       <th>187</th>
-      <td>193</td>
+      <td>192</td>
       <td>187</td>
+      <td>144</td>
+    </tr>
+    <tr>
+      <th>188</th>
+      <td>193</td>
+      <td>188</td>
+      <td>&lt;NA&gt;</td>
+    </tr>
+    <tr>
+      <th>189</th>
+      <td>194</td>
+      <td>189</td>
+      <td>145</td>
+    </tr>
+    <tr>
+      <th>190</th>
+      <td>195</td>
+      <td>190</td>
       <td>&lt;NA&gt;</td>
     </tr>
   </tbody>
 </table>
-<p>188 rows × 3 columns</p>
+<p>191 rows × 3 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1043,47 +974,47 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>54</td>
-      <td>-0.637943</td>
+      <td>77</td>
+      <td>-0.367219</td>
       <td>1</td>
-      <td>101</td>
-      <td>72</td>
+      <td>100</td>
+      <td>97</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>54</td>
-      <td>-0.032348</td>
+      <td>77</td>
+      <td>0.129278</td>
       <td>2</td>
-      <td>101</td>
-      <td>72</td>
+      <td>100</td>
+      <td>97</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>129</td>
-      <td>1.214961</td>
+      <td>77</td>
+      <td>0.487851</td>
       <td>3</td>
-      <td>101</td>
-      <td>173</td>
+      <td>100</td>
+      <td>97</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>129</td>
-      <td>0.747303</td>
+      <td>77</td>
+      <td>0.587456</td>
       <td>4</td>
-      <td>101</td>
-      <td>173</td>
+      <td>100</td>
+      <td>97</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>95</td>
-      <td>0.292926</td>
+      <td>77</td>
+      <td>-0.600196</td>
       <td>5</td>
-      <td>101</td>
-      <td>127</td>
+      <td>100</td>
+      <td>97</td>
     </tr>
     <tr>
       <th>...</th>
@@ -1095,53 +1026,53 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <td>...</td>
     </tr>
     <tr>
-      <th>470</th>
-      <td>94</td>
-      <td>92</td>
-      <td>0.243164</td>
+      <th>480</th>
+      <td>96</td>
+      <td>10</td>
+      <td>-1.857470</td>
       <td>1</td>
       <td>199</td>
-      <td>123</td>
+      <td>11</td>
     </tr>
     <tr>
-      <th>471</th>
-      <td>94</td>
-      <td>92</td>
-      <td>1.217721</td>
+      <th>481</th>
+      <td>96</td>
+      <td>20</td>
+      <td>-2.253385</td>
       <td>2</td>
       <td>199</td>
-      <td>123</td>
+      <td>22</td>
     </tr>
     <tr>
-      <th>472</th>
-      <td>94</td>
-      <td>130</td>
-      <td>0.655586</td>
+      <th>482</th>
+      <td>96</td>
+      <td>20</td>
+      <td>-1.531509</td>
       <td>3</td>
       <td>199</td>
-      <td>174</td>
+      <td>22</td>
     </tr>
     <tr>
-      <th>473</th>
-      <td>94</td>
-      <td>130</td>
-      <td>2.070455</td>
+      <th>483</th>
+      <td>96</td>
+      <td>20</td>
+      <td>-1.925547</td>
       <td>4</td>
       <td>199</td>
-      <td>174</td>
+      <td>22</td>
     </tr>
     <tr>
-      <th>474</th>
-      <td>94</td>
-      <td>137</td>
-      <td>2.942263</td>
+      <th>484</th>
+      <td>96</td>
+      <td>76</td>
+      <td>0.076055</td>
       <td>5</td>
       <td>199</td>
-      <td>187</td>
+      <td>96</td>
     </tr>
   </tbody>
 </table>
-<p>475 rows × 6 columns</p>
+<p>485 rows × 6 columns</p>
 </div></div>
 </div>
 </div>
@@ -1193,8 +1124,8 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>35</td>
-      <td>-0.937087</td>
+      <td>75</td>
+      <td>0.190688</td>
       <td>1</td>
     </tr>
     <tr>
@@ -1221,8 +1152,8 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>0</td>
-      <td>-1.727093</td>
+      <td>108</td>
+      <td>-0.327032</td>
       <td>5</td>
     </tr>
     <tr>
@@ -1235,8 +1166,8 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>154</td>
-      <td>2.694752</td>
+      <td>2</td>
+      <td>-1.422114</td>
       <td>1</td>
     </tr>
     <tr>
@@ -1263,8 +1194,8 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>158</td>
-      <td>3.079194</td>
+      <td>70</td>
+      <td>1.683308</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -1273,10 +1204,453 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 </div>
+<div class="section" id="Getting-extended-event-studies">
+<h2>Getting extended event studies<a class="headerlink" href="#Getting-extended-event-studies" title="Permalink to this headline">¶</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># BipartitePandas allows you to use clustered long data to generate event studies with more than 2 periods (note they only return i, t, g, and y columns)</span>
+<span class="n">sim_data</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">sim_network</span><span class="p">()[[</span><span class="s1">&#39;i&#39;</span><span class="p">,</span> <span class="s1">&#39;j&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">]]</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteLong</span><span class="p">(</span><span class="n">sim_data</span><span class="p">)</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">clean_data</span><span class="p">()</span>
+<span class="n">bdf</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">cluster</span><span class="p">()</span>
+<span class="n">es_extended</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_es_extended</span><span class="p">(</span><span class="n">periods_pre</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">periods_post</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stable_pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stable_post</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="c1"># periods_post includes the first period after the transition</span>
+<span class="n">display</span><span class="p">(</span><span class="n">es_extended</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>t</th>
+      <th>g_l3</th>
+      <th>g_l2</th>
+      <th>g_l1</th>
+      <th>g_f1</th>
+      <th>g_f2</th>
+      <th>y_l3</th>
+      <th>y_l2</th>
+      <th>y_l1</th>
+      <th>y_f1</th>
+      <th>y_f2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>4</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.389689</td>
+      <td>2.860047</td>
+      <td>2.610123</td>
+      <td>2.824718</td>
+      <td>3.188280</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>5</td>
+      <td>4</td>
+      <td>6</td>
+      <td>6</td>
+      <td>3</td>
+      <td>3</td>
+      <td>0</td>
+      <td>1.687508</td>
+      <td>2.222085</td>
+      <td>2.273496</td>
+      <td>1.039830</td>
+      <td>0.579249</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>6</td>
+      <td>4</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7</td>
+      <td>7</td>
+      <td>-1.073846</td>
+      <td>-1.785203</td>
+      <td>-2.658163</td>
+      <td>-2.498565</td>
+      <td>-2.896267</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>7</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7</td>
+      <td>7</td>
+      <td>-1.451531</td>
+      <td>0.016457</td>
+      <td>0.536526</td>
+      <td>-2.219636</td>
+      <td>1.128918</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>8</td>
+      <td>4</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3.145236</td>
+      <td>0.295461</td>
+      <td>-0.540854</td>
+      <td>1.660430</td>
+      <td>1.257174</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>4978</th>
+      <td>9994</td>
+      <td>4</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>-0.833096</td>
+      <td>1.738988</td>
+      <td>1.685855</td>
+      <td>0.259959</td>
+      <td>-0.000176</td>
+    </tr>
+    <tr>
+      <th>4979</th>
+      <td>9995</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>-0.570217</td>
+      <td>1.573532</td>
+      <td>-0.401494</td>
+      <td>-2.171693</td>
+      <td>0.837444</td>
+    </tr>
+    <tr>
+      <th>4980</th>
+      <td>9997</td>
+      <td>4</td>
+      <td>7</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.560460</td>
+      <td>-1.741946</td>
+      <td>1.618080</td>
+      <td>0.828687</td>
+      <td>-0.898448</td>
+    </tr>
+    <tr>
+      <th>4981</th>
+      <td>9998</td>
+      <td>4</td>
+      <td>1</td>
+      <td>7</td>
+      <td>1</td>
+      <td>6</td>
+      <td>5</td>
+      <td>1.810997</td>
+      <td>1.469065</td>
+      <td>1.421835</td>
+      <td>1.256657</td>
+      <td>-1.404912</td>
+    </tr>
+    <tr>
+      <th>4982</th>
+      <td>9999</td>
+      <td>4</td>
+      <td>7</td>
+      <td>4</td>
+      <td>1</td>
+      <td>7</td>
+      <td>7</td>
+      <td>-1.501543</td>
+      <td>-0.834729</td>
+      <td>0.142229</td>
+      <td>1.144423</td>
+      <td>-2.241417</td>
+    </tr>
+  </tbody>
+</table>
+<p>4983 rows × 12 columns</p>
+</div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
+<span></span><span class="c1"># You can specify stable_pre or stable_post to keep only workers who stayed at the same firm before/after the transition</span>
+<span class="n">es_extended</span> <span class="o">=</span> <span class="n">bdf</span><span class="o">.</span><span class="n">get_es_extended</span><span class="p">(</span><span class="n">periods_pre</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">periods_post</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">stable_pre</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stable_post</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">es_extended</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>t</th>
+      <th>g_l3</th>
+      <th>g_l2</th>
+      <th>g_l1</th>
+      <th>g_f1</th>
+      <th>g_f2</th>
+      <th>y_l3</th>
+      <th>y_l2</th>
+      <th>y_l1</th>
+      <th>y_f1</th>
+      <th>y_f2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>3</td>
+      <td>4</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.389689</td>
+      <td>2.860047</td>
+      <td>2.610123</td>
+      <td>2.824718</td>
+      <td>3.188280</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>7</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0</td>
+      <td>7</td>
+      <td>7</td>
+      <td>-1.451531</td>
+      <td>0.016457</td>
+      <td>0.536526</td>
+      <td>-2.219636</td>
+      <td>1.128918</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>14</td>
+      <td>4</td>
+      <td>7</td>
+      <td>7</td>
+      <td>7</td>
+      <td>2</td>
+      <td>2</td>
+      <td>0.251200</td>
+      <td>0.950570</td>
+      <td>-0.661024</td>
+      <td>-3.091429</td>
+      <td>-2.239547</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>15</td>
+      <td>4</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+      <td>3</td>
+      <td>3</td>
+      <td>2.183230</td>
+      <td>2.348490</td>
+      <td>1.786574</td>
+      <td>2.426871</td>
+      <td>1.873137</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>17</td>
+      <td>4</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>4</td>
+      <td>4</td>
+      <td>-1.088123</td>
+      <td>-0.264196</td>
+      <td>-1.710529</td>
+      <td>-1.997116</td>
+      <td>0.298100</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>2537</th>
+      <td>9990</td>
+      <td>4</td>
+      <td>3</td>
+      <td>6</td>
+      <td>6</td>
+      <td>6</td>
+      <td>6</td>
+      <td>5.357987</td>
+      <td>1.121260</td>
+      <td>1.358064</td>
+      <td>2.647050</td>
+      <td>0.313891</td>
+    </tr>
+    <tr>
+      <th>2538</th>
+      <td>9992</td>
+      <td>4</td>
+      <td>1</td>
+      <td>7</td>
+      <td>7</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1.518030</td>
+      <td>-0.986159</td>
+      <td>-0.276542</td>
+      <td>-0.177890</td>
+      <td>0.395933</td>
+    </tr>
+    <tr>
+      <th>2539</th>
+      <td>9994</td>
+      <td>4</td>
+      <td>0</td>
+      <td>3</td>
+      <td>1</td>
+      <td>0</td>
+      <td>0</td>
+      <td>-0.833096</td>
+      <td>1.738988</td>
+      <td>1.685855</td>
+      <td>0.259959</td>
+      <td>-0.000176</td>
+    </tr>
+    <tr>
+      <th>2540</th>
+      <td>9997</td>
+      <td>4</td>
+      <td>7</td>
+      <td>0</td>
+      <td>3</td>
+      <td>0</td>
+      <td>0</td>
+      <td>0.560460</td>
+      <td>-1.741946</td>
+      <td>1.618080</td>
+      <td>0.828687</td>
+      <td>-0.898448</td>
+    </tr>
+    <tr>
+      <th>2541</th>
+      <td>9999</td>
+      <td>4</td>
+      <td>7</td>
+      <td>4</td>
+      <td>1</td>
+      <td>7</td>
+      <td>7</td>
+      <td>-1.501543</td>
+      <td>-0.834729</td>
+      <td>0.142229</td>
+      <td>1.144423</td>
+      <td>-2.241417</td>
+    </tr>
+  </tbody>
+</table>
+<p>2542 rows × 12 columns</p>
+</div></div>
+</div>
+</div>
 <div class="section" id="Uncollapsing-data-(converting-from-collapsed-long-to-long)">
 <h2>Uncollapsing data (converting from collapsed long to long)<a class="headerlink" href="#Uncollapsing-data-(converting-from-collapsed-long-to-long)" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1325,8 +1699,8 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>15</td>
-      <td>-1.586632</td>
+      <td>78</td>
+      <td>0.009346</td>
       <td>1</td>
       <td>1</td>
       <td>1</td>
@@ -1335,42 +1709,42 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>-1.221474</td>
+      <td>44</td>
+      <td>0.381649</td>
       <td>2</td>
-      <td>5</td>
-      <td>4</td>
+      <td>2</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
-      <td>1</td>
-      <td>147</td>
-      <td>0.514602</td>
-      <td>1</td>
+      <td>0</td>
+      <td>46</td>
+      <td>0.017770</td>
       <td>3</td>
       <td>3</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
-      <td>1</td>
-      <td>104</td>
-      <td>0.078592</td>
+      <td>0</td>
+      <td>37</td>
+      <td>-0.738595</td>
       <td>4</td>
-      <td>5</td>
-      <td>2</td>
+      <td>4</td>
+      <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
-      <td>2</td>
-      <td>39</td>
-      <td>-0.710781</td>
-      <td>1</td>
-      <td>5</td>
-      <td>5</td>
       <td>0</td>
+      <td>77</td>
+      <td>-0.428766</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>...</th>
@@ -1383,58 +1757,58 @@ Notice this fails, as include_id_reference_dict has not been set to True
       <td>...</td>
     </tr>
     <tr>
-      <th>29785</th>
+      <th>29927</th>
       <td>9998</td>
-      <td>164</td>
-      <td>0.735405</td>
-      <td>1</td>
+      <td>38</td>
+      <td>-2.019297</td>
       <td>3</td>
-      <td>3</td>
+      <td>4</td>
+      <td>2</td>
       <td>1</td>
     </tr>
     <tr>
-      <th>29786</th>
+      <th>29928</th>
       <td>9998</td>
-      <td>191</td>
-      <td>3.219480</td>
+      <td>93</td>
+      <td>0.532911</td>
+      <td>5</td>
+      <td>5</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29929</th>
+      <td>9999</td>
+      <td>54</td>
+      <td>1.078404</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29930</th>
+      <td>9999</td>
+      <td>62</td>
+      <td>-1.230441</td>
+      <td>2</td>
+      <td>3</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29931</th>
+      <td>9999</td>
+      <td>3</td>
+      <td>-2.744810</td>
       <td>4</td>
       <td>5</td>
       <td>2</td>
       <td>1</td>
     </tr>
-    <tr>
-      <th>29787</th>
-      <td>9999</td>
-      <td>149</td>
-      <td>2.117283</td>
-      <td>1</td>
-      <td>3</td>
-      <td>3</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29788</th>
-      <td>9999</td>
-      <td>65</td>
-      <td>1.209873</td>
-      <td>4</td>
-      <td>4</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
-    <tr>
-      <th>29789</th>
-      <td>9999</td>
-      <td>63</td>
-      <td>2.463615</td>
-      <td>5</td>
-      <td>5</td>
-      <td>1</td>
-      <td>1</td>
-    </tr>
   </tbody>
 </table>
-<p>29790 rows × 7 columns</p>
+<p>29932 rows × 7 columns</p>
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1471,8 +1845,8 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>15</td>
-      <td>-1.586632</td>
+      <td>78</td>
+      <td>0.009346</td>
       <td>1</td>
       <td>1.0</td>
       <td>1</td>
@@ -1480,37 +1854,37 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>31</td>
-      <td>-1.221474</td>
+      <td>44</td>
+      <td>0.381649</td>
       <td>2</td>
-      <td>4.0</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>31</td>
-      <td>-1.221474</td>
+      <td>46</td>
+      <td>0.017770</td>
       <td>3</td>
-      <td>4.0</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>31</td>
-      <td>-1.221474</td>
+      <td>37</td>
+      <td>-0.738595</td>
       <td>4</td>
-      <td>4.0</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>31</td>
-      <td>-1.221474</td>
+      <td>77</td>
+      <td>-0.428766</td>
       <td>5</td>
-      <td>4.0</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
@@ -1525,46 +1899,46 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>149</td>
-      <td>2.117283</td>
+      <td>54</td>
+      <td>1.078404</td>
       <td>1</td>
-      <td>3.0</td>
+      <td>1.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>149</td>
-      <td>2.117283</td>
+      <td>62</td>
+      <td>-1.230441</td>
       <td>2</td>
-      <td>3.0</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>149</td>
-      <td>2.117283</td>
+      <td>62</td>
+      <td>-1.230441</td>
       <td>3</td>
-      <td>3.0</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>65</td>
-      <td>1.209873</td>
+      <td>3</td>
+      <td>-2.744810</td>
       <td>4</td>
-      <td>1.0</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>63</td>
-      <td>2.463615</td>
+      <td>3</td>
+      <td>-2.744810</td>
       <td>5</td>
-      <td>1.0</td>
+      <td>2.0</td>
       <td>1</td>
     </tr>
   </tbody>
@@ -1576,7 +1950,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 <div class="section" id="Column-inference">
 <h2>Column inference<a class="headerlink" href="#Column-inference" title="Permalink to this headline">¶</a></h2>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1622,36 +1996,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>73</td>
-      <td>-0.926906</td>
+      <td>126</td>
+      <td>0.273470</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>73</td>
-      <td>-1.614707</td>
+      <td>17</td>
+      <td>-2.168754</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>23</td>
-      <td>0.526607</td>
+      <td>17</td>
+      <td>-0.114282</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>33</td>
-      <td>-1.338169</td>
+      <td>63</td>
+      <td>-0.826436</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>70</td>
-      <td>-0.662472</td>
+      <td>7</td>
+      <td>0.188220</td>
       <td>5</td>
     </tr>
     <tr>
@@ -1664,36 +2038,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>42</td>
-      <td>-0.259712</td>
+      <td>174</td>
+      <td>0.859657</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>85</td>
-      <td>-0.272997</td>
+      <td>174</td>
+      <td>1.621943</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>42</td>
-      <td>-1.173498</td>
+      <td>128</td>
+      <td>0.793700</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>32</td>
-      <td>-2.484496</td>
+      <td>128</td>
+      <td>-0.856568</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>32</td>
-      <td>-1.506836</td>
+      <td>90</td>
+      <td>-0.125052</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -1702,7 +2076,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1748,40 +2122,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>49</td>
-      <td>1.333236</td>
+      <td>32</td>
+      <td>-0.735045</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>49</td>
-      <td>1.041921</td>
+      <td>32</td>
+      <td>-0.651975</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>55</td>
-      <td>0.157938</td>
+      <td>32</td>
+      <td>-2.005339</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>55</td>
-      <td>0.892844</td>
+      <td>32</td>
+      <td>-1.170584</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>66</td>
-      <td>1.074220</td>
+      <td>16</td>
+      <td>-1.312386</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -1796,40 +2170,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>79</td>
-      <td>0.474852</td>
+      <td>53</td>
+      <td>-0.248344</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>79</td>
-      <td>0.679068</td>
+      <td>53</td>
+      <td>-1.131706</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>79</td>
-      <td>-0.605855</td>
+      <td>93</td>
+      <td>-0.244001</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>167</td>
-      <td>3.994244</td>
+      <td>93</td>
+      <td>-1.136047</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>166</td>
-      <td>3.104107</td>
+      <td>93</td>
+      <td>-1.714383</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -1839,7 +2213,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -1884,36 +2258,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>129</td>
-      <td>0.106212</td>
+      <td>111</td>
+      <td>-1.021839</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>129</td>
-      <td>2.421254</td>
+      <td>111</td>
+      <td>1.083939</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>184</td>
-      <td>1.669022</td>
+      <td>111</td>
+      <td>-0.456949</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>184</td>
-      <td>2.527571</td>
+      <td>129</td>
+      <td>1.168908</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>184</td>
-      <td>2.750344</td>
+      <td>129</td>
+      <td>-0.659914</td>
       <td>5</td>
     </tr>
     <tr>
@@ -1926,36 +2300,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>128</td>
-      <td>0.594863</td>
+      <td>18</td>
+      <td>0.069395</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>128</td>
-      <td>-0.556530</td>
+      <td>18</td>
+      <td>-1.895396</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>128</td>
-      <td>2.884363</td>
+      <td>42</td>
+      <td>-0.966151</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>182</td>
-      <td>2.830062</td>
+      <td>3</td>
+      <td>-1.377394</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>182</td>
-      <td>0.008022</td>
+      <td>37</td>
+      <td>0.282045</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -1964,7 +2338,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2010,40 +2384,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>28</td>
-      <td>0.813411</td>
+      <td>42</td>
+      <td>-0.552423</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>64</td>
-      <td>0.309910</td>
+      <td>42</td>
+      <td>0.943231</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>129</td>
-      <td>1.340066</td>
+      <td>42</td>
+      <td>-1.555695</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>143</td>
-      <td>0.616610</td>
+      <td>42</td>
+      <td>-0.619463</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>192</td>
-      <td>2.104819</td>
+      <td>88</td>
+      <td>-1.768071</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -2058,40 +2432,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>96</td>
-      <td>-0.880188</td>
+      <td>102</td>
+      <td>0.300628</td>
       <td>1</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>41</td>
-      <td>0.151882</td>
+      <td>102</td>
+      <td>-1.552802</td>
       <td>2</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>41</td>
-      <td>0.211678</td>
+      <td>107</td>
+      <td>-1.702500</td>
       <td>3</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>41</td>
-      <td>-1.287437</td>
+      <td>49</td>
+      <td>-0.932932</td>
       <td>4</td>
       <td>0</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>41</td>
-      <td>-0.936708</td>
+      <td>49</td>
+      <td>-0.844011</td>
       <td>5</td>
       <td>0</td>
     </tr>
@@ -2101,7 +2475,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2147,36 +2521,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.244612</td>
+      <td>15</td>
+      <td>-1.028431</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>174</td>
-      <td>2.199444</td>
+      <td>15</td>
+      <td>-2.520617</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.960504</td>
+      <td>15</td>
+      <td>-0.845811</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.397325</td>
+      <td>1</td>
+      <td>-2.703370</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>174</td>
-      <td>0.932462</td>
+      <td>1</td>
+      <td>-2.016674</td>
       <td>5</td>
     </tr>
     <tr>
@@ -2189,36 +2563,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>120</td>
-      <td>1.499970</td>
+      <td>110</td>
+      <td>0.295253</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>163</td>
-      <td>2.126022</td>
+      <td>87</td>
+      <td>0.533566</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>50</td>
-      <td>1.051911</td>
+      <td>17</td>
+      <td>-1.485227</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>166</td>
-      <td>3.338495</td>
+      <td>58</td>
+      <td>0.940265</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>79</td>
-      <td>-1.023933</td>
+      <td>86</td>
+      <td>-1.565428</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -2227,7 +2601,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2271,42 +2645,42 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.244612</td>
+      <td>15</td>
+      <td>-1.028431</td>
       <td>1</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>174</td>
-      <td>2.199444</td>
+      <td>15</td>
+      <td>-2.520617</td>
       <td>2</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.960504</td>
+      <td>15</td>
+      <td>-0.845811</td>
       <td>3</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.397325</td>
+      <td>1</td>
+      <td>-2.703370</td>
       <td>4</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>174</td>
-      <td>0.932462</td>
+      <td>1</td>
+      <td>-2.016674</td>
       <td>5</td>
-      <td>0</td>
+      <td>1</td>
     </tr>
     <tr>
       <th>...</th>
@@ -2319,40 +2693,40 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>120</td>
-      <td>1.499970</td>
+      <td>110</td>
+      <td>0.295253</td>
       <td>1</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>163</td>
-      <td>2.126022</td>
+      <td>87</td>
+      <td>0.533566</td>
       <td>2</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>50</td>
-      <td>1.051911</td>
+      <td>17</td>
+      <td>-1.485227</td>
       <td>3</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>166</td>
-      <td>3.338495</td>
+      <td>58</td>
+      <td>0.940265</td>
       <td>4</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>79</td>
-      <td>-1.023933</td>
+      <td>86</td>
+      <td>-1.565428</td>
       <td>5</td>
       <td>1</td>
     </tr>
@@ -2362,7 +2736,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[16]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2394,36 +2768,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.244612</td>
+      <td>15</td>
+      <td>-1.028431</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>174</td>
-      <td>2.199444</td>
+      <td>15</td>
+      <td>-2.520617</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.960504</td>
+      <td>15</td>
+      <td>-0.845811</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.397325</td>
+      <td>1</td>
+      <td>-2.703370</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>174</td>
-      <td>0.932462</td>
+      <td>1</td>
+      <td>-2.016674</td>
       <td>5</td>
     </tr>
     <tr>
@@ -2436,36 +2810,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>120</td>
-      <td>1.499970</td>
+      <td>110</td>
+      <td>0.295253</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>163</td>
-      <td>2.126022</td>
+      <td>87</td>
+      <td>0.533566</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>50</td>
-      <td>1.051911</td>
+      <td>17</td>
+      <td>-1.485227</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>166</td>
-      <td>3.338495</td>
+      <td>58</td>
+      <td>0.940265</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>79</td>
-      <td>-1.023933</td>
+      <td>86</td>
+      <td>-1.565428</td>
       <td>5</td>
     </tr>
   </tbody>
@@ -2474,7 +2848,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </div></div>
 </div>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre>
@@ -2493,7 +2867,7 @@ Notice this fails, as include_id_reference_dict has not been set to True
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[15]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[17]:
 </pre></div>
 </div>
 <div class="output_area rendered_html docutils container">
@@ -2525,36 +2899,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>0</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.244612</td>
+      <td>15</td>
+      <td>-1.028431</td>
       <td>1</td>
     </tr>
     <tr>
       <th>1</th>
       <td>0</td>
-      <td>174</td>
-      <td>2.199444</td>
+      <td>15</td>
+      <td>-2.520617</td>
       <td>2</td>
     </tr>
     <tr>
       <th>2</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.960504</td>
+      <td>15</td>
+      <td>-0.845811</td>
       <td>3</td>
     </tr>
     <tr>
       <th>3</th>
       <td>0</td>
-      <td>174</td>
-      <td>1.397325</td>
+      <td>1</td>
+      <td>-2.703370</td>
       <td>4</td>
     </tr>
     <tr>
       <th>4</th>
       <td>0</td>
-      <td>174</td>
-      <td>0.932462</td>
+      <td>1</td>
+      <td>-2.016674</td>
       <td>5</td>
     </tr>
     <tr>
@@ -2567,36 +2941,36 @@ Notice this fails, as include_id_reference_dict has not been set to True
     <tr>
       <th>49995</th>
       <td>9999</td>
-      <td>120</td>
-      <td>1.499970</td>
+      <td>110</td>
+      <td>0.295253</td>
       <td>1</td>
     </tr>
     <tr>
       <th>49996</th>
       <td>9999</td>
-      <td>163</td>
-      <td>2.126022</td>
+      <td>87</td>
+      <td>0.533566</td>
       <td>2</td>
     </tr>
     <tr>
       <th>49997</th>
       <td>9999</td>
-      <td>50</td>
-      <td>1.051911</td>
+      <td>17</td>
+      <td>-1.485227</td>
       <td>3</td>
     </tr>
     <tr>
       <th>49998</th>
       <td>9999</td>
-      <td>166</td>
-      <td>3.338495</td>
+      <td>58</td>
+      <td>0.940265</td>
       <td>4</td>
     </tr>
     <tr>
       <th>49999</th>
       <td>9999</td>
-      <td>79</td>
-      <td>-1.023933</td>
+      <td>86</td>
+      <td>-1.565428</td>
       <td>5</td>
     </tr>
   </tbody>
