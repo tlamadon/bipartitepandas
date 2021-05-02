@@ -14,6 +14,10 @@ def kmeans(**kwargs):
     Returns:
         compute_kmeans (function): subfunction
     '''
+    # Workaround for multiprocessing
+    # Source: https://stackoverflow.com/a/61879723
+    global compute_kmeans
+
     def compute_kmeans(data, weights):
         '''
         Compute kmeans groups for data.
@@ -39,6 +43,10 @@ def quantiles(n_quantiles=4):
     Returns:
         compute_quantiles (function): subfunction
     '''
+    # Workaround for multiprocessing
+    # Source: https://stackoverflow.com/a/61879723
+    global compute_quantiles
+
     def compute_quantiles(data, weights):
         '''
         Compute quantiles groups for data.

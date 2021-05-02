@@ -16,6 +16,10 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
     Returns:
         compute_measures_cdfs (function): subfunction
     '''
+    # Workaround for multiprocessing
+    # Source: https://stackoverflow.com/a/61879723
+    global compute_measures_cdfs
+
     def compute_measures_cdfs(data, jids):
         '''
         Arguments:
@@ -104,6 +108,10 @@ def moments(measures='mean'):
     Returns:
         compute_measures_moments (function): subfunction
     '''
+    # Workaround for multiprocessing
+    # Source: https://stackoverflow.com/a/61879723
+    global compute_measures_moments
+
     def compute_measures_moments(data, jids):
         '''
         Arguments:

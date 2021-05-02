@@ -882,10 +882,10 @@ class BipartiteBase(DataFrame):
         Arguments:
             measures (function or list of functions): how to compute measures for clustering. Options can be seen in bipartitepandas.measures.
             grouping (function): how to group firms based on measures. Options can be seen in bipartitepandas.grouping.
-            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
-            t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
-            weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-            dropna (bool, default=False): if True, drop observations where firms aren't clustered; if False, keep all observations
+            stayers_movers (str or None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            t (int or None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
+            weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+            dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
 
         Returns:
             frame (BipartiteBase): BipartiteBase with clusters
