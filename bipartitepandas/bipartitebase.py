@@ -904,11 +904,6 @@ class BipartiteBase(DataFrame):
                 computed_measures = np.concatenate([computed_measures, measure(cluster_data, jids)], axis=1)
         frame.logger.info('firm moments computed')
 
-        # Drop columns (because prepared data is not always a copy, must drop from self)
-        for col in ['row_weights', 'one']:
-            if col in self.columns:
-                self.drop(col)
-
         # Can't group using quantiles if more than 1 column
         if (grouping.__name__ == 'compute_quantiles') and (computed_measures.shape[1] > 1):
             grouping = bpd.measures.kmeans()
@@ -918,6 +913,11 @@ class BipartiteBase(DataFrame):
         frame.logger.info('computing firm groups')
         clusters = grouping(computed_measures, weights)
         frame.logger.info('firm groups computed')
+
+        # Drop columns (because prepared data is not always a copy, must drop from self)
+        for col in ['row_weights', 'one']:
+            if col in self.columns:
+                self.drop(col)
 
         # Drop existing clusters
         if frame._col_included('g'):
