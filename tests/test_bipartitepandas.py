@@ -1405,22 +1405,22 @@ def test_long_get_es_extended_1():
     bdf = bpd.BipartiteLong(df)
     bdf = bdf.clean_data()
 
-    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=1)
+    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=1, include=['j', 'y'])
 
     assert es_extended.iloc[0]['i'] == 0
     assert es_extended.iloc[0]['t'] == 4
-    assert es_extended.iloc[0]['g_l2'] == 1
-    assert es_extended.iloc[0]['g_l1'] == 1
-    assert es_extended.iloc[0]['g_f1'] == 0
+    assert es_extended.iloc[0]['j_l2'] == 1
+    assert es_extended.iloc[0]['j_l1'] == 1
+    assert es_extended.iloc[0]['j_f1'] == 0
     assert es_extended.iloc[0]['y_l2'] == 1
     assert es_extended.iloc[0]['y_l1'] == 1
     assert es_extended.iloc[0]['y_f1'] == 1
 
     assert es_extended.iloc[1]['i'] == 2
     assert es_extended.iloc[1]['t'] == 3
-    assert es_extended.iloc[1]['g_l2'] == 2
-    assert es_extended.iloc[1]['g_l1'] == 2
-    assert es_extended.iloc[1]['g_f1'] == 3
+    assert es_extended.iloc[1]['j_l2'] == 2
+    assert es_extended.iloc[1]['j_l1'] == 2
+    assert es_extended.iloc[1]['j_f1'] == 3
     assert es_extended.iloc[1]['y_l2'] == 1
     assert es_extended.iloc[1]['y_l1'] == 1
     assert es_extended.iloc[1]['y_f1'] == 1.5
@@ -1428,37 +1428,48 @@ def test_long_get_es_extended_1():
 def test_long_get_es_extended_2():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study
     sim_data = bpd.SimBipartite().sim_network()
-    sim_data['g'] = sim_data['j'] # Fill in g column as j
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
-    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2)
+    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, include=['j', 'y'])
 
-    assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
+    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
 
 def test_long_get_es_extended_3_1():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_pre works
     sim_data = bpd.SimBipartite().sim_network()
-    sim_data['g'] = sim_data['j'] # Fill in g column as j
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
-    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=3, stable_pre=True)
+    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=3, stable_pre='j', include=['j', 'y'])
 
-    assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
-    assert np.sum(es_extended['g_l2'] != es_extended['g_l1']) == 0
+    assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
+    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
 
 def test_long_get_es_extended_3_2():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post works
     sim_data = bpd.SimBipartite().sim_network()
-    sim_data['g'] = sim_data['j'] # Fill in g column as j
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
-    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_post=True)
+    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_post='j', include=['j', 'y'])
 
-    assert np.sum(es_extended['g_l1'] == es_extended['g_f1']) == 0
-    assert np.sum(es_extended['g_f1'] != es_extended['g_f2']) == 0
+    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
+    assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
+
+def test_long_get_es_extended_3_3():
+    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post and stable_pre work together
+    sim_data = bpd.SimBipartite().sim_network()
+    bdf = bpd.BipartiteLong(sim_data)
+    bdf = bdf.clean_data()
+
+    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', include=['j', 'y'])
+
+    assert len(es_extended) > 0 # Make sure something is left
+    assert np.sum(es_extended['j_l3'] != es_extended['j_l2']) == 0
+    assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
+    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
+    assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####

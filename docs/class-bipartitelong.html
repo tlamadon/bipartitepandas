@@ -249,15 +249,17 @@
 
 <dl class="py method">
 <dt id="bipartitepandas.bipartitelong.BipartiteLong.get_es_extended">
-<code class="sig-name descname">get_es_extended</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">periods_pre</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">periods_post</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">stable_pre</span><span class="o">=</span><span class="default_value">False</span></em>, <em class="sig-param"><span class="n">stable_post</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelong.BipartiteLong.get_es_extended" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.</p>
+<code class="sig-name descname">get_es_extended</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">periods_pre</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">periods_post</span><span class="o">=</span><span class="default_value">3</span></em>, <em class="sig-param"><span class="n">stable_pre</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">stable_post</span><span class="o">=</span><span class="default_value">[]</span></em>, <em class="sig-param"><span class="n">include</span><span class="o">=</span><span class="default_value">['g', 'y']</span></em>, <em class="sig-param"><span class="n">transition_col</span><span class="o">=</span><span class="default_value">'j'</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitelong.BipartiteLong.get_es_extended" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>periods_pre</strong> (<em>int</em>) – number of periods before the transition</p></li>
 <li><p><strong>periods_post</strong> (<em>int</em>) – number of periods after the transition</p></li>
-<li><p><strong>stable_pre</strong> (<em>bool</em>) – if True, keep only workers who stay at a single firm before the transition</p></li>
-<li><p><strong>stable_post</strong> (<em>bool</em>) – if True, keep only workers who stay at a single firm after the transition</p></li>
+<li><p><strong>stable_pre</strong> (<em>column name</em><em> or </em><em>list of column names</em>) – for each column, keep only workers who have constant values in that column before the transition</p></li>
+<li><p><strong>stable_post</strong> (<em>column name</em><em> or </em><em>list of column names</em>) – for each column, keep only workers who have constant values in that column after the transition</p></li>
+<li><p><strong>include</strong> (<em>column name</em><em> or </em><em>list of column names</em>) – columns to include data for all periods</p></li>
+<li><p><strong>transition_col</strong> (<em>str</em>) – column to use to define a transition</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
