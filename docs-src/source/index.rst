@@ -11,7 +11,10 @@
   :caption: Notebook examples
   :maxdepth: 2
 
-  BipartitePandas <notebooks/bipartitepandas_example>
+  Simple Example <notebooks/simple_example>
+  Clustering Examples <notebooks/clustering_examples>
+  Formatting Examples <notebooks/formatting_examples>
+  Extra Features <notebooks/extra_features_examples>
 
 .. toctree::
   :caption: Under the hood

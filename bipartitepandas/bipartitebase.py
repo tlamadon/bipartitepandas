@@ -901,7 +901,7 @@ class BipartiteBase(DataFrame):
                 computed_measures = measure(cluster_data, jids)
             else:
                 # For computing both cdfs and moments
-                computed_measures = np.concatenate([computed_measures, self.measure(cluster_data, jids)], axis=1)
+                computed_measures = np.concatenate([computed_measures, measure(cluster_data, jids)], axis=1)
         frame.logger.info('firm moments computed')
 
         # Drop columns (because prepared data is not always a copy, must drop from self)
