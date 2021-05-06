@@ -230,6 +230,7 @@
 <blockquote>
 <div><p>connectedness (str or None, default=’connected’): if ‘connected’, keep observations in the largest connected set of firms; if ‘biconnected’, keep observations in the largest biconnected set of firms; if None, keep all observations</p>
 <p>i_t_how (str, default=’max’): if ‘max’, keep max paying job; if ‘sum’, sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if ‘mean’, average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format</p>
+<p>copy (bool, default=False): if False, avoid copy</p>
 </div></blockquote>
 </p>
 </dd>
@@ -244,7 +245,7 @@
 
 <dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.cluster">
-<code class="sig-name descname">cluster</code><span class="sig-paren">(</span><em class="sig-param">measures=&lt;function compute_measures_cdfs&gt;</em>, <em class="sig-param">grouping=&lt;function compute_kmeans&gt;</em>, <em class="sig-param">stayers_movers=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">weighted=True</em>, <em class="sig-param">dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cluster</code><span class="sig-paren">(</span><em class="sig-param">measures=&lt;function compute_measures_cdfs&gt;</em>, <em class="sig-param">grouping=&lt;function compute_kmeans&gt;</em>, <em class="sig-param">stayers_movers=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">weighted=True</em>, <em class="sig-param">dropna=False</em>, <em class="sig-param">copy=False</em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cluster data and assign a new column giving the cluster for each firm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -255,6 +256,7 @@
 <li><p><strong>t</strong> (<em>int</em><em> or </em><em>None</em>) – if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)</p></li>
 <li><p><strong>weighted</strong> (<em>bool</em>) – if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)</p></li>
 <li><p><strong>dropna</strong> (<em>bool</em>) – if True, drop observations where firms aren’t clustered; if False, keep all observations</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -282,7 +284,7 @@
 
 <dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.drop">
-<code class="sig-name descname">drop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.drop" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">drop</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">indices</span></em>, <em class="sig-param"><span class="n">axis</span><span class="o">=</span><span class="default_value">1</span></em>, <em class="sig-param"><span class="n">inplace</span><span class="o">=</span><span class="default_value">True</span></em>, <em class="sig-param"><span class="n">allow_required</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.drop" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop indices along axis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -290,6 +292,7 @@
 <li><p><strong>indices</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>optionally as a list</em>) – row(s) or column(s) to drop. For columns, use general column names for joint columns, e.g. put ‘g’ instead of ‘g1’, ‘g2’. Only optional columns may be dropped</p></li>
 <li><p><strong>axis</strong> (<em>int</em>) – 0 to drop rows, 1 to drop columns</p></li>
 <li><p><strong>inplace</strong> (<em>bool</em>) – if True, modify in-place</p></li>
+<li><p><strong>allow_required</strong> (<em>bool</em>) – if True, allow to drop required columns</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -382,14 +385,17 @@
 
 <dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.original_ids">
-<code class="sig-name descname">original_ids</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.original_ids" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return copy of self merged with original column ids.</p>
+<code class="sig-name descname">original_ids</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">copy</span><span class="o">=</span><span class="default_value">True</span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.original_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return self merged with original column ids.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>copy of self merged with original column ids</p>
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>copy of self merged with original column ids</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
 </dd>
 </dl>
 </dd></dl>

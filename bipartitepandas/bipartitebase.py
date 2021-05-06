@@ -79,7 +79,8 @@ class BipartiteBase(DataFrame):
 
         self.default_clean = {
             'connectedness': 'connected', # When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
-            'i_t_how': 'max' # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
+            'i_t_how': 'max', # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
+            'copy': False # If False, avoid copy
         }
 
         # self.logger.info('BipartiteBase object initialized')
@@ -163,14 +164,17 @@ class BipartiteBase(DataFrame):
             cid_lst += list(self[g_col].unique())
         return len(set(cid_lst))
 
-    def original_ids(self):
+    def original_ids(self, copy=True):
         '''
-        Return copy of self merged with original column ids.
+        Return self merged with original column ids.
+
+        Arguments:
+            copy (bool): if False, avoid copy
 
         Returns:
             (BipartiteBase): copy of self merged with original column ids
         '''
-        frame = pd.DataFrame(self, copy=True)
+        frame = pd.DataFrame(self, copy=copy)
         if self.id_reference_dict:
             for id_col, reference_df in self.id_reference_dict.items():
                 if len(reference_df) > 0: # Make sure non-empty
@@ -271,7 +275,7 @@ class BipartiteBase(DataFrame):
                     all_cols.append(col)
         return all_cols
 
-    def drop(self, indices, axis=1, inplace=True):
+    def drop(self, indices, axis=1, inplace=True, allow_required=False):
         '''
         Drop indices along axis.
 
@@ -279,6 +283,7 @@ class BipartiteBase(DataFrame):
             indices (int or str, optionally as a list): row(s) or column(s) to drop. For columns, use general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'. Only optional columns may be dropped
             axis (int): 0 to drop rows, 1 to drop columns
             inplace (bool): if True, modify in-place
+            allow_required (bool): if True, allow to drop required columns
 
         Returns:
             frame (BipartiteBase): BipartiteBase with dropped indices
@@ -302,13 +307,16 @@ class BipartiteBase(DataFrame):
                     elif col not in frame._included_cols() and col not in frame._included_cols(flat=True): # If column is not pre-established
                         DataFrame.drop(frame, col, axis=1, inplace=True)
                     else:
-                        warnings.warn("{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col))
+                        if not allow_required:
+                            warnings.warn("{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col))
+                        else:
+                            DataFrame.drop(frame, col, axis=1, inplace=True)
                 else:
                     warnings.warn('{} is not in data columns'.format(col))
         elif axis == 0:
             DataFrame.drop(frame, indices, axis=0, inplace=True)
             frame._reset_attributes()
-            frame.clean_data()
+            frame.clean_data({'connectedness': frame.connected})
 
         return frame
 
@@ -368,17 +376,21 @@ class BipartiteBase(DataFrame):
             frame._set_attributes(self)
         return frame
 
-    def _contiguous_ids(self, id_col):
+    def _contiguous_ids(self, id_col, copy=True):
         '''
         Make column of ids contiguous.
 
         Arguments:
             id_col (str): column to make contiguous ('fid', 'wid', or 'j'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'. Only optional columns may be renamed
+            copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteBase): BipartiteBase with contiguous ids
         '''
-        frame = self.copy()
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
 
         # Create sorted set of unique ids
         ids = []
@@ -406,7 +418,7 @@ class BipartiteBase(DataFrame):
             ids_df = pd.DataFrame(ids_dict, index=adjusted_ids)
 
             # Merge new, contiguous ids into event study data
-            frame = frame.merge(ids_df, how='left', on=id)
+            frame = frame.merge(ids_df, how='left', on=id, copy=False)
 
             # Adjust id column to use new contiguous id
             frame[id] = frame['adj_' + id]
@@ -469,14 +481,19 @@ class BipartiteBase(DataFrame):
 
                     i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
 
+                    copy (bool, default=False): if False, avoid copy
+
         Returns:
             frame (BipartiteBase): BipartiteBase with cleaned data
         '''
-        frame = self.copy()
+        self.logger.info('beginning BipartiteBase data cleaning')
 
-        frame.logger.info('beginning BipartiteBase data cleaning')
+        clean_params = update_dict(self.default_clean, user_clean)
 
-        clean_params = update_dict(frame.default_clean, user_clean)
+        if clean_params['copy']:
+            frame = self.copy()
+        else:
+            frame = self
 
         # First, correct columns
         # Note this must be done before _data_validity(), otherwise certain checks are not guaranteed to work
@@ -506,19 +523,19 @@ class BipartiteBase(DataFrame):
         # Next, make sure i-t (worker-year) observations are unique
         if frame.i_t_unique is not None and not frame.i_t_unique:
             frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
-            frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'])
+            frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], copy=False)
 
         # Next, find largest set of firms connected by movers
         if frame.connected in [False, None]:
             # Generate largest connected set
             frame.logger.info('generating largest connected set')
-            frame = frame._conset(connectedness=clean_params['connectedness'])
+            frame = frame._conset(connectedness=clean_params['connectedness'], copy=False)
 
         # Next, check contiguous ids
         for contig_col, is_contig in frame.columns_contig.items():
             if is_contig is not None and not is_contig:
                 frame.logger.info('making {} ids contiguous'.format(contig_col))
-                frame = frame._contiguous_ids(contig_col)
+                frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Using contiguous fids, get NetworkX Graph of largest connected set (note that this must be done even if firms already connected and contiguous)
         # frame.logger.info('generating NetworkX Graph of largest connected set')
@@ -697,17 +714,21 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _drop_i_t_duplicates(self, how='max'):
+    def _drop_i_t_duplicates(self, how='max', copy=True):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
             how (str): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteBase): BipartiteBase that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
         '''
-        frame = self.copy()
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
 
         if frame._col_included('t'):
             try: # If BipartiteEventStudy or BipartiteEventStudyCollapsed
@@ -735,22 +756,23 @@ class BipartiteBase(DataFrame):
             else:
                 warnings.warn('{} is not a valid method for dropping i-t duplicates'.format(how))
                 
-        frame = frame.reset_index(drop=True)
+        frame.reset_index(drop=True, inplace=True)
         frame.i_t_unique = True
 
         if convert_2: # If data was collapsed
-            frame = frame.get_collapsed_long().drop('m')
+            frame = frame.get_collapsed_long(copy=copy).drop('m')
         if convert_1: # If data was event study
             frame = frame.get_es()
 
         return frame
 
-    def _conset(self, connectedness='connected', return_G=False):
+    def _conset(self, connectedness='connected', copy=True, return_G=False):
         '''
         Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
+            copy (bool): if False, avoid copy
             return_G (bool): if True, return a tuple of (frame, G)
 
         Returns:
@@ -760,7 +782,10 @@ class BipartiteBase(DataFrame):
                 frame (BipartiteBase): BipartiteBase with connected set of movers
                 G (NetworkX Graph): largest connected set of movers (only returns if firm ids are contiguous, otherwise returns None)
         '''
-        frame = self.copy()
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
 
         if connectedness is None:
             # Skipping connected set
@@ -771,7 +796,7 @@ class BipartiteBase(DataFrame):
         prev_firms = frame.n_firms()
         prev_clusters = frame.n_clusters()
         # Create graph
-        if len(to_list(self.reference_dict['j'])) == 1:
+        if len(to_list(frame.reference_dict['j'])) == 1:
             # Add max firm id per worker to serve as a central node for the worker
             # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
             frame['j_max'] = frame.groupby(['i'])['j'].transform(max) # FIXME - this is undirected but is much faster
@@ -780,8 +805,8 @@ class BipartiteBase(DataFrame):
             # Source: https://networkx.github.io/documentation/stable/reference/algorithms/generated/networkx.algorithms.components.connected_components.html
             G = nx.from_pandas_edgelist(frame, 'j', 'j_max')
             # Drop fid_max
-            frame.drop('j_max', axis=1)
-        elif len(to_list(self.reference_dict['j'])) == 2:
+            frame.drop('j_max')
+        elif len(to_list(frame.reference_dict['j'])) == 2:
             G = nx.from_pandas_edgelist(frame, 'j1', 'j2')
         else:
             warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j'].")
@@ -795,7 +820,7 @@ class BipartiteBase(DataFrame):
             else:
                 warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
             # Keep largest connected set of firms
-            if len(to_list(self.reference_dict['j'])) == 1:
+            if len(to_list(frame.reference_dict['j'])) == 1:
                 frame = frame[frame['j'].isin(largest_cc)]
             else:
                 frame = frame[(frame['j1'].isin(largest_cc)) & (frame['j2'].isin(largest_cc))]
@@ -906,7 +931,7 @@ class BipartiteBase(DataFrame):
 
         return data, weights, jids
 
-    def cluster(self, measures=bpd.measures.cdfs(), grouping=bpd.grouping.kmeans(), stayers_movers=None, t=None, weighted=True, dropna=False):
+    def cluster(self, measures=bpd.measures.cdfs(), grouping=bpd.grouping.kmeans(), stayers_movers=None, t=None, weighted=True, dropna=False, copy=False):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
 
@@ -917,11 +942,15 @@ class BipartiteBase(DataFrame):
             t (int or None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
             weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
             dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
+            copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteBase): BipartiteBase with clusters
         '''
-        frame = self.copy()
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
 
         # Prepare data for clustering
         cluster_data, weights, jids = self._prep_cluster_data(stayers_movers=stayers_movers, t=t, weighted=weighted)
@@ -964,7 +993,7 @@ class BipartiteBase(DataFrame):
             frame.logger.info('dataframe linking fids to clusters generated')
 
             # Merge into event study data
-            frame = frame.merge(clusters_df, how='left', on=j_col)
+            frame = frame.merge(clusters_df, how='left', on=j_col, copy=False)
             # Keep column as int even with nans
             frame[g_col] = frame[g_col].astype('Int64')
             frame.col_dict[g_col] = g_col
@@ -975,9 +1004,10 @@ class BipartiteBase(DataFrame):
 
         if dropna:
             # Drop firms that don't get clustered
-            frame = frame.dropna().reset_index(drop=True)
+            frame.dropna(inplace=True)
+            frame.reset_index(drop=True, inplace=True)
             frame[frame.reference_dict['g']] = frame[frame.reference_dict['g']].astype(int)
-            frame.clean_data()
+            frame.clean_data({'connectedness': frame.connected}) # Compute same connectedness measure
 
         frame.columns_contig['g'] = True
 

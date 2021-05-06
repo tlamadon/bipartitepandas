@@ -39,9 +39,12 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudy
 
-    def get_collapsed_long(self):
+    def get_collapsed_long(self, copy=True):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
+
+        Arguments:
+            copy (bool): if False, avoid copy
 
         Returns:
             collapsed_frame (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
@@ -49,8 +52,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Generate m column (the function checks if it already exists)
         self.gen_m()
 
-        # Copy data
-        data = pd.DataFrame(self, copy=True)
+        # Convert to Pandas dataframe
+        data = pd.DataFrame(self, copy=copy)
         # Sort data by i and t
         data = data.sort_values(['i', 't'])
         self.logger.info('copied data sorted by i and t')
@@ -105,20 +108,21 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def fill_periods(self, fill_j=-1, fill_y=pd.NA):
+    def fill_periods(self, fill_j=-1, fill_y=pd.NA, copy=True):
         '''
         Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1 and y is filled in as pd.NA, but these values can be specified.
 
         Arguments:
             fill_j (value): value to fill in for missing j
             fill_y (value): value to fill in for missing y
+            copy (bool): if False, avoid copy
 
         Returns:
             fill_frame (Pandas DataFrame): Pandas DataFrame with missing periods filled in as unemployed
         '''
         import numpy as np
         m = self._col_included('m') # Check whether m column included
-        fill_frame = pd.DataFrame(self, copy=True).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
+        fill_frame = pd.DataFrame(self, copy=copy).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
         fill_frame['i_l1'] = fill_frame['i'].shift(periods=1) # Lagged value
         fill_frame['t_l1'] = fill_frame['t'].shift(periods=1) # Lagged value
         missing_periods = (fill_frame['i'] == fill_frame['i_l1']) & (fill_frame['t'] != fill_frame['t_l1'] + 1)
@@ -138,7 +142,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return fill_frame
 
-    def get_es_extended(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j'):
+    def get_es_extended(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', copy=True):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
 
@@ -149,6 +153,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
+            copy (bool): if False, avoid copy
 
         Returns:
             es_extended_frame or None (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
@@ -170,7 +175,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 return None
 
         # Create return frame
-        es_extended_frame = pd.DataFrame(self, copy=True)
+        es_extended_frame = pd.DataFrame(self, copy=copy)
 
         # Generate how many periods each worker worked
         es_extended_frame['one'] = 1

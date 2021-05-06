@@ -518,8 +518,14 @@ def test_contiguous_cids_13():
     df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't', 'g']]
 
     bdf = bpd.BipartiteLong(data=df)
+    print('---------------')
+    print('1')
     bdf = bdf.clean_data()
+    print('---------------')
+    print('2')
     bdf = bdf.get_collapsed_long()
+    print('---------------')
+    print('3')
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
