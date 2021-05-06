@@ -90,8 +90,8 @@
 <p class="caption"><span class="caption-text">Notebook examples</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/simple_example.html">Simple Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering_examples.html">Clustering Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/formatting_examples.html">Formatting Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering_examples.html">Clustering Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/extra_features_examples.html">Extra Features</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Under the hood</span></p>
@@ -242,17 +242,17 @@
 
 <dl class="py method">
 <dt id="bipartitepandas.bipartitebase.BipartiteBase.cluster">
-<code class="sig-name descname">cluster</code><span class="sig-paren">(</span><em class="sig-param">measures=&lt;function cdfs.&lt;locals&gt;.compute_measures_cdfs&gt;</em>, <em class="sig-param">grouping=&lt;function kmeans.&lt;locals&gt;.compute_kmeans&gt;</em>, <em class="sig-param">stayers_movers=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">weighted=True</em>, <em class="sig-param">dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">cluster</code><span class="sig-paren">(</span><em class="sig-param">measures=&lt;function compute_measures_cdfs&gt;</em>, <em class="sig-param">grouping=&lt;function compute_kmeans&gt;</em>, <em class="sig-param">stayers_movers=None</em>, <em class="sig-param">t=None</em>, <em class="sig-param">weighted=True</em>, <em class="sig-param">dropna=False</em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition">¶</a></dt>
 <dd><p>Cluster data and assign a new column giving the cluster for each firm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>measures</strong> (<em>function</em><em> or </em><em>list of functions</em>) – how to compute measures for clustering. Options can be seen in bipartitepandas.measures.</p></li>
 <li><p><strong>grouping</strong> (<em>function</em>) – how to group firms based on measures. Options can be seen in bipartitepandas.grouping.</p></li>
-<li><p><strong>stayers_movers</strong> (<em>str</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – if None, clusters on entire dataset; if ‘stayers’, clusters on only stayers; if ‘movers’, clusters on only movers</p></li>
-<li><p><strong>t</strong> (<em>int</em><em> or </em><em>None</em><em>, </em><em>default=None</em>) – if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)</p></li>
-<li><p><strong>weighted</strong> (<em>bool</em><em>, </em><em>default=True</em>) – if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)</p></li>
-<li><p><strong>dropna</strong> (<em>bool</em><em>, </em><em>default=False</em>) – if True, drop observations where firms aren’t clustered; if False, keep all observations</p></li>
+<li><p><strong>stayers_movers</strong> (<em>str</em><em> or </em><em>None</em>) – if None, clusters on entire dataset; if ‘stayers’, clusters on only stayers; if ‘movers’, clusters on only movers</p></li>
+<li><p><strong>t</strong> (<em>int</em><em> or </em><em>None</em>) – if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)</p></li>
+<li><p><strong>weighted</strong> (<em>bool</em>) – if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)</p></li>
+<li><p><strong>dropna</strong> (<em>bool</em>) – if True, drop observations where firms aren’t clustered; if False, keep all observations</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -445,7 +445,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon.
       <span class="lastupdated">
-        Last updated on May 02, 2021.
+        Last updated on May 06, 2021.
       </span>
 
     </p>

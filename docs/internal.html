@@ -90,8 +90,8 @@
 <p class="caption"><span class="caption-text">Notebook examples</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/simple_example.html">Simple Example</a></li>
-<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering_examples.html">Clustering Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/formatting_examples.html">Formatting Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering_examples.html">Clustering Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="notebooks/extra_features_examples.html">Extra Features</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Under the hood</span></p>
@@ -343,7 +343,7 @@
 <td><p>Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_es_extended</span></code>([periods_pre, periods_post, …])</p></td>
-<td><p>Return Pandas dataframe of event study with periods_pre periods before the transition and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move.</p></td>
+<td><p>Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move.</p></td>
 </tr>
 </tbody>
 </table>
@@ -499,7 +499,7 @@
         
         &copy; Copyright 2021, Thibaut Lamadon.
       <span class="lastupdated">
-        Last updated on May 02, 2021.
+        Last updated on May 06, 2021.
       </span>
 
     </p>

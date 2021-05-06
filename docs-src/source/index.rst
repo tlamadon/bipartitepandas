@@ -12,8 +12,9 @@
   :maxdepth: 2
 
   Simple Example <notebooks/simple_example>
-  Clustering Examples <notebooks/clustering_examples>
   Formatting Examples <notebooks/formatting_examples>
+  Clustering Examples <notebooks/clustering_examples>
+  Extended Event Study Examples <notebooks/extended_es_examples>
   Extra Features <notebooks/extra_features_examples>
 
 .. toctree::
