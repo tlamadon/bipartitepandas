@@ -66,8 +66,8 @@ class BipartiteBase(DataFrame):
 
         self.default_cluster = {
             'measure_cdf': False, # If True, approximate firm-level income cdfs
-            'measure_moments': False, # (bool, default=False): if True, approximate firm-level moments
-            'cluster_KMeans': False, # (bool, default=False): if True, cluster using KMeans. Valid only if cluster_quantiles=False.
+            'measure_moments': False, # If True, approximate firm-level moments
+            'cluster_KMeans': False, # If True, cluster using KMeans. Valid only if cluster_quantiles=False.
             'cluster_quantiles': False # If True, cluster using quantiles. Valid only if cluster_KMeans=False, measure_cdf=False, and measure_moments=True, and measuring only a single moment.
         }
 
@@ -78,6 +78,7 @@ class BipartiteBase(DataFrame):
         }
 
         self.default_clean = {
+            'connectedness': 'connected', # When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
             'i_t_how': 'max' # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
         }
 
@@ -117,7 +118,7 @@ class BipartiteBase(DataFrame):
         ret_str += 'mean wage: ' + str(mean_wage) + '\n'
         ret_str += 'max wage: ' + str(max_wage) + '\n'
         ret_str += 'min wage: ' + str(min_wage) + '\n'
-        ret_str += 'connected: ' + str(self.connected) + '\n'
+        ret_str += 'connected (None if not ignoring connected set): ' + str(self.connected) + '\n'
         for contig_col, is_contig in self.columns_contig.items():
             ret_str += 'contiguous {} ids (None if not included): '.format(contig_col) + str(is_contig) + '\n'
         ret_str += 'correct column names and types: ' + str(self.correct_cols) + '\n'
@@ -204,7 +205,7 @@ class BipartiteBase(DataFrame):
             for id_col, reference_df in frame.id_reference_dict.items():
                 self.id_reference_dict[id_col] = reference_df.copy()
         # Booleans
-        self.connected = frame.connected # If True, all firms are connected by movers
+        self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = frame.correct_cols # If True, column names are correct
         self.no_na = frame.no_na # If True, no NaN observations in the data
         self.no_duplicates = frame.no_duplicates # If True, no duplicate rows in the data
@@ -219,7 +220,7 @@ class BipartiteBase(DataFrame):
                 self.columns_contig[contig_col] = False
             else:
                 self.columns_contig[contig_col] = None
-        self.connected = False # If True, all firms are connected by movers
+        self.connected = False # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = False # If True, column names are correct
         self.no_na = False # If True, no NaN observations in the data
         self.no_duplicates = False # If True, no duplicate rows in the data
@@ -464,6 +465,8 @@ class BipartiteBase(DataFrame):
 
                 Dictionary parameters:
 
+                    connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
+
                     i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
 
         Returns:
@@ -482,7 +485,7 @@ class BipartiteBase(DataFrame):
 
         frame.logger.info('checking quality of data')
         # Make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in _data_validity() if all columns are in the data)
-        frame = BipartiteBase._data_validity(frame) # Shared _data_validity
+        frame = BipartiteBase._data_validity(frame, connectedness=clean_params['connectedness']) # Shared _data_validity
 
         # Next, drop NaN observations
         if not frame.no_na:
@@ -506,10 +509,10 @@ class BipartiteBase(DataFrame):
             frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'])
 
         # Next, find largest set of firms connected by movers
-        if not frame.connected:
+        if frame.connected in [False, None]:
             # Generate largest connected set
             frame.logger.info('generating largest connected set')
-            frame = frame._conset()
+            frame = frame._conset(connectedness=clean_params['connectedness'])
 
         # Next, check contiguous ids
         for contig_col, is_contig in frame.columns_contig.items():
@@ -530,9 +533,12 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _data_validity(self):
+    def _data_validity(self, connectedness='connected'):
         '''
         Checks that data is formatted correctly and updates relevant attributes.
+
+        Arguments:
+            connectedness (str or None): if 'connected', check that observations are in the largest connected set of firms; if 'biconnected', check that observations are in the largest biconnected set of firms; if None, keep all observations
 
         Returns:
             frame (BipartiteBase): BipartiteBase with corrected attributes
@@ -632,27 +638,40 @@ class BipartiteBase(DataFrame):
         else:
             frame.i_t_unique = None
 
-        frame.logger.info('--- checking connected set ---')
-        if len(to_list(frame.reference_dict['j'])) == 1:
-            frame['j_max'] = frame.groupby(['i'])['j'].transform(max)
-            G = nx.from_pandas_edgelist(frame, 'j', 'j_max')
-            # Drop fid_max
-            frame.drop('j_max', axis=1)
-            largest_cc = max(nx.connected_components(G), key=len)
-            outside_cc = frame[(~frame['j'].isin(largest_cc))].shape[0]
-        elif len(to_list(frame.reference_dict['j'])) == 2:
-            G = nx.from_pandas_edgelist(frame, 'j1', 'j2')
-            largest_cc = max(nx.connected_components(G), key=len)
-            outside_cc = frame[(~frame['j1'].isin(largest_cc)) | (~frame['j2'].isin(largest_cc))].shape[0]
+        if connectedness is None:
+            # Skipping connected set
+            self.connected = None
         else:
-            raise InvalidIndexError("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j']")
+            frame.logger.info('--- checking connected set ---')
+            # Create graph
+            if len(to_list(frame.reference_dict['j'])) == 1:
+                frame['j_max'] = frame.groupby(['i'])['j'].transform(max)
+                G = nx.from_pandas_edgelist(frame, 'j', 'j_max')
+                # Drop fid_max
+                frame.drop('j_max', axis=1)
+            elif len(to_list(frame.reference_dict['j'])) == 2:
+                G = nx.from_pandas_edgelist(frame, 'j1', 'j2')
+            else:
+                warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j']")
+            # Find largest connected set of firms
+            if connectedness == 'connected':
+                largest_cc = max(nx.connected_components(G), key=len)
+            elif connectedness == 'biconnected':
+                largest_cc = max(nx.biconnected_components(G), key=len)
+            else:
+                warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
+            # Keep largest connected set of firms
+            if len(to_list(frame.reference_dict['j'])) == 1:
+                outside_cc = frame[(~frame['j'].isin(largest_cc))].shape[0]
+            else:
+                outside_cc = frame[(~frame['j1'].isin(largest_cc)) | (~frame['j2'].isin(largest_cc))].shape[0]
 
-        frame.logger.info('observations outside connected set (should be 0):' + str(outside_cc))
-        if outside_cc > 0:
-            frame.connected = False
-            success = False
-        else:
-            frame.connected = True
+            frame.logger.info('observations outside connected set (should be 0):' + str(outside_cc))
+            if outside_cc > 0:
+                frame.connected = False
+                success = False
+            else:
+                frame.connected = connectedness
 
         # Check contiguous columns
         for contig_col, is_contig in frame.columns_contig.items():
@@ -726,11 +745,12 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _conset(self, return_G=False):
+    def _conset(self, connectedness='connected', return_G=False):
         '''
         Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
 
         Arguments:
+            connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
             return_G (bool): if True, return a tuple of (frame, G)
 
         Returns:
@@ -742,9 +762,15 @@ class BipartiteBase(DataFrame):
         '''
         frame = self.copy()
 
+        if connectedness is None:
+            # Skipping connected set
+            frame.connected = None
+            return frame
+
         prev_workers = frame.n_workers()
         prev_firms = frame.n_firms()
         prev_clusters = frame.n_clusters()
+        # Create graph
         if len(to_list(self.reference_dict['j'])) == 1:
             # Add max firm id per worker to serve as a central node for the worker
             # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
@@ -758,11 +784,16 @@ class BipartiteBase(DataFrame):
         elif len(to_list(self.reference_dict['j'])) == 2:
             G = nx.from_pandas_edgelist(frame, 'j1', 'j2')
         else:
-            warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j']. Returning unaltered frame")
-            return frame
+            warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j'].")
         # Update data if not connected
         if not frame.connected:
-            largest_cc = max(nx.connected_components(G), key=len)
+            # Find largest connected set of firms
+            if connectedness == 'connected':
+                largest_cc = max(nx.connected_components(G), key=len)
+            elif connectedness == 'biconnected':
+                largest_cc = max(nx.biconnected_components(G), key=len)
+            else:
+                warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
             # Keep largest connected set of firms
             if len(to_list(self.reference_dict['j'])) == 1:
                 frame = frame[frame['j'].isin(largest_cc)]
@@ -770,7 +801,7 @@ class BipartiteBase(DataFrame):
                 frame = frame[(frame['j1'].isin(largest_cc)) & (frame['j2'].isin(largest_cc))]
 
         # Data is now connected
-        frame.connected = True
+        frame.connected = connectedness
 
         # If connected data != full data, set contiguous to False
         if prev_workers != frame.n_workers():
