@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  # - python   # or 2.7 if you are feeling nostalgic
+  - python=3.7
   - pip
   - pybind11
   - ipython
@@ -11,18 +11,16 @@ dependencies:
   - notebook
   - pytest
   - numpy
-  - numpy_groupies
   - pandas
-  - tqdm
-  - networkx
   - scipy
   - scikit-learn
-  # - sphinx
+  - statsmodels
+  - networkx
+  - tqdm
   - nbsphinx
   - pip:
       - sphinx-rtd-theme # Sphinx theme
-      - pytwoway
-      # - pyarrow
+      - pyarrow
 
 # conda env create --file conda-env-file.yml
 # conda env remove --name bpd-env

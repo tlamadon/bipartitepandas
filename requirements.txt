@@ -1,8 +1,0 @@
-numpy
-pandas
-bipartitepandas
-scipy
-scikit-learn
-statsmodels
-networkx
-tqdm
