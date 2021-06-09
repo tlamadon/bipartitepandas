@@ -37,3 +37,15 @@ To install via pip, from the command line run::
 To install via Conda, from the command line run::
 
     conda install -c tlamadon bipartitepandas
+
+Authors
+-------
+
+Thibaut Lamadon,
+Assistant Professor in Economics, University of Chicago,
+lamadon@uchicago.edu
+
+
+Adam A. Oppenheimer,
+Research Professional, University of Chicago,
+oppenheimer@uchicago.edu

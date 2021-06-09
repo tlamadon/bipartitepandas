@@ -1,8 +1,10 @@
 # Folders #
 ###########
 .vscode/
-docs-src/build/
+docs/build/
 bipartitepandas/__pycache__/
+bipartitepandas/grouping/__pycache__/
+bipartitepandas/measures/__pycache__/
 tests/__pycache__/
 .pytest_cache/
 .eggs
@@ -10,9 +12,6 @@ tests/__pycache__/
 bipartitepandas/config.txt
 dist/
 bipartitepandas.egg-info/
-docs/_sources/
-docs/_static/**.rst
-docs/_static/conf.py
 build/
 .ipynb_checkpoints/
 

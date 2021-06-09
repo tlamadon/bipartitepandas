@@ -80,7 +80,7 @@ class BipartiteBase(DataFrame):
         self.default_clean = {
             'connectedness': 'connected', # When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
             'i_t_how': 'max', # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
-            'copy': False # If False, avoid copy
+            'copy': False # If False, avoid copying data when possible
         }
 
         # self.logger.info('BipartiteBase object initialized')
