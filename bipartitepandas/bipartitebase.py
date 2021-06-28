@@ -502,7 +502,7 @@ class BipartiteBase(DataFrame):
 
         # Next, sort rows
         frame.logger.info('sorting rows')
-        frame.sort_values(['i'] + to_list(self.reference_dict['t']))
+        frame.sort_values(['i'] + to_list(self.reference_dict['t']), inplace=True)
 
         # Next, make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in _data_validity() if all columns are in the data)
         frame.logger.info('checking quality of data')
