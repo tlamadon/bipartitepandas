@@ -500,8 +500,12 @@ class BipartiteBase(DataFrame):
         frame.logger.info('correcting columns')
         frame._update_cols()
 
+        # Next, sort rows
+        frame.logger.info('sorting rows')
+        frame.sort_values(['i'] + to_list(self.reference_dict['t']))
+
+        # Next, make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in _data_validity() if all columns are in the data)
         frame.logger.info('checking quality of data')
-        # Make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in _data_validity() if all columns are in the data)
         frame = BipartiteBase._data_validity(frame, connectedness=clean_params['connectedness']) # Shared _data_validity
 
         # Next, drop NaN observations
