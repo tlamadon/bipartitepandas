@@ -49,6 +49,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
                     i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
 
+                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
+
                     copy (bool, default=False): if False, avoid copy
 
         Returns:
@@ -56,9 +58,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         frame = bpd.BipartiteBase.clean_data(self, user_clean)
 
-        frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
-        frame.logger.info('checking quality of data')
-        frame = frame._data_validity()
+        if ('data_validity' not in user_clean.keys()) or user_clean['data_validity']:
+            frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
+            frame.logger.info('checking quality of data')
+            frame = frame._data_validity()
 
         frame.logger.info('BipartiteEventStudyBase data cleaning complete')
 
