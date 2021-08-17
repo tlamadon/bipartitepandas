@@ -80,6 +80,7 @@ class BipartiteBase(DataFrame):
         self.default_clean = {
             'connectedness': 'connected', # When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
             'i_t_how': 'max', # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
+            'data_validity': True, # If True, run data validity checks; much faster if set to False
             'copy': False # If False, avoid copying data when possible
         }
 
@@ -481,6 +482,8 @@ class BipartiteBase(DataFrame):
 
                     i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
 
+                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
+
                     copy (bool, default=False): if False, avoid copy
 
         Returns:
@@ -495,6 +498,10 @@ class BipartiteBase(DataFrame):
         else:
             frame = self
 
+        # If not running _data_validity(), reset all attributes
+        if not clean_params['data_validity']:
+            frame._reset_attributes()
+
         # First, correct columns
         # Note this must be done before _data_validity(), otherwise certain checks are not guaranteed to work
         frame.logger.info('correcting columns')
@@ -504,9 +511,10 @@ class BipartiteBase(DataFrame):
         frame.logger.info('sorting rows')
         frame.sort_values(['i'] + to_list(self.reference_dict['t']), inplace=True)
 
-        # Next, make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks (note that column names are corrected in _data_validity() if all columns are in the data)
-        frame.logger.info('checking quality of data')
-        frame = BipartiteBase._data_validity(frame, connectedness=clean_params['connectedness']) # Shared _data_validity
+        # Next, make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks
+        if clean_params['data_validity']:
+            frame.logger.info('checking quality of data')
+            frame = BipartiteBase._data_validity(frame, connectedness=clean_params['connectedness']) # Shared _data_validity
 
         # Next, drop NaN observations
         if not frame.no_na:
