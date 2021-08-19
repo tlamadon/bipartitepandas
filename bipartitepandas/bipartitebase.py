@@ -498,9 +498,9 @@ class BipartiteBase(DataFrame):
         else:
             frame = self
 
-        # If not running _data_validity(), reset all attributes
-        if not clean_params['data_validity']:
-            frame._reset_attributes()
+        # # If not running _data_validity(), reset all attributes
+        # if not clean_params['data_validity']:
+        #     frame._reset_attributes()
 
         # First, correct columns
         # Note this must be done before _data_validity(), otherwise certain checks are not guaranteed to work
