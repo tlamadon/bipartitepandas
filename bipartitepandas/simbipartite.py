@@ -71,10 +71,8 @@ class SimBipartite:
         # Update parameters to include user parameters
         self.sim_params = update_dict(self.default_sim_params, sim_params)
 
-        # Create NumPy Generator instance and set up for scipy norm
+        # Create NumPy Generator instance
         self.rng = np.random.default_rng(self.sim_params['seed'])
-        self.norm = norm
-        self.norm.random_state = self.rng
 
         # Prevent plotting unless results exist
         self.monte_carlo_res = False
@@ -123,11 +121,11 @@ class SimBipartite:
         csort, cnetw, csig = sim_params['csort'], sim_params['cnetw'], sim_params['csig']
 
         # Draw fixed effects
-        psi = self.norm.ppf(np.linspace(1, nk, nk) / (nk + 1)) * psi_sig
-        alpha = self.norm.ppf(np.linspace(1, nl, nl) / (nl + 1)) * alpha_sig
+        psi = norm.ppf(np.linspace(1, nk, nk) / (nk + 1)) * psi_sig
+        alpha = norm.ppf(np.linspace(1, nl, nl) / (nl + 1)) * alpha_sig
 
         # Generate transition matrices
-        G = self.norm.pdf((psi[ax, ax, :] - cnetw * psi[ax, :, ax] - csort * alpha[:, ax, ax]) / csig)
+        G = norm.pdf((psi[ax, ax, :] - cnetw * psi[ax, :, ax] - csort * alpha[:, ax, ax]) / csig)
         G = np.divide(G, G.sum(axis=2)[:, :, ax])
 
         # Generate empty stationary distributions
@@ -229,7 +227,7 @@ class SimBipartite:
         data['move'] = (data['j'] != data['j'].shift(1)) & (data['i'] == data['i'].shift(1))
 
         # Compute wages through the AKM formula
-        data['y'] = data['alpha'] + data['psi'] + w_sig * self.norm.rvs(size=num_ind * num_time)
+        data['y'] = data['alpha'] + data['psi'] + w_sig * norm.rvs(size=num_ind * num_time, random_state=self.rng)
 
         data['i'] -= 1 # Start at 0
         data['j'] -= 1 # Start at 0
