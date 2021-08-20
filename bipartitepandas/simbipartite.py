@@ -4,7 +4,7 @@ Class for a simulated two-way fixed effect network
 import numpy as np
 from numpy import matlib
 import pandas as pd
-from random import choices
+# from random import choices
 from scipy.stats import norm
 from scipy.linalg import eig
 ax = np.newaxis
@@ -42,6 +42,8 @@ class SimBipartite:
                 csig (float, default=1): standard error of sorting/network effects
 
                 p_move (float, default=0.5): probability a worker moves firms in each period
+
+                seed (int, default=None): NumPy RandomState seed
     '''
 
     def __init__(self, sim_params={}):
@@ -62,11 +64,15 @@ class SimBipartite:
             'csort': 1, # Sorting effect
             'cnetw': 1, # Network effect
             'csig': 1, # Standard error of sorting/network effects
-            'p_move': 0.5 # Probability a worker moves firms in any period
+            'p_move': 0.5, # Probability a worker moves firms in any period
+            'seed': None # np.random.RandomState() seed
         }
 
         # Update parameters to include user parameters
         self.sim_params = update_dict(self.default_sim_params, sim_params)
+
+        # Create NumPy RandomState instance
+        self.rs = np.random.RandomState(self.sim_params['seed'])
 
         # Prevent plotting unless results exist
         self.monte_carlo_res = False
@@ -149,7 +155,7 @@ class SimBipartite:
             (NumPy Array): random firms for each group
         '''
         max_int = int(np.maximum(1, freq.sum() / (firm_size * num_time)))
-        return np.array(np.random.choice(max_int, size=freq.count()) + 1)
+        return np.array(self.rs.choice(max_int, size=freq.count()) + 1)
 
     def sim_network(self):
         '''
@@ -170,17 +176,17 @@ class SimBipartite:
         spellcount = np.ones((num_ind, num_time))
 
         # Random draws of worker types for all individuals in panel
-        sim_worker_types = np.random.randint(low=1, high=nl, size=num_ind)
+        sim_worker_types = self.rs.randint(low=1, high=nl, size=num_ind)
 
         for i in range(0, num_ind):
             l = sim_worker_types[i]
             # At time 1, we draw from H for initial firm
-            network[i, 0] = choices(range(0, nk), H[l, :])[0]
+            network[i, 0] = self.rs.choice(range(0, nk), p=H[l, :]) # choices(range(0, nk), H[l, :])[0]
 
             for t in range(1, num_time):
                 # Hit moving shock
-                if np.random.rand() < p_move:
-                    network[i, t] = choices(range(0, nk), G[l, network[i, t - 1], :])[0]
+                if self.rs.rand() < p_move:
+                    network[i, t] = self.rs.choice(range(0, nk), p=G[l, network[i, t - 1], :]) # choices(range(0, nk), G[l, network[i, t - 1], :])[0]
                     spellcount[i, t] = spellcount[i, t - 1] + 1
                 else:
                     network[i, t] = network[i, t - 1]
