@@ -71,8 +71,10 @@ class SimBipartite:
         # Update parameters to include user parameters
         self.sim_params = update_dict(self.default_sim_params, sim_params)
 
-        # Create NumPy RandomState instance
-        self.rs = np.random.RandomState(self.sim_params['seed'])
+        # Create NumPy Generator instance and set up for scipy norm
+        self.rng = np.random.default_rng(self.sim_params['seed'])
+        self.norm = norm
+        self.norm.random_state = self.rng
 
         # Prevent plotting unless results exist
         self.monte_carlo_res = False
@@ -121,11 +123,11 @@ class SimBipartite:
         csort, cnetw, csig = sim_params['csort'], sim_params['cnetw'], sim_params['csig']
 
         # Draw fixed effects
-        psi = norm.ppf(np.linspace(1, nk, nk) / (nk + 1)) * psi_sig
-        alpha = norm.ppf(np.linspace(1, nl, nl) / (nl + 1)) * alpha_sig
+        psi = self.norm.ppf(np.linspace(1, nk, nk) / (nk + 1)) * psi_sig
+        alpha = self.norm.ppf(np.linspace(1, nl, nl) / (nl + 1)) * alpha_sig
 
         # Generate transition matrices
-        G = norm.pdf((psi[ax, ax, :] - cnetw * psi[ax, :, ax] - csort * alpha[:, ax, ax]) / csig)
+        G = self.norm.pdf((psi[ax, ax, :] - cnetw * psi[ax, :, ax] - csort * alpha[:, ax, ax]) / csig)
         G = np.divide(G, G.sum(axis=2)[:, :, ax])
 
         # Generate empty stationary distributions
@@ -155,7 +157,7 @@ class SimBipartite:
             (NumPy Array): random firms for each group
         '''
         max_int = int(np.maximum(1, freq.sum() / (firm_size * num_time)))
-        return np.array(self.rs.choice(max_int, size=freq.count()) + 1)
+        return np.array(self.rng.choice(max_int, size=freq.count()) + 1)
 
     def sim_network(self):
         '''
@@ -176,17 +178,17 @@ class SimBipartite:
         spellcount = np.ones((num_ind, num_time))
 
         # Random draws of worker types for all individuals in panel
-        sim_worker_types = self.rs.randint(low=1, high=nl, size=num_ind)
+        sim_worker_types = self.rng.integers(low=0, high=nl, size=num_ind)
 
         for i in range(0, num_ind):
             l = sim_worker_types[i]
             # At time 1, we draw from H for initial firm
-            network[i, 0] = self.rs.choice(range(0, nk), p=H[l, :]) # choices(range(0, nk), H[l, :])[0]
+            network[i, 0] = self.rng.choice(range(0, nk), p=H[l, :]) # choices(range(0, nk), H[l, :])[0]
 
             for t in range(1, num_time):
                 # Hit moving shock
-                if self.rs.rand() < p_move:
-                    network[i, t] = self.rs.choice(range(0, nk), p=G[l, network[i, t - 1], :]) # choices(range(0, nk), G[l, network[i, t - 1], :])[0]
+                if self.rng.random() < p_move:
+                    network[i, t] = self.rng.choice(range(0, nk), p=G[l, network[i, t - 1], :]) # choices(range(0, nk), G[l, network[i, t - 1], :])[0]
                     spellcount[i, t] = spellcount[i, t - 1] + 1
                 else:
                     network[i, t] = network[i, t - 1]
@@ -227,7 +229,7 @@ class SimBipartite:
         data['move'] = (data['j'] != data['j'].shift(1)) & (data['i'] == data['i'].shift(1))
 
         # Compute wages through the AKM formula
-        data['y'] = data['alpha'] + data['psi'] + w_sig * norm.rvs(size=num_ind * num_time)
+        data['y'] = data['alpha'] + data['psi'] + w_sig * self.norm.rvs(size=num_ind * num_time)
 
         data['i'] -= 1 # Start at 0
         data['j'] -= 1 # Start at 0
