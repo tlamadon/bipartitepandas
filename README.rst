@@ -7,6 +7,9 @@ BipartitePandas
 .. image:: https://anaconda.org/tlamadon/bipartitepandas/badges/version.svg
     :target: https://anaconda.org/tlamadon/bipartitepandas
 
+.. image:: https://anaconda.org/tlamadon/pytwoway/badges/platforms.svg
+    :target: https://anaconda.org/tlamadon/pytwoway
+
 .. image:: https://travis-ci.com/tlamadon/bipartitepandas.svg?branch=master
     :target: https://travis-ci.com/tlamadon/bipartitepandas
 
@@ -15,6 +18,9 @@ BipartitePandas
 
 .. image:: https://img.shields.io/badge/doc-latest-blue
     :target: https://tlamadon.github.io/bipartitepandas/
+
+.. image:: https://badgen.net/badge//gh/bipartitepandas?icon=github
+    :target: https://github.com/tlamadon/bipartitepandas
 
 `BipartitePandas` is a Python package for handling bipartite labor data.
 
