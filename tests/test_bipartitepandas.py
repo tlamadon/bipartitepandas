@@ -1411,7 +1411,7 @@ def test_long_get_es_extended_1():
     bdf = bpd.BipartiteLong(df)
     bdf = bdf.clean_data()
 
-    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=1, include=['j', 'y'])
+    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=1, include=['j', 'y'], transition_col='g')
 
     assert es_extended.iloc[0]['i'] == 0
     assert es_extended.iloc[0]['t'] == 4
@@ -1476,6 +1476,14 @@ def test_long_get_es_extended_3_3():
     assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
     assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
+
+def test_long_plot_es_extended_4():
+    # Test plot_es_extended() by making sure it doesn't crash
+    sim_data = bpd.SimBipartite().sim_network()
+    bdf = bpd.BipartiteLong(sim_data).clean_data().cluster(grouping=bpd.grouping.kmeans(n_clusters=2))
+    bdf.plot_es_extended()
+
+    assert True # Just making sure it doesn't crash
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####

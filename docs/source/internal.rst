@@ -79,6 +79,7 @@ Classes and Methods
    ~bipartitepandas.BipartiteLong.fill_periods
    ~bipartitepandas.BipartiteLong.get_collapsed_long
    ~bipartitepandas.BipartiteLong.get_es_extended
+   ~bipartitepandas.BipartiteLong.plot_es_extended
 
 ``bipartitepandas.BipartiteLongCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
