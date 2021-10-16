@@ -179,11 +179,12 @@ class BipartiteBase(DataFrame):
         if self.id_reference_dict:
             for id_col, reference_df in self.id_reference_dict.items():
                 if len(reference_df) > 0: # Make sure non-empty
-                    try:
-                        frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_col}, axis=1), how='left', on=id_col)
-                    except TypeError: # Int64 error with NaNs
-                        frame[id_col] = frame[id_col].astype('Int64')
-                        frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_col}, axis=1), how='left', on=id_col)
+                    for i, id_subcol in enumerate(to_list(self.reference_dict[id_col])):
+                        try:
+                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col + '_' + str(i + 1), 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                        except TypeError: # Int64 error with NaNs
+                            frame[id_col] = frame[id_col].astype('Int64')
+                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col + '_' + str(i + 1), 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
             return frame
         else:
             warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
@@ -886,6 +887,165 @@ class BipartiteBase(DataFrame):
             self.logger.info('m column already included. Returning unaltered frame')
 
         return frame
+
+    def min_movers(self, threshold=15, copy=True):
+        '''
+        Keep only firms with at least `threshold` many movers.
+
+        Arguments:
+            threshold (int): minimum number of movers required to keep a firm
+            copy (bool): if False, avoid copy
+
+        Returns:
+            valid_firms (list): list of firms with sufficiently many movers
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+        # Generate m column (the function checks if it already exists)
+        self.gen_m()
+
+        frame = frame[frame['m'] == 1] # Keep movers
+
+        j_cols = to_list(self.reference_dict['j'])
+        n_movers = frame.groupby(j_cols[0])['i'].unique().apply(list) # List of all unique worker ids for j/j1
+        # Convert into DataFrame for merging
+        n_movers = pd.DataFrame(n_movers).reset_index().rename({j_cols[0]: 'j'}, axis=1)
+
+        for j_col in j_cols[1:]:
+            n_movers_merge = frame.groupby(j_col)['i'].unique().apply(list)
+            # Convert into DataFrame for merging
+            n_movers_merge = pd.DataFrame(n_movers_merge).reset_index().rename({j_col: 'j'}, axis=1)
+            # Merge
+            n_movers = pd.merge(n_movers, n_movers_merge, on='j')
+            # Correct columns
+            n_movers[['i_x', 'i_y']] = n_movers[['i_x', 'i_y']].fillna('').apply(list) # Replace NaNs with empty list, source: https://stackoverflow.com/questions/33199193/how-to-fill-dataframe-nan-values-with-empty-list-in-pandas
+            n_movers['i'] = n_movers['i_x'] + n_movers['i_y'] # Total movers
+            n_movers = n_movers[['j', 'i']]
+
+        # Get number of unique movers at firm j
+        n_movers['i'] = n_movers['i'].apply(set).apply(len)
+        valid_firms = n_movers.loc[n_movers['i'] >= threshold, 'j']
+
+        return valid_firms
+
+    def subsets_increasing(self, subsets=np.linspace(0.1, 0.5, 5), threshold=15, user_clean={}, copy=True):
+        '''
+        First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Constructively rebuild the data to reach each subsequent value of subsets. Return these subsets as an iterator.
+
+        Arguments:
+            subsets (list): percents of movers to keep
+            threshold (int): minimum number of movers required to keep a firm
+            user_clean (dict): dictionary of parameters for cleaning
+
+                Dictionary parameters:
+
+                    connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
+
+                    i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
+
+                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
+
+                    copy (bool, default=False): if False, avoid copy
+            copy (bool): if False, avoid copy
+
+        Returns:
+            subset (iterator of BipartiteBase): subset of data
+        '''
+        if copy:
+            subset_init = self.copy()
+        else:
+            subset_init = self
+        threshold_firms = subset_init.min_movers(threshold=threshold, copy=copy)
+
+        # Take subset of firms that meet threshold
+        for j_col in to_list(self.reference_dict['j']):
+            subset_init = subset_init[subset_init[j_col].isin(threshold_firms)]
+
+        wids_init = subset_init.loc[subset_init['m'] == 1, 'i'].unique()
+        n_wid_drops_1 = int(np.floor((1 - subsets[0]) * len(wids_init))) # Number of wids to drop
+        wid_drops_1 = set(np.random.choice(wids_init, size=n_wid_drops_1, replace=False)) # FIXME figure out using RNG seeds
+
+        subset_1 = subset_init[~(subset_init['i'].isin(wid_drops_1))].copy().clean_data(user_clean)
+        subset_1 = subset_1.original_ids(copy=copy)
+        yield subset_1[['i'] + to_list(self.reference_dict['j']) + to_list(self.reference_dict['y']) + to_list(self.reference_dict['t']) + ['m']] # Keep i, j, y, t (drop original_id columns)
+
+        # Get list of all valid firms
+        valid_firms = []
+        for i, j_col in enumerate(to_list(self.reference_dict['j'])):
+            original_j = 'original_j_' + str(i + 1)
+            try: # If working with a subset
+                valid_firms += list(subset_1[original_j].unique())
+            except KeyError: # If no subset required
+                valid_firms += list(subset_1[j_col].unique())
+        valid_firms = set(valid_firms)
+
+        # Take full list of valid observations
+        for j_col in to_list(self.reference_dict['j']):
+            subset_init = subset_init[subset_init[j_col].isin(valid_firms)]
+
+        # Determine which wids (for movers) can still be drawn
+        all_valid_wids = set(subset_init.loc[subset_init['m'] == 1, 'i'].unique())
+        dropped_wids = all_valid_wids.difference(set(subset_1.loc[subset_1['m'] == 1, 'original_i_1'].unique()))
+        subset_prev = subset_1
+
+        for subset_pct in subsets[1:]: # Each step, drop fewer wids
+            n_wid_draws_i = min(int(np.ceil((1 - subset_pct) * len(all_valid_wids))), len(dropped_wids))
+            if n_wid_draws_i <= 0:
+                yield subset_prev
+            else:
+                wid_draws_i = set(np.random.choice(list(dropped_wids), size=n_wid_draws_i, replace=False)) # FIXME figure out using RNG seeds
+                dropped_wids = wid_draws_i
+
+                subset_i = subset_init[~(subset_init['i'].isin(dropped_wids))].copy().clean_data(user_clean)
+                yield subset_i
+
+                subset_prev = subset_i
+
+    def subsets_decreasing(self, subsets=np.linspace(0.5, 0.1, 5), threshold=15, user_clean={}, copy=True):
+        '''
+        First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Deconstruct the data to reach each subsequent value of subsets. Return these subsets as an iterator.
+
+        Arguments:
+            subsets (list): percents of movers to keep
+            threshold (int): minimum number of movers required to keep a firm
+            user_clean (dict): dictionary of parameters for cleaning
+
+                Dictionary parameters:
+
+                    connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
+
+                    i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
+
+                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
+
+                    copy (bool, default=False): if False, avoid copy
+            copy (bool): if False, avoid copy
+
+        Returns:
+            subset (iterator of BipartiteBase): subset of data
+        '''
+        if copy:
+            subset_init = self.copy()
+        else:
+            subset_init = self
+        threshold_firms = subset_init.min_movers(threshold=threshold, copy=copy)
+
+        # Take subset of firms that meet threshold
+        for j_col in to_list(self.reference_dict['j']):
+            subset_init = subset_init[subset_init[j_col].isin(threshold_firms)]
+
+        wids = subset_init.loc[subset_init['m'] == 1, 'i'].unique()
+
+        relative_fraction = subsets / (np.concatenate([[1], subsets]))[:-1]
+
+        for frac in relative_fraction:
+            n_draws = int(np.ceil(frac * len(wids)))
+            wids = np.random.choice(wids, size=n_draws, replace=False)
+
+            subset_i = subset_init[subset_init['i'].isin(wids)].copy().clean_data()
+            yield subset_i
 
     def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
         '''

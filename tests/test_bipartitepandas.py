@@ -1097,44 +1097,44 @@ def test_id_reference_dict_22():
     movers = merge_df[merge_df['m'] == 1]
 
     assert movers.iloc[0]['i'] == 0
-    assert movers.iloc[0]['original_i'] == 'a'
+    assert movers.iloc[0]['original_i_1'] == 'a'
     assert movers.iloc[0]['j'] == 0
-    assert movers.iloc[0]['original_j'] == 'a'
+    assert movers.iloc[0]['original_j_1'] == 'a'
     assert movers.iloc[0]['y'] == 2
     assert movers.iloc[0]['t'] == 1
 
     assert movers.iloc[1]['i'] == 0
-    assert movers.iloc[1]['original_i'] == 'a'
+    assert movers.iloc[1]['original_i_1'] == 'a'
     assert movers.iloc[1]['j'] == 1
-    assert movers.iloc[1]['original_j'] == 'b'
+    assert movers.iloc[1]['original_j_1'] == 'b'
     assert movers.iloc[1]['y'] == 1
     assert movers.iloc[1]['t'] == 2
 
     assert movers.iloc[2]['i'] == 1
-    assert movers.iloc[2]['original_i'] == 'b'
+    assert movers.iloc[2]['original_i_1'] == 'b'
     assert movers.iloc[2]['j'] == 1
-    assert movers.iloc[2]['original_j'] == 'b'
+    assert movers.iloc[2]['original_j_1'] == 'b'
     assert movers.iloc[2]['y'] == 1
     assert movers.iloc[2]['t'] == 1
 
     assert movers.iloc[3]['i'] == 1
-    assert movers.iloc[3]['original_i'] == 'b'
+    assert movers.iloc[3]['original_i_1'] == 'b'
     assert movers.iloc[3]['j'] == 2
-    assert movers.iloc[3]['original_j'] == 'c'
+    assert movers.iloc[3]['original_j_1'] == 'c'
     assert movers.iloc[3]['y'] == 1
     assert movers.iloc[3]['t'] == 2
 
     assert movers.iloc[4]['i'] == 2
-    assert movers.iloc[4]['original_i'] == 'd'
+    assert movers.iloc[4]['original_i_1'] == 'd'
     assert movers.iloc[4]['j'] == 1
-    assert movers.iloc[4]['original_j'] == 'b'
+    assert movers.iloc[4]['original_j_1'] == 'b'
     assert movers.iloc[4]['y'] == 1.5
     assert movers.iloc[4]['t'] == 1
 
     assert movers.iloc[5]['i'] == 2
-    assert movers.iloc[5]['original_i'] == 'd'
+    assert movers.iloc[5]['original_i_1'] == 'd'
     assert movers.iloc[5]['j'] == 2
-    assert movers.iloc[5]['original_j'] == 'c'
+    assert movers.iloc[5]['original_j_1'] == 'c'
     assert movers.iloc[5]['y'] == 1
     assert movers.iloc[5]['t'] == 2
 
@@ -1163,23 +1163,23 @@ def test_id_reference_dict_23():
     movers = merge_df[merge_df['m'] == 1]
 
     assert movers.iloc[0]['i'] == 0
-    assert movers.iloc[0]['original_i'] == 'a'
+    assert movers.iloc[0]['original_i_1'] == 'a'
     assert movers.iloc[0]['j'] == 0
-    assert movers.iloc[0]['original_j'] == 'b'
+    assert movers.iloc[0]['original_j_1'] == 'b'
     assert movers.iloc[0]['y'] == 1
     assert movers.iloc[0]['t'] == 2
 
     assert movers.iloc[1]['i'] == 1
-    assert movers.iloc[1]['original_i'] == 'b'
+    assert movers.iloc[1]['original_i_1'] == 'b'
     assert movers.iloc[1]['j'] == 0
-    assert movers.iloc[1]['original_j'] == 'b'
+    assert movers.iloc[1]['original_j_1'] == 'b'
     assert movers.iloc[1]['y'] == 1
     assert movers.iloc[1]['t'] == 1
 
     assert movers.iloc[2]['i'] == 2
-    assert movers.iloc[2]['original_i'] == 'd'
+    assert movers.iloc[2]['original_i_1'] == 'd'
     assert movers.iloc[2]['j'] == 0
-    assert movers.iloc[2]['original_j'] == 'b'
+    assert movers.iloc[2]['original_j_1'] == 'b'
     assert movers.iloc[2]['y'] == 1.5
     assert movers.iloc[2]['t'] == 1
 
@@ -1385,6 +1385,81 @@ def test_uncollapse_25():
     assert bdf.iloc[10]['y'] == 1.5
     assert bdf.iloc[10]['t'] == 2
 
+def test_min_movers_26():
+    # Keep only firms that meet a minimum threshold of movers.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data().gen_m().get_es()
+
+    threshold = 15
+
+    # First, manually estimate the new frame
+    frame = bdf.copy()
+    frame = frame[frame['m'] == 1] # Keep movers
+    n_movers = frame.groupby('j1')['i'].unique().apply(list)
+    n_movers = pd.DataFrame(n_movers).reset_index().rename({'j1': 'j'}, axis=1)
+
+    n_movers2 = frame.groupby('j2')['i'].unique().apply(list)
+    n_movers2 = pd.DataFrame(n_movers2).reset_index().rename({'j2': 'j'}, axis=1)
+
+    n_movers_merge = pd.merge(n_movers, n_movers2, on='j')
+    n_movers_merge['i'] = (n_movers_merge['i_x'] + n_movers_merge['i_y']).apply(set).apply(len)
+    n_movers_merge = n_movers_merge[['j', 'i']]
+
+    valid_firms = sorted(n_movers_merge.loc[n_movers_merge['i'] >= threshold, 'j'])
+
+    # Next, estimate the new frame using the built-in function
+    valid_firms2 = sorted(bdf.min_movers(threshold=15, copy=True))
+
+    assert len(valid_firms) == len(valid_firms2)
+    for i in range(len(valid_firms)):
+        assert valid_firms[i] == valid_firms2[i]
+
+def test_subsets_increasing_27():
+    # Test subsets_increasing, by making sure the subsets are actually increasing over time.
+    # Non-collapsed
+    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_es()
+    subsets=np.linspace(0.1, 0.5, 5)
+
+    a = []
+
+    for j in bdf.subsets_increasing():
+        a.append(len(j))
+
+    assert min(np.diff(a)) > 0
+
+    # Collapsed
+    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_collapsed_long().get_es()
+
+    a = []
+
+    for j in bdf.subsets_increasing():
+        a.append(len(j))
+
+    assert min(np.diff(a)) > 0
+
+def test_subsets_decreasing_28():
+    # Test subsets_decreasing, by making sure the subsets are actually decreasing over time.
+    # Non-collapsed
+    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_es()
+    subsets=np.linspace(0.1, 0.5, 5)
+
+    a = []
+
+    for j in bdf.subsets_decreasing():
+        a.append(len(j))
+
+    assert min(np.diff(a)) < 0
+
+    # Collapsed
+    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_collapsed_long().get_es()
+
+    a = []
+
+    for j in bdf.subsets_decreasing():
+        a.append(len(j))
+
+    assert min(np.diff(a)) < 0
+
 ###################################
 ##### Tests for BipartiteLong #####
 ###################################
@@ -1477,13 +1552,14 @@ def test_long_get_es_extended_3_3():
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
     assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
 
-def test_long_plot_es_extended_4():
-    # Test plot_es_extended() by making sure it doesn't crash
-    sim_data = bpd.SimBipartite().sim_network()
-    bdf = bpd.BipartiteLong(sim_data).clean_data().cluster(grouping=bpd.grouping.kmeans(n_clusters=2))
-    bdf.plot_es_extended()
+# Only uncomment for manual testing - this produces a graph which pauses the testing
+# def test_long_plot_es_extended_4():
+#     # Test plot_es_extended() by making sure it doesn't crash
+#     sim_data = bpd.SimBipartite().sim_network()
+#     bdf = bpd.BipartiteLong(sim_data).clean_data().cluster(grouping=bpd.grouping.kmeans(n_clusters=2))
+#     bdf.plot_es_extended()
 
-    assert True # Just making sure it doesn't crash
+#     assert True # Just making sure it doesn't crash
 
 ############################################
 ##### Tests for BipartiteLongCollapsed #####

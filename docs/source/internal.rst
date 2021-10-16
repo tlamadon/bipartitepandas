@@ -55,11 +55,14 @@ Classes and Methods
    ~bipartitepandas.BipartiteBase.drop
    ~bipartitepandas.BipartiteBase.gen_m
    ~bipartitepandas.BipartiteBase.merge
+   ~bipartitepandas.BipartiteBase.min_movers
    ~bipartitepandas.BipartiteBase.n_clusters
    ~bipartitepandas.BipartiteBase.n_firms
    ~bipartitepandas.BipartiteBase.n_workers
    ~bipartitepandas.BipartiteBase.original_ids
    ~bipartitepandas.BipartiteBase.rename
+   ~bipartitepandas.BipartiteBase.subsets_decreasing
+   ~bipartitepandas.BipartiteBase.subsets_increasing
    ~bipartitepandas.BipartiteBase.summary
 
 ``bipartitepandas.BipartiteLongBase``
