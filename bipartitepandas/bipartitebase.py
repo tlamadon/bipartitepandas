@@ -930,7 +930,7 @@ class BipartiteBase(DataFrame):
 
         return valid_firms
 
-    def subsets_increasing(self, subsets=np.linspace(0.1, 0.5, 5), threshold=15, user_clean={}, copy=True):
+    def attrition_decreasing(self, subsets=np.linspace(0.1, 0.5, 5), threshold=15, user_clean={}, copy=True):
         '''
         First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Constructively rebuild the data to reach each subsequent value of subsets. Return these subsets as an iterator.
 
@@ -1003,7 +1003,7 @@ class BipartiteBase(DataFrame):
 
                 subset_prev = subset_i
 
-    def subsets_decreasing(self, subsets=np.linspace(0.5, 0.1, 5), threshold=15, user_clean={}, copy=True):
+    def attrition_decreasing(self, subsets=np.linspace(0.5, 0.1, 5), threshold=15, user_clean={}, copy=True):
         '''
         First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Deconstruct the data to reach each subsequent value of subsets. Return these subsets as an iterator.
 
@@ -1044,7 +1044,7 @@ class BipartiteBase(DataFrame):
             n_draws = int(np.ceil(frac * len(wids)))
             wids = np.random.choice(wids, size=n_draws, replace=False)
 
-            subset_i = subset_init[subset_init['i'].isin(wids)].copy().clean_data()
+            subset_i = subset_init[subset_init['i'].isin(wids)].copy().clean_data(user_clean)
             yield subset_i
 
     def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):

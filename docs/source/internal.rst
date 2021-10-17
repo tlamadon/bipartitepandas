@@ -49,6 +49,8 @@ Classes and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteBase
+   ~bipartitepandas.BipartiteBase.attrition_decreasing
+   ~bipartitepandas.BipartiteBase.attrition_increasing
    ~bipartitepandas.BipartiteBase.clean_data
    ~bipartitepandas.BipartiteBase.cluster
    ~bipartitepandas.BipartiteBase.copy
@@ -61,8 +63,6 @@ Classes and Methods
    ~bipartitepandas.BipartiteBase.n_workers
    ~bipartitepandas.BipartiteBase.original_ids
    ~bipartitepandas.BipartiteBase.rename
-   ~bipartitepandas.BipartiteBase.subsets_decreasing
-   ~bipartitepandas.BipartiteBase.subsets_increasing
    ~bipartitepandas.BipartiteBase.summary
 
 ``bipartitepandas.BipartiteLongBase``
