@@ -930,7 +930,7 @@ class BipartiteBase(DataFrame):
 
         return valid_firms
 
-    def attrition_decreasing(self, subsets=np.linspace(0.1, 0.5, 5), threshold=15, user_clean={}, copy=True):
+    def attrition_increasing(self, subsets=np.linspace(0.1, 0.5, 5), threshold=15, user_clean={}, copy=True):
         '''
         First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Constructively rebuild the data to reach each subsequent value of subsets. Return these subsets as an iterator.
 
