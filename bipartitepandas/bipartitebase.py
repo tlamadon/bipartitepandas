@@ -206,6 +206,7 @@ class BipartiteBase(DataFrame):
             self.col_dtype_dict = frame.col_dtype_dict.copy()
             self.col_dict = frame.col_dict.copy()
         self.columns_contig = frame.columns_contig.copy() # Required, even if no_dict
+        self.id_reference_dict = {} # Required, even if no_dict (this goes first, because always need to instantiate the empty dict before it's filled)
         if frame.id_reference_dict:
             # Must do a deep copy
             for id_col, reference_df in frame.id_reference_dict.items():
@@ -213,8 +214,6 @@ class BipartiteBase(DataFrame):
         elif include_id_reference_dict:
             # This is if the original dataframe DIDN'T have an id_reference_dict but the new dataframe does
             self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()} # Link original id values to contiguous id values
-        else:
-            self.id_reference_dict = {} # Required, even if no_dict
         # Booleans
         self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = frame.correct_cols # If True, column names are correct
@@ -904,12 +903,13 @@ class BipartiteBase(DataFrame):
         Returns:
             valid_firms (list): list of firms with sufficiently many movers
         '''
+        # Generate m column (the function checks if it already exists)
+        self.gen_m()
+
         if copy:
             frame = self.copy()
         else:
             frame = self
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
 
         frame = frame[frame['m'] == 1] # Keep movers
 
@@ -972,18 +972,18 @@ class BipartiteBase(DataFrame):
         n_wid_drops_1 = int(np.floor((1 - subsets[0]) * len(wids_init))) # Number of wids to drop
         wid_drops_1 = set(np.random.choice(wids_init, size=n_wid_drops_1, replace=False)) # FIXME figure out using RNG seeds
 
-        subset_1 = subset_init[~(subset_init['i'].isin(wid_drops_1))].copy().clean_data(user_clean)
-        subset_1 = subset_1.original_ids(copy=copy)
-        yield subset_1[['i'] + to_list(self.reference_dict['j']) + to_list(self.reference_dict['y']) + to_list(self.reference_dict['t']) + ['m']] # Keep i, j, y, t (drop original_id columns)
+        subset_1 = subset_init[~(subset_init['i'].isin(wid_drops_1))].copy().clean_data()
+        subset_1_orig_ids = subset_1.original_ids(copy=copy)
+        yield subset_1
 
         # Get list of all valid firms
         valid_firms = []
         for i, j_col in enumerate(to_list(self.reference_dict['j'])):
             original_j = 'original_j_' + str(i + 1)
             try: # If working with a subset
-                valid_firms += list(subset_1[original_j].unique())
+                valid_firms += list(subset_1_orig_ids[original_j].unique())
             except KeyError: # If no subset required
-                valid_firms += list(subset_1[j_col].unique())
+                valid_firms += list(subset_1_orig_ids[j_col].unique())
         valid_firms = set(valid_firms)
 
         # Take full list of valid observations
@@ -992,7 +992,8 @@ class BipartiteBase(DataFrame):
 
         # Determine which wids (for movers) can still be drawn
         all_valid_wids = set(subset_init.loc[subset_init['m'] == 1, 'i'].unique())
-        dropped_wids = all_valid_wids.difference(set(subset_1.loc[subset_1['m'] == 1, 'original_i_1'].unique()))
+        dropped_wids = all_valid_wids.difference(set(subset_1_orig_ids.loc[subset_1_orig_ids['m'] == 1, 'original_i_1'].unique()))
+        del subset_1_orig_ids
         subset_prev = subset_1
 
         for subset_pct in subsets[1:]: # Each step, drop fewer wids
