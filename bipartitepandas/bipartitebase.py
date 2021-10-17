@@ -39,7 +39,7 @@ class BipartiteBase(DataFrame):
         # self.logger.info('initializing BipartiteBase object')
 
         if len(args) > 0 and isinstance(args[0], BipartiteBase): # Note that isinstance works for subclasses
-            self._set_attributes(args[0])
+            self._set_attributes(args[0], include_id_reference_dict)
         else:
             self.columns_req = ['i', 'j', 'y'] + columns_req
             self.columns_opt = ['g', 'm'] + columns_opt
@@ -189,13 +189,14 @@ class BipartiteBase(DataFrame):
         else:
             warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
 
-    def _set_attributes(self, frame, no_dict=False):
+    def _set_attributes(self, frame, no_dict=False, include_id_reference_dict=False):
         '''
         Set class attributes to equal those of another BipartitePandas object.
 
         Arguments:
             frame (BipartitePandas): BipartitePandas object whose attributes to use
             no_dict (bool): if True, only set booleans, no dictionaries
+            include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         '''
         # Dictionaries
         if not no_dict:
@@ -205,11 +206,15 @@ class BipartiteBase(DataFrame):
             self.col_dtype_dict = frame.col_dtype_dict.copy()
             self.col_dict = frame.col_dict.copy()
         self.columns_contig = frame.columns_contig.copy() # Required, even if no_dict
-        self.id_reference_dict = {} # Required, even if no_dict
         if frame.id_reference_dict:
             # Must do a deep copy
             for id_col, reference_df in frame.id_reference_dict.items():
                 self.id_reference_dict[id_col] = reference_df.copy()
+        elif include_id_reference_dict:
+            # This is if the original dataframe DIDN'T have an id_reference_dict but the new dataframe does
+            self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()} # Link original id values to contiguous id values
+        else:
+            self.id_reference_dict = {} # Required, even if no_dict
         # Booleans
         self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = frame.correct_cols # If True, column names are correct

@@ -1414,15 +1414,15 @@ def test_min_movers_26():
     for i in range(len(valid_firms)):
         assert valid_firms[i] == valid_firms2[i]
 
-def test_subsets_increasing_27():
-    # Test subsets_increasing, by making sure the subsets are actually increasing over time.
+def test_attrition_increasing_27():
+    # Test attrition_increasing, by making sure the subsets are actually increasing over time.
     # Non-collapsed
     bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_es()
-    subsets=np.linspace(0.1, 0.5, 5)
+    subsets = np.linspace(0.1, 0.5, 5)
 
     a = []
 
-    for j in bdf.subsets_increasing():
+    for j in bdf.attrition_increasing():
         a.append(len(j))
 
     assert min(np.diff(a)) > 0
@@ -1432,20 +1432,20 @@ def test_subsets_increasing_27():
 
     a = []
 
-    for j in bdf.subsets_increasing():
+    for j in bdf.attrition_increasing():
         a.append(len(j))
 
     assert min(np.diff(a)) > 0
 
-def test_subsets_decreasing_28():
-    # Test subsets_decreasing, by making sure the subsets are actually decreasing over time.
+def test_attrition_decreasing_28():
+    # Test attrition_decreasing, by making sure the subsets are actually decreasing over time.
     # Non-collapsed
     bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_es()
-    subsets=np.linspace(0.1, 0.5, 5)
+    subsets = np.linspace(0.1, 0.5, 5)
 
     a = []
 
-    for j in bdf.subsets_decreasing():
+    for j in bdf.attrition_decreasing():
         a.append(len(j))
 
     assert min(np.diff(a)) < 0
@@ -1455,7 +1455,7 @@ def test_subsets_decreasing_28():
 
     a = []
 
-    for j in bdf.subsets_decreasing():
+    for j in bdf.attrition_decreasing():
         a.append(len(j))
 
     assert min(np.diff(a)) < 0
