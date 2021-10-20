@@ -1097,44 +1097,44 @@ def test_id_reference_dict_22():
     movers = merge_df[merge_df['m'] == 1]
 
     assert movers.iloc[0]['i'] == 0
-    assert movers.iloc[0]['original_i_1'] == 'a'
+    assert movers.iloc[0]['original_i'] == 'a'
     assert movers.iloc[0]['j'] == 0
-    assert movers.iloc[0]['original_j_1'] == 'a'
+    assert movers.iloc[0]['original_j'] == 'a'
     assert movers.iloc[0]['y'] == 2
     assert movers.iloc[0]['t'] == 1
 
     assert movers.iloc[1]['i'] == 0
-    assert movers.iloc[1]['original_i_1'] == 'a'
+    assert movers.iloc[1]['original_i'] == 'a'
     assert movers.iloc[1]['j'] == 1
-    assert movers.iloc[1]['original_j_1'] == 'b'
+    assert movers.iloc[1]['original_j'] == 'b'
     assert movers.iloc[1]['y'] == 1
     assert movers.iloc[1]['t'] == 2
 
     assert movers.iloc[2]['i'] == 1
-    assert movers.iloc[2]['original_i_1'] == 'b'
+    assert movers.iloc[2]['original_i'] == 'b'
     assert movers.iloc[2]['j'] == 1
-    assert movers.iloc[2]['original_j_1'] == 'b'
+    assert movers.iloc[2]['original_j'] == 'b'
     assert movers.iloc[2]['y'] == 1
     assert movers.iloc[2]['t'] == 1
 
     assert movers.iloc[3]['i'] == 1
-    assert movers.iloc[3]['original_i_1'] == 'b'
+    assert movers.iloc[3]['original_i'] == 'b'
     assert movers.iloc[3]['j'] == 2
-    assert movers.iloc[3]['original_j_1'] == 'c'
+    assert movers.iloc[3]['original_j'] == 'c'
     assert movers.iloc[3]['y'] == 1
     assert movers.iloc[3]['t'] == 2
 
     assert movers.iloc[4]['i'] == 2
-    assert movers.iloc[4]['original_i_1'] == 'd'
+    assert movers.iloc[4]['original_i'] == 'd'
     assert movers.iloc[4]['j'] == 1
-    assert movers.iloc[4]['original_j_1'] == 'b'
+    assert movers.iloc[4]['original_j'] == 'b'
     assert movers.iloc[4]['y'] == 1.5
     assert movers.iloc[4]['t'] == 1
 
     assert movers.iloc[5]['i'] == 2
-    assert movers.iloc[5]['original_i_1'] == 'd'
+    assert movers.iloc[5]['original_i'] == 'd'
     assert movers.iloc[5]['j'] == 2
-    assert movers.iloc[5]['original_j_1'] == 'c'
+    assert movers.iloc[5]['original_j'] == 'c'
     assert movers.iloc[5]['y'] == 1
     assert movers.iloc[5]['t'] == 2
 
@@ -1163,23 +1163,23 @@ def test_id_reference_dict_23():
     movers = merge_df[merge_df['m'] == 1]
 
     assert movers.iloc[0]['i'] == 0
-    assert movers.iloc[0]['original_i_1'] == 'a'
+    assert movers.iloc[0]['original_i'] == 'a'
     assert movers.iloc[0]['j'] == 0
-    assert movers.iloc[0]['original_j_1'] == 'b'
+    assert movers.iloc[0]['original_j'] == 'b'
     assert movers.iloc[0]['y'] == 1
     assert movers.iloc[0]['t'] == 2
 
     assert movers.iloc[1]['i'] == 1
-    assert movers.iloc[1]['original_i_1'] == 'b'
+    assert movers.iloc[1]['original_i'] == 'b'
     assert movers.iloc[1]['j'] == 0
-    assert movers.iloc[1]['original_j_1'] == 'b'
+    assert movers.iloc[1]['original_j'] == 'b'
     assert movers.iloc[1]['y'] == 1
     assert movers.iloc[1]['t'] == 1
 
     assert movers.iloc[2]['i'] == 2
-    assert movers.iloc[2]['original_i_1'] == 'd'
+    assert movers.iloc[2]['original_i'] == 'd'
     assert movers.iloc[2]['j'] == 0
-    assert movers.iloc[2]['original_j_1'] == 'b'
+    assert movers.iloc[2]['original_j'] == 'b'
     assert movers.iloc[2]['y'] == 1.5
     assert movers.iloc[2]['t'] == 1
 
@@ -1385,7 +1385,25 @@ def test_uncollapse_25():
     assert bdf.iloc[10]['y'] == 1.5
     assert bdf.iloc[10]['t'] == 2
 
-def test_min_movers_26():
+def test_keep_ids_26():
+    # Keep only given ids.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data()
+    all_fids = bdf['j'].unique()
+    ids_to_keep = all_fids[: len(all_fids) // 2]
+    bdf_keep = bdf.get_es().keep_ids('j', ids_to_keep).get_long()
+    assert set(bdf_keep['j']) == set(ids_to_keep)
+
+def test_drop_ids_27():
+    # Drop given ids.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data()
+    all_fids = bdf['j'].unique()
+    ids_to_drop = all_fids[: len(all_fids) // 2]
+    bdf_keep = bdf.get_es().drop_ids('j', ids_to_drop).get_long()
+    assert set(bdf_keep['j']) == set(all_fids).difference(set(ids_to_drop))
+
+def test_min_movers_28():
     # Keep only firms that meet a minimum threshold of movers.
     df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data().gen_m().get_es()
@@ -1413,52 +1431,6 @@ def test_min_movers_26():
     assert len(valid_firms) == len(valid_firms2)
     for i in range(len(valid_firms)):
         assert valid_firms[i] == valid_firms2[i]
-
-def test_attrition_increasing_27():
-    # Test attrition_increasing, by making sure the subsets are actually increasing over time.
-    # Non-collapsed
-    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_es()
-    subsets = np.linspace(0.1, 0.5, 5)
-
-    a = []
-
-    for j in bdf.attrition_increasing():
-        a.append(len(j))
-
-    assert min(np.diff(a)) > 0
-
-    # Collapsed
-    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_collapsed_long().get_es()
-
-    a = []
-
-    for j in bdf.attrition_increasing():
-        a.append(len(j))
-
-    assert min(np.diff(a)) > 0
-
-def test_attrition_decreasing_28():
-    # Test attrition_decreasing, by making sure the subsets are actually decreasing over time.
-    # Non-collapsed
-    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_es()
-    subsets = np.linspace(0.1, 0.5, 5)
-
-    a = []
-
-    for j in bdf.attrition_decreasing():
-        a.append(len(j))
-
-    assert min(np.diff(a)) < 0
-
-    # Collapsed
-    bdf = bpd.BipartiteLong(bpd.SimBipartite().sim_network(), include_id_reference_dict=True).clean_data().get_collapsed_long().get_es()
-
-    a = []
-
-    for j in bdf.attrition_decreasing():
-        a.append(len(j))
-
-    assert min(np.diff(a)) < 0
 
 ###################################
 ##### Tests for BipartiteLong #####

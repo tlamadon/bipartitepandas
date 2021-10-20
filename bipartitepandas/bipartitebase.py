@@ -19,7 +19,7 @@ class BipartiteBase(DataFrame):
 
     Arguments:
         *args: arguments for Pandas DataFrame
-        columns_req (list): required columns (only put general column names for joint columns, e.g. put 'fid' instead of 'f1i', 'f2i'; then put the joint columns in reference_dict)
+        columns_req (list): required columns (only put general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'; then put the joint columns in reference_dict)
         columns_opt (list): optional columns (only put general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'; then put the joint columns in reference_dict)
         columns_contig (dictionary): columns requiring contiguous ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {'i': False, 'j': False, 'g': None} (only put general column names for joint columns)
         reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}
@@ -179,12 +179,12 @@ class BipartiteBase(DataFrame):
         if self.id_reference_dict:
             for id_col, reference_df in self.id_reference_dict.items():
                 if len(reference_df) > 0: # Make sure non-empty
-                    for i, id_subcol in enumerate(to_list(self.reference_dict[id_col])):
+                    for id_subcol in to_list(self.reference_dict[id_col]):
                         try:
-                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col + '_' + str(i + 1), 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
                         except TypeError: # Int64 error with NaNs
                             frame[id_col] = frame[id_col].astype('Int64')
-                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_col + '_' + str(i + 1), 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
             return frame
         else:
             warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
@@ -387,7 +387,7 @@ class BipartiteBase(DataFrame):
         Make column of ids contiguous.
 
         Arguments:
-            id_col (str): column to make contiguous ('fid', 'wid', or 'j'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'. Only optional columns may be renamed
+            id_col (str): column to make contiguous ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'. Only optional columns may be renamed
             copy (bool): if False, avoid copy
 
         Returns:
@@ -688,20 +688,14 @@ class BipartiteBase(DataFrame):
             else:
                 warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j']")
             # Find largest connected set of firms
-            if connectedness == 'connected':
-                largest_cc = max(nx.connected_components(G), key=len)
-            elif connectedness == 'biconnected':
-                largest_cc = max(nx.biconnected_components(G), key=len)
-            else:
-                warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
-            # Keep largest connected set of firms
-            if len(to_list(frame.reference_dict['j'])) == 1:
-                outside_cc = frame[(~frame['j'].isin(largest_cc))].shape[0]
-            else:
-                outside_cc = frame[(~frame['j1'].isin(largest_cc)) | (~frame['j2'].isin(largest_cc))].shape[0]
+            connectedness_dict = {
+                'connected': nx.is_connected,
+                'biconnected': nx.is_biconnected
+            }
+            is_connected = connectedness_dict[connectedness](G)
 
-            frame.logger.info('observations outside connected set (should be 0):' + str(outside_cc))
-            if outside_cc > 0:
+            frame.logger.info('data is {}: {}'.format(connectedness, frame.connected))
+            if not is_connected:
                 frame.connected = False
                 success = False
             else:
@@ -892,9 +886,53 @@ class BipartiteBase(DataFrame):
 
         return frame
 
+    def keep_ids(self, id_col, keep_ids, copy=True):
+        '''
+        Only keep ids belonging to a given set of ids.
+
+        Arguments:
+            id_col (str): column of ids to consider ('i', 'j', or 'g')
+            keep_ids (list): ids to keep
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteBase): BipartiteBase with ids in the given set
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        for id_subcol in to_list(self.reference_dict[id_col]):
+            frame = frame[frame[id_subcol].isin(keep_ids)]
+
+        return frame
+
+    def drop_ids(self, id_col, drop_ids, copy=True):
+        '''
+        Drop all ids belonging to a given set of ids.
+
+        Arguments:
+            id_col (str): column of ids to consider ('i', 'j', or 'g')
+            drop_ids (list): ids to drop
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteBase): BipartiteBase with ids in the given set
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        for id_subcol in to_list(self.reference_dict[id_col]):
+            frame = frame[~(frame[id_subcol].isin(drop_ids))]
+
+        return frame
+
     def min_movers(self, threshold=15, copy=True):
         '''
-        Keep only firms with at least `threshold` many movers.
+        List firms with at least `threshold` many movers.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
