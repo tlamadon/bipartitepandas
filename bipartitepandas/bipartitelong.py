@@ -258,9 +258,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', user_graph={}, user_clean={}):
+    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', user_graph={}):
         '''
         Generate event study plots.
+
         Arguments:
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
@@ -269,30 +270,33 @@ class BipartiteLong(bpd.BipartiteLongBase):
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
             user_graph (dict): dictionary of parameters for graphing
+
                 Dictionary parameters:
-                    title_height (float, default=-0.45): location of titles for subfigures
+
+                    title_height (float, default=1): location of titles for subfigures
+
                     fontsize (float, default=9): font size of titles for subfigures
-            user_clean (dict): dictionary of parameters for cleaning
-                Dictionary parameters:
-                    connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
-                    i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
-                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
-                    copy (bool, default=False): if False, avoid copy
+
+                    sharex (bool, default=True): share x axis between plots
+
+                    sharey (bool, default=True): share y axis between plots
         '''
         import numpy as np
         from matplotlib import pyplot as plt
 
         # Default parameter dictionaries
         default_graph = {
-            'title_height': -0.45,
-            'fontsize': 9
+            'title_height': 1,
+            'fontsize': 9,
+            'sharex': True,
+            'sharey': True
         }
         graph_params = bpd.update_dict(default_graph, user_graph)
 
         es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col)
         n_clusters = self.n_clusters()
         # Want n_clusters x n_clusters subplots
-        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters)
+        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=graph_params['sharex'], sharey=graph_params['sharey'])
         # Create lists of the x values and y columns we want
         x_vals = []
         y_cols = []
@@ -314,7 +318,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 yerr = es_plot[y_cols].std(axis=0) / (len(es_plot) ** 0.5)
                 ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
                 ax.axvline(0, color='orange', zorder=1)
-                ax.set_title('{} to {} (n={})'.format(i, j, len(es_plot)), y=graph_params['title_height'], fontdict={'fontsize': graph_params['fontsize']})
+                ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=graph_params['title_height'], fontdict={'fontsize': graph_params['fontsize']})
                 ax.grid()
                 y_min = min(y_min, ax.get_ylim()[0])
                 y_max = max(y_max, ax.get_ylim()[1])

@@ -14,7 +14,7 @@
   Simple Example <notebooks/simple_example>
   Formatting Examples <notebooks/formatting_examples>
   Clustering Examples <notebooks/clustering_examples>
-  Extended Event Study Examples <notebooks/extended_es_examples>
+  CHK Event Study Examples <notebooks/chk_examples>
   Extra Features <notebooks/extra_features_examples>
 
 .. toctree::
