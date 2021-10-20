@@ -49,13 +49,13 @@ Classes and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteBase
-   ~bipartitepandas.BipartiteBase.attrition_decreasing
-   ~bipartitepandas.BipartiteBase.attrition_increasing
    ~bipartitepandas.BipartiteBase.clean_data
    ~bipartitepandas.BipartiteBase.cluster
    ~bipartitepandas.BipartiteBase.copy
    ~bipartitepandas.BipartiteBase.drop
+   ~bipartitepandas.BipartiteBase.drop_ids
    ~bipartitepandas.BipartiteBase.gen_m
+   ~bipartitepandas.BipartiteBase.keep_ids
    ~bipartitepandas.BipartiteBase.merge
    ~bipartitepandas.BipartiteBase.min_movers
    ~bipartitepandas.BipartiteBase.n_clusters
