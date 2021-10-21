@@ -45,11 +45,7 @@ class BipartiteBase(DataFrame):
             self.columns_opt = ['g', 'm'] + columns_opt
             self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
             self.reference_dict = update_dict({'i': 'i', 'm': 'm'}, reference_dict)
-            if include_id_reference_dict:
-                # Link original id values to contiguous id values
-                self._reset_id_reference_dict()
-            else:
-                self.id_reference_dict = {}
+            self._reset_id_reference_dict(include_id_reference_dict) # Link original id values to contiguous id values
             self.col_dtype_dict = update_dict({'i': 'int', 'j': 'int', 'y': 'float', 't': 'int', 'g': 'int', 'm': 'int'}, col_dtype_dict)
             default_col_dict = {}
             for col in to_list(self.columns_req):
@@ -207,14 +203,14 @@ class BipartiteBase(DataFrame):
             self.col_dtype_dict = frame.col_dtype_dict.copy()
             self.col_dict = frame.col_dict.copy()
         self.columns_contig = frame.columns_contig.copy() # Required, even if no_dict
-        self.id_reference_dict = {} # Required, even if no_dict (this goes first, because always need to instantiate the empty dict before it's filled)
         if frame.id_reference_dict:
+            self.id_reference_dict = {}
             # Must do a deep copy
             for id_col, reference_df in frame.id_reference_dict.items():
                 self.id_reference_dict[id_col] = reference_df.copy()
-        elif include_id_reference_dict:
-            # This is if the original dataframe DIDN'T have an id_reference_dict but the new dataframe does
-            self._reset_id_reference_dict()
+        else:
+            # This is if the original dataframe DIDN'T have an id_reference_dict (but the new dataframe may or may not)
+            self._reset_id_reference_dict(include_id_reference_dict)
         # Booleans
         self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = frame.correct_cols # If True, column names are correct
@@ -248,14 +244,20 @@ class BipartiteBase(DataFrame):
 
         return self
 
-    def _reset_id_reference_dict(self):
+    def _reset_id_reference_dict(self, include=False):
         '''
         Reset id_reference_dict.
+
+        Arguments:
+            include (bool): if True, id_reference_dict will track changes in ids
 
         Returns:
             self (BipartiteBase): self with reset id_reference_dict
         '''
-        self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()}
+        if include:
+            self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()}
+        else:
+            self.id_reference_dict = {}
 
         return self
 
