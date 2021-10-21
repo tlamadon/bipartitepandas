@@ -224,6 +224,9 @@ class BipartiteBase(DataFrame):
     def _reset_attributes(self):
         '''
         Reset class attributes conditions to be False/None.
+
+        Returns:
+            self (BipartiteBase): self with reset class attributes
         '''
         for contig_col in self.columns_contig.keys():
             if self._col_included(contig_col):
@@ -239,6 +242,8 @@ class BipartiteBase(DataFrame):
         # Verify whether period included
         if self._col_included('t'):
             self.i_t_unique = False
+
+        return self
 
     def _col_included(self, col):
         '''
