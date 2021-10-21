@@ -46,7 +46,8 @@ class BipartiteBase(DataFrame):
             self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
             self.reference_dict = update_dict({'i': 'i', 'm': 'm'}, reference_dict)
             if include_id_reference_dict:
-                self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()} # Link original id values to contiguous id values
+                # Link original id values to contiguous id values
+                self._reset_id_reference_dict()
             else:
                 self.id_reference_dict = {}
             self.col_dtype_dict = update_dict({'i': 'int', 'j': 'int', 'y': 'float', 't': 'int', 'g': 'int', 'm': 'int'}, col_dtype_dict)
@@ -213,7 +214,7 @@ class BipartiteBase(DataFrame):
                 self.id_reference_dict[id_col] = reference_df.copy()
         elif include_id_reference_dict:
             # This is if the original dataframe DIDN'T have an id_reference_dict but the new dataframe does
-            self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()} # Link original id values to contiguous id values
+            self._reset_id_reference_dict()
         # Booleans
         self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = frame.correct_cols # If True, column names are correct
@@ -242,6 +243,19 @@ class BipartiteBase(DataFrame):
         # Verify whether period included
         if self._col_included('t'):
             self.i_t_unique = False
+
+        # logger_init(self) # FIXME should this be included?
+
+        return self
+
+    def _reset_id_reference_dict(self):
+        '''
+        Reset id_reference_dict.
+
+        Returns:
+            self (BipartiteBase): self with reset id_reference_dict
+        '''
+        self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.reference_dict.keys()}
 
         return self
 
