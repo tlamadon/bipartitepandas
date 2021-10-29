@@ -182,9 +182,10 @@ class BipartiteBase(DataFrame):
                         except TypeError: # Int64 error with NaNs
                             frame[id_col] = frame[id_col].astype('Int64')
                             frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
-            return frame
         else:
             warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
+
+        return frame
 
     def _set_attributes(self, frame, no_dict=False, include_id_reference_dict=False):
         '''
@@ -211,6 +212,8 @@ class BipartiteBase(DataFrame):
         else:
             # This is if the original dataframe DIDN'T have an id_reference_dict (but the new dataframe may or may not)
             self._reset_id_reference_dict(include_id_reference_dict)
+        # # Logger
+        # self.logger = frame.logger
         # Booleans
         self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = frame.correct_cols # If True, column names are correct
@@ -230,7 +233,7 @@ class BipartiteBase(DataFrame):
                 self.columns_contig[contig_col] = False
             else:
                 self.columns_contig[contig_col] = None
-        self.connected = False # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
+        self.connected = None # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'biconnected' all observations are in the largest biconnected set of firms; if None, connectedness ignored
         self.correct_cols = False # If True, column names are correct
         self.no_na = False # If True, no NaN observations in the data
         self.no_duplicates = False # If True, no duplicate rows in the data
@@ -240,7 +243,7 @@ class BipartiteBase(DataFrame):
         if self._col_included('t'):
             self.i_t_unique = False
 
-        # logger_init(self) # FIXME should this be included?
+        # logger_init(self)
 
         return self
 
@@ -402,6 +405,22 @@ class BipartiteBase(DataFrame):
         if kwargs['how'] == 'left': # Non-left merge could cause issues with data, by default resets attributes
             frame._set_attributes(self)
         return frame
+
+    def _check_contiguous_ids(self):
+        '''
+        Check whether each id column is contiguous.
+        '''
+        for contig_col, is_contig in self.columns_contig.items():
+            if self._col_included(contig_col):
+                id_max = - np.inf
+                ids_unique = []
+                for id_col in to_list(self.reference_dict[contig_col]):
+                    id_max = max(self[id_col].max(), id_max)
+                    ids_unique = list(self[id_col].unique()) + ids_unique
+                n_ids = len(set(ids_unique))
+
+                contig_ids = (id_max == n_ids - 1)
+                self.columns_contig[contig_col] = contig_ids
 
     def _contiguous_ids(self, id_col, copy=True):
         '''
@@ -574,10 +593,6 @@ class BipartiteBase(DataFrame):
             if is_contig is not None and not is_contig:
                 frame.logger.info('making {} ids contiguous'.format(contig_col))
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
-
-        # Using contiguous fids, get NetworkX Graph of largest connected set (note that this must be done even if firms already connected and contiguous)
-        # frame.logger.info('generating NetworkX Graph of largest connected set')
-        # _, frame.G = frame._conset(return_G=True) # FIXME currently not used
 
         # Sort columns
         frame.logger.info('sorting columns')
@@ -798,14 +813,13 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _conset(self, connectedness='connected', copy=True, return_G=False):
+    def _conset(self, connectedness='connected', copy=True):
         '''
         Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
             copy (bool): if False, avoid copy
-            return_G (bool): if True, return a tuple of (frame, G)
 
         Returns:
             frame (BipartiteBase): BipartiteBase with connected set of movers
@@ -822,6 +836,7 @@ class BipartiteBase(DataFrame):
         if connectedness is None:
             # Skipping connected set
             frame.connected = None
+            # frame._check_contiguous_ids() # This is necessary
             return frame
 
         prev_workers = frame.n_workers()
@@ -831,13 +846,13 @@ class BipartiteBase(DataFrame):
         if len(to_list(frame.reference_dict['j'])) == 1:
             # Add max firm id per worker to serve as a central node for the worker
             # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
-            frame['j_max'] = frame.groupby(['i'])['j'].transform(max) # FIXME - this is undirected but is much faster
+            frame['j_first'] = frame.groupby('i')['j'].transform('first') # FIXME - this is undirected but is much faster
 
-            # Find largest connected set
+            # Find largest connected set (look only at movers)
             # Source: https://networkx.github.io/documentation/stable/reference/algorithms/generated/networkx.algorithms.components.connected_components.html
-            G = nx.from_pandas_edgelist(frame, 'j', 'j_max')
-            # Drop fid_max
-            frame.drop('j_max')
+            G = nx.from_pandas_edgelist(frame, 'j', 'j_first')
+            # Drop j_first
+            frame.drop('j_first')
         elif len(to_list(frame.reference_dict['j'])) == 2:
             G = nx.from_pandas_edgelist(frame, 'j1', 'j2')
         else:
@@ -848,12 +863,16 @@ class BipartiteBase(DataFrame):
             if connectedness == 'connected':
                 largest_cc = max(nx.connected_components(G), key=len)
             elif connectedness == 'biconnected':
+                if isinstance(frame, bpd.BipartiteEventStudyCollapsed):
+                    raise NotImplementedError('Cannot compute biconnected components on collapsed event study data. This is because intermediate firms can be dropped, turning a mover into a stayer - for instance, a worker may work at firms A, B, then return to A. But if B is not in the largest biconnected set of firms, the worker now has their associated firms listed as A, A. These observations should be collapsed into a single observation, but there is not currently a way to collapse this data efficiently if it is formatted as a collapsed event study. Please compute biconnected components on another data format.')
                 largest_cc = max(nx.biconnected_components(G), key=len)
             else:
                 warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
             # Keep largest connected set of firms
             if len(to_list(frame.reference_dict['j'])) == 1:
                 frame = frame[frame['j'].isin(largest_cc)]
+                if isinstance(frame, bpd.BipartiteLongCollapsed):
+                    frame = frame.recollapse(copy=False)
             else:
                 frame = frame[(frame['j1'].isin(largest_cc)) & (frame['j2'].isin(largest_cc))]
 
@@ -868,11 +887,6 @@ class BipartiteBase(DataFrame):
         if prev_clusters is not None and prev_clusters != frame.n_clusters():
             frame.columns_contig['g'] = False
 
-        if return_G:
-            # Return G if all ids are contiguous (if they're not contiguous, they have to be updated first)
-            if frame.columns_contig['i'] and frame.columns_contig['j'] and (frame.columns_contig['g'] is None or frame.columns_contig['g']):
-                return frame, G
-            return frame, None
         return frame
 
     def gen_m(self, inplace=True):
@@ -892,9 +906,10 @@ class BipartiteBase(DataFrame):
 
         if not frame._col_included('m'):
             if len(to_list(frame.reference_dict['j'])) == 1:
-                frame['m'] = (aggregate_transform(frame, col_groupby='i', col_grouped='j', func='n_unique', col_name='m') > 1).astype(int)
+                frame['m'] = (frame.groupby('i')['j'].transform('nunique') > 1).astype(int) # (aggregate_transform(frame, col_groupby='i', col_grouped='j', func='n_unique', col_name='m') > 1).astype(int)
             elif len(to_list(frame.reference_dict['j'])) == 2:
                 frame['m'] = (frame['j1'] != frame['j2']).astype(int)
+                # frame['m'] = frame.groupby('i')['m'].transform('max')
             else:
                 warnings.warn("Trying to compute whether an individual moved firms is not possible with 3 or more firms per observation. Please check df.reference_dict['j']. Returning unaltered frame")
                 return frame
@@ -993,124 +1008,6 @@ class BipartiteBase(DataFrame):
         valid_firms = n_movers.loc[n_movers['i'] >= threshold, 'j']
 
         return valid_firms
-
-    def attrition_increasing(self, subsets=np.linspace(0.1, 0.5, 5), threshold=15, user_clean={}, copy=True):
-        '''
-        First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Constructively rebuild the data to reach each subsequent value of subsets. Return these subsets as an iterator.
-
-        Arguments:
-            subsets (list): percents of movers to keep
-            threshold (int): minimum number of movers required to keep a firm
-            user_clean (dict): dictionary of parameters for cleaning
-
-                Dictionary parameters:
-
-                    connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
-
-                    i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
-
-                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
-
-                    copy (bool, default=False): if False, avoid copy
-            copy (bool): if False, avoid copy
-
-        Returns:
-            subset (iterator of BipartiteBase): subset of data
-        '''
-        if copy:
-            subset_init = self.copy()
-        else:
-            subset_init = self
-        threshold_firms = subset_init.min_movers(threshold=threshold, copy=copy)
-
-        # Take subset of firms that meet threshold
-        for j_col in to_list(self.reference_dict['j']):
-            subset_init = subset_init[subset_init[j_col].isin(threshold_firms)]
-
-        wids_init = subset_init.loc[subset_init['m'] == 1, 'i'].unique()
-        n_wid_drops_1 = int(np.floor((1 - subsets[0]) * len(wids_init))) # Number of wids to drop
-        wid_drops_1 = set(np.random.choice(wids_init, size=n_wid_drops_1, replace=False)) # FIXME figure out using RNG seeds
-
-        subset_1 = subset_init[~(subset_init['i'].isin(wid_drops_1))].copy().clean_data()
-        subset_1_orig_ids = subset_1.original_ids(copy=copy)
-        yield subset_1
-
-        # Get list of all valid firms
-        valid_firms = []
-        for i, j_col in enumerate(to_list(self.reference_dict['j'])):
-            original_j = 'original_j_' + str(i + 1)
-            try: # If working with a subset
-                valid_firms += list(subset_1_orig_ids[original_j].unique())
-            except KeyError: # If no subset required
-                valid_firms += list(subset_1_orig_ids[j_col].unique())
-        valid_firms = set(valid_firms)
-
-        # Take full list of valid observations
-        for j_col in to_list(self.reference_dict['j']):
-            subset_init = subset_init[subset_init[j_col].isin(valid_firms)]
-
-        # Determine which wids (for movers) can still be drawn
-        all_valid_wids = set(subset_init.loc[subset_init['m'] == 1, 'i'].unique())
-        dropped_wids = all_valid_wids.difference(set(subset_1_orig_ids.loc[subset_1_orig_ids['m'] == 1, 'original_i_1'].unique()))
-        del subset_1_orig_ids
-        subset_prev = subset_1
-
-        for subset_pct in subsets[1:]: # Each step, drop fewer wids
-            n_wid_draws_i = min(int(np.ceil((1 - subset_pct) * len(all_valid_wids))), len(dropped_wids))
-            if n_wid_draws_i <= 0:
-                yield subset_prev
-            else:
-                wid_draws_i = set(np.random.choice(list(dropped_wids), size=n_wid_draws_i, replace=False)) # FIXME figure out using RNG seeds
-                dropped_wids = wid_draws_i
-
-                subset_i = subset_init[~(subset_init['i'].isin(dropped_wids))].copy().clean_data(user_clean)
-                yield subset_i
-
-                subset_prev = subset_i
-
-    def attrition_decreasing(self, subsets=np.linspace(0.5, 0.1, 5), threshold=15, user_clean={}, copy=True):
-        '''
-        First, keep only firms that have at minimum `threshold` many movers. Then take a random subset of subsets[0] percent of remaining movers. Deconstruct the data to reach each subsequent value of subsets. Return these subsets as an iterator.
-
-        Arguments:
-            subsets (list): percents of movers to keep
-            threshold (int): minimum number of movers required to keep a firm
-            user_clean (dict): dictionary of parameters for cleaning
-
-                Dictionary parameters:
-
-                    connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
-
-                    i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
-
-                    data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
-
-                    copy (bool, default=False): if False, avoid copy
-            copy (bool): if False, avoid copy
-
-        Returns:
-            subset (iterator of BipartiteBase): subset of data
-        '''
-        if copy:
-            subset_init = self.copy()
-        else:
-            subset_init = self
-        threshold_firms = subset_init.min_movers(threshold=threshold, copy=copy)
-
-        # Take subset of firms that meet threshold
-        for j_col in to_list(self.reference_dict['j']):
-            subset_init = subset_init[subset_init[j_col].isin(threshold_firms)]
-
-        wids = subset_init.loc[subset_init['m'] == 1, 'i'].unique()
-
-        relative_fraction = subsets / (np.concatenate([[1], subsets]))[:-1]
-
-        for frac in relative_fraction:
-            n_draws = int(np.ceil(frac * len(wids)))
-            wids = np.random.choice(wids, size=n_draws, replace=False)
-
-            subset_i = subset_init[subset_init['i'].isin(wids)].copy().clean_data(user_clean)
-            yield subset_i
 
     def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
         '''

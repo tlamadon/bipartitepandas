@@ -90,6 +90,7 @@ Classes and Methods
 .. autosummary::
 
    ~bipartitepandas.BipartiteLongCollapsed
+   ~bipartitepandas.BipartiteLongCollapsed.recollapse
    ~bipartitepandas.BipartiteLongCollapsed.uncollapse
 
 ``bipartitepandas.BipartiteEventStudyBase``
