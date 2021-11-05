@@ -215,7 +215,8 @@ class SimBipartite:
                                 'spell': spell_data.astype(int)})
 
         # Generate size of spells
-        dspell = data.groupby(['i', 'spell', 'k']).size().to_frame(name='freq').reset_index()
+        dspell = data.groupby(['i', 'spell', 'k']).size().to_frame(name='freq')
+        dspell.reset_index(inplace=True)
         # Draw firm ids
         dspell['j'] = dspell.groupby(['k'])['freq'].transform(self.__sim_network_draw_fids, *[num_time, firm_size])
         # Make firm ids contiguous (and have them start at 1)

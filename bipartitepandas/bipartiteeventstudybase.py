@@ -49,6 +49,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
                     i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
 
+                    drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for biconnected components)
+
                     data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
 
                     copy (bool, default=False): if False, avoid copy
@@ -142,7 +144,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort columns
         sorted_cols = sorted(data_cs.columns, key=bpd.col_order)
-        data_cs = data_cs[sorted_cols]
+        data_cs = data_cs.reindex(sorted_cols, axis=1, copy=False)
 
         self.logger.info('mover and stayer event study datasets combined into cross section')
 
@@ -223,7 +225,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        data_long = data_long[sorted_cols].sort_values(sort_order_2).reset_index(drop=True)
+        data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
+        data_long.sort_values(sort_order_2, inplace=True)
+        data_long.reset_index(drop=True, inplace=True)
 
         if return_df:
             return data_long
@@ -295,7 +299,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        data_long = data_long[sorted_cols].sort_values(sort_order).reset_index(drop=True)
+        data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
+        data_long.sort_values(sort_order, inplace=True)
+        data_long.reset_index(drop=True, inplace=True)
 
         if return_df:
             return data_long

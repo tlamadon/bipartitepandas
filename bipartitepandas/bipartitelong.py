@@ -59,18 +59,19 @@ class BipartiteLong(bpd.BipartiteLongBase):
         self.logger.info('copied data sorted by i and t')
 
         # Introduce lagged i and j
-        data['i_l1'] = data['i'].shift(periods=1)
-        data['j_l1'] = data['j'].shift(periods=1)
+        i_l1 = data['i'].shift(periods=1)
+        j_l1 = data['j'].shift(periods=1)
         self.logger.info('lagged i and j introduced')
 
         # Generate spell ids
         # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
-        new_spell = (data['j'] != data['j_l1']) | (data['i'] != data['i_l1']) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
-        data['spell_id'] = new_spell.cumsum()
+        new_spell = (data['j'] != j_l1) | (data['i'] != i_l1) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
+        del i_l1, j_l1
+        spell_id = new_spell.cumsum()
         self.logger.info('spell ids generated')
 
         # Aggregate at the spell level
-        spell = data.groupby(['spell_id'])
+        spell = data.groupby(spell_id)
         # First, aggregate required columns
         data_spell = spell.agg(
             i=pd.NamedAgg(column='i', aggfunc='first'),
@@ -95,15 +96,15 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # if not self._col_included('m'):
         #     spell_count = data_spell.groupby(['i']).transform('count')['j'] # Choice of j arbitrary
         #     data_spell['m'] = (spell_count > 1).astype(int)
-        collapsed_data = data_spell.reset_index(drop=True)
+        data_spell.reset_index(drop=True, inplace=True)
 
         # Sort columns
-        sorted_cols = sorted(collapsed_data.columns, key=bpd.col_order)
-        collapsed_data = collapsed_data[sorted_cols]
+        sorted_cols = sorted(data_spell.columns, key=bpd.col_order)
+        data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
 
         self.logger.info('data aggregated at the spell level')
 
-        collapsed_frame = bpd.BipartiteLongCollapsed(collapsed_data)
+        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
         collapsed_frame._set_attributes(self, no_dict=True)
 
         return collapsed_frame
@@ -122,23 +123,27 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         import numpy as np
         m = self._col_included('m') # Check whether m column included
-        fill_frame = pd.DataFrame(self, copy=copy).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
-        fill_frame['i_l1'] = fill_frame['i'].shift(periods=1) # Lagged value
-        fill_frame['t_l1'] = fill_frame['t'].shift(periods=1) # Lagged value
-        missing_periods = (fill_frame['i'] == fill_frame['i_l1']) & (fill_frame['t'] != fill_frame['t_l1'] + 1)
+        fill_frame = pd.DataFrame(self, copy=copy)
+        fill_frame.sort_values(['i', 't'], inplace=True)
+        fill_frame.reset_index(drop=True, inplace=True) # Sort by i, t
+        i_l1 = fill_frame['i'].shift(periods=1) # Lagged value
+        t_l1 = fill_frame['t'].shift(periods=1) # Lagged value
+        missing_periods = (fill_frame['i'] == i_l1) & (fill_frame['t'] != t_l1 + 1)
         if np.sum(missing_periods) > 0: # If have data to fill in
             fill_data = []
             for index in fill_frame[missing_periods].index:
                 row = fill_frame.iloc[index]
                 # Only iterate over missing years
-                for t in range(int(row['t_l1']) + 1, int(row['t'])):
+                for t in range(int(t_l1[index]) + 1, int(row['t'])):
                     new_row = {'i': int(row['i']), 'j': fill_j, 'y': fill_y, 't': t}
                     if m: # If m column included
                         new_row['m'] = int(row['m'])
                     fill_data.append(new_row)
             fill_df = pd.concat([pd.DataFrame(fill_row, index=[i]) for i, fill_row in enumerate(fill_data)])
-            fill_frame = pd.concat([fill_frame, fill_df]).sort_values(['i', 't']).reset_index(drop=True) # Sort by i, t
-        fill_frame.drop(['i_l1', 't_l1'], axis=1, inplace=True)
+            fill_frame = pd.concat([fill_frame, fill_df])
+            fill_frame.sort_values(['i', 't'], inplace=True)
+            fill_frame.reset_index(drop=True, inplace=True) # Sort by i, t
+        # fill_frame.drop(['i_l1', 't_l1'], axis=1, inplace=True)
 
         return fill_frame
 
@@ -182,7 +187,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame['worker_total_periods'] = es_extended_frame.groupby('i')['one'].transform(sum) # Must faster to use .transform(sum) than to use .transform(len)
 
         # Keep workers with enough periods (must have at least periods_pre + periods_post periods)
-        es_extended_frame = es_extended_frame[es_extended_frame['worker_total_periods'] >= periods_pre + periods_post].reset_index(drop=True)
+        es_extended_frame = es_extended_frame[es_extended_frame['worker_total_periods'] >= periods_pre + periods_post]
+        es_extended_frame.reset_index(drop=True, inplace=True)
 
         # Sort by worker-period
         es_extended_frame.sort_values(['i', 't'], inplace=True)
@@ -239,7 +245,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame.rename({col: col + '_f1' for col in include}, axis=1, inplace=True)
 
         # Keep rows with valid moves
-        es_extended_frame = es_extended_frame[es_extended_frame['valid_move'] == 1].reset_index(drop=True)
+        es_extended_frame = es_extended_frame[es_extended_frame['valid_move'] == 1]
+        es_extended_frame.reset_index(drop=True, inplace=True)
 
         # Drop irrelevant columns
         es_extended_frame.drop('valid_move', axis=1, inplace=True)

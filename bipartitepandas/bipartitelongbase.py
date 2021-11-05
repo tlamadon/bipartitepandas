@@ -81,22 +81,22 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     movers[col + '1' + subcol_number] = movers[col + '1' + subcol_number].astype(int)
 
         # Correct i
-        movers.drop('i1', axis=1, inplace=True)
-        movers.rename({'i2': 'i'}, axis=1, inplace=True)
+        movers.drop('i2', axis=1, inplace=True)
+        movers.rename({'i1': 'i'}, axis=1, inplace=True)
         stayers.drop('i2', axis=1, inplace=True)
         stayers.rename({'i1': 'i'}, axis=1, inplace=True)
 
         # Keep only relevant columns
-        stayers = stayers[keep_cols]
-        movers = movers[keep_cols]
+        stayers = stayers.reindex(keep_cols, axis=1, copy=False)
+        movers = movers.reindex(keep_cols, axis=1, copy=False)
         self.logger.info('columns updated')
 
         # Merge stayers and movers
-        data_es = pd.concat([stayers, movers]).reset_index(drop=True)
+        data_es = pd.concat([stayers, movers], ignore_index=True) # .reset_index(drop=True)
 
         # Sort columns
         sorted_cols = sorted(data_es.columns, key=bpd.col_order)
-        data_es = data_es[sorted_cols]
+        data_es = data_es.reindex(sorted_cols, axis=1, copy=False)
 
         self.logger.info('data reformatted as event study')
 

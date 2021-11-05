@@ -55,7 +55,7 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
 
         elif measure in ['quantile_firm_small', 'quantile_firm_large']:
             # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
-            data = data.sort_values(['y'])
+            data.sort_values('y', inplace=True)
 
             if measure == 'quantile_firm_small':
                 # Convert pandas dataframe into a dictionary to access data faster
@@ -94,6 +94,8 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
                             break
                     # Update cdfs with the firm-level cdf
                     cdfs[i, j] = y[index]
+
+        data.sort_index(inplace=True) # Reset sort
 
         return cdfs
     return compute_measures_cdfs

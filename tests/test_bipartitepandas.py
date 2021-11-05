@@ -567,10 +567,10 @@ def test_contiguous_cids_14():
 
     df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't', 'g']]
 
-    bdf = bpd.BipartiteLong(data=df)
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long()
-    bdf = bdf.get_es()
+    bdf = bdf.get_es().original_ids()
 
     stayers = bdf[bdf['m'] == 0]
     movers = bdf[bdf['m'] == 1]
@@ -580,24 +580,30 @@ def test_contiguous_cids_14():
     assert movers.iloc[0]['i'] == 0
     assert movers.iloc[0]['y1'] == 2
     assert movers.iloc[0]['y2'] == 1
-    assert movers.iloc[0]['g1'] == 1
-    assert movers.iloc[0]['g2'] == 0
+    assert movers.iloc[0]['original_g1'] == 2
+    assert movers.iloc[0]['original_g2'] == 1
+    assert movers.iloc[0]['g1'] == 0
+    assert movers.iloc[0]['g2'] == 1
 
     assert movers.iloc[1]['j1'] == 1
     assert movers.iloc[1]['j2'] == 2
     assert movers.iloc[1]['i'] == 1
     assert movers.iloc[1]['y1'] == 1
     assert movers.iloc[1]['y2'] == 1
-    assert movers.iloc[1]['g1'] == 0
-    assert movers.iloc[1]['g2'] == 1
+    assert movers.iloc[1]['original_g1'] == 1
+    assert movers.iloc[1]['original_g2'] == 2
+    assert movers.iloc[1]['g1'] == 1
+    assert movers.iloc[1]['g2'] == 0
 
     assert stayers.iloc[0]['j1'] == 2
     assert stayers.iloc[0]['j2'] == 2
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['y1'] == 1
     assert stayers.iloc[0]['y2'] == 1
-    assert stayers.iloc[0]['g1'] == 1
-    assert stayers.iloc[0]['g2'] == 1
+    assert stayers.iloc[0]['original_g1'] == 2
+    assert stayers.iloc[0]['original_g2'] == 2
+    assert stayers.iloc[0]['g1'] == 0
+    assert stayers.iloc[0]['g2'] == 0
 
 def test_col_dict_15():
     # Check that col_dict works properly.
@@ -701,10 +707,10 @@ def test_worker_year_unique_16_2():
     worker_data.append({'j': 1, 't': 1, 'i': 3, 'y': 1.5})
     worker_data.append({'j': 2, 't': 2, 'i': 3, 'y': 1.})
 
-    df = pd.concat([pd.DataFrame(worker, index=np.arange(len(worker_data))) for worker in worker_data])[['i', 'j', 'y', 't']]
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j', 'y', 't']]
 
     for how in ['max', 'sum', 'mean']:
-        bdf = bpd.BipartiteLong(data=df)
+        bdf = bpd.BipartiteLong(data=df.copy())
         bdf = bdf.clean_data({'i_t_how': how}).gen_m()
 
         stayers = bdf[bdf['m'] == 0]
@@ -816,13 +822,14 @@ def test_worker_year_unique_16_4():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])[['i', 'j1', 'j2', 'y1', 'y2', 't1', 't2']]
 
     for how in ['max', 'sum', 'mean']:
-        bdf = bpd.BipartiteEventStudy(data=df)
-        bdf = bdf.clean_data({'i_t_how': how}).gen_m()
+        bdf = bpd.BipartiteEventStudy(data=df.copy(), include_id_reference_dict=True)
+        bdf = bdf.clean_data({'i_t_how': how}).gen_m().original_ids()
 
         stayers = bdf[bdf['m'] == 0]
         movers = bdf[bdf['m'] == 1]
 
-        assert movers.iloc[0]['i'] == 0
+        assert movers.iloc[0]['original_i'] == 0
+        assert movers.iloc[0]['i'] == 1
         assert movers.iloc[0]['j1'] == 0
         assert movers.iloc[0]['j2'] == 1
         assert movers.iloc[0]['y1'] == 2
@@ -830,7 +837,8 @@ def test_worker_year_unique_16_4():
         assert movers.iloc[0]['t1'] == 1
         assert movers.iloc[0]['t2'] == 2
 
-        assert movers.iloc[1]['i'] == 1
+        assert movers.iloc[1]['original_i'] == 1
+        assert movers.iloc[1]['i'] == 2
         if how == 'max':
             assert movers.iloc[1]['j1'] == 2
             assert movers.iloc[1]['y1'] == 1
@@ -849,7 +857,8 @@ def test_worker_year_unique_16_4():
         assert movers.iloc[1]['t1'] == 1
         assert movers.iloc[1]['t2'] == 2
 
-        assert stayers.iloc[0]['i'] == 2
+        assert stayers.iloc[0]['i'] == 0
+        assert stayers.iloc[0]['original_i'] == 3
         assert stayers.iloc[0]['j1'] == 1
         assert stayers.iloc[0]['j2'] == 1
         assert stayers.iloc[0]['y1'] == 1.5
@@ -857,7 +866,8 @@ def test_worker_year_unique_16_4():
         assert stayers.iloc[0]['t1'] == 1
         assert stayers.iloc[0]['t2'] == 1
 
-        assert stayers.iloc[1]['i'] == 2
+        assert stayers.iloc[1]['i'] == 0
+        assert stayers.iloc[1]['original_i'] == 3
         assert stayers.iloc[1]['j1'] == 1
         assert stayers.iloc[1]['j2'] == 1
         assert stayers.iloc[1]['y1'] == 1.5
