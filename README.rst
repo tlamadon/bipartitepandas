@@ -60,6 +60,7 @@ Uploading to Pip
 ----------------
 
 First, update the package number in `setup.cfg`. Second, delete the current `dist/` folder (if there is one). Finally, from the command line run::
+
     python3 -m build
     twine upload dist/*
 and enter your PyPi credentials.
