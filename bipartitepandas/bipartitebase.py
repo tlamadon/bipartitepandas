@@ -623,9 +623,9 @@ class BipartiteBase(DataFrame):
         frame._update_cols()
 
         # FIXME I believe this was necessary for an old version of gen_m(), so I commented it out to speed up the code
-        # # Next, sort rows
-        # frame.logger.info('sorting rows')
-        # frame.sort_values(['i'] + to_list(self.reference_dict['t']), inplace=True)
+        # Next, sort rows
+        frame.logger.info('sorting rows')
+        frame.sort_values(['i', to_list(self.reference_dict['t'])[0]], inplace=True)
 
         # Next, make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks
         if clean_params['data_validity']:
@@ -867,7 +867,7 @@ class BipartiteBase(DataFrame):
 
             if how == 'max':
                 # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
-                frame = frame[frame['y'] == frame.groupby(['i', 't'])['y'].transform(max)].groupby(['i', 't'], as_index=False).first()
+                frame = frame[frame['y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy()].groupby(['i', 't'], as_index=False).first()
                 # frame.sort_values('y').groupby(['i', 't'], as_index=False).last()
                 # frame = frame.iloc[frame.reset_index().groupby(['i', 't']).agg({'y': max, 'index': 'first'})['index']].reset_index(drop=True)
                 # # Sort by worker id, time, and compensation
@@ -876,7 +876,7 @@ class BipartiteBase(DataFrame):
             elif how in ['sum', 'mean']:
                 # Group by worker id, time, and firm id, and take sum/mean of compensation
                 frame['y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
-                frame = frame[frame['y'] == frame.groupby(['i', 't'])['y'].transform(max)].groupby(['i', 't'], as_index=False).first()
+                frame = frame[frame['y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy()].groupby(['i', 't'], as_index=False).first()
                 # frame = frame.iloc[frame.reset_index().groupby(['i', 't']).agg({'y': max, 'index': 'first'})['index']].reset_index(drop=True)
                 # # Sort by worker id, time, and compensation
                 # frame.sort_values(['i', 't', 'y'], inplace=True)
@@ -929,16 +929,29 @@ class BipartiteBase(DataFrame):
         if len(to_list(frame.reference_dict['j'])) == 1:
             # Add max firm id per worker to serve as a central node for the worker
             # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
-            j_first = frame.groupby('i')['j'].transform('first') # FIXME - this is undirected but is much faster
-
+            # j_first = frame.groupby('i')['j'].transform('first') # FIXME - this is undirected but is much faster
+            i_col = frame['i'].to_numpy()
+            j_col = frame['j'].to_numpy()
+            j_prev = np.roll(j_col, 1)
+            i_match = (i_col == np.roll(i_col, 1))
+            j_col = j_col[i_match]
+            j_prev = j_prev[i_match]
+            j_zip = pd._libs.lib.fast_zip([j_col, j_prev])
+            # if connectedness == 'biconnected':
+            #     i_col = i_col[i_match]
+            #     j_df = pd.DataFrame([i_col, j_zip], columns=['i', 'j'])
+            #     j_zip = j_df.groupby('i')['j'].unique().to_numpy()
+            #     # Source: https://stackoverflow.com/questions/716477/join-list-of-lists-in-python
+            #     j_zip = [j_unique for i_unique in j_zip for j_unique in i_unique]
+            #     del j_df
             # Find largest connected set (look only at movers)
             # Source: https://networkx.github.io/documentation/stable/reference/algorithms/generated/networkx.algorithms.components.connected_components.html
             # Source for values.tolist(): https://stackoverflow.com/questions/44849668/merge-two-columns-in-pandas-dataframe-into-a-list
             # Source for fast_zip: https://stackoverflow.com/questions/16453465/multi-column-factorize-in-pandas
-            G = nx.from_edgelist(pd._libs.lib.fast_zip([frame['j'].to_numpy(), j_first.to_numpy()])) # nx.from_edgelist(frame[['j', 'j_first']].to_numpy().tolist()) # nx.from_pandas_edgelist(frame[['j', 'j_first']], 'j', 'j_first')
+            G = nx.from_edgelist(j_zip) # nx.from_edgelist(frame[['j', 'j_first']].to_numpy().tolist()) # nx.from_pandas_edgelist(frame[['j', 'j_first']], 'j', 'j_first')
             # # Drop j_first
             # frame.drop('j_first')
-            del j_first
+            del i_col, j_col, j_prev, i_match, j_zip
         elif len(to_list(frame.reference_dict['j'])) == 2:
             G = nx.from_edgelist(pd._libs.lib.fast_zip([frame['j1'].to_numpy(), frame['j2'].to_numpy()])) # nx.from_edgelist(frame[['j1', 'j2']].to_numpy().tolist()) # nx.from_pandas_edgelist(frame[['j1', 'j2']], 'j1', 'j2')
         else:
@@ -957,8 +970,14 @@ class BipartiteBase(DataFrame):
         # Keep largest connected set of firms
         if len(to_list(frame.reference_dict['j'])) == 1:
             frame = frame[frame['j'].isin(largest_cc)]
-            if isinstance(frame, bpd.BipartiteLongCollapsed): # and (connectedness == 'biconnected'):
+                
+            if isinstance(frame, bpd.BipartiteLongCollapsed): # and (connectedness == 'biconnected'): # FIXME this is a bug, this should only happen with biconnected but for some reason it is happening with connected too
                 frame = frame.recollapse(drop_multiples=drop_multiples, copy=False)
+
+            if connectedness == 'biconnected':
+                # This fixes a discrepency between networkx's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out wants the set of firms to remain unchanged
+                frame.gen_m()
+                frame = frame[frame.groupby('j')['m'].transform('sum') >= 2]
         else:
             frame = frame[(frame['j1'].isin(largest_cc)) & (frame['j2'].isin(largest_cc))]
 
@@ -992,9 +1011,9 @@ class BipartiteBase(DataFrame):
 
         if not frame._col_included('m'):
             if len(to_list(frame.reference_dict['j'])) == 1:
-                frame['m'] = (frame.groupby('i')['j'].transform('nunique') > 1).astype(int) # (aggregate_transform(frame, col_groupby='i', col_grouped='j', func='n_unique', col_name='m') > 1).astype(int)
+                frame['m'] = (frame.groupby('i')['j'].transform('nunique').to_numpy() > 1).astype(int) # (aggregate_transform(frame, col_groupby='i', col_grouped='j', func='n_unique', col_name='m') > 1).astype(int)
             elif len(to_list(frame.reference_dict['j'])) == 2:
-                frame['m'] = (frame['j1'] != frame['j2']).astype(int)
+                frame['m'] = (frame['j1'].to_numpy() != frame['j2'].to_numpy()).astype(int)
                 # frame['m'] = frame.groupby('i')['m'].transform('max')
             else:
                 warnings.warn("Trying to compute whether an individual moved firms is not possible with 3 or more firms per observation. Please check df.reference_dict['j']. Returning unaltered frame")
@@ -1056,26 +1075,21 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def min_movers(self, threshold=15, copy=True):
+    def min_workers(self, threshold=15, copy=True):
         '''
-        List firms with at least `threshold` many movers.
+        List firms with at least `threshold` many workers.
 
         Arguments:
-            threshold (int): minimum number of movers required to keep a firm
+            threshold (int): minimum number of workers required to keep a firm
             copy (bool): if False, avoid copy
 
         Returns:
-            valid_firms (list): list of firms with sufficiently many movers
+            valid_firms (list): list of firms with sufficiently many workers
         '''
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
-
         if copy:
             frame = self.copy()
         else:
             frame = self
-
-        frame = frame[frame['m'] == 1] # Keep movers
 
         j_cols = to_list(self.reference_dict['j'])
         n_movers = frame.groupby(j_cols[0])['i'].unique().apply(list) # List of all unique worker ids for j/j1
@@ -1099,9 +1113,32 @@ class BipartiteBase(DataFrame):
 
         # Get number of unique movers at firm j
         n_movers['i'] = n_movers['i'].apply(set).apply(len)
-        valid_firms = n_movers.loc[n_movers['i'] >= threshold, 'j']
+        valid_firms = n_movers.loc[n_movers['i'].to_numpy() >= threshold, 'j']
 
         return valid_firms
+
+    def min_movers(self, threshold=15, copy=True):
+        '''
+        List firms with at least `threshold` many movers.
+
+        Arguments:
+            threshold (int): minimum number of movers required to keep a firm
+            copy (bool): if False, avoid copy
+
+        Returns:
+            valid_firms (list): list of firms with sufficiently many movers
+        '''
+        # Generate m column (the function checks if it already exists)
+        self.gen_m()
+
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        frame = frame[frame['m'].to_numpy() == 1] # Keep movers
+
+        return frame.min_workers(threshold=threshold, copy=False)
 
     def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
         '''
@@ -1129,16 +1166,16 @@ class BipartiteBase(DataFrame):
 
         if stayers_movers is not None:
             if stayers_movers == 'stayers':
-                data = pd.DataFrame(frame[frame['m'] == 0])
+                data = pd.DataFrame(frame[frame['m'].to_numpy() == 0])
             elif stayers_movers == 'movers':
-                data = pd.DataFrame(frame[frame['m'] == 1])
+                data = pd.DataFrame(frame[frame['m'].to_numpy() == 1])
         else:
             data = pd.DataFrame(frame)
 
         # If period-level, then only use data for that particular period
         if t is not None:
             if len(to_list(self.reference_dict['t'])) == 1:
-                data = data[data['t'] == t]
+                data = data[data['t'].to_numpy() == t]
             else:
                 warnings.warn('Cannot use data from a particular period on collapsed data, proceeding to cluster on all data')
 

@@ -1,6 +1,7 @@
 '''
 Class for a bipartite network in long form
 '''
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -59,14 +60,16 @@ class BipartiteLong(bpd.BipartiteLongBase):
         self.logger.info('copied data sorted by i and t')
 
         # Introduce lagged i and j
-        i_l1 = data['i'].shift(periods=1)
-        j_l1 = data['j'].shift(periods=1)
+        i_np = data['i'].to_numpy()
+        j_np = data['j'].to_numpy()
+        i_l1 = np.roll(i_np, 1) # data['i'].shift(periods=1)
+        j_l1 = np.roll(j_np, 1) # data['j'].shift(periods=1)
         self.logger.info('lagged i and j introduced')
 
         # Generate spell ids
         # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
-        new_spell = (data['j'] != j_l1) | (data['i'] != i_l1) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
-        del i_l1, j_l1
+        new_spell = (j_np != j_l1) | (i_np != i_l1) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
+        del i_np, j_np, i_l1, j_l1
         spell_id = new_spell.cumsum()
         self.logger.info('spell ids generated')
 

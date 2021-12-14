@@ -1,6 +1,7 @@
 '''
 Class for a bipartite network in collapsed long form
 '''
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -63,16 +64,18 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             frame['w'] = 1
 
         # Introduce lagged i and j
-        i_l1 = frame['i'].shift(periods=1)
-        j_l1 = frame['j'].shift(periods=1)
+        i_np = frame['i'].to_numpy()
+        j_np = frame['j'].to_numpy()
+        i_l1 = np.roll(i_np, 1) # data['i'].shift(periods=1)
+        j_l1 = np.roll(j_np, 1) # data['j'].shift(periods=1)
 
         # Generate spell ids
-        new_spell = (frame['j'] != j_l1) | (frame['i'] != i_l1) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
-        del i_l1, j_l1
+        new_spell = (j_np != j_l1) | (i_np != i_l1) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
+        del i_np, j_np, i_l1, j_l1
         spell_id = new_spell.cumsum()
 
         # Quickly check whether a recollapse is necessary
-        if spell_id.iloc[-1] == len(frame):
+        if spell_id[-1] == len(frame):
             if copy:
                 return self.copy()
             return self
