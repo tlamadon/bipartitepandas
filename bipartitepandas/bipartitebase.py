@@ -426,22 +426,6 @@ class BipartiteBase(DataFrame):
             frame._set_attributes(self)
         return frame
 
-    def _check_contiguous_ids(self):
-        '''
-        Check whether each id column is contiguous.
-        '''
-        for contig_col, is_contig in self.columns_contig.items():
-            if self._col_included(contig_col):
-                id_max = - np.inf
-                ids_unique = []
-                for id_col in to_list(self.reference_dict[contig_col]):
-                    id_max = max(self[id_col].max(), id_max)
-                    ids_unique = list(self[id_col].unique()) + ids_unique
-                n_ids = len(set(ids_unique))
-
-                contig_ids = (id_max == n_ids - 1)
-                self.columns_contig[contig_col] = contig_ids
-
     def _contiguous_ids(self, id_col, copy=True):
         '''
         Make column of ids contiguous.
@@ -458,7 +442,7 @@ class BipartiteBase(DataFrame):
         else:
             frame = self
 
-        cols = to_list(self.reference_dict[id_col])
+        cols = to_list(frame.reference_dict[id_col])
         n_cols = len(cols)
         n_rows = len(frame)
         all_ids = frame[cols].to_numpy().reshape(n_cols * n_rows)
@@ -472,7 +456,7 @@ class BipartiteBase(DataFrame):
         except TypeError:
             # If ids are not integers, this will return a TypeError and we can ignore it
             pass
-        
+
         frame[cols] = factorized[0].reshape((n_rows, n_cols))
 
         # Save id reference dataframe, so user can revert back to original ids
@@ -486,66 +470,12 @@ class BipartiteBase(DataFrame):
                 frame.id_reference_dict[id_col] = frame.id_reference_dict[id_col].merge(id_reference_df, how='left', on='adjusted_ids_' + str(n_cols_id - 1))
 
         # Sort columns
-        sorted_cols = sorted(frame.columns, key=col_order)
-        frame = frame.reindex(sorted_cols, axis=1, copy=False)
+        frame = frame.sort_cols(copy=False)
 
         # ids are now contiguous
         frame.columns_contig[id_col] = True
 
         return frame
-
-        # # Create sorted set of unique ids
-        # ids = []
-        # for id in to_list(self.reference_dict[id_col]):
-        #     ids += list(frame[id].unique())
-        # ids = sorted(list(set(ids)))
-
-        # # Quickly check whether ids need to be reset
-        # try:
-        #     if ids[-1] + 1 == len(ids): # Recall ids is sorted
-        #         return frame
-        # except TypeError:
-        #     # If ids are not integers, this will return a TypeError and we can ignore it
-        #     pass
-
-        # # Create list of adjusted ids
-        # adjusted_ids = np.arange(len(ids)).astype(int)
-
-        # # Save id reference dataframe, so user can revert back to original ids
-        # if frame.id_reference_dict: # If id_reference_dict has been initialized
-        #     if len(frame.id_reference_dict[id_col]) == 0: # If dataframe empty, start with original ids: adjusted ids
-        #         frame.id_reference_dict[id_col]['original_ids'] = ids
-        #         frame.id_reference_dict[id_col]['adjusted_ids_1'] = adjusted_ids
-        #     else: # Merge in new adjustment step
-        #         n_cols = len(frame.id_reference_dict[id_col].columns)
-        #         id_reference_df = pd.DataFrame({'adjusted_ids_' + str(n_cols - 1): ids, 'adjusted_ids_' + str(n_cols): adjusted_ids}, index=adjusted_ids).astype('Int64')
-        #         frame.id_reference_dict[id_col] = frame.id_reference_dict[id_col].merge(id_reference_df, how='left', on='adjusted_ids_' + str(n_cols - 1))
-
-        # # Update each fid one at a time
-        # ids_dict = dict(zip(ids, adjusted_ids))
-        # for id in to_list(self.reference_dict[id_col]):
-        #     # Source: https://stackoverflow.com/questions/20250771/remap-values-in-pandas-column-with-a-dict
-        #     frame[id] = frame[id].map(ids_dict)
-
-        #     # # Create dictionary linking current to new ids, then convert into a dataframe for merging
-        #     # ids_dict = {id: ids, 'adj_' + id: adjusted_ids}
-        #     # ids_df = pd.DataFrame(ids_dict, index=adjusted_ids)
-
-        #     # # Merge new, contiguous ids into event study data
-        #     # frame = frame.merge(ids_df, how='left', on=id, copy=False)
-
-        #     # # Adjust id column to use new contiguous id
-        #     # frame[id] = frame['adj_' + id]
-        #     # frame.drop('adj_' + id)
-
-        # # Sort columns
-        # sorted_cols = sorted(frame.columns, key=col_order)
-        # frame = frame.reindex(sorted_cols, axis=1, copy=False)
-
-        # # ids are now contiguous
-        # frame.columns_contig[id_col] = True
-
-        # return frame
 
     def _update_cols(self, inplace=True):
         '''
@@ -607,47 +537,46 @@ class BipartiteBase(DataFrame):
         self.logger.info('beginning BipartiteBase data cleaning')
 
         clean_params = update_dict(self.default_clean, user_clean)
+        data_validity = clean_params['data_validity']
 
         if clean_params['copy']:
             frame = self.copy()
         else:
             frame = self
 
-        # # If not running _data_validity(), reset all attributes
-        # if not clean_params['data_validity']:
-        #     frame._reset_attributes()
-
-        # First, correct columns
-        # Note this must be done before _data_validity(), otherwise certain checks are not guaranteed to work
-        frame.logger.info('correcting columns')
+        # First, correct column names
+        frame.logger.info('correcting column names')
         frame._update_cols()
 
-        # FIXME I believe this was necessary for an old version of gen_m(), so I commented it out to speed up the code
+        # Next, check that required columns are included and datatypes are correct
+        frame.logger.info('checking required columns and datatypes')
+        frame = frame._check_cols()
+
         # Next, sort rows
         frame.logger.info('sorting rows')
         frame.sort_values(['i', to_list(self.reference_dict['t'])[0]], inplace=True)
 
-        # Next, make sure data is valid - computes correct_cols, no_na, no_duplicates, connected, and contiguous, along with other checks
-        if clean_params['data_validity']:
-            frame.logger.info('checking quality of data')
-            frame = BipartiteBase._data_validity(frame, connectedness=clean_params['connectedness']) # Shared _data_validity
-
         # Next, drop NaN observations
-        if not frame.no_na:
+        if (not frame.no_na) or data_validity:
             frame.logger.info('dropping NaN observations')
             frame = frame.dropna()
 
             # Update no_na
             frame.no_na = True
 
+        # Generate 'm' column - this is necessary for the next steps
+        # 'm' will get updated in the following steps as it changes
+        frame.logger.info("generating 'm' column")
+        frame = frame.gen_m(force=True, copy=False)
+
         # Next, make sure i-t (worker-year) observations are unique
-        if frame.i_t_unique is not None and not frame.i_t_unique:
+        if frame.i_t_unique is not None and ((not frame.i_t_unique) or data_validity):
             frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
             frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], copy=False)
 
             # Update no_duplicates
             frame.no_duplicates = True
-        elif not frame.no_duplicates:
+        elif (not frame.no_duplicates) or data_validity:
             # Drop duplicate observations
             frame.logger.info('dropping duplicate observations')
             frame.drop_duplicates(inplace=True)
@@ -655,22 +584,27 @@ class BipartiteBase(DataFrame):
             # Update no_duplicates
             frame.no_duplicates = True
 
+        # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
+        for contig_col, is_contig in frame.columns_contig.items():
+            if is_contig is not None and ((not is_contig) or data_validity):
+                frame.logger.info('making {} ids contiguous'.format(contig_col))
+                frame = frame._contiguous_ids(id_col=contig_col, copy=False)
+
         # Next, find largest set of firms connected by movers
-        if frame.connected in [False, None]:
+        if frame.connected in [False, None] or data_validity:
             # Generate largest connected set
             frame.logger.info('generating largest connected set')
             frame = frame._conset(connectedness=clean_params['connectedness'], drop_multiples=clean_params['drop_multiples'], copy=False)
 
-        # Next, check contiguous ids
-        for contig_col, is_contig in frame.columns_contig.items():
-            if is_contig is not None and not is_contig:
-                frame.logger.info('making {} ids contiguous'.format(contig_col))
-                frame = frame._contiguous_ids(id_col=contig_col, copy=False)
+            # Next, check contiguous ids after igraph, in case the connected components dropped ids
+            for contig_col, is_contig in frame.columns_contig.items():
+                if is_contig is not None and ((not is_contig) or data_validity):
+                    frame.logger.info('making {} ids contiguous'.format(contig_col))
+                    frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Sort columns
         frame.logger.info('sorting columns')
-        sorted_cols = sorted(frame.columns, key=col_order)
-        frame = frame.reindex(sorted_cols, axis=1, copy=False)
+        frame = frame.sort_cols(copy=False)
 
         # Reset index
         frame.reset_index(drop=True, inplace=True)
@@ -679,161 +613,39 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _data_validity(self, connectedness='connected'):
+    def _check_cols(self):
         '''
-        Checks that data is formatted correctly and updates relevant attributes.
-
-        Arguments:
-            connectedness (str or None): if 'connected', check that observations are in the largest connected set of firms; if 'biconnected', check that observations are in the largest biconnected set of firms; if None, keep all observations
+        Check that required columns are included, and that all columns have the correct datatype. Raises a ValueError if either is false.
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with corrected attributes
+            frame (BipartiteBase): BipartiteBase with contiguous ids, for columns that started with incorrect datatypes
         '''
-        frame = self # .copy()
+        frame = self
+        cols_included = True
+        correct_dtypes = True
 
-        success = True
-
-        frame.logger.info('--- checking columns ---')
-        all_cols = frame._included_cols()
-        cols = True
-        frame.logger.info('--- checking column datatypes ---')
-        col_dtypes = True
-        for col in all_cols:
+        # Check all included columns
+        for col in frame._included_cols():
             for subcol in to_list(frame.reference_dict[col]):
-                if frame.col_dict[subcol] not in frame.columns:
-                    frame.logger.info('{} missing from data'.format(frame.col_dict[subcol]))
-                    col_dtypes = False
-                    cols = False
+                if subcol not in frame.columns:
+                    # If column missing
+                    frame.logger.info('{} missing from data'.format(subcol))
+                    cols_included = False
                 else:
-                    col_type = str(frame[frame.col_dict[subcol]].dtype)
+                    # If column included, check type
+                    col_type = str(frame[subcol].dtype)
                     valid_types = to_list(frame.dtype_dict[frame.col_dtype_dict[col]])
                     if col_type not in valid_types:
-                        frame.logger.info('{} has wrong dtype, should be {} but is {}'.format(frame.col_dict[subcol], frame.col_dtype_dict[col], col_type))
-                        if col in frame.columns_contig.keys(): # If column contiguous
-                            frame.logger.info('{} has wrong dtype, converting to contiguous integers'.format(frame.col_dict[subcol]))
-                            frame = frame._contiguous_ids(col)
+                        if col in frame.columns_contig.keys():
+                            # If column contiguous, we don't worry about datatype, but will log it
+                            frame.logger.info('{} has dtype {}, so we have converted it to contiguous integers'.format(subcol, col_type))
+                            frame = frame._contiguous_ids(id_col=col, copy=False)
                         else:
-                            frame.logger.info('{} has wrong dtype. Please check that this is the correct column (it is supposed to give {}), and if it is, cast it to a valid datatype (these include: {})'.format(frame.col_dict[subcol], subcol, valid_types))
-                            col_dtypes = False
-                            cols = False
+                            frame.logger.info('{} has wrong dtype, it is currently {} but should be one of the following: {}'.format(subcol, col_type, valid_types))
+                            correct_dtypes = False
 
-        frame.logger.info('column datatypes correct:' + str(col_dtypes))
-        if not col_dtypes:
-            success = False
-            raise ValueError('Your data does not include the correct columns or column datatypes. The BipartitePandas object cannot be generated with your data.')
-
-        frame.logger.info('--- checking column names ---')
-        col_names = True
-        for col in all_cols:
-            for subcol in to_list(frame.reference_dict[col]):
-                if frame.col_dict[subcol] != subcol:
-                    col_names = False
-                    cols = False
-                    break
-
-        frame.logger.info('column names correct:' + str(col_names))
-        if not col_names:
-            success = False
-
-        frame.logger.info('--- checking non-pre-established columns ---')
-        all_cols = frame._included_cols(flat=True)
-        for col in frame.columns:
-            if col not in all_cols:
-                cols = False
-                break
-
-        frame.logger.info('columns correct:' + str(cols))
-        if not cols:
-            frame.correct_cols = False
-        else:
-            frame.correct_cols = True
-
-        frame.logger.info('--- checking nan data ---')
-        nans = frame.shape[0] - frame.dropna().shape[0]
-
-        frame.logger.info('data nans (should be 0):' + str(nans))
-        if nans > 0:
-            frame.no_na = False
-            success = False
-        else:
-            frame.no_na = True
-
-        frame.logger.info('--- checking duplicates ---')
-        duplicates = frame.shape[0] - frame.drop_duplicates().shape[0]
-
-        frame.logger.info('duplicates (should be 0):' + str(duplicates))
-        if duplicates > 0:
-            frame.no_duplicates = False
-            success = False
-        else:
-            frame.no_duplicates = True
-
-        if frame._col_included('t'):
-            frame.logger.info('--- checking i-t (worker-year) observations ---')
-            max_obs = 1
-            for t_col in to_list(frame.reference_dict['t']):
-                max_obs_col = frame.groupby(['i', t_col]).size().max()
-                max_obs = max(max_obs_col, max_obs)
-
-            frame.logger.info('max number of i-t (worker-year) observations (should be 1):' + str(max_obs))
-            if max_obs > 1:
-                frame.i_t_unique = False
-                success = False
-            else:
-                frame.i_t_unique = True
-        else:
-            frame.i_t_unique = None
-
-        if connectedness is None:
-            # Skipping connected set
-            self.connected = None
-        else:
-            frame.logger.info('--- checking connected set ---')
-            # Create graph
-            if len(to_list(frame.reference_dict['j'])) == 1:
-                j_first = frame.groupby(['i'])['j'].transform('first')
-                G = nx.from_edgelist(pd._libs.lib.fast_zip([frame['j'].to_numpy(), j_first.to_numpy()])) # nx.from_pandas_edgelist(frame, 'j', 'j_max')
-                # # Drop fid_max
-                # frame.drop('j_max', axis=1)
-            elif len(to_list(frame.reference_dict['j'])) == 2:
-                G = nx.from_edgelist(pd._libs.lib.fast_zip([frame['j1'].to_numpy(), frame['j2'].to_numpy()])) # nx.from_pandas_edgelist(frame, 'j1', 'j2')
-            else:
-                warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j']")
-            # Find largest connected set of firms
-            connectedness_dict = {
-                'connected': nx.is_connected,
-                'biconnected': nx.is_biconnected
-            }
-            is_connected = connectedness_dict[connectedness](G)
-
-            frame.logger.info('data is {}: {}'.format(connectedness, frame.connected))
-            if not is_connected:
-                frame.connected = False
-                success = False
-            else:
-                frame.connected = connectedness
-
-        # Check contiguous columns
-        for contig_col, is_contig in frame.columns_contig.items():
-            if frame._col_included(contig_col):
-                frame.logger.info('--- checking contiguous {} ids ---'.format(contig_col))
-                id_max = - np.inf
-                ids_unique = []
-                for id_col in to_list(frame.reference_dict[contig_col]):
-                    id_max = max(frame[id_col].max(), id_max)
-                    ids_unique = list(frame[id_col].unique()) + ids_unique
-                n_ids = len(set(ids_unique))
-
-                contig_ids = (id_max == n_ids - 1)
-                frame.columns_contig[contig_col] = contig_ids
-
-                frame.logger.info('contiguous {} ids (should be True): {}'.format(contig_col, contig_ids))
-                if not contig_ids:
-                    success = False
-            else:
-                frame.logger.info('--- skipping contiguous {} ids, column(s) not included ---'.format(contig_col))
-
-        frame.logger.info('BipartiteBase success:' + str(success))
+        if (not cols_included) or (not correct_dtypes):
+            raise ValueError('Your data does not include the correct columns or column datatypes. The BipartitePandas object cannot be generated with your data. Please see the generated logs for more information.')
 
         return frame
 
@@ -853,9 +665,12 @@ class BipartiteBase(DataFrame):
         else:
             frame = self
 
+        # Check whether any observations are dropped
+        prev_len = len(frame)
+
         if frame._col_included('t'):
             try: # If BipartiteEventStudy or BipartiteEventStudyCollapsed
-                frame = frame.unstack_es().drop('m').drop_duplicates()
+                frame = frame.unstack_es().drop_duplicates()
                 convert_1 = True
             except AttributeError:
                 convert_1 = False
@@ -865,6 +680,8 @@ class BipartiteBase(DataFrame):
             except AttributeError:
                 convert_2 = False
 
+            # Temporarily disable warnings
+            warnings.filterwarnings('ignore')
             if how == 'max':
                 # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
                 frame = frame[frame['y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy()].groupby(['i', 't'], as_index=False).first()
@@ -883,13 +700,20 @@ class BipartiteBase(DataFrame):
                 # # For each i-t group, take max compensation
                 # frame.drop_duplicates(subset=['i', 't'], keep='last', inplace=True)
             else:
+                # Restore warnings
+                warnings.filterwarnings('default')
                 warnings.warn('{} is not a valid method for dropping i-t duplicates'.format(how))
+            # Restore warnings
+            warnings.filterwarnings('default')
 
         # Data now has unique i-t observations
         frame.i_t_unique = True
 
+        # If observations dropped, recompute 'm'
+        if prev_len != len(frame):
+            frame = frame.gen_m(force=True, copy=False)
         if convert_2: # If data was collapsed
-            frame = frame.get_collapsed_long(copy=copy).drop('m')
+            frame = frame.get_collapsed_long(copy=copy)
         if convert_1: # If data was event study
             frame = frame.get_es()
 
@@ -906,10 +730,6 @@ class BipartiteBase(DataFrame):
 
         Returns:
             frame (BipartiteBase): BipartiteBase with connected set of movers
-            ALTERNATIVELY
-            (tuple):
-                frame (BipartiteBase): BipartiteBase with connected set of movers
-                G (NetworkX Graph): largest connected set of movers (only returns if firm ids are contiguous, otherwise returns None)
         '''
         if copy:
             frame = self.copy()
@@ -922,64 +742,30 @@ class BipartiteBase(DataFrame):
             # frame._check_contiguous_ids() # This is necessary
             return frame
 
+        # Keep track of whether contiguous ids change
         prev_workers = frame.n_workers()
         prev_firms = frame.n_firms()
         prev_clusters = frame.n_clusters()
+
         # Create graph
-        if len(to_list(frame.reference_dict['j'])) == 1:
-            # Add max firm id per worker to serve as a central node for the worker
-            # frame['fid_f1'] = frame.groupby('wid')['fid'].transform(lambda a: a.shift(-1)) # FIXME - this is directed but is much slower
-            # j_first = frame.groupby('i')['j'].transform('first') # FIXME - this is undirected but is much faster
-            i_col = frame['i'].to_numpy()
-            j_col = frame['j'].to_numpy()
-            j_prev = np.roll(j_col, 1)
-            i_match = (i_col == np.roll(i_col, 1))
-            j_col = j_col[i_match]
-            j_prev = j_prev[i_match]
-            j_zip = pd._libs.lib.fast_zip([j_col, j_prev])
-            # if connectedness == 'biconnected':
-            #     i_col = i_col[i_match]
-            #     j_df = pd.DataFrame([i_col, j_zip], columns=['i', 'j'])
-            #     j_zip = j_df.groupby('i')['j'].unique().to_numpy()
-            #     # Source: https://stackoverflow.com/questions/716477/join-list-of-lists-in-python
-            #     j_zip = [j_unique for i_unique in j_zip for j_unique in i_unique]
-            #     del j_df
-            # Find largest connected set (look only at movers)
-            # Source: https://networkx.github.io/documentation/stable/reference/algorithms/generated/networkx.algorithms.components.connected_components.html
-            # Source for values.tolist(): https://stackoverflow.com/questions/44849668/merge-two-columns-in-pandas-dataframe-into-a-list
-            # Source for fast_zip: https://stackoverflow.com/questions/16453465/multi-column-factorize-in-pandas
-            G = nx.from_edgelist(j_zip) # nx.from_edgelist(frame[['j', 'j_first']].to_numpy().tolist()) # nx.from_pandas_edgelist(frame[['j', 'j_first']], 'j', 'j_first')
-            # # Drop j_first
-            # frame.drop('j_first')
-            del i_col, j_col, j_prev, i_match, j_zip
-        elif len(to_list(frame.reference_dict['j'])) == 2:
-            G = nx.from_edgelist(pd._libs.lib.fast_zip([frame['j1'].to_numpy(), frame['j2'].to_numpy()])) # nx.from_edgelist(frame[['j1', 'j2']].to_numpy().tolist()) # nx.from_pandas_edgelist(frame[['j1', 'j2']], 'j1', 'j2')
-        else:
-            warnings.warn("Trying to create network with 3 or more edges is not possible. Please check df.reference_dict['j'].")
+        G = frame._construct_graph()
 
         # Update data
         # Find largest connected set of firms
         if connectedness == 'connected':
-            largest_cc = max(nx.connected_components(G), key=len)
+            # Compute largest connected set of firms
+            largest_cc = max(G.components(), key=len)
+            # Keep largest connected set of firms
+            frame = frame.keep_ids('j', largest_cc, copy=False)
         elif connectedness == 'biconnected':
-            if isinstance(frame, bpd.BipartiteEventStudyCollapsed):
-                raise NotImplementedError('Cannot compute biconnected components on collapsed event study data. This is because intermediate firms can be dropped, turning a mover into a stayer - for instance, a worker may work at firms A, B, then return to A. But if B is not in the largest biconnected set of firms, the worker now has their associated firms listed as A, A. These observations should be collapsed into a single observation, but there is not currently a way to collapse this data efficiently if it is formatted as a collapsed event study. Please compute biconnected components on another data format.')
-            largest_cc = max(nx.biconnected_components(G), key=len)
+            if isinstance(frame, bpd.BipartiteEventStudyBase):
+                raise NotImplementedError('Cannot compute biconnected components on event study data. This is because intermediate firms can be dropped, for instance a worker may work at firms A, B, then return to A. But if B is not in the largest biconnected set of firms, the worker now has their associated firms listed as A, A. This causes two issues. First, for event study format, this could lead to situations that require complicated data rearrangement. For instance, the second observation in the first row might have to be dropped. This would require shifting the first observation of the second row into the second observation of the first row, etc. Second, this could turn a mover into a stayer. This is an issue for collapsed event study data - these observations should be collapsed into a single observation, but there is not currently a way to collapse this data efficiently. Please compute biconnected components on data in long or collapsed long format, then convert to event study format.')
+            # Compute all biconnected sets of firms
+            bcc_list = G.biconnected_components()
+            # Keep largest leave-one-out set of firms
+            frame = self.leave_one_out(bcc_list, drop_multiples)
         else:
             warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
-        # Keep largest connected set of firms
-        if len(to_list(frame.reference_dict['j'])) == 1:
-            frame = frame[frame['j'].isin(largest_cc)]
-                
-            if isinstance(frame, bpd.BipartiteLongCollapsed): # and (connectedness == 'biconnected'): # FIXME this is a bug, this should only happen with biconnected but for some reason it is happening with connected too
-                frame = frame.recollapse(drop_multiples=drop_multiples, copy=False)
-
-            if connectedness == 'biconnected':
-                # This fixes a discrepency between networkx's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out wants the set of firms to remain unchanged
-                frame.gen_m()
-                frame = frame[frame.groupby('j')['m'].transform('sum') >= 2]
-        else:
-            frame = frame[(frame['j1'].isin(largest_cc)) & (frame['j2'].isin(largest_cc))]
 
         # Data is now connected
         frame.connected = connectedness
@@ -994,36 +780,24 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def gen_m(self, inplace=True):
+    def sort_cols(self, copy=True):
         '''
-        Generate m column for data (m == 0 if stayer, m == 1 if mover).
+        Sort frame columns (not in-place).
 
         Arguments:
-            inplace (bool): if True, modify in-place
+            copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with m column
+            frame (BipartiteBase): BipartiteBase with columns sorted
         '''
-        if inplace:
-            frame = self
-        else:
+        if copy:
             frame = self.copy()
-
-        if not frame._col_included('m'):
-            if len(to_list(frame.reference_dict['j'])) == 1:
-                frame['m'] = (frame.groupby('i')['j'].transform('nunique').to_numpy() > 1).astype(int) # (aggregate_transform(frame, col_groupby='i', col_grouped='j', func='n_unique', col_name='m') > 1).astype(int)
-            elif len(to_list(frame.reference_dict['j'])) == 2:
-                frame['m'] = (frame['j1'].to_numpy() != frame['j2'].to_numpy()).astype(int)
-                # frame['m'] = frame.groupby('i')['m'].transform('max')
-            else:
-                warnings.warn("Trying to compute whether an individual moved firms is not possible with 3 or more firms per observation. Please check df.reference_dict['j']. Returning unaltered frame")
-                return frame
-            frame.col_dict['m'] = 'm'
-            # Sort columns
-            sorted_cols = sorted(frame.columns, key=col_order)
-            frame = frame.reindex(sorted_cols, axis=1, copy=False)
         else:
-            self.logger.info('m column already included. Returning unaltered frame')
+            frame = self
+
+        # Sort columns
+        sorted_cols = sorted(frame.columns, key=col_order)
+        frame = frame.reindex(sorted_cols, axis=1, copy=False)
 
         return frame
 
@@ -1092,7 +866,8 @@ class BipartiteBase(DataFrame):
             frame = self
 
         j_cols = to_list(self.reference_dict['j'])
-        n_movers = frame.groupby(j_cols[0])['i'].unique().apply(list) # List of all unique worker ids for j/j1
+        # Generate lists of all unique worker ids for j/j1
+        n_movers = frame.groupby(j_cols[0])['i'].unique().apply(list)
         # Convert into DataFrame for merging
         n_movers = pd.DataFrame(n_movers)
         n_movers.reset_index(inplace=True)
@@ -1128,9 +903,6 @@ class BipartiteBase(DataFrame):
         Returns:
             valid_firms (list): list of firms with sufficiently many movers
         '''
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
-
         if copy:
             frame = self.copy()
         else:
@@ -1154,10 +926,6 @@ class BipartiteBase(DataFrame):
             jids (NumPy Array): firm ids of firms in subset of data used to cluster
         '''
         # Prepare data
-        if stayers_movers is not None: # Note this condition is split into two sections, one prior to stacking event study data and one post
-            # Generate m column (the function checks if it already exists)
-            self.gen_m()
-
         # Stack data if event study (need all data in 1 column)
         try:
             frame = self.get_long(return_df=True) # Returns Pandas dataframe, not BipartiteLong(Collapsed)
@@ -1264,8 +1032,7 @@ class BipartiteBase(DataFrame):
             frame.col_dict[g_col] = g_col
 
         # Sort columns
-        sorted_cols = sorted(frame.columns, key=col_order)
-        frame = frame.reindex(sorted_cols, axis=1, copy=False)
+        frame = frame.sort_cols(copy=False)
 
         if dropna:
             # Drop firms that don't get clustered

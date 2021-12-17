@@ -767,7 +767,7 @@ def test_worker_year_unique_16_3():
 
     for how in ['max', 'sum', 'mean']:
         bdf = bpd.BipartiteLongCollapsed(data=df)
-        bdf = bdf.clean_data({'i_t_how': how}).gen_m()
+        bdf = bdf.clean_data({'i_t_how': how})
 
         stayers = bdf[bdf['m'] == 0]
         movers = bdf[bdf['m'] == 1]
@@ -987,33 +987,33 @@ def test_save_19():
 
     # Long
     bdf = bpd.BipartiteLong(data=df)
-    bdf = bdf.clean_data()
+    bdf = bdf.clean_data().drop('m')
     bdf2 = bdf.copy()
-    bdf2.gen_m()
+    bdf2 = bdf2.gen_m(copy=False)
 
     assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
     # Event study
-    bdf = bdf.get_es()
+    bdf = bdf.gen_m(copy=False).get_es()
     bdf = bdf.clean_data().drop('m')
     bdf2 = bdf.copy()
-    bdf2.gen_m()
+    bdf2 = bdf2.gen_m(copy=False)
 
     assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
     # Collapsed long
-    bdf = bdf.get_long().get_collapsed_long()
+    bdf = bdf.gen_m(copy=False).get_long().get_collapsed_long()
     bdf = bdf.clean_data().drop('m')
     bdf2 = bdf.copy()
-    bdf2.gen_m()
+    bdf2 = bdf2.gen_m(copy=False)
 
     assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
     # Collapsed event study
-    bdf = bdf.get_es()
+    bdf = bdf.gen_m(copy=False).get_es()
     bdf = bdf.clean_data().drop('m')
     bdf2 = bdf.copy()
-    bdf2.gen_m()
+    bdf2 = bdf2.gen_m(copy=False)
 
     assert 'm' in bdf2._included_cols() and 'm' not in bdf._included_cols()
 
@@ -1032,7 +1032,7 @@ def test_id_reference_dict_20():
     df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
 
     bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
-    bdf = bdf.clean_data().gen_m()
+    bdf = bdf.clean_data()
 
     id_reference_dict = bdf.id_reference_dict
 
@@ -1163,11 +1163,14 @@ def test_id_reference_dict_23():
     df = pd.concat([pd.DataFrame(worker, index=[worker['index']]) for worker in worker_data])[['i', 'j', 'y', 't']]
 
     bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
-    bdf = bdf.clean_data().gen_m()
+    bdf = bdf.clean_data()
     bdf = bdf[bdf['j'] == 1]
     bdf = bdf.clean_data()
 
     merge_df = bdf.original_ids()
+    # Since 'm' was overwritten, we need to reset
+    # the values to all be 1
+    merge_df['m'] = 1
 
     stayers = merge_df[merge_df['m'] == 0]
     movers = merge_df[merge_df['m'] == 1]

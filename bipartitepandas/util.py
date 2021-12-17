@@ -38,9 +38,9 @@ def to_list(data):
     Returns:
         (list): data as a list
     '''
-    if not isinstance(data, (list, tuple)):
+    if not isinstance(data, (list, tuple, set, frozenset)):
         return [data]
-    return data
+    return list(data)
 
 loggers = {}
 

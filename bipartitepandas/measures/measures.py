@@ -43,7 +43,7 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
             # Generate firm-level cdfs
             data.sort_values('j', inplace=True) # Required for aggregate_transform
             for i, quant in enumerate(quantile_groups):
-                data['quant'] = (data['y'] <= quant).astype(int)
+                data['quant'] = (data['y'].to_numpy() <= quant).astype(int)
                 cdfs_col = aggregate_transform(data, col_groupby='j', col_grouped='quant', func='sum', weights='row_weights', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
                 cdfs[:, i] = cdfs_col[cdfs_col >= 0]
             data.drop('quant', axis=1, inplace=True)
@@ -77,8 +77,8 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
                     y = np.array(data_dict[jid])
                     w = np.array(weights_dict[jid])
                 elif measure == 'quantile_firm_large':
-                    y = data.loc[data['j'] == jid, 'y'].to_numpy()
-                    w = data.loc[data['j'] == jid, 'row_weights'].to_numpy()
+                    y = data.loc[data['j'].to_numpy() == jid, 'y'].to_numpy()
+                    w = data.loc[data['j'].to_numpy() == jid, 'row_weights'].to_numpy()
                 cum_w = w.cumsum() # Cumulative weight
                 weighted_n = w.sum() # Weighted number of observations
                 # Generate the firm-level cdf

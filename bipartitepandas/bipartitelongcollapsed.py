@@ -64,14 +64,14 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             frame['w'] = 1
 
         # Introduce lagged i and j
-        i_np = frame['i'].to_numpy()
-        j_np = frame['j'].to_numpy()
-        i_l1 = np.roll(i_np, 1) # data['i'].shift(periods=1)
-        j_l1 = np.roll(j_np, 1) # data['j'].shift(periods=1)
+        i_col = frame['i'].to_numpy()
+        j_col = frame['j'].to_numpy()
+        i_prev = np.roll(i_col, 1)
+        j_prev = np.roll(j_col, 1)
 
         # Generate spell ids
-        new_spell = (j_np != j_l1) | (i_np != i_l1) # Allow for i != i_l1 to ensure that consecutive workers at the same firm get counted as different spells
-        del i_np, j_np, i_l1, j_l1
+        new_spell = (j_col != j_prev) | (i_col != i_prev) # Allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells
+        del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum()
 
         # Quickly check whether a recollapse is necessary
@@ -84,7 +84,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         spell = frame.groupby(spell_id)
 
         if drop_multiples:
-            data_spell = frame[spell['i'].transform('size') == 1]
+            data_spell = frame[spell['i'].transform('size').to_numpy() == 1]
             data_spell.reset_index(drop=True, inplace=True)
         else:
             # First, aggregate required columns

@@ -1,8 +1,10 @@
 '''
 Base class for bipartite networks in long or collapsed long form
 '''
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
+import igraph as ig
 
 class BipartiteLongBase(bpd.BipartiteBase):
     '''
@@ -35,6 +37,35 @@ class BipartiteLongBase(bpd.BipartiteBase):
         '''
         return BipartiteLongBase
 
+    def gen_m(self, force=False, copy=True):
+        '''
+        Generate m column for data (m == 0 if stayer, m == 1 if mover).
+
+        Arguments:
+            force (bool): if True, reset 'm' column even if it exists
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteBase): BipartiteBase with m column
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if not frame._col_included('m') or force:
+            frame['m'] = (frame.groupby('i')['j'].transform('nunique').to_numpy() > 1).astype(int)
+
+            frame.col_dict['m'] = 'm'
+
+            # Sort columns
+            frame = frame.sort_cols(copy=False)
+
+        else:
+            self.logger.info("'m' column already included. Returning unaltered frame.")
+
+        return frame
+
     def get_es(self):
         '''
         Return (collapsed) long form data reformatted into (collapsed) event study data.
@@ -42,12 +73,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Returns:
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
         '''
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
-
         # Split workers by movers and stayers
-        stayers = pd.DataFrame(self[self['m'] == 0])
-        movers = pd.DataFrame(self[self['m'] == 1])
+        stayers = pd.DataFrame(self[self['m'].to_numpy() == 0])
+        movers = pd.DataFrame(self[self['m'].to_numpy() == 1])
         self.logger.info('workers split by movers and stayers')
 
         # Add lagged values
@@ -71,7 +99,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 else:
                     keep_cols.append('m')
 
-        movers = movers[movers['i1'] == movers['i2']] # Ensure lagged values are for the same worker
+        # Ensure lagged values are for the same worker
+        # NOTE: cannot use .to_numpy()
+        movers = movers[movers['i1'] == movers['i2']]
 
         # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
         for col in all_cols:
@@ -103,4 +133,73 @@ class BipartiteLongBase(bpd.BipartiteBase):
         es_frame = self._constructor_es(data_es)
         es_frame._set_attributes(self, no_dict=True)
 
+        # Recompute 'm'
+        es_frame = es_frame.gen_m(force=True, copy=False)
+
         return es_frame
+
+    def _construct_graph(self):
+        '''
+        Construct igraph graph linking firms by movers.
+
+        Returns:
+            G (igraph Graph): igraph graph
+        '''
+        # Match firms linked by worker moves
+        i_col = self['i'].to_numpy()
+        j_col = self['j'].to_numpy()
+        j_prev = np.roll(j_col, 1)
+        i_match = (i_col == np.roll(i_col, 1))
+        j_col = j_col[i_match]
+        j_prev = j_prev[i_match]
+        # # Source: https://stackoverflow.com/questions/16453465/multi-column-factorize-in-pandas
+        # j_zip = pd._libs.lib.fast_zip([j_col, j_prev])
+        j_zip = np.stack([j_col, j_prev], axis=1)
+        G = ig.Graph(n=self.n_firms(), edges=j_zip)
+
+        return G
+
+    def leave_one_out(self, bcc_list, drop_multiples=False):
+        '''
+        Extract largest leave-one-out connected set.
+
+        Arguments:
+            bcc_list (list of lists): list of lists, where sublists give firms in each biconnected component
+            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+
+        Returns:
+            frame_largest_bcc (BipartiteLongBase): largest leave-one-out connected set
+        '''
+        # This will become the largest biconnected component
+        frame_largest_bcc = []
+
+        for bcc in bcc_list:
+            # Observations in biconnected components
+            frame_bcc = self[self['j'].isin(bcc)]
+
+            if isinstance(self, bpd.BipartiteLongCollapsed):
+                frame_bcc = frame_bcc.recollapse(drop_multiples=drop_multiples, copy=False)
+
+            # Recompute 'm' since it might change from dropping firms or from re-collapsing
+            frame_bcc = frame_bcc.gen_m(force=True, copy=True)
+
+            # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+            # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
+            frame_bcc = frame_bcc[frame_bcc.groupby('j')['m'].transform('sum') >= 2]
+
+            # Recompute 'm' since it might change from dropping firms
+            frame_bcc = frame_bcc.gen_m(force=True, copy=True)
+
+            # Recompute biconnected components
+            G2 = frame_bcc._construct_graph()
+            bcc_list_2 = G2.biconnected_components()
+
+            # If new frame is biconnected after dropping firms with 1 mover observation, return it
+            if (len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms()):
+                frame_largest_bcc = max(frame_largest_bcc, frame_bcc, key=len)
+            # Otherwise, loop again
+            else:
+                frame_largest_bcc = max(frame_largest_bcc, frame_bcc.leave_one_out(bcc_list_2, drop_multiples), key=len)
+
+        # Return largest biconnected component
+        return frame_largest_bcc

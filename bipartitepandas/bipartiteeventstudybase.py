@@ -1,8 +1,10 @@
 '''
 Base class for bipartite networks in event study or collapsed event study form
 '''
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
+import igraph as ig
 
 class BipartiteEventStudyBase(bpd.BipartiteBase):
     '''
@@ -35,6 +37,36 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         For inheritance from Pandas.
         '''
         return BipartiteEventStudyBase
+
+    def gen_m(self, force=False, copy=True):
+        '''
+        Generate m column for data (m == 0 if stayer, m == 1 if mover).
+
+        Arguments:
+            force (bool): if True, reset 'm' column even if it exists
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteBase): BipartiteBase with m column
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if not frame._col_included('m') or force:
+            frame['m'] = (frame['j1'].to_numpy() != frame['j2'].to_numpy()).astype(int)
+            # frame['m'] = frame.groupby('i')['m'].transform('max')
+
+            frame.col_dict['m'] = 'm'
+
+            # Sort columns
+            frame = frame.sort_cols(copy=False)
+
+        else:
+            self.logger.info("'m' column already included. Returning unaltered frame.")
+
+        return frame
 
     def clean_data(self, user_clean={}):
         '''
@@ -81,12 +113,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         success_stayers = True
         success_movers = True
 
-        stayers = frame[frame['m'] == 0]
-        movers = frame[frame['m'] == 1]
+        stayers = frame[frame['m'].to_numpy() == 0]
+        movers = frame[frame['m'].to_numpy() == 1]
 
         frame.logger.info('--- checking firms ---')
-        firms_stayers = (stayers['j1'] != stayers['j2']).sum()
-        firms_movers = (movers['j1'] == movers['j2']).sum()
+        firms_stayers = (stayers['j1'].to_numpy() != stayers['j2'].to_numpy()).sum()
+        firms_movers = (movers['j1'].to_numpy() == movers['j2'].to_numpy()).sum()
 
         frame.logger.info('stayers with different firms (should be 0):' + str(firms_stayers))
         frame.logger.info('movers with same firm (should be 0):' + str(firms_movers))
@@ -96,7 +128,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             success_movers = False
 
         frame.logger.info('--- checking income ---')
-        income_stayers = (stayers['y1'] != stayers['y2']).sum()
+        income_stayers = (stayers['y1'].to_numpy() != stayers['y2'].to_numpy()).sum()
 
         frame.logger.info('stayers with different income (should be 0):' + str(income_stayers))
         if income_stayers > 0:
@@ -114,11 +146,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             data_cs (Pandas DataFrame): cross section data
         '''
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
-
-        sdata = pd.DataFrame(self[self['m'] == 0])
-        jdata = pd.DataFrame(self[self['m'] == 1])
+        sdata = pd.DataFrame(self[self['m'].to_numpy() == 0])
+        jdata = pd.DataFrame(self[self['m'].to_numpy() == 1])
 
         # Columns used for constructing cross section
         cs_cols = self._included_cols(flat=True)
@@ -160,9 +189,6 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
-
         # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
         rename_dict_1 = {}
         # Dictionary to reformat names into (collapsed) long form
@@ -197,10 +223,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         sort_order_2 = ['i']
         if self._col_included('t'):
             sort_order_1.append(bpd.to_list(self.reference_dict['t'])[0]) # Pre-reformatting
-            sort_order_2.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
+            sort_order_2.append(bpd.to_list(self.reference_dict['t'])[0][: -1]) # Remove last number, e.g. t11 to t1
 
         # Append the last row if a mover (this is because the last observation is only given as an f2i, never as an f1i)
-        last_obs_df = pd.DataFrame(self[self['m'] == 1]) \
+        # We need to redefine 'm' to indicate if an individual was EVER a mover
+        m = self['m'].to_numpy()
+        m2 = (self.groupby('i')['m'].transform('max').to_numpy())
+        self['m'] = m2 # Will have to reset this
+        last_obs_df = pd.DataFrame(self[m2 == 1]) \
             .sort_values(sort_order_1) \
             .drop_duplicates(subset='i', keep='last') \
             .rename(rename_dict_1, axis=1) # Sort by i, t to ensure last observation is actually last
@@ -223,6 +253,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         #     .rename(rename_dict_2, axis=1) \
         #     .astype(astype_dict)
 
+        # Reset 'm'
+        self['m'] = m
+
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
@@ -244,9 +277,6 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
-        # Generate m column (the function checks if it already exists)
-        self.gen_m()
-
         # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
         rename_dict_1 = {}
         # Dictionary to reformat names into (collapsed) long form
@@ -282,7 +312,11 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             sort_order.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
 
         # Stack period 2 data if a mover (this is because the last observation is only given as an f2i, never as an f1i)
-        stacked_df = pd.DataFrame(self[self['m'] == 1]).rename(rename_dict_1, axis=1)
+        # We need to redefine 'm' to indicate if an individual was EVER a mover
+        m = self['m'].to_numpy()
+        m2 = (self.groupby('i')['m'].transform('max').to_numpy())
+        self['m'] = m2 # Will have to reset this
+        stacked_df = pd.DataFrame(self[m2 == 1]).rename(rename_dict_1, axis=1)
 
         try:
             data_long = pd.concat([pd.DataFrame(self), stacked_df], ignore_index=True) \
@@ -297,6 +331,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 .rename(rename_dict_2, axis=1) \
                 .astype(astype_dict)
 
+        # Reset 'm'
+        self['m'] = m
+
         # Sort columns and rows
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
@@ -310,3 +347,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         long_frame._set_attributes(self, no_dict=True)
 
         return long_frame
+
+    def _construct_graph(self):
+        '''
+        Construct igraph graph linking firms by movers.
+
+        Returns:
+            (igraph Graph): igraph graph
+        '''
+        return ig.Graph(n=self.n_firms(), edges=self[['j1', 'j2']].to_numpy())
