@@ -15,7 +15,7 @@ dependencies:
   - scipy
   - scikit-learn
   - statsmodels
-  - networkx
+  - igraph
   - tqdm
   - nbsphinx
   - pip:

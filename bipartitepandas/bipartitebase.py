@@ -7,7 +7,6 @@ import numpy as np
 # from numpy_groupies.aggregate_numpy import aggregate
 import pandas as pd
 from pandas import DataFrame, Int64Dtype
-import networkx as nx
 # from scipy.sparse.csgraph import connected_components
 import warnings
 import bipartitepandas as bpd
@@ -721,7 +720,7 @@ class BipartiteBase(DataFrame):
 
     def _conset(self, connectedness='connected', drop_multiples=False, copy=True):
         '''
-        Update data to include only the largest connected set of movers, and if firm ids are contiguous, also return the NetworkX Graph.
+        Update data to include only the largest connected set of movers.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
