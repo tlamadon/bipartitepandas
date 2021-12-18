@@ -228,16 +228,23 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 if col in include:
                     column_order[i].append('{}_f{}'.format(col, j + 1))
 
-        valid_rows = ~pd.isna(es_extended_frame[col]) # Demarcate valid rows (all should start off True)
+        # Demarcate valid rows (all should start off True)
+        valid_rows = ~pd.isna(es_extended_frame[col])
+        # Construct i and i_prev
+        i_col = es_extended_frame['i'].to_numpy()
+        i_prev = np.roll(i_col, 1)
         # Stable pre-trend
         for col in stable_pre:
             for i in range(2, periods_pre + 1): # Shift 1 is baseline
-                valid_rows = (valid_rows) & (np.roll(es_extended_frame[col].to_numpy(), 1) == np.roll(es_extended_frame[col].to_numpy(), i))
+                valid_rows = (valid_rows) & (np.roll(es_extended_frame[col].to_numpy(), 1) == np.roll(es_extended_frame[col].to_numpy(), i)) & (i_prev == np.roll(i_col, i))
 
         # Stable post-trend
         for col in stable_post:
             for i in range(1, periods_post): # Shift 0 is baseline
-                valid_rows = (valid_rows) & (es_extended_frame[col].to_numpy() == np.roll(es_extended_frame[col].to_numpy(), -i))
+                valid_rows = (valid_rows) & (es_extended_frame[col].to_numpy() == np.roll(es_extended_frame[col].to_numpy(), -i)) & (i_col == np.roll(i_col, -i))
+
+        # Delete i_col, i_prev
+        del i_col, i_prev
 
         # Update with pre- and/or post-trend
         es_extended_frame = es_extended_frame[valid_rows]

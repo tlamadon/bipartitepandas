@@ -1928,9 +1928,121 @@ def test_reformatting_1():
     assert stayers.iloc[1]['t2'] == 1
     assert stayers.iloc[1]['g'] == 0
 
-# ################################
-# ##### Tests for Clustering #####
-# ################################
+###################################
+##### Tests for Connectedness #####
+###################################
+
+def test_connectedness_1():
+    # Test connected and leave-one-out for collapsed long format.
+    # There are 2 biconnected sets that are connected by 1 mover, so the largest connected set is all the observations, while the largest biconnected component is the larger of the 2 biconnected sets.
+    worker_data = []
+    # Group 1 is firms 0 to 5
+    # Firm 0 -> 1
+    worker_data.append({'i': 0, 'j': 0, 'y': 1, 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 2})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 2, 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1, 't': 2})
+    # Firm 2 -> 3
+    worker_data.append({'i': 2, 'j': 2, 'y': 3, 't': 1})
+    worker_data.append({'i': 2, 'j': 3, 'y': 2.5, 't': 2})
+    # Firm 3 -> 4
+    worker_data.append({'i': 3, 'j': 3, 'y': 1, 't': 1})
+    worker_data.append({'i': 3, 'j': 4, 'y': 1, 't': 2})
+    # Firm 4 -> 5
+    worker_data.append({'i': 4, 'j': 4, 'y': 1, 't': 1})
+    worker_data.append({'i': 4, 'j': 5, 'y': 1.3, 't': 2})
+    # Firm 5 -> 0
+    worker_data.append({'i': 5, 'j': 5, 'y': 1.1, 't': 1})
+    worker_data.append({'i': 5, 'j': 0, 'y': 1, 't': 2})
+    # Group 2 is firms 6 to 9
+    # Group 2 is linked to Group 1 through firms 3 and 6
+    # Firm 3 -> 6
+    worker_data.append({'i': 6, 'j': 3, 'y': 2, 't': 1})
+    worker_data.append({'i': 6, 'j': 6, 'y': 1, 't': 2})
+    # Firm 6 -> 7
+    worker_data.append({'i': 7, 'j': 6, 'y': 1, 't': 1})
+    worker_data.append({'i': 7, 'j': 7, 'y': 2, 't': 2})
+    # Firm 7 -> 8
+    worker_data.append({'i': 8, 'j': 7, 'y': 1.5, 't': 1})
+    worker_data.append({'i': 8, 'j': 8, 'y': 1.2, 't': 2})
+    # Firm 8 -> 9
+    worker_data.append({'i': 9, 'j': 8, 'y': 1.6, 't': 1})
+    worker_data.append({'i': 9, 'j': 9, 'y': 2, 't': 2})
+    # Firm 9 -> 6
+    worker_data.append({'i': 10, 'j': 9, 'y': 1.8, 't': 1})
+    worker_data.append({'i': 10, 'j': 6, 'y': 1.4, 't': 2})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    # Connected
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    assert bdf.n_firms() == 10
+
+    # Biconnected
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected'})
+    assert bdf.n_firms() == 6
+
+def test_connectedness_2():
+    # Test connected and leave-one-out for collapsed long format. Now, add two firms connected to the largest biconnected set that are linked only by 1 mover.
+    # There are 3 biconnected sets that are connected by 1 mover, so the largest connected set is all the observations, while the largest biconnected component is the larger of the 3 biconnected sets.
+    worker_data = []
+    # Group 1 is firms 0 to 5
+    # Firm 0 -> 1
+    worker_data.append({'i': 0, 'j': 0, 'y': 1, 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 2})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 2, 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1, 't': 2})
+    # Firm 2 -> 3
+    worker_data.append({'i': 2, 'j': 2, 'y': 3, 't': 1})
+    worker_data.append({'i': 2, 'j': 3, 'y': 2.5, 't': 2})
+    # Firm 3 -> 4
+    worker_data.append({'i': 3, 'j': 3, 'y': 1, 't': 1})
+    worker_data.append({'i': 3, 'j': 4, 'y': 1, 't': 2})
+    # Firm 4 -> 5
+    worker_data.append({'i': 4, 'j': 4, 'y': 1, 't': 1})
+    worker_data.append({'i': 4, 'j': 5, 'y': 1.3, 't': 2})
+    # Firm 5 -> 0
+    worker_data.append({'i': 5, 'j': 5, 'y': 1.1, 't': 1})
+    worker_data.append({'i': 5, 'j': 0, 'y': 1, 't': 2})
+    # Group 2 is firms 6 to 9
+    # Group 2 is linked to Group 1 through firms 3 and 6
+    # Firm 3 -> 6
+    worker_data.append({'i': 6, 'j': 3, 'y': 2, 't': 1})
+    worker_data.append({'i': 6, 'j': 6, 'y': 1, 't': 2})
+    # Firm 6 -> 7
+    worker_data.append({'i': 7, 'j': 6, 'y': 1, 't': 1})
+    worker_data.append({'i': 7, 'j': 7, 'y': 2, 't': 2})
+    # Firm 7 -> 8
+    worker_data.append({'i': 8, 'j': 7, 'y': 1.5, 't': 1})
+    worker_data.append({'i': 8, 'j': 8, 'y': 1.2, 't': 2})
+    # Firm 8 -> 9
+    worker_data.append({'i': 9, 'j': 8, 'y': 1.6, 't': 1})
+    worker_data.append({'i': 9, 'j': 9, 'y': 2, 't': 2})
+    # Firm 9 -> 6
+    worker_data.append({'i': 10, 'j': 9, 'y': 1.8, 't': 1})
+    worker_data.append({'i': 10, 'j': 6, 'y': 1.4, 't': 2})
+    # Group 3 is firms 10 to 11
+    # Firm 10 -> 4
+    worker_data.append({'i': 11, 'j': 10, 'y': 1.3, 't': 1})
+    worker_data.append({'i': 11, 'j': 4, 'y': 1.2, 't': 2})
+    worker_data.append({'i': 11, 'j': 11, 'y': 1, 't': 3})
+    worker_data.append({'i': 11, 'j': 10, 'y': 1.1, 't': 4})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    # Connected
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    assert bdf.n_firms() == 12
+
+    # Biconnected
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected'})
+    assert bdf.n_firms() == 6
+
+################################
+##### Tests for Clustering #####
+################################
 
 def test_cluster_1():
     # Test cluster function is working correctly for long format.
