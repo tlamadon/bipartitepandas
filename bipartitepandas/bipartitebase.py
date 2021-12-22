@@ -11,6 +11,7 @@ from pandas import DataFrame, Int64Dtype
 import warnings
 import bipartitepandas as bpd
 from bipartitepandas import col_order, update_dict, to_list, logger_init, col_dict_optional_cols, aggregate_transform
+import igraph as ig
 
 class BipartiteBase(DataFrame):
     '''
@@ -74,7 +75,7 @@ class BipartiteBase(DataFrame):
         }
 
         self.default_clean = {
-            'connectedness': 'connected', # When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
+            'connectedness': 'connected', # When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'biconnected_firms' or 'biconnected_observations', keep observations in the largest biconnected set of firms; if None, keep all observations
             'i_t_how': 'max', # When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format
             'drop_multiples': False, # If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for biconnected components)
             'data_validity': True, # If True, run data validity checks; much faster if set to False
@@ -107,9 +108,9 @@ class BipartiteBase(DataFrame):
         '''
         Print summary statistics.
         '''
-        mean_wage = np.mean(self[self.reference_dict['y']].to_numpy())
-        max_wage = np.max(self[self.reference_dict['y']].to_numpy())
-        min_wage = np.min(self[self.reference_dict['y']].to_numpy())
+        mean_wage = np.mean(self.loc[:, self.reference_dict['y']].to_numpy())
+        max_wage = np.max(self.loc[:, self.reference_dict['y']].to_numpy())
+        min_wage = np.min(self.loc[:, self.reference_dict['y']].to_numpy())
         ret_str = 'format: ' + type(self).__name__ + '\n'
         ret_str += 'number of workers: ' + str(self.n_workers()) + '\n'
         ret_str += 'number of firms: ' + str(self.n_firms()) + '\n'
@@ -127,6 +128,33 @@ class BipartiteBase(DataFrame):
 
         print(ret_str)
 
+    def unique_ids(self, id_col):
+        '''
+        Unique ids in column.
+
+        Arguments:
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'
+
+        Returns:
+            (NumPy Array): unique ids
+        '''
+        id_lst = []
+        for id_subcol in to_list(self.reference_dict[id_col]):
+            id_lst += list(self.loc[:, id_subcol].unique())
+        return np.array(list(set(id_lst)))
+
+    def n_unique_ids(self, id_col):
+        '''
+        Number of unique ids in column.
+
+        Arguments:
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'
+
+        Returns:
+            (int): number of unique ids
+        '''
+        return len(self.unique_ids(id_col))
+
     def n_workers(self):
         '''
         Get the number of unique workers.
@@ -134,7 +162,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int): number of unique workers
         '''
-        return self['i'].nunique()
+        return self.loc[:, 'i'].nunique()
 
     def n_firms(self):
         '''
@@ -143,10 +171,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int): number of unique firms
         '''
-        fid_lst = []
-        for fid_col in to_list(self.reference_dict['j']):
-            fid_lst += list(self[fid_col].unique())
-        return len(set(fid_lst))
+        return self.n_unique_ids('j')
 
     def n_clusters(self):
         '''
@@ -157,10 +182,7 @@ class BipartiteBase(DataFrame):
         '''
         if not self._col_included('g'): # If cluster column not in dataframe
             return None
-        cid_lst = []
-        for g_col in to_list(self.reference_dict['g']):
-            cid_lst += list(self[g_col].unique())
-        return len(set(cid_lst))
+        return self.n_unique_ids('g')
 
     def original_ids(self, copy=True):
         '''
@@ -178,10 +200,10 @@ class BipartiteBase(DataFrame):
                 if len(reference_df) > 0: # Make sure non-empty
                     for id_subcol in to_list(self.reference_dict[id_col]):
                         try:
-                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                            frame = frame.merge(reference_df.loc[:, ['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
                         except TypeError: # Int64 error with NaNs
-                            frame[id_col] = frame[id_col].astype('Int64')
-                            frame = frame.merge(reference_df[['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                            frame.loc[:, id_col] = frame.loc[:, id_col].astype('Int64', copy=False)
+                            frame = frame.merge(reference_df.loc[:, ['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
                 # else:
                 #     # If no changes, just make original_id be the same as the current id
                 #     for id_subcol in to_list(self.reference_dict[id_col]):
@@ -444,7 +466,7 @@ class BipartiteBase(DataFrame):
         cols = to_list(frame.reference_dict[id_col])
         n_cols = len(cols)
         n_rows = len(frame)
-        all_ids = frame[cols].to_numpy().reshape(n_cols * n_rows)
+        all_ids = frame.loc[:, cols].to_numpy().reshape(n_cols * n_rows)
         # Source: https://stackoverflow.com/questions/16453465/multi-column-factorize-in-pandas
         factorized = pd.factorize(all_ids)
 
@@ -456,16 +478,16 @@ class BipartiteBase(DataFrame):
             # If ids are not integers, this will return a TypeError and we can ignore it
             pass
 
-        frame[cols] = factorized[0].reshape((n_rows, n_cols))
+        frame.loc[:, cols] = factorized[0].reshape((n_rows, n_cols))
 
         # Save id reference dataframe, so user can revert back to original ids
         if frame.id_reference_dict: # If id_reference_dict has been initialized
             if len(frame.id_reference_dict[id_col]) == 0: # If dataframe empty, start with original ids: adjusted ids
-                frame.id_reference_dict[id_col]['original_ids'] = factorized[1]
-                frame.id_reference_dict[id_col]['adjusted_ids_1'] = np.arange(len(factorized[1]))
+                frame.id_reference_dict[id_col].loc[:, 'original_ids'] = factorized[1]
+                frame.id_reference_dict[id_col].loc[:, 'adjusted_ids_1'] = np.arange(len(factorized[1]))
             else: # Merge in new adjustment step
                 n_cols_id = len(frame.id_reference_dict[id_col].columns)
-                id_reference_df = pd.DataFrame({'adjusted_ids_' + str(n_cols_id - 1): factorized[1], 'adjusted_ids_' + str(n_cols_id): np.arange(len(factorized[1]))}, index=np.arange(len(factorized[1]))).astype('Int64')
+                id_reference_df = pd.DataFrame({'adjusted_ids_' + str(n_cols_id - 1): factorized[1], 'adjusted_ids_' + str(n_cols_id): np.arange(len(factorized[1]))}, index=np.arange(len(factorized[1]))).astype('Int64', copy=False)
                 frame.id_reference_dict[id_col] = frame.id_reference_dict[id_col].merge(id_reference_df, how='left', on='adjusted_ids_' + str(n_cols_id - 1))
 
         # Sort columns
@@ -653,11 +675,11 @@ class BipartiteBase(DataFrame):
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
-            how (str): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
+            frame (BipartiteBase): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
         '''
         if copy:
             frame = self.copy()
@@ -668,40 +690,14 @@ class BipartiteBase(DataFrame):
         prev_len = len(frame)
 
         if frame._col_included('t'):
-            try: # If BipartiteEventStudy or BipartiteEventStudyCollapsed
-                frame = frame.unstack_es().drop_duplicates()
-                convert_1 = True
-            except AttributeError:
-                convert_1 = False
-            try: # If BipartiteLongCollapsed
-                frame = frame.uncollapse()
-                convert_2 = True
-            except AttributeError:
-                convert_2 = False
-
             # Temporarily disable warnings
             warnings.filterwarnings('ignore')
-            if how == 'max':
-                # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
-                frame = frame[frame['y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy()].groupby(['i', 't'], as_index=False).first()
-                # frame.sort_values('y').groupby(['i', 't'], as_index=False).last()
-                # frame = frame.iloc[frame.reset_index().groupby(['i', 't']).agg({'y': max, 'index': 'first'})['index']].reset_index(drop=True)
-                # # Sort by worker id, time, and compensation
-                # frame.sort_values(['i', 't', 'y'], inplace=True)
-                # frame.drop_duplicates(subset=['i', 't'], keep='last', inplace=True)
-            elif how in ['sum', 'mean']:
-                # Group by worker id, time, and firm id, and take sum/mean of compensation
-                frame['y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
-                frame = frame[frame['y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy()].groupby(['i', 't'], as_index=False).first()
-                # frame = frame.iloc[frame.reset_index().groupby(['i', 't']).agg({'y': max, 'index': 'first'})['index']].reset_index(drop=True)
-                # # Sort by worker id, time, and compensation
-                # frame.sort_values(['i', 't', 'y'], inplace=True)
-                # # For each i-t group, take max compensation
-                # frame.drop_duplicates(subset=['i', 't'], keep='last', inplace=True)
-            else:
-                # Restore warnings
-                warnings.filterwarnings('default')
-                warnings.warn('{} is not a valid method for dropping i-t duplicates'.format(how))
+            if how not in ['max', max]:
+                # Group by worker id, time, and firm id, and take `how` of compensation
+                frame.loc[:, 'y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
+            # Take max over duplicates
+            # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
+            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy(), :].groupby(['i', 't'], as_index=False).first()
             # Restore warnings
             warnings.filterwarnings('default')
 
@@ -711,24 +707,21 @@ class BipartiteBase(DataFrame):
         # If observations dropped, recompute 'm'
         if prev_len != len(frame):
             frame = frame.gen_m(force=True, copy=False)
-        if convert_2: # If data was collapsed
-            frame = frame.get_collapsed_long(copy=copy)
-        if convert_1: # If data was event study
-            frame = frame.get_es()
 
         return frame
 
-    def _conset(self, connectedness='connected', drop_multiples=False, copy=True):
+    def _conset(self, connectedness='connected', how_max='length', drop_multiples=False, copy=True):
         '''
-        Update data to include only the largest connected set of movers.
+        Update data to include only the largest connected component of movers.
 
         Arguments:
-            connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'biconnected', keep observations in the largest biconnected set of firms; if None, keep all observations
+            connectedness (str or None): if 'connected', keep observations in the largest connected component of firms; if 'biconnected', keep observations in the largest biconnected component of firms; if None, keep all observations
+            how_max (str): how to determine largest biconnected component. Options are 'length', 'firms', and 'workers', where each option chooses the biconnected component with the highest of the chosen value
             drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for biconnected components)
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with connected set of movers
+            frame (BipartiteBase): BipartiteBase with (bi)connected component of movers
         '''
         if copy:
             frame = self.copy()
@@ -746,25 +739,32 @@ class BipartiteBase(DataFrame):
         prev_firms = frame.n_firms()
         prev_clusters = frame.n_clusters()
 
-        # Create graph
-        G = frame._construct_graph()
-
         # Update data
         # Find largest connected set of firms
+        # First, create graph
+        G = frame._construct_graph(connectedness)
         if connectedness == 'connected':
             # Compute largest connected set of firms
             largest_cc = max(G.components(), key=len)
             # Keep largest connected set of firms
             frame = frame.keep_ids('j', largest_cc, copy=False)
-        elif connectedness == 'biconnected':
+        elif connectedness == 'biconnected_observations':
             if isinstance(frame, bpd.BipartiteEventStudyBase):
-                raise NotImplementedError('Cannot compute biconnected components on event study data. This is because intermediate firms can be dropped, for instance a worker may work at firms A, B, then return to A. But if B is not in the largest biconnected set of firms, the worker now has their associated firms listed as A, A. This causes two issues. First, for event study format, this could lead to situations that require complicated data rearrangement. For instance, the second observation in the first row might have to be dropped. This would require shifting the first observation of the second row into the second observation of the first row, etc. Second, this could turn a mover into a stayer. This is an issue for collapsed event study data - these observations should be collapsed into a single observation, but there is not currently a way to collapse this data efficiently. Please compute biconnected components on data in long or collapsed long format, then convert to event study format.')
-            # Compute all biconnected sets of firms
+                # warnings.warn('You should avoid computing biconnected components on event study data. This is because intermediate firms can be dropped, for instance a worker may work at firms A, B, then return to A. But if B is not in the largest biconnected set of firms, the worker now has their associated firms listed as A, A. This causes two issues. First, for event study format, this could lead to situations that require complicated data rearrangement. For instance, the second observation in the first row might have to be dropped. This would require shifting the first observation of the second row into the second observation of the first row, etc. Second, this could turn a mover into a stayer. This is an issue for collapsed event study data - these observations should be collapsed into a single observation. Neither of these issues is handled properly in the current implementation - both are handled by simply dropping rows where either firm is outside the biconnected components. Please compute biconnected components on data in long or collapsed long format, then convert to event study format.')
+                warnings.warn('You should avoid computing biconnected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
+            # Compute all connected components of firms (each entry is a connected component)
+            cc_list = G.components()
+            # Keep largest leave-one-out set of firms
+            frame = frame._leave_one_observation_out(cc_list=cc_list, how_max=how_max, drop_multiples=drop_multiples)
+        elif connectedness == 'biconnected_firms':
+            if isinstance(frame, bpd.BipartiteEventStudyBase):
+                warnings.warn('You should avoid computing biconnected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
+            # Compute all biconnected components of firms (each entry is a biconnected component)
             bcc_list = G.biconnected_components()
             # Keep largest leave-one-out set of firms
-            frame = self.leave_one_out(bcc_list, drop_multiples)
+            frame = frame._leave_one_firm_out(bcc_list=bcc_list, how_max=how_max, drop_multiples=drop_multiples)
         else:
-            warnings.warn("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', or None.".format(connectedness))
+            raise NotImplementedError("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', and None.".format(connectedness))
 
         # Data is now connected
         frame.connected = connectedness
@@ -778,6 +778,73 @@ class BipartiteBase(DataFrame):
             frame.columns_contig['g'] = False
 
         return frame
+
+    def _construct_graph(self, connectedness='connected'):
+        '''
+        Construct igraph graph linking firms by movers.
+
+        Arguments:
+            connectedness (str): if 'connected', for use when computing the largest connected component of firms; if 'biconnected_observations' or 'biconnected_firms', for use when computing the largest leave-one-out component of firms
+
+        Returns:
+            (igraph Graph): graph
+        '''
+        linkages_fn_dict = {
+            'connected': self._construct_connected_linkages,
+            'biconnected_observations': self._construct_biconnected_linkages,
+            'biconnected_firms': self._construct_biconnected_linkages
+        }
+        n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
+        return ig.Graph(n=n_firms, edges=linkages_fn_dict[connectedness]())
+
+    def _leave_one_firm_out(self, bcc_list, how_max='length', drop_multiples=False):
+        '''
+        Extract largest leave-one-firm-out connected component.
+
+        Arguments:
+            bcc_list (list of lists): each entry is a biconnected component
+            how_max (str): how to determine largest biconnected component. Options are 'length', 'firms', and 'workers', where each option chooses the biconnected component with the highest of the chosen value
+            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+
+        Returns:
+            frame_largest_bcc (BipartiteBase): dataframe of largest leave-one-out connected component
+        '''
+        # This will become the largest leave-one-firm-out component
+        frame_largest_bcc = None
+
+        for bcc in bcc_list:
+            # Keep observations in biconnected components
+            frame_bcc = self.keep_ids('j', bcc, drop_multiples, copy=True)
+
+            # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+            # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
+            frame_bcc = frame_bcc.min_moves_frame(2, drop_multiples, copy=False)
+
+            # # Recompute biconnected components
+            # G2 = frame_bcc._construct_biconnected_graph()
+            # bcc_list_2 = G2.biconnected_components()
+
+            # # If new frame is not biconnected after dropping firms with 1 mover observation, recompute biconnected components
+            # if not ((len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms())):
+            #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, how_max, drop_multiples)
+
+            if (frame_largest_bcc is None) or (frame_bcc is None):
+                # If in the first round, or if the biconnected components have recursively been eliminated
+                replace = True
+            else:
+                if how_max == 'length':
+                    replace = (len(frame_bcc) >= len(frame_largest_bcc))
+                elif how_max == 'firms':
+                    replace = (frame_bcc.n_firms() >= frame_largest_bcc.n_firms())
+                elif how_max == 'workers':
+                    replace = (frame_bcc.n_workers() >= frame_largest_bcc.n_workers())
+                else:
+                    raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
+            if replace:
+                frame_largest_bcc = frame_bcc
+
+        # Return largest biconnected component
+        return frame_largest_bcc
 
     def sort_cols(self, copy=True):
         '''
@@ -800,116 +867,105 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def keep_ids(self, id_col, keep_ids, copy=True):
+    def drop_rows(self, rows, drop_multiples=False, reset_index=True, copy=True):
         '''
-        Only keep ids belonging to a given set of ids.
+        Drop particular rows.
 
         Arguments:
-            id_col (str): column of ids to consider ('i', 'j', or 'g')
-            keep_ids (list): ids to keep
+            rows (list): rows to keep
+            drop_multiples (bool): used only if using collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with ids in the given set
+            frame (BipartiteBase): dataframe with given rows dropped
         '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
+        rows = set(rows)
+        if len(rows) == 0:
+            # If nothing input
+            if copy:
+                return self.copy()
+            return self
+        self_rows = set(self.index.to_numpy())
+        rows_diff = self_rows.difference(rows)
 
-        for id_subcol in to_list(self.reference_dict[id_col]):
-            frame = frame[frame[id_subcol].isin(keep_ids)]
+        return self.keep_rows(rows_diff, drop_multiples=drop_multiples, reset_index=reset_index, copy=copy)
 
-        frame.reset_index(drop=True, inplace=True)
-
-        return frame
-
-    def drop_ids(self, id_col, drop_ids, copy=True):
+    def min_moves_firms(self, threshold=2):
         '''
-        Drop all ids belonging to a given set of ids.
+        List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm. Also note that if a worker moves to a firm then leaves it, that counts as two moves - even if the worker was at the firm for only one period.
 
         Arguments:
-            id_col (str): column of ids to consider ('i', 'j', or 'g')
-            drop_ids (list): ids to drop
+            threshold (int): minimum number of moves required to keep a firm
+
+        Returns:
+            valid_firms (NumPy Array): firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            return self.unique_ids('j')
+
+        return self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0].min_obs_firms(threshold)
+
+    def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with ids in the given set
+            (BipartiteBase): dataframe of firms with sufficiently many moves
         '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
 
-        for id_subcol in to_list(self.reference_dict[id_col]):
-            frame = frame[~(frame[id_subcol].isin(drop_ids))]
+        return self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0].min_obs_frame(threshold, drop_multiples, copy)
 
-        frame.reset_index(drop=True, inplace=True)
-
-        return frame
-
-    def min_workers(self, threshold=15, copy=True):
-        '''
-        List firms with at least `threshold` many workers.
-
-        Arguments:
-            threshold (int): minimum number of workers required to keep a firm
-            copy (bool): if False, avoid copy
-
-        Returns:
-            valid_firms (list): list of firms with sufficiently many workers
-        '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
-
-        j_cols = to_list(self.reference_dict['j'])
-        # Generate lists of all unique worker ids for j/j1
-        n_movers = frame.groupby(j_cols[0])['i'].unique().apply(list)
-        # Convert into DataFrame for merging
-        n_movers = pd.DataFrame(n_movers)
-        n_movers.reset_index(inplace=True)
-        n_movers.rename({j_cols[0]: 'j'}, axis=1, inplace=True)
-
-        for j_col in j_cols[1:]:
-            n_movers_merge = frame.groupby(j_col)['i'].unique().apply(list)
-            # Convert into DataFrame for merging
-            n_movers_merge = pd.DataFrame(n_movers_merge)
-            n_movers_merge.reset_index(inplace=True)
-            n_movers_merge.rename({j_col: 'j'}, axis=1, inplace=True)
-            # Merge
-            n_movers = pd.merge(n_movers, n_movers_merge, on='j')
-            # Correct columns
-            n_movers[['i_x', 'i_y']] = n_movers[['i_x', 'i_y']].fillna('').apply(list) # Replace NaNs with empty list, source: https://stackoverflow.com/questions/33199193/how-to-fill-dataframe-nan-values-with-empty-list-in-pandas
-            n_movers['i'] = n_movers['i_x'] + n_movers['i_y'] # Total movers
-            n_movers = n_movers[['j', 'i']]
-
-        # Get number of unique movers at firm j
-        n_movers['i'] = n_movers['i'].apply(set).apply(len)
-        valid_firms = n_movers.loc[n_movers['i'].to_numpy() >= threshold, 'j']
-
-        return valid_firms
-
-    def min_movers(self, threshold=15, copy=True):
+    def min_movers_firms(self, threshold=15):
         '''
         List firms with at least `threshold` many movers.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
+
+        Returns:
+            valid_firms (NumPy Array): firms with sufficiently many movers
+        '''
+        if threshold == 0:
+            # If no threshold
+            return self.unique_ids('j')
+
+        frame = self.loc[self.loc[:, 'm'].to_numpy() > 0, :]
+
+        return frame.min_workers_firms(threshold)
+
+    def min_movers_frame(self, threshold=15, drop_multiples=False, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many movers.
+
+        Arguments:
+            threshold (int): minimum number of movers required to keep a firm
+            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
             copy (bool): if False, avoid copy
 
         Returns:
-            valid_firms (list): list of firms with sufficiently many movers
+            (BipartiteBase): dataframe of firms with sufficiently many movers
         '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
 
-        frame = frame[frame['m'].to_numpy() == 1] # Keep movers
+        valid_firms = self.min_movers_firms(threshold)
 
-        return frame.min_workers(threshold=threshold, copy=False)
+        return self.keep_ids('j', valid_firms, drop_multiples, copy)
 
     def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
         '''
@@ -927,39 +983,40 @@ class BipartiteBase(DataFrame):
         # Prepare data
         # Stack data if event study (need all data in 1 column)
         try:
-            frame = self.get_long(return_df=True) # Returns Pandas dataframe, not BipartiteLong(Collapsed)
+            # Returns Pandas dataframe, not BipartiteLong(Collapsed)
+            frame = self.get_long(return_df=True)
         except AttributeError:
             frame = self
 
         if stayers_movers is not None:
             if stayers_movers == 'stayers':
-                data = pd.DataFrame(frame[frame['m'].to_numpy() == 0])
+                data = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :])
             elif stayers_movers == 'movers':
-                data = pd.DataFrame(frame[frame['m'].to_numpy() == 1])
+                data = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :])
         else:
             data = pd.DataFrame(frame)
 
         # If period-level, then only use data for that particular period
         if t is not None:
             if len(to_list(self.reference_dict['t'])) == 1:
-                data = data[data['t'].to_numpy() == t]
+                data = data.loc[data.loc[:, 't'].to_numpy() == t, :]
             else:
                 warnings.warn('Cannot use data from a particular period on collapsed data, proceeding to cluster on all data')
 
         # Create weights
         if weighted:
             if self._col_included('w'):
-                data['row_weights'] = data['w']
+                data.loc[:, 'row_weights'] = data.loc[:, 'w']
                 weights = data.groupby('j')['w'].sum().to_numpy()
             else:
-                data['row_weights'] = 1
+                data.loc[:, 'row_weights'] = 1
                 weights = data.groupby('j').size().to_numpy()
         else:
-            data['row_weights'] = 1
+            data.loc[:, 'row_weights'] = 1
             weights = None
 
         # Get unique firm ids
-        jids = sorted(data['j'].unique()) # Must sort
+        jids = sorted(data.loc[:, 'j'].unique()) # Must sort
 
         return data, weights, jids
 
@@ -1027,7 +1084,7 @@ class BipartiteBase(DataFrame):
             # Merge into event study data
             frame = frame.merge(clusters_df, how='left', on=j_col, copy=False)
             # Keep column as int even with nans
-            frame[g_col] = frame[g_col].astype('Int64')
+            frame.loc[:, g_col] = frame.loc[:, g_col].astype('Int64', copy=False)
             frame.col_dict[g_col] = g_col
 
         # Sort columns
@@ -1037,7 +1094,7 @@ class BipartiteBase(DataFrame):
             # Drop firms that don't get clustered
             frame.dropna(inplace=True)
             frame.reset_index(drop=True, inplace=True)
-            frame[frame.reference_dict['g']] = frame[frame.reference_dict['g']].astype(int)
+            frame.loc[:, frame.reference_dict['g']] = frame.loc[:, frame.reference_dict['g']].astype(int, copy=False)
             frame.clean_data({'connectedness': frame.connected}) # Compute same connectedness measure
 
         frame.columns_contig['g'] = True

@@ -61,11 +61,11 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         # Add w
         if 'w' not in frame.columns:
-            frame['w'] = 1
+            frame.loc[:, 'w'] = 1
 
         # Introduce lagged i and j
-        i_col = frame['i'].to_numpy()
-        j_col = frame['j'].to_numpy()
+        i_col = frame.loc[:, 'i'].to_numpy()
+        j_col = frame.loc[:, 'j'].to_numpy()
         i_prev = np.roll(i_col, 1)
         j_prev = np.roll(j_col, 1)
 
@@ -75,7 +75,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         spell_id = new_spell.cumsum()
 
         # Quickly check whether a recollapse is necessary
-        if spell_id[-1] == len(frame):
+        if (len(frame) < 2) or (spell_id[-1] == len(frame)):
             if copy:
                 return self.copy()
             return self
@@ -84,7 +84,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         spell = frame.groupby(spell_id)
 
         if drop_multiples:
-            data_spell = frame[spell['i'].transform('size').to_numpy() == 1]
+            data_spell = frame.loc[spell['i'].transform('size').to_numpy() == 1, :]
             data_spell.reset_index(drop=True, inplace=True)
         else:
             # First, aggregate required columns
@@ -102,10 +102,10 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                 if col in self.columns_opt:
                     if self.col_dtype_dict[col] == 'int':
                         for subcol in bpd.to_list(self.reference_dict[col]):
-                            data_spell[subcol] = spell[subcol].first()
+                            data_spell.loc[:, subcol] = spell[subcol].first()
                     if self.col_dtype_dict[col] == 'float':
                         for subcol in bpd.to_list(self.reference_dict[col]):
-                            data_spell[subcol] = spell[subcol].mean()
+                            data_spell.loc[:, subcol] = spell[subcol].mean()
 
             data_spell.reset_index(drop=True, inplace=True)
 
@@ -136,7 +136,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         # Iterate over all data
         for i in range(len(self)):
             row = self.iloc[i]
-            for t in range(int(row['t1']), int(row['t2']) + 1):
+            for t in range(int(row.loc['t1']), int(row.loc['t2']) + 1):
                 long_dict['t'].append(t)
                 for col in all_cols: # Add variables other than period
                     long_dict[col].append(row[col])
@@ -144,8 +144,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         # Convert to Pandas dataframe
         data_long = pd.DataFrame(long_dict)
         # Correct datatypes
-        data_long['t'] = data_long['t'].astype(int)
-        data_long = data_long.astype({col: self.col_dtype_dict[col] for col in all_cols})
+        data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
+        data_long = data_long.astype({col: self.col_dtype_dict[col] for col in all_cols}, copy=False)
 
         # Sort columns
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
@@ -155,5 +155,36 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         long_frame = bpd.BipartiteLong(data_long)
         long_frame._set_attributes(self, no_dict=True)
+        long_frame = long_frame.gen_m(force=True, copy=False)
 
         return long_frame
+
+    def _drop_i_t_duplicates(self, how='max', copy=True):
+        '''
+        Keep only the highest paying job for i-t (worker-year) duplicates.
+
+        Arguments:
+            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteLongCollapsed): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if frame._col_included('t'):
+            # Convert to long
+            frame = frame.uncollapse()
+
+            frame = bpd.BipartiteBase._drop_i_t_duplicates(frame, how, copy=False)
+
+            # Return to collapsed long
+            frame = frame.get_collapsed_long(copy=False)
+
+        # Data now has unique i-t observations
+        frame.i_t_unique = True
+
+        return frame

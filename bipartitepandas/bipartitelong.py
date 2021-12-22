@@ -57,8 +57,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         self.logger.info('copied data sorted by i and t')
 
         # Introduce lagged i and j
-        i_col = data['i'].to_numpy()
-        j_col = data['j'].to_numpy()
+        i_col = data.loc[:, 'i'].to_numpy()
+        j_col = data.loc[:, 'j'].to_numpy()
         i_prev = np.roll(i_col, 1)
         j_prev = np.roll(j_col, 1)
         self.logger.info('lagged i and j introduced')
@@ -103,15 +103,19 @@ class BipartiteLong(bpd.BipartiteLongBase):
         collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
         collapsed_frame._set_attributes(self, no_dict=True)
 
+        # m can change from long to collapsed long
+        collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
+
         return collapsed_frame
 
-    def fill_periods(self, fill_j=-1, fill_y=pd.NA, copy=True):
+    def fill_periods(self, fill_j=-1, fill_y=pd.NA, fill_m=pd.NA, copy=True):
         '''
-        Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1 and y is filled in as pd.NA, but these values can be specified.
+        Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1, and y and m are filled in as pd.NA, but these values can be specified.
 
         Arguments:
             fill_j (value): value to fill in for missing j
             fill_y (value): value to fill in for missing y
+            fill_m (value): value to fill in for missing m
             copy (bool): if False, avoid copy
 
         Returns:
@@ -121,20 +125,20 @@ class BipartiteLong(bpd.BipartiteLongBase):
         fill_frame = pd.DataFrame(self, copy=copy)
         fill_frame.sort_values(['i', 't'], inplace=True)
         fill_frame.reset_index(drop=True, inplace=True) # Sort by i, t
-        i_col = fill_frame['i'].to_numpy()
-        t_col = fill_frame['t'].to_numpy()
+        i_col = fill_frame.loc[:, 'i'].to_numpy()
+        t_col = fill_frame.loc[:, 't'].to_numpy()
         i_prev = np.roll(i_col, 1)
         t_prev = np.roll(t_col, 1)
         missing_periods = (i_col == i_prev) & (t_col != t_prev + 1)
         if np.sum(missing_periods) > 0: # If have data to fill in
             fill_data = []
-            for index in fill_frame[missing_periods].index:
+            for index in fill_frame.loc[missing_periods, :].index:
                 row = fill_frame.iloc[index]
                 # Only iterate over missing years
-                for t in range(int(t_prev[index]) + 1, int(row['t'])):
-                    new_row = {'i': int(row['i']), 'j': fill_j, 'y': fill_y, 't': t}
+                for t in range(int(t_prev[index]) + 1, int(row.loc['t'])):
+                    new_row = {'i': int(row.loc['i']), 'j': fill_j, 'y': fill_y, 't': t}
                     if m: # If m column included
-                        new_row['m'] = int(row['m'])
+                        new_row['m'] = fill_m # int(row['m'])
                     fill_data.append(new_row)
             fill_df = pd.concat([pd.DataFrame(fill_row, index=[i]) for i, fill_row in enumerate(fill_data)])
             fill_frame = pd.concat([fill_frame, fill_df])
@@ -179,81 +183,81 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame = pd.DataFrame(self, copy=copy)
 
         # Generate how many periods each worker worked
-        es_extended_frame['one'] = 1
-        es_extended_frame['worker_total_periods'] = es_extended_frame.groupby('i')['one'].transform('size')
+        es_extended_frame.loc[:, 'one'] = 1
+        es_extended_frame.loc[:, 'worker_total_periods'] = es_extended_frame.groupby('i')['one'].transform('size')
 
         # Keep workers with enough periods (must have at least periods_pre + periods_post periods)
-        es_extended_frame = es_extended_frame[es_extended_frame['worker_total_periods'].to_numpy() >= periods_pre + periods_post]
+        es_extended_frame = es_extended_frame.loc[es_extended_frame.loc[:, 'worker_total_periods'].to_numpy() >= periods_pre + periods_post, :]
         es_extended_frame.reset_index(drop=True, inplace=True)
 
         # Sort by worker-period
         es_extended_frame.sort_values(['i', 't'], inplace=True)
 
         # For each worker-period, generate (how many total years - 1) they have worked at that point (e.g. if a worker started in 2005, and had data each year, then 2008 would give 3, 2009 would give 4, etc.)
-        es_extended_frame['worker_periods_worked'] = es_extended_frame.groupby('i')['one'].cumsum().to_numpy() - 1
+        es_extended_frame.loc[:, 'worker_periods_worked'] = es_extended_frame.groupby('i')['one'].cumsum().to_numpy() - 1
         es_extended_frame.drop('one', axis=1, inplace=True)
 
         # Find periods where the worker transitioned, which can serve as fulcrums for the event study
-        i_col = es_extended_frame['i'].to_numpy()
-        transition_col = es_extended_frame[transition_col].to_numpy()
+        i_col = es_extended_frame.loc[:, 'i'].to_numpy()
+        transition_col = es_extended_frame.loc[:, transition_col].to_numpy()
         i_prev = np.roll(i_col, 1)
         transition_prev = np.roll(transition_col, 1)
-        es_extended_frame['moved_firms'] = ((i_col == i_prev) & (transition_col != transition_prev)).astype(int)
+        es_extended_frame.loc[:, 'moved_firms'] = ((i_col == i_prev) & (transition_col != transition_prev)).astype(int, copy=False)
         del i_col, transition_col, i_prev, transition_prev
 
         # Compute valid moves - periods where the worker transitioned, and they also have periods_pre periods before the move, and periods_post periods after (and including) the move
-        es_extended_frame['valid_move'] = \
-                                es_extended_frame['moved_firms'] & \
-                                (es_extended_frame['worker_periods_worked'].to_numpy() >= periods_pre) & \
-                                ((es_extended_frame['worker_total_periods'].to_numpy() - es_extended_frame['worker_periods_worked'].to_numpy()) >= periods_post)
+        es_extended_frame.loc[:, 'valid_move'] = \
+                                es_extended_frame.loc[:, 'moved_firms'] & \
+                                (es_extended_frame.loc[:, 'worker_periods_worked'].to_numpy() >= periods_pre) & \
+                                ((es_extended_frame.loc[:, 'worker_total_periods'].to_numpy() - es_extended_frame.loc[:, 'worker_periods_worked'].to_numpy()) >= periods_post)
 
         # Drop irrelevant columns
         es_extended_frame.drop(['worker_total_periods', 'worker_periods_worked', 'moved_firms'], axis=1, inplace=True)
 
         # Only keep workers who have a valid move
-        es_extended_frame = es_extended_frame[es_extended_frame.groupby('i')['valid_move'].transform(max).to_numpy() > 0]
+        es_extended_frame = es_extended_frame.loc[es_extended_frame.groupby('i')['valid_move'].transform(max).to_numpy() > 0, :]
 
         # Compute lags and leads
         column_order = [[] for _ in range(len(include))] # For column order
         for i, col in enumerate(all_cols):
             # Compute lagged values
             for j in range(1, periods_pre + 1):
-                es_extended_frame['{}_l{}'.format(col, j)] = es_extended_frame[col].shift(periods=j)
+                es_extended_frame.loc[:, '{}_l{}'.format(col, j)] = es_extended_frame.loc[:, col].shift(periods=j)
                 if col in include:
                     column_order[i].insert(0, '{}_l{}'.format(col, j))
             # Compute lead values
             for j in range(periods_post): # No + 1 because base period has no shift (e.g. y becomes y_f1)
                 if j > 0: # No shift necessary for base period because already exists
-                    es_extended_frame['{}_f{}'.format(col, j + 1)] = es_extended_frame[col].shift(periods=-j)
+                    es_extended_frame.loc[:, '{}_f{}'.format(col, j + 1)] = es_extended_frame.loc[:, col].shift(periods=-j)
                 if col in include:
                     column_order[i].append('{}_f{}'.format(col, j + 1))
 
         # Demarcate valid rows (all should start off True)
-        valid_rows = ~pd.isna(es_extended_frame[col])
+        valid_rows = ~pd.isna(es_extended_frame.loc[:, col])
         # Construct i and i_prev
-        i_col = es_extended_frame['i'].to_numpy()
+        i_col = es_extended_frame.loc[:, 'i'].to_numpy()
         i_prev = np.roll(i_col, 1)
         # Stable pre-trend
         for col in stable_pre:
             for i in range(2, periods_pre + 1): # Shift 1 is baseline
-                valid_rows = (valid_rows) & (np.roll(es_extended_frame[col].to_numpy(), 1) == np.roll(es_extended_frame[col].to_numpy(), i)) & (i_prev == np.roll(i_col, i))
+                valid_rows = (valid_rows) & (np.roll(es_extended_frame.loc[:, col].to_numpy(), 1) == np.roll(es_extended_frame.loc[:, col].to_numpy(), i)) & (i_prev == np.roll(i_col, i))
 
         # Stable post-trend
         for col in stable_post:
             for i in range(1, periods_post): # Shift 0 is baseline
-                valid_rows = (valid_rows) & (es_extended_frame[col].to_numpy() == np.roll(es_extended_frame[col].to_numpy(), -i)) & (i_col == np.roll(i_col, -i))
+                valid_rows = (valid_rows) & (es_extended_frame.loc[:, col].to_numpy() == np.roll(es_extended_frame.loc[:, col].to_numpy(), -i)) & (i_col == np.roll(i_col, -i))
 
         # Delete i_col, i_prev
         del i_col, i_prev
 
         # Update with pre- and/or post-trend
-        es_extended_frame = es_extended_frame[valid_rows]
+        es_extended_frame = es_extended_frame.loc[valid_rows, :]
 
         # Rename base period to have _f1 (e.g. y becomes y_f1)
         es_extended_frame.rename({col: col + '_f1' for col in include}, axis=1, inplace=True)
 
         # Keep rows with valid moves
-        es_extended_frame = es_extended_frame[es_extended_frame['valid_move'].to_numpy() == 1]
+        es_extended_frame = es_extended_frame.loc[es_extended_frame.loc[:, 'valid_move'].to_numpy() == 1, :]
         es_extended_frame.reset_index(drop=True, inplace=True)
 
         # Drop irrelevant columns
@@ -261,7 +265,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         # Correct datatypes
         for i, col in enumerate(include):
-            es_extended_frame[column_order[i]] = es_extended_frame[column_order[i]].astype(self.col_dtype_dict[col])
+            es_extended_frame.loc[:, column_order[i]] = es_extended_frame.loc[:, column_order[i]].astype(self.col_dtype_dict[col], copy=False)
 
         col_order = []
         for order in column_order:
@@ -327,9 +331,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         for i, row in enumerate(axs):
             for j, ax in enumerate(row):
                 # Keep if previous firm type is i and next firm type is j
-                es_plot = es[(es['g_l1'].to_numpy() == i) & (es['g_f1'].to_numpy() == j)]
-                y = es_plot[y_cols].mean(axis=0)
-                yerr = es_plot[y_cols].std(axis=0) / (len(es_plot) ** 0.5)
+                es_plot = es.loc[(es.loc[:, 'g_l1'].to_numpy() == i) & (es.loc[:, 'g_f1'].to_numpy() == j), :]
+                y = es_plot.loc[:, y_cols].mean(axis=0)
+                yerr = es_plot.loc[:, y_cols].std(axis=0) / (len(es_plot) ** 0.5)
                 ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
                 ax.axvline(0, color='orange', zorder=1)
                 ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=graph_params['title_height'], fontdict={'fontsize': graph_params['fontsize']})
