@@ -190,9 +190,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     frame_cc = frame_cc.drop_rows(articulation_rows, drop_multiples, copy=False)
                     # Recompute connected components
                     G2 = frame_cc._construct_graph('biconnected_observations')
-                    cc_list = G2.components()
+                    cc_list_2 = G2.components()
                     # Recursion step
-                    frame_cc = frame_cc._leave_one_observation_out(cc_list, how_max, drop_multiples)
+                    frame_cc = frame_cc._leave_one_observation_out(cc_list_2, how_max, drop_multiples)
 
             if (frame_largest_cc is None) or (frame_cc is None):
                 # If in the first round, or if the biconnected components have recursively been eliminated
