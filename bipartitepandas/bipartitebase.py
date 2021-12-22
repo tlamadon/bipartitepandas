@@ -762,9 +762,7 @@ class BipartiteBase(DataFrame):
             # Compute all biconnected components of firms (each entry is a biconnected component)
             bcc_list = G.biconnected_components()
             # Keep largest leave-one-out set of firms
-            print('pre-conset length:', len(frame))
             frame = frame._leave_one_firm_out(bcc_list=bcc_list, how_max=how_max, drop_multiples=drop_multiples)
-            print('post-conset length:', len(frame))
         else:
             raise NotImplementedError("Invalid connectedness: {}. Valid options are 'connected', 'biconnected', and None.".format(connectedness))
 
