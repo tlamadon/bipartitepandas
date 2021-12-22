@@ -828,9 +828,12 @@ class BipartiteBase(DataFrame):
             # if not ((len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms())):
             #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, how_max, drop_multiples)
 
-            if (frame_largest_bcc is None) or (frame_bcc is None):
-                # If in the first round, or if the biconnected components have recursively been eliminated
+            if frame_largest_bcc is None:
+                # If in the first round
                 replace = True
+            elif frame_bcc is None:
+                # If the biconnected components have recursively been eliminated
+                replace = False
             else:
                 if how_max == 'length':
                     replace = (len(frame_bcc) >= len(frame_largest_bcc))

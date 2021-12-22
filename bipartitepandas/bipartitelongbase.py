@@ -195,10 +195,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     frame_cc = frame_cc._leave_one_observation_out(cc_list_2, how_max, drop_multiples)
 
             if frame_largest_cc is None:
-                # If in the first round, or if the biconnected components have recursively been eliminated
+                # If in the first round
                 replace = True
             elif frame_cc is None:
-                # If frame_cc is None, don't replace
+                # If the biconnected components have recursively been eliminated
                 replace = False
             else:
                 if how_max == 'length':
