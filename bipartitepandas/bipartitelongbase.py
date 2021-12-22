@@ -38,7 +38,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     def gen_m(self, force=False, copy=True):
         '''
-        Generate m column for data (m == 0 if stayer, m == 1 if mover).
+        Generate m column for data (m == 0 if stayer, m == 1 or 2 if mover).
 
         Arguments:
             force (bool): if True, reset 'm' column even if it exists
@@ -165,6 +165,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         '''
         # This will become the largest leave-one-observation-out component
         frame_largest_cc = None
+        print('start length:', len(self))
 
         for cc in cc_list:
             # Keep observations in connected components
@@ -192,11 +193,16 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     G2 = frame_cc._construct_graph('biconnected_observations')
                     cc_list_2 = G2.components()
                     # Recursion step
+                    print('recursion start')
                     frame_cc = frame_cc._leave_one_observation_out(cc_list_2, how_max, drop_multiples)
+                    print('recursion stop')
 
-            if (frame_largest_cc is None) or (frame_cc is None):
+            if frame_largest_cc is None:
                 # If in the first round, or if the biconnected components have recursively been eliminated
                 replace = True
+            elif frame_cc is None:
+                # If frame_cc is None, don't replace
+                replace = False
             else:
                 if how_max == 'length':
                     replace = (len(frame_cc) >= len(frame_largest_cc))
@@ -208,6 +214,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
             if replace:
                 frame_largest_cc = frame_cc
+        if frame_largest_cc is not None:
+            print('end length:', len(frame_largest_cc))
+        else:
+            print('end length: None')
 
         # Return largest leave-one-observation-out component
         return frame_largest_cc

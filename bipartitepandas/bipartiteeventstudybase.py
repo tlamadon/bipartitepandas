@@ -40,7 +40,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     def gen_m(self, force=False, copy=True):
         '''
-        Generate m column for data (m == 0 if stayer, m == 1 if mover).
+        Generate m column for data (m == 0 if stayer, m == 1 or 2 if mover).
 
         Arguments:
             force (bool): if True, reset 'm' column even if it exists
