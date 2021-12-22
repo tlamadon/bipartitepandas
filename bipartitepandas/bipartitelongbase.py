@@ -260,7 +260,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
-        indices = self.index.to_numpy()
+        indices = self.loc[move_rows, :].index.to_numpy()
         i_next = np.roll(i_col, -1)
         indices_next = np.roll(indices, -1)
         valid_next = (i_col == i_next)
