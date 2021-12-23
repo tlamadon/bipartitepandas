@@ -7,6 +7,7 @@ import pytest
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
+import pickle
 
 ###################################
 ##### Tests for BipartiteBase #####
@@ -1836,9 +1837,9 @@ def test_min_movers_firms_34():
     for i in range(len(valid_firms)):
         assert valid_firms[i] == valid_firms2[i] == valid_firms3[i] == valid_firms4[i] == valid_firms5[i]
 
-def test_min_movers_frame_35():
+def test_min_movers_frame_35_1():
     # Keep only firms that meet a minimum threshold of movers.
-    # Using long/event study/long collapsed/event study collapsed.
+    # Using long/event study.
     df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
@@ -1856,19 +1857,40 @@ def test_min_movers_frame_35():
     # Next, estimate the new frame using the built-in function
     new_frame2 = bdf.min_movers_frame(threshold).get_collapsed_long()
     new_frame3 = bdf.get_es().min_movers_frame(threshold).get_long().get_collapsed_long()
-    new_frame4 = bdf.get_collapsed_long().min_movers_frame(threshold)
-    new_frame5 = bdf.get_collapsed_long().get_es().min_movers_frame(threshold).get_long()
 
     assert (0 < len(new_frame) < len(bdf))
-    assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
+    assert len(new_frame) == len(new_frame2) == len(new_frame3)
     for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
         for col in ['i', 'j', 'y', 't1', 't2']:
             # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
     for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
         for col in ['i', 'j', 'y', 't1', 't2']:
             # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
+
+def test_min_movers_frame_35_2():
+    # Keep only firms that meet a minimum threshold of movers.
+    # Using long collapsed/event study collapsed.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
+
+    threshold = 12
+
+    # Estimate the new frame using the built-in function
+    new_frame1 = bdf.min_movers_frame(threshold)
+    new_frame2 = bdf.get_es().min_movers_frame(threshold).get_long()
+
+    assert (0 < len(new_frame1) < len(bdf))
+    assert len(new_frame1) == len(new_frame2)
+    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
+        for col in ['i', 'j', 'y', 't1', 't2']:
+            # Skip 'm' since we didn't recompute it
+            assert new_frame1.iloc[i][col] == new_frame2.iloc[i][col]
+    for i in range(len(new_frame1) - 100, len(new_frame1)): # range(len(new_frame)): # It takes too long to go through all rows
+        for col in ['i', 'j', 'y', 't1', 't2']:
+            # Skip 'm' since we didn't recompute it
+            assert new_frame1.iloc[i][col] == new_frame2.iloc[i][col]
 
 ###################################
 ##### Tests for BipartiteLong #####
@@ -2750,6 +2772,17 @@ def test_connectedness_6():
     # Biconnected
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_observations'})
     assert bdf.n_firms() == 6
+
+def test_connectedness_7():
+    '''
+    This test uses simulated data that is very badly behaved. When computing the leave-one-observation-out connected set, if you drop firms with fewer than 2 moves then recollapse, this creates new firms with fewer than 2 moves. This test checks that the method is handling this correctly. In this data, if the cleaning process doesn't loop until convergence, the cleaned data will have firms with only 1 move.
+    '''
+    with open('tests/test_data/wid_drops.pkl', 'rb') as f:
+        wid_drops = pickle.load(f)
+    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, correct_cols=False, no_na=False, no_duplicates=False, i_t_unique=False).clean_data({'connectedness': 'biconnected_observations', 'data_validity': True})
+    bad_df2 = bad_df.min_moves_frame(2)
+
+    assert len(bad_df) == len(bad_df2) > 0
 
 ################################
 ##### Tests for Clustering #####

@@ -2,7 +2,7 @@
 from .util import col_order, update_dict, to_list, logger_init, col_dict_optional_cols, aggregate_transform
 from .measures import measures
 from .grouping import grouping
-from .bipartitebase import BipartiteBase
+from .bipartitebase import BipartiteBase, recollapse_loop
 from .bipartitelongbase import BipartiteLongBase
 from .bipartitelong import BipartiteLong
 from .bipartitelongcollapsed import BipartiteLongCollapsed

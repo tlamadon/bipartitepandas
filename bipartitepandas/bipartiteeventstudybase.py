@@ -159,11 +159,11 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # Convert to long
             # Note: we use unstack rather than convert to long because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - converting to long will arbitrarily decide which rows are already correct
             frame = frame.unstack_es(is_clean=False).drop_duplicates()
-            try:
-                # If BipartiteEventStudyCollapsed
+            if isinstance(frame, bpd.BipartiteLongCollapsed):
+                # If self is BipartiteEventStudyCollapsed, then frame is BipartiteLongCollapsed
                 frame = frame.uncollapse()
                 collapsed = True
-            except AttributeError:
+            else:
                 collapsed = False
 
             frame = bpd.BipartiteBase._drop_i_t_duplicates(frame, how, copy=False)
@@ -574,7 +574,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_obs_frame(threshold, drop_multiples, copy).get_es()
+        return self.get_long().min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
 
     def min_workers_firms(self, threshold=2):
         '''
@@ -626,7 +626,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_workers_frame(threshold, drop_multiples, copy).get_es()
+        return self.get_long().min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
 
     # def min_moves_firms(self, threshold=2):
     #     '''

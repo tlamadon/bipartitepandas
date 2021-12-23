@@ -13,6 +13,28 @@ import bipartitepandas as bpd
 from bipartitepandas import col_order, update_dict, to_list, logger_init, col_dict_optional_cols, aggregate_transform
 import igraph as ig
 
+def recollapse_loop(func):
+    '''
+    Decorator function that accounts for issues with selecting ids under particular restrictions for collapsed data. In particular, looking at a restricted set of observations can require recollapsing data, which can they change which observations meet the given restrictions. This function loops until stability is achieved.
+    '''
+    def recollapse_loop_inner(*args, **kwargs):
+        # Do function
+        self = args[0]
+        frame = func(*args, **kwargs)
+
+        if isinstance(self, (bpd.BipartiteLongCollapsed, bpd.BipartiteEventStudyCollapsed)):
+            kwargs['copy'] = False
+            if len(frame) != len(self):
+                # If the frame changes, we have to re-loop until stability
+                frame_prev = frame
+                frame = func(frame_prev, *args[1:], **kwargs)
+                while len(frame) != len(frame_prev):
+                    frame_prev = frame
+                    frame = func(frame_prev, *args[1:], **kwargs)
+
+        return frame
+    return recollapse_loop_inner
+
 class BipartiteBase(DataFrame):
     '''
     Base class for BipartitePandas, where BipartitePandas gives a bipartite network of firms and workers. Contains generalized methods. Inherits from DataFrame.
@@ -908,8 +930,9 @@ class BipartiteBase(DataFrame):
             # If no threshold
             return self.unique_ids('j')
 
-        return self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0].min_obs_firms(threshold)
+        return self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0].min_obs_firms(threshold=threshold)
 
+    @recollapse_loop
     def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
@@ -928,7 +951,9 @@ class BipartiteBase(DataFrame):
                 return self.copy()
             return self
 
-        return self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0].min_obs_frame(threshold, drop_multiples, copy)
+        valid_firms = self.min_moves_firms(threshold)
+
+        return self.keep_ids('j', keep_ids=valid_firms, drop_multiples=drop_multiples, copy=copy)
 
     def min_movers_firms(self, threshold=15):
         '''
@@ -948,6 +973,7 @@ class BipartiteBase(DataFrame):
 
         return frame.min_workers_firms(threshold)
 
+    @recollapse_loop
     def min_movers_frame(self, threshold=15, drop_multiples=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many movers.
@@ -968,7 +994,7 @@ class BipartiteBase(DataFrame):
 
         valid_firms = self.min_movers_firms(threshold)
 
-        return self.keep_ids('j', valid_firms, drop_multiples, copy)
+        return self.keep_ids('j', keep_ids=valid_firms, drop_multiples=drop_multiples, copy=copy)
 
     def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
         '''
@@ -985,10 +1011,10 @@ class BipartiteBase(DataFrame):
         '''
         # Prepare data
         # Stack data if event study (need all data in 1 column)
-        try:
+        if isinstance(self, bpd.BipartiteEventStudyBase):
             # Returns Pandas dataframe, not BipartiteLong(Collapsed)
             frame = self.get_long(return_df=True)
-        except AttributeError:
+        else:
             frame = self
 
         if stayers_movers is not None:

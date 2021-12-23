@@ -170,9 +170,38 @@ class BipartiteLongBase(bpd.BipartiteBase):
             # Keep observations in connected components
             frame_cc = self.keep_ids('j', cc, drop_multiples, copy=True)
 
+            if frame_largest_cc is not None:
+                # If frame_cc is already smaller than frame_largest_cc
+                if how_max == 'length':
+                    skip = (len(frame_largest_cc) >= len(frame_cc))
+                elif how_max == 'firms':
+                    skip = (frame_largest_cc.n_firms() >= frame_cc.n_firms())
+                elif how_max == 'workers':
+                    skip = (frame_largest_cc.n_workers() >= frame_cc.n_workers())
+                else:
+                    raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
+                if skip:
+                    break
+
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
             # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
             frame_cc = frame_cc.min_moves_frame(2, drop_multiples, copy=False)
+            if len(frame_cc) != len(frame_cc.min_moves_frame(2, drop_multiples, copy=True)):
+                print('min_moves')
+                raise NotImplementedError
+
+            if frame_largest_cc is not None:
+                # If frame_cc is already smaller than frame_largest_cc
+                if how_max == 'length':
+                    skip = (len(frame_largest_cc) >= len(frame_cc))
+                elif how_max == 'firms':
+                    skip = (frame_largest_cc.n_firms() >= frame_cc.n_firms())
+                elif how_max == 'workers':
+                    skip = (frame_largest_cc.n_workers() >= frame_cc.n_workers())
+                else:
+                    raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
+                if skip:
+                    break
 
             # Construct graph
             G2 = frame_cc._construct_graph('biconnected_observations')
@@ -188,11 +217,28 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 if len(articulation_rows) > 0:
                     # If new frame is not leave-one-out connected, drop articulation rows then recompute leave-one-out components
                     frame_cc = frame_cc.drop_rows(articulation_rows, drop_multiples, copy=False)
+
+                    if frame_largest_cc is not None:
+                        # If frame_cc is already smaller than frame_largest_cc
+                        if how_max == 'length':
+                            skip = (len(frame_largest_cc) >= len(frame_cc))
+                        elif how_max == 'firms':
+                            skip = (frame_largest_cc.n_firms() >= frame_cc.n_firms())
+                        elif how_max == 'workers':
+                            skip = (frame_largest_cc.n_workers() >= frame_cc.n_workers())
+                        else:
+                            raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
+                        if skip:
+                            break
+
                     # Recompute connected components
                     G2 = frame_cc._construct_graph('biconnected_observations')
                     cc_list_2 = G2.components()
                     # Recursion step
                     frame_cc = frame_cc._leave_one_observation_out(cc_list_2, how_max, drop_multiples)
+                    if len(frame_cc) != len(frame_cc.min_moves_frame(2, drop_multiples, copy=True)):
+                        print('recursion')
+                        raise NotImplementedError
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -211,6 +257,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
             if replace:
                 frame_largest_cc = frame_cc
+
+        if len(frame_largest_cc) != len(frame_largest_cc.min_moves_frame(2, drop_multiples, copy=True)):
+            print('end')
+            raise NotImplementedError
 
         # Return largest leave-one-observation-out component
         return frame_largest_cc
@@ -345,13 +395,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         frame = self.loc[self.loc[:, id_col].isin(keep_ids), :]
 
         if id_col in ['j', 'g']:
-            try:
+            if isinstance(frame, bpd.BipartiteLongCollapsed):
                 # If BipartiteLongCollapsed
                 frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
                 # We don't need to copy again
                 copy = False
-            except AttributeError:
-                pass
 
             # Recompute 'm' since it might change from dropping observations or from re-collapsing
             frame = frame.gen_m(force=True, copy=copy)
@@ -391,13 +439,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         frame = self.loc[~(self.loc[:, id_col].isin(drop_ids)), :]
 
         if id_col in ['j', 'g']:
-            try:
+            if isinstance(frame, bpd.BipartiteLongCollapsed):
                 # If BipartiteLongCollapsed
                 frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
                 # We don't need to copy again
                 copy = False
-            except AttributeError:
-                pass
 
             # Recompute 'm' since it might change from dropping observations or from re-collapsing
             frame = frame.gen_m(force=True, copy=copy)
@@ -436,13 +482,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         frame = self.iloc[rows]
 
-        try:
+        if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
             frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
             # We don't need to copy again
             copy = False
-        except AttributeError:
-            pass
 
         # Recompute 'm' since it might change from dropping observations or from re-collapsing
         frame = frame.gen_m(force=True, copy=copy)
@@ -471,9 +515,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return valid_firms
 
+    @bpd.recollapse_loop
     def min_obs_frame(self, threshold=2, drop_multiples=False, copy=True):
         '''
-        Return dataframe of firms with at least `threshold` many observations.
+        Interior function for min_obs_frame().
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
@@ -491,13 +536,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         frame = self.loc[self.groupby('j')['i'].transform('size').to_numpy() >= threshold, :]
 
-        try:
+        if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
             frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
             # We don't need to copy again
             copy = False
-        except AttributeError:
-            pass
 
         # Recompute 'm' since it might change from dropping observations or from re-collapsing
         frame = frame.gen_m(force=True, copy=copy)
@@ -525,6 +568,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return valid_firms
 
+    @bpd.recollapse_loop
     def min_workers_frame(self, threshold=15, drop_multiples=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
@@ -545,13 +589,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         frame = self.loc[self.groupby('j')['i'].transform('nunique').to_numpy() >= threshold, :]
 
-        try:
+        if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
             frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
             # We don't need to copy again
             copy = False
-        except AttributeError:
-            pass
 
         # Recompute 'm' since it might change from dropping observations or from re-collapsing
         frame = frame.gen_m(force=True, copy=copy)
@@ -599,13 +641,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     #     frame = self.loc[self.groupby('j')['m'].transform('sum').to_numpy() >= threshold, :]
 
-    #     try:
-    #         # If BipartiteLongCollapsed
-    #         frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
-    #         # We don't need to copy again
-    #         copy = False
-    #     except AttributeError:
-    #         pass
+    #    if isinstance(frame, bpd.BipartiteLongCollapsed):
+    #        frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
+    #        # We don't need to copy again
+    #        copy = False
 
     #     # Recompute 'm' since it might change from dropping observations or from re-collapsing
     #     frame = frame.gen_m(force=True, copy=copy)
