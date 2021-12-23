@@ -186,9 +186,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
             # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
             frame_cc = frame_cc.min_moves_frame(2, drop_multiples, copy=False)
-            if len(frame_cc) != len(frame_cc.min_moves_frame(2, drop_multiples, copy=True)):
-                print('min_moves')
-                raise NotImplementedError
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
@@ -236,9 +233,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     cc_list_2 = G2.components()
                     # Recursion step
                     frame_cc = frame_cc._leave_one_observation_out(cc_list_2, how_max, drop_multiples)
-                    if len(frame_cc) != len(frame_cc.min_moves_frame(2, drop_multiples, copy=True)):
-                        print('recursion')
-                        raise NotImplementedError
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -257,10 +251,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
             if replace:
                 frame_largest_cc = frame_cc
-
-        if len(frame_largest_cc) != len(frame_largest_cc.min_moves_frame(2, drop_multiples, copy=True)):
-            print('end')
-            raise NotImplementedError
 
         # Return largest leave-one-observation-out component
         return frame_largest_cc
