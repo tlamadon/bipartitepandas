@@ -40,11 +40,12 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudy
 
-    def get_collapsed_long(self, copy=True):
+    def get_collapsed_long(self, spell_to_worker=False, copy=True):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
 
         Arguments:
+            spell_to_worker (bool): if True, use spell ids as new worker ids
             copy (bool): if False, avoid copy
 
         Returns:
@@ -67,8 +68,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
         new_spell = (j_col != j_prev) | (i_col != i_prev) # Allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells
         del i_col, j_col, i_prev, j_prev
-        spell_id = new_spell.cumsum()
+        spell_id = new_spell.cumsum() - 1
         self.logger.info('spell ids generated')
+
+        if spell_to_worker:
+            data.loc[:, 'i'] = spell_id
 
         # Aggregate at the spell level
         spell = data.groupby(spell_id)
