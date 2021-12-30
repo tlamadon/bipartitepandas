@@ -40,12 +40,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudy
 
-    def get_collapsed_long(self, spell_to_worker=False, copy=True):
+    def get_collapsed_long(self, copy=True):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
 
         Arguments:
-            spell_to_worker (bool): if True, use spell ids as new worker ids
             copy (bool): if False, avoid copy
 
         Returns:
@@ -70,9 +69,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
         del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum() - 1
         self.logger.info('spell ids generated')
-
-        if spell_to_worker:
-            data.loc[:, 'i'] = spell_id
 
         # Aggregate at the spell level
         spell = data.groupby(spell_id)

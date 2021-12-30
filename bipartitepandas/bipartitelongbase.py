@@ -76,9 +76,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def get_es(self):
+    def get_es(self, move_to_worker=False):
         '''
         Return (collapsed) long form data reformatted into (collapsed) event study data.
+
+        Arguments:
+            move_to_worker (bool): if True, each move is treated as a new worker
 
         Returns:
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
@@ -148,6 +151,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         # Recompute 'm'
         es_frame = es_frame.gen_m(force=True, copy=False)
+
+        if move_to_worker:
+            es_frame.loc[:, 'i'] = es_frame.index
 
         return es_frame
 
