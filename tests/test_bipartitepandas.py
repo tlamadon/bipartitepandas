@@ -1751,64 +1751,101 @@ def test_min_workers_frame_31():
             # Skip 'm' since we didn't recompute it
             assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
 
-# def test_min_moves_firms_32():
-#     # List only firms that meet a minimum threshold of moves.
-#     # Using long/event study/long collapsed/event study collapsed.
-#     df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
-#     bdf = bpd.BipartiteLong(df).clean_data()
+def test_min_moves_firms_32_1():
+    # List only firms that meet a minimum threshold of moves.
+    # Using long/event study.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data()
 
-#     threshold = 20
+    threshold = 20
 
-#     # First, manually estimate the valid set of firms
-#     frame = bdf.copy()
-#     frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
-#     n_moves = frame.groupby('j')['m'].sum()
+    # First, manually estimate the valid set of firms
+    frame = bdf.copy()
+    frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
+    n_moves = frame.groupby('j')['m'].sum()
 
-#     valid_firms = sorted(n_moves[n_moves >= threshold].index)
+    valid_firms = sorted(n_moves[n_moves >= threshold].index)
 
-#     # Next, estimate the set of valid firms using the built-in function
-#     valid_firms2 = sorted(bdf.min_moves_firms(threshold))
-#     valid_firms3 = sorted(bdf.get_es().min_moves_firms(threshold))
-#     valid_firms4 = sorted(bdf.get_collapsed_long().min_moves_firms(threshold))
-#     valid_firms5 = sorted(bdf.get_collapsed_long().get_es().min_moves_firms(threshold))
+    # Next, estimate the set of valid firms using the built-in function
+    valid_firms2 = sorted(bdf.min_moves_firms(threshold))
+    valid_firms3 = sorted(bdf.get_es().min_moves_firms(threshold))
 
-#     assert (0 < len(valid_firms) < df['j'].nunique())
-#     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3) == len(valid_firms4) == len(valid_firms5)
-#     for i in range(len(valid_firms)):
-#         assert valid_firms[i] == valid_firms2[i] == valid_firms3[i] == valid_firms4[i] == valid_firms5[i]
+    assert (0 < len(valid_firms) < df['j'].nunique())
+    assert len(valid_firms) == len(valid_firms2) == len(valid_firms3)
+    for i in range(len(valid_firms)):
+        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i]
 
-# def test_min_moves_frame_33():
-#     # Keep only firms that meet a minimum threshold of moves.
-#     # Using long/event study/long collapsed/event study collapsed.
-#     df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
-#     bdf = bpd.BipartiteLong(df).clean_data()
+def test_min_moves_firms_32_2():
+    # List only firms that meet a minimum threshold of moves.
+    # Using long collapsed/event study collapsed.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
-#     threshold = 20
+    threshold = 20
 
-#     # First, manually estimate the new frame
-#     frame = bdf.copy()
-#     frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
-#     n_moves = frame.groupby('j')['m'].sum()
+    # First, manually estimate the valid set of firms
+    frame = bdf.copy()
+    frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
+    n_moves = frame.groupby('j')['m'].sum()
 
-#     valid_firms = sorted(n_moves[n_moves >= threshold].index)
-#     new_frame = frame.keep_ids('j', valid_firms).get_collapsed_long()
+    valid_firms = sorted(n_moves[n_moves >= threshold].index)
 
-#     # Next, estimate the new frame using the built-in function
-#     new_frame2 = bdf.min_moves_frame(threshold).get_collapsed_long()
-#     new_frame3 = bdf.get_es().min_moves_frame(threshold).get_long().get_collapsed_long()
-#     new_frame4 = bdf.get_collapsed_long().min_moves_frame(threshold)
-#     new_frame5 = bdf.get_collapsed_long().get_es().min_moves_frame(threshold).get_long()
+    # Next, estimate the set of valid firms using the built-in function
+    valid_firms2 = sorted(bdf.min_moves_firms(threshold))
+    valid_firms3 = sorted(bdf.get_es().min_moves_firms(threshold))
 
-#     assert (0 < len(new_frame) < len(bdf))
-#     assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
-#     for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-#         for col in ['i', 'j', 'y', 't1', 't2']:
-#             # Skip 'm' since we didn't recompute it
-#             assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
-#     for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
-#         for col in ['i', 'j', 'y', 't1', 't2']:
-#             # Skip 'm' since we didn't recompute it
-#             assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+    assert (0 < len(valid_firms) < df['j'].nunique())
+    assert len(valid_firms) == len(valid_firms2) == len(valid_firms3)
+    for i in range(len(valid_firms)):
+        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i]
+
+def test_min_moves_frame_33():
+    # Keep only firms that meet a minimum threshold of moves.
+    # Using long/event study/long collapsed/event study collapsed.
+    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data()
+
+    threshold = 12
+
+    # First, manually estimate the valid set of firms
+    frame = bdf.copy()
+    frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
+    n_moves = frame.groupby('j')['m'].sum()
+
+    valid_firms = sorted(n_moves[n_moves >= threshold].index)
+    new_frame = frame.keep_ids('j', valid_firms)
+
+    # Iterate until set of firms stays the same between loops
+    loop = True
+    n_loops = 0
+    while loop:
+        n_loops += 1
+        prev_frame = new_frame
+        prev_frame.loc[prev_frame.loc[:, 'm'] == 2, 'm'] = 1
+        # Keep firms with sufficiently many moves
+        n_moves = prev_frame.groupby('j')['m'].sum()
+        valid_firms = sorted(n_moves[n_moves >= threshold].index)
+        new_frame = prev_frame.keep_ids('j', valid_firms)
+        loop = (len(new_frame) != len(prev_frame))
+    new_frame = new_frame.get_collapsed_long()
+
+    # Next, estimate the new frame using the built-in function
+    new_frame2 = bdf.min_moves_frame(threshold).get_collapsed_long()
+    new_frame3 = bdf.get_es().min_moves_frame(threshold).get_long().get_collapsed_long()
+    new_frame4 = bdf.get_collapsed_long().min_moves_frame(threshold)
+    new_frame5 = bdf.get_collapsed_long().get_es().min_moves_frame(threshold).get_long()
+
+    assert n_loops > 1
+    assert (0 < len(new_frame) < len(bdf))
+    assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
+    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
+        for col in ['i', 'j', 'y', 't1', 't2']:
+            # Skip 'm' since we didn't recompute it
+            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+    for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
+        for col in ['i', 'j', 'y', 't1', 't2']:
+            # Skip 'm' since we didn't recompute it
+            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
 
 def test_min_movers_firms_34():
     # List only firms that meet a minimum threshold of movers.
@@ -1837,13 +1874,13 @@ def test_min_movers_firms_34():
     for i in range(len(valid_firms)):
         assert valid_firms[i] == valid_firms2[i] == valid_firms3[i] == valid_firms4[i] == valid_firms5[i]
 
-def test_min_movers_frame_35_1():
+def test_min_movers_frame_35():
     # Keep only firms that meet a minimum threshold of movers.
-    # Using long/event study.
+    # Using long/event study/long collapsed/event study collapsed.
     df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
-    threshold = 20
+    threshold = 12
 
     # First, manually estimate the new frame
     frame = bdf.copy()
@@ -1852,45 +1889,39 @@ def test_min_movers_frame_35_1():
     n_movers = frame_movers.groupby('j')['i'].nunique()
 
     valid_firms = n_movers[n_movers >= threshold].index
-    new_frame = frame.keep_ids('j', valid_firms).get_collapsed_long()
+    new_frame = frame.keep_ids('j', valid_firms)
+
+    # Iterate until set of firms stays the same between loops
+    loop = True
+    n_loops = 0
+    while loop:
+        n_loops += 1
+        prev_frame = new_frame
+        # Keep movers
+        prev_frame_movers = prev_frame[prev_frame['m'] > 0]
+        n_movers = prev_frame_movers.groupby('j')['i'].nunique()
+        valid_firms = n_movers[n_movers >= threshold].index
+        new_frame = prev_frame.keep_ids('j', valid_firms)
+        loop = (len(new_frame) != len(prev_frame))
+    new_frame = new_frame.get_collapsed_long()
 
     # Next, estimate the new frame using the built-in function
     new_frame2 = bdf.min_movers_frame(threshold).get_collapsed_long()
     new_frame3 = bdf.get_es().min_movers_frame(threshold).get_long().get_collapsed_long()
+    new_frame4 = bdf.get_collapsed_long().min_movers_frame(threshold)
+    new_frame5 = bdf.get_collapsed_long().get_es().min_movers_frame(threshold).get_long()
 
+    assert n_loops > 1
     assert (0 < len(new_frame) < len(bdf))
-    assert len(new_frame) == len(new_frame2) == len(new_frame3)
+    assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
     for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
         for col in ['i', 'j', 'y', 't1', 't2']:
             # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
+            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
     for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
         for col in ['i', 'j', 'y', 't1', 't2']:
             # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
-
-def test_min_movers_frame_35_2():
-    # Keep only firms that meet a minimum threshold of movers.
-    # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
-
-    threshold = 12
-
-    # Estimate the new frame using the built-in function
-    new_frame1 = bdf.min_movers_frame(threshold)
-    new_frame2 = bdf.get_es().min_movers_frame(threshold).get_long()
-
-    assert (0 < len(new_frame1) < len(bdf))
-    assert len(new_frame1) == len(new_frame2)
-    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame1.iloc[i][col] == new_frame2.iloc[i][col]
-    for i in range(len(new_frame1) - 100, len(new_frame1)): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame1.iloc[i][col] == new_frame2.iloc[i][col]
+            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
 
 ###################################
 ##### Tests for BipartiteLong #####

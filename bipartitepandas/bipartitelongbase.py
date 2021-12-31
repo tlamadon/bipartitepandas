@@ -511,7 +511,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return valid_firms
 
-    @bpd.recollapse_loop
+    @bpd.recollapse_loop(False)
     def min_obs_frame(self, threshold=2, drop_multiples=False, copy=True):
         '''
         Interior function for min_obs_frame().
@@ -564,7 +564,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return valid_firms
 
-    @bpd.recollapse_loop
+    @bpd.recollapse_loop(False)
     def min_workers_frame(self, threshold=15, drop_multiples=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
@@ -597,6 +597,45 @@ class BipartiteLongBase(bpd.BipartiteBase):
         frame.reset_index(drop=True, inplace=True)
 
         return frame
+
+    def min_moves_firms(self, threshold=2):
+        '''
+        List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+
+        Returns:
+            valid_firms (NumPy Array): firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            return self.unique_ids('j')
+
+        return self.loc[self.loc[:, 'm'].to_numpy() > 0].min_obs_firms(threshold=threshold)
+
+    @bpd.recollapse_loop(True)
+    def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteBase): dataframe of firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        valid_firms = self.min_moves_firms(threshold)
+
+        return self.keep_ids('j', keep_ids=valid_firms, drop_multiples=drop_multiples, copy=copy)
 
     # def min_moves_firms(self, threshold=2):
     #     '''

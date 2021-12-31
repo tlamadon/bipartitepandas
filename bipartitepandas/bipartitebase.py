@@ -13,26 +13,31 @@ import bipartitepandas as bpd
 from bipartitepandas import col_order, update_dict, to_list, logger_init, col_dict_optional_cols, aggregate_transform
 import igraph as ig
 
-def recollapse_loop(func):
+def recollapse_loop(force=False):
     '''
     Decorator function that accounts for issues with selecting ids under particular restrictions for collapsed data. In particular, looking at a restricted set of observations can require recollapsing data, which can they change which observations meet the given restrictions. This function loops until stability is achieved.
-    '''
-    def recollapse_loop_inner(*args, **kwargs):
-        # Do function
-        self = args[0]
-        frame = func(*args, **kwargs)
 
-        if isinstance(self, (bpd.BipartiteLongCollapsed, bpd.BipartiteEventStudyCollapsed)):
-            kwargs['copy'] = False
-            if len(frame) != len(self):
-                # If the frame changes, we have to re-loop until stability
-                frame_prev = frame
-                frame = func(frame_prev, *args[1:], **kwargs)
-                while len(frame) != len(frame_prev):
+    Arguments:
+        force (bool): if True, force loop for non-collapsed data
+    '''
+    def recollapse_loop_inner(func):
+        def recollapse_loop_inner_inner(*args, **kwargs):
+            # Do function
+            self = args[0]
+            frame = func(*args, **kwargs)
+
+            if force or isinstance(self, (bpd.BipartiteLongCollapsed, bpd.BipartiteEventStudyCollapsed)):
+                kwargs['copy'] = False
+                if len(frame) != len(self):
+                    # If the frame changes, we have to re-loop until stability
                     frame_prev = frame
                     frame = func(frame_prev, *args[1:], **kwargs)
+                    while len(frame) != len(frame_prev):
+                        frame_prev = frame
+                        frame = func(frame_prev, *args[1:], **kwargs)
 
-        return frame
+            return frame
+        return recollapse_loop_inner_inner
     return recollapse_loop_inner
 
 class BipartiteBase(DataFrame):
@@ -916,45 +921,6 @@ class BipartiteBase(DataFrame):
 
         return self.keep_rows(rows_diff, drop_multiples=drop_multiples, reset_index=reset_index, copy=copy)
 
-    def min_moves_firms(self, threshold=2):
-        '''
-        List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm. Also note that if a worker moves to a firm then leaves it, that counts as two moves - even if the worker was at the firm for only one period.
-
-        Arguments:
-            threshold (int): minimum number of moves required to keep a firm
-
-        Returns:
-            valid_firms (NumPy Array): firms with sufficiently many moves
-        '''
-        if threshold == 0:
-            # If no threshold
-            return self.unique_ids('j')
-
-        return self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0].min_obs_firms(threshold=threshold)
-
-    @recollapse_loop
-    def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
-        '''
-        Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
-
-        Arguments:
-            threshold (int): minimum number of moves required to keep a firm
-            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
-            copy (bool): if False, avoid copy
-
-        Returns:
-            (BipartiteBase): dataframe of firms with sufficiently many moves
-        '''
-        if threshold == 0:
-            # If no threshold
-            if copy:
-                return self.copy()
-            return self
-
-        valid_firms = self.min_moves_firms(threshold)
-
-        return self.keep_ids('j', keep_ids=valid_firms, drop_multiples=drop_multiples, copy=copy)
-
     def min_movers_firms(self, threshold=15):
         '''
         List firms with at least `threshold` many movers.
@@ -973,7 +939,7 @@ class BipartiteBase(DataFrame):
 
         return frame.min_workers_firms(threshold)
 
-    @recollapse_loop
+    @recollapse_loop(True)
     def min_movers_frame(self, threshold=15, drop_multiples=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many movers.

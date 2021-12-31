@@ -628,6 +628,42 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long().min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
 
+    def min_moves_firms(self, threshold=2):
+        '''
+        List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+
+        Returns:
+            valid_firms (NumPy Array): firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            return self.unique_ids('j')
+
+        return self.get_long().min_moves_firms(threshold=threshold)
+
+    def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteBase): dataframe of firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        return self.get_long().min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
+
     # def min_moves_firms(self, threshold=2):
     #     '''
     #     List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm. Also note that if a worker moves to a firm then leaves it, that counts as two moves - even if the worker was at the firm for only one period.
