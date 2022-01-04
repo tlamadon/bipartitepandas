@@ -407,13 +407,27 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return long_frame
 
+    def _leave_one_firm_out(self, bcc_list, how_max='length', drop_multiples=False):
+        '''
+        Extract largest leave-one-firm-out connected component.
+
+        Arguments:
+            bcc_list (list of lists): each entry is a biconnected component
+            how_max (str): how to determine largest biconnected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+
+        Returns:
+            frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
+        '''
+        return self.get_long()._leave_one_firm_out(bcc_list=bcc_list, how_max=how_max, drop_multiples=drop_multiples).get_es()
+
     def _leave_one_observation_out(self, cc_list, how_max='length', drop_multiples=False):
         '''
         Extract largest leave-one-observation-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
-            how_max (str): how to determine largest biconnected component. Options are 'length', 'firms', and 'workers', where each option chooses the biconnected component with the highest of the chosen value
+            how_max (str): how to determine largest biconnected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
 
         Returns:

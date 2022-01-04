@@ -225,3 +225,36 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col
         agg_df = pd.DataFrame({col_groupby: np.unique(col1), col_name: agg_array}, index=np.arange(len(agg_array)))
         return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name].to_numpy()
     return agg_array
+
+def compare_frames(frame1, frame2, prop='len', operator='geq'):
+    '''
+    Compare two frames using a particular property and operator.
+
+    Arguments:
+        frame1 (BipartiteBase): first frame
+        frame2 (BipartiteBase): second frame
+        prop (str): what property to use to compare frames. Options are 'len'/'length' (compare length of frames), 'firms' (compare number of unique firms), 'workers' (compare number of unique workers), 'stayers' (compare number of unique stayers), and 'movers' (compare number of unique movers)
+        operator (str): how to compare properties. Options are 'eq' (equality), 'gt' (greater than), 'lt' (less than), 'geq' (greater than or equal to), and 'leq' (less than or equal to)
+    '''
+    # First, get the values for the frames corresponding to the given property
+    property_dict = {
+        'len': lambda a: len(a),
+        'length': lambda a: len(a),
+        'firms': lambda a: a.n_firms(),
+        'workers': lambda a: a.n_workers(),
+        'stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
+        'movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i')
+    }
+    val1 = property_dict[prop](frame1)
+    val2 = property_dict[prop](frame2)
+
+    # Second, compare the values using the given operator
+    operator_dict = {
+        'eq': lambda a, b: a == b,
+        'gt': lambda a, b: a > b,
+        'lt': lambda a, b: a < b,
+        'geq': lambda a, b: a >= b,
+        'leq': lambda a, b: a <= b
+    }
+    
+    return operator_dict[operator](val1, val2)

@@ -821,60 +821,8 @@ class BipartiteBase(DataFrame):
             'biconnected_observations': self._construct_biconnected_linkages,
             'biconnected_firms': self._construct_biconnected_linkages
         }
-        n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
-        return ig.Graph(edges=linkages_fn_dict[connectedness]())
-
-    def _leave_one_firm_out(self, bcc_list, how_max='length', drop_multiples=False):
-        '''
-        Extract largest leave-one-firm-out connected component.
-
-        Arguments:
-            bcc_list (list of lists): each entry is a biconnected component
-            how_max (str): how to determine largest biconnected component. Options are 'length', 'firms', and 'workers', where each option chooses the biconnected component with the highest of the chosen value
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
-
-        Returns:
-            frame_largest_bcc (BipartiteBase): dataframe of largest leave-one-out connected component
-        '''
-        # This will become the largest leave-one-firm-out component
-        frame_largest_bcc = None
-
-        for bcc in bcc_list:
-            # Keep observations in biconnected components
-            frame_bcc = self.keep_ids('j', bcc, drop_multiples, copy=True)
-
-            # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
-            # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
-            frame_bcc = frame_bcc.min_moves_frame(2, drop_multiples, copy=False)
-
-            # # Recompute biconnected components
-            # G2 = frame_bcc._construct_biconnected_graph()
-            # bcc_list_2 = G2.biconnected_components()
-
-            # # If new frame is not biconnected after dropping firms with 1 mover observation, recompute biconnected components
-            # if not ((len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms())):
-            #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, how_max, drop_multiples)
-
-            if frame_largest_bcc is None:
-                # If in the first round
-                replace = True
-            elif frame_bcc is None:
-                # If the biconnected components have recursively been eliminated
-                replace = False
-            else:
-                if how_max == 'length':
-                    replace = (len(frame_bcc) >= len(frame_largest_bcc))
-                elif how_max == 'firms':
-                    replace = (frame_bcc.n_firms() >= frame_largest_bcc.n_firms())
-                elif how_max == 'workers':
-                    replace = (frame_bcc.n_workers() >= frame_largest_bcc.n_workers())
-                else:
-                    raise NotImplementedError("Invalid how_max: {}. Valid options are 'length', 'firms', and 'workers'.".format(how_max))
-            if replace:
-                frame_largest_bcc = frame_bcc
-
-        # Return largest biconnected component
-        return frame_largest_bcc
+        # n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
+        return ig.Graph(edges=linkages_fn_dict[connectedness]()) # n=n_firms
 
     def sort_cols(self, copy=True):
         '''
