@@ -8,71 +8,97 @@ import pandas as pd
 from scipy.stats import norm
 from scipy.linalg import eig
 ax = np.newaxis
-from bipartitepandas import update_dict, logger_init
+from bipartitepandas import update_dict, logger_init, ParamsDict
+
+# Define default parameter dictionary
+sim_params_default = ParamsDict({
+    'num_ind': (10000, 'type', int,
+        '''
+            (default=10000) Number of workers.
+        '''),
+    'num_time': (5, 'type', int,
+        '''
+            (default=5) Time length of panel.
+        '''),
+    'firm_size': (50, 'type', int,
+        '''
+            (default=50) Maximum number of individuals per firm.
+        '''),
+    'nk': (10, 'type', int,
+        '''
+            (default=10) Number of firm types.
+        '''),
+    'nl': (5, 'type', int,
+        '''
+            (default=5) Number of worker types.
+        '''),
+    'alpha_sig': (1, 'type', (float, int),
+        '''
+            (default=1) Standard error of individual fixed effect (volatility of worker effects).
+        '''),
+    'psi_sig': (1, 'type', (float, int),
+        '''
+            (default=1) Standard error of firm fixed effect (volatility of firm effects).
+        '''),
+    'w_sig': (1, 'type', (float, int),
+        '''
+            (default=1) Standard error of residual in AKM wage equation (volatility of wage shocks).
+        '''),
+    'csort': (1, 'type', (float, int),
+        '''
+            (default=1) Sorting effect.
+        '''),
+    'cnetw': (1, 'type', (float, int),
+        '''
+            (default=1) Network effect.
+        '''),
+    'csig': (1, 'type', (float, int),
+        '''
+            (default=1) Standard error of sorting/network effects.
+        '''),
+    'p_move': (0.5, 'type', (float, int),
+        '''
+            (default=0.5) Probability a worker moves firms in any period.
+        '''),
+    'rng': (np.random.default_rng(None), 'type', np.random.Generator,
+        '''
+            (default=np.random.default_rng(None)) NumPy Generator seed.
+        ''')
+})
+
+def sim_params(update_dict={}):
+    '''
+    Dictionary of default sim_params.
+
+    Arguments:
+        update_dict (dict): user parameter values
+
+    Returns:
+        (ParamsDict) dictionary of sim_params
+    '''
+    new_dict = sim_params_default.copy()
+    for k, v in update_dict.items():
+        new_dict[k] = v
+    return new_dict
 
 class SimBipartite:
     '''
     Class of SimBipartite, where SimBipartite simulates a bipartite network of firms and workers.
 
     Arguments:
-        sim_params (dict): parameters for simulated data
-
-            Dictionary parameters:
-
-                num_ind (int, default=10000): number of workers
-
-                num_time (int, default=5): time length of panel
-
-                firm_size (int, default=50): max number of individuals per firm
-
-                nk (int, default=10): number of firm types
-
-                nl (int, default=5): number of worker types
-
-                alpha_sig (float, default=1): standard error of individual fixed effect (volatility of worker effects)
-
-                psi_sig (float, default=1): standard error of firm fixed effect (volatility of firm effects)
-
-                w_sig (float, default=1): standard error of residual in AKM wage equation (volatility of wage shocks)
-
-                csort (float, default=1): sorting effect
-
-                cnetw (float, default=1): network effect
-
-                csig (float, default=1): standard error of sorting/network effects
-
-                p_move (float, default=0.5): probability a worker moves firms in each period
-
-                seed (int, default=None): NumPy RandomState seed
+        sim_params (ParamsDict): parameters for simulating data. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
     '''
 
-    def __init__(self, sim_params={}):
+    def __init__(self, sim_params=sim_params()):
         # Start logger
         logger_init(self)
         # self.logger.info('initializing SimBipartite object')
 
-        # Define default parameter dictionaries
-        self.default_sim_params = {
-            'num_ind': 10000, # Number of workers
-            'num_time': 5, # Time length of panel
-            'firm_size': 50, # Max number of individuals per firm
-            'nk': 10, # Number of firm types
-            'nl': 5, # Number of worker types
-            'alpha_sig': 1, # Standard error of individual fixed effect (volatility of worker effects)
-            'psi_sig': 1, # Standard error of firm fixed effect (volatility of firm effects)
-            'w_sig': 1, # Standard error of residual in AKM wage equation (volatility of wage shocks)
-            'csort': 1, # Sorting effect
-            'cnetw': 1, # Network effect
-            'csig': 1, # Standard error of sorting/network effects
-            'p_move': 0.5, # Probability a worker moves firms in any period
-            'seed': None # np.random.RandomState() seed
-        }
-
-        # Update parameters to include user parameters
-        self.sim_params = update_dict(self.default_sim_params, sim_params)
+        # Store parameters
+        self.sim_params = sim_params
 
         # Create NumPy Generator instance
-        self.rng = np.random.default_rng(self.sim_params['seed'])
+        self.rng = sim_params['rng']
 
         # Prevent plotting unless results exist
         self.monte_carlo_res = False

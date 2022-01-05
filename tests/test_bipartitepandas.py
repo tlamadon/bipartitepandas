@@ -735,7 +735,7 @@ def test_worker_year_unique_16_1():
 
     for how in ['max', 'sum', 'mean']:
         bdf = bpd.BipartiteLong(data=df)
-        bdf = bdf.clean_data({'i_t_how': how})
+        bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how}))
 
         stayers = bdf[bdf['m'] == 0]
         movers = bdf[bdf['m'] == 1]
@@ -796,7 +796,7 @@ def test_worker_year_unique_16_2():
 
     for how in ['max', 'sum', 'mean']:
         bdf = bpd.BipartiteLong(data=df.copy())
-        bdf = bdf.clean_data({'i_t_how': how})
+        bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how}))
 
         stayers = bdf[bdf['m'] == 0]
         movers = bdf[bdf['m'] == 1]
@@ -861,7 +861,7 @@ def test_worker_year_unique_16_3():
 
     for how in ['max', 'sum', 'mean']:
         bdf = bpd.BipartiteLongCollapsed(data=df)
-        bdf = bdf.clean_data({'i_t_how': how})
+        bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how}))
 
         stayers = bdf[bdf['m'] == 0]
         movers = bdf[bdf['m'] == 1]
@@ -920,7 +920,7 @@ def test_worker_year_unique_16_4():
 
     for how in ['max', 'sum', 'mean']:
         bdf = bpd.BipartiteEventStudy(data=df.copy(), include_id_reference_dict=True)
-        bdf = bdf.clean_data({'i_t_how': how}).original_ids()
+        bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how})).original_ids()
 
         stayers = bdf[bdf['m'] == 0]
         movers = bdf[bdf['m'] == 1]
@@ -1059,10 +1059,10 @@ def test_general_methods_18():
             break
     assert correct_cols
 
-    bdf.drop('g1')
+    bdf.drop('g1', axis=1, inplace=True)
     assert 'g1' in bdf.columns and 'g2' in bdf.columns
 
-    bdf.drop('g')
+    bdf.drop('g', axis=1, inplace=True)
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
 
     bdf.rename({'i': 'w'})
@@ -1095,7 +1095,7 @@ def test_save_19():
 
     # Long
     bdf = bpd.BipartiteLong(data=df)
-    bdf = bdf.clean_data().drop('m')
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1103,7 +1103,7 @@ def test_save_19():
 
     # Event study
     bdf = bdf.gen_m(copy=False).get_es()
-    bdf = bdf.clean_data().drop('m')
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1111,7 +1111,7 @@ def test_save_19():
 
     # Collapsed long
     bdf = bdf.gen_m(copy=False).get_long().get_collapsed_long()
-    bdf = bdf.clean_data().drop('m')
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1119,7 +1119,7 @@ def test_save_19():
 
     # Collapsed event study
     bdf = bdf.gen_m(copy=False).get_es()
-    bdf = bdf.clean_data().drop('m')
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1290,7 +1290,7 @@ def test_id_reference_dict_23():
     bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
     bdf = bdf.clean_data()
     bdf = bdf[bdf['j'] > 0]
-    bdf = bdf.clean_data({'connectedness': None})
+    bdf = bdf.clean_data(bpd.clean_params({'connectedness': None}))
 
     merge_df = bdf.original_ids()
 
@@ -1561,7 +1561,7 @@ def test_uncollapse_25():
 
 def test_keep_ids_26():
     # Keep only given ids.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
     all_fids = bdf['j'].unique()
     ids_to_keep = all_fids[: len(all_fids) // 2]
@@ -1574,7 +1574,7 @@ def test_keep_ids_26():
 
 def test_drop_ids_27():
     # Drop given ids.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
     all_fids = bdf['j'].unique()
     ids_to_drop = all_fids[: len(all_fids) // 2]
@@ -1588,7 +1588,7 @@ def test_drop_ids_27():
 def test_min_obs_firms_28_1():
     # List only firms that meet a minimum threshold of observations.
     # Using long/event study.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 250
@@ -1611,7 +1611,7 @@ def test_min_obs_firms_28_1():
 def test_min_obs_firms_28_2():
     # List only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
     threshold = 60
@@ -1634,7 +1634,7 @@ def test_min_obs_firms_28_2():
 def test_min_obs_frame_29_1():
     # Keep only firms that meet a minimum threshold of observations.
     # Using long/event study.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 250
@@ -1665,7 +1665,7 @@ def test_min_obs_frame_29_1():
 def test_min_obs_frame_29_2():
     # Keep only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
     threshold = 60
@@ -1695,7 +1695,7 @@ def test_min_obs_frame_29_2():
 def test_min_workers_firms_30():
     # List only firms that meet a minimum threshold of workers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 40
@@ -1721,7 +1721,7 @@ def test_min_workers_firms_30():
 def test_min_workers_frame_31():
     # Keep only firms that meet a minimum threshold of workers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 60
@@ -1754,7 +1754,7 @@ def test_min_workers_frame_31():
 def test_min_moves_firms_32_1():
     # List only firms that meet a minimum threshold of moves.
     # Using long/event study.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 20
@@ -1778,7 +1778,7 @@ def test_min_moves_firms_32_1():
 def test_min_moves_firms_32_2():
     # List only firms that meet a minimum threshold of moves.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
     threshold = 20
@@ -1802,7 +1802,7 @@ def test_min_moves_firms_32_2():
 def test_min_moves_frame_33():
     # Keep only firms that meet a minimum threshold of moves.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 12
@@ -1850,7 +1850,7 @@ def test_min_moves_frame_33():
 def test_min_movers_firms_34():
     # List only firms that meet a minimum threshold of movers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 20
@@ -1877,7 +1877,7 @@ def test_min_movers_firms_34():
 def test_min_movers_frame_35():
     # Keep only firms that meet a minimum threshold of movers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite({'p_move': 0.05, 'seed': 1234}).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 12
@@ -2488,11 +2488,11 @@ def test_connectedness_1():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     # Connected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_firms'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
     assert bdf.n_firms() == 6
 
 def test_connectedness_2():
@@ -2557,11 +2557,11 @@ def test_connectedness_2():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     # Connected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 12
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_firms'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
     assert bdf.n_firms() == 6
 
 def test_connectedness_3():
@@ -2617,11 +2617,11 @@ def test_connectedness_3():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     # Connected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_firms'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
     assert bdf.n_firms() == 10
 
 def test_connectedness_4():
@@ -2677,11 +2677,11 @@ def test_connectedness_4():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     # Connected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_firms'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
     assert bdf.n_firms() == 7
 
 def test_connectedness_5():
@@ -2738,11 +2738,11 @@ def test_connectedness_5():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     # Connected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_observations'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_observation_out'}))
     assert bdf.n_firms() == 10
 
 def test_connectedness_6():
@@ -2797,20 +2797,82 @@ def test_connectedness_6():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     # Connected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'connected'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(user_clean={'connectedness': 'biconnected_observations'})
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_observation_out'}))
     assert bdf.n_firms() == 6
+    assert bdf.n_workers() == 6
 
 def test_connectedness_7():
+    # Test connected and leave-one-observation-out for collapsed long format.
+    # There are 2 biconnected sets that are connected by 1 mover, so the largest connected set is all the observations. Unlike test 6, the link from group 1 to 2 is a worker going from group 2 to group 1. The worker's observation in group 1 should remain, despite the fact that it is an articulation observation.
+    worker_data = []
+    # Group 1 is firms 0 to 5
+    # Worker 0
+    # Firm 0 -> 1
+    worker_data.append({'i': 0, 'j': 0, 'y': 1, 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 2})
+    # Worker 1
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 2, 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1, 't': 2})
+    # Worker 2
+    # Firm 2 -> 3
+    worker_data.append({'i': 2, 'j': 2, 'y': 3, 't': 1})
+    worker_data.append({'i': 2, 'j': 3, 'y': 2.5, 't': 2})
+    # Worker 3
+    # Firm 3 -> 4
+    worker_data.append({'i': 3, 'j': 3, 'y': 1, 't': 1})
+    worker_data.append({'i': 3, 'j': 4, 'y': 1, 't': 2})
+    # Worker 4
+    # Firm 4 -> 5
+    worker_data.append({'i': 4, 'j': 4, 'y': 1, 't': 1})
+    worker_data.append({'i': 4, 'j': 5, 'y': 1.3, 't': 2})
+    # Worker 5
+    # Firm 5 -> 0
+    worker_data.append({'i': 5, 'j': 5, 'y': 1.1, 't': 1})
+    worker_data.append({'i': 5, 'j': 0, 'y': 1, 't': 2})
+    # Group 2 is firms 6 to 9
+    # Group 2 is linked to Group 1 through firms 2, 3, and 6
+    # Worker 6
+    # Firm 6 -> 7
+    worker_data.append({'i': 6, 'j': 6, 'y': 1, 't': 1})
+    worker_data.append({'i': 6, 'j': 7, 'y': 2, 't': 2})
+    # Worker 7
+    # Firm 7 -> 8
+    worker_data.append({'i': 7, 'j': 7, 'y': 1.5, 't': 1})
+    worker_data.append({'i': 7, 'j': 8, 'y': 1.2, 't': 2})
+    # Worker 8
+    # Firm 8 -> 9
+    worker_data.append({'i': 8, 'j': 8, 'y': 1.6, 't': 1})
+    worker_data.append({'i': 8, 'j': 9, 'y': 2, 't': 2})
+    # Worker 9
+    # Firm 9 -> 6 -> 3
+    worker_data.append({'i': 9, 'j': 9, 'y': 1.8, 't': 1})
+    worker_data.append({'i': 9, 'j': 6, 'y': 1.4, 't': 2})
+    worker_data.append({'i': 9, 'j': 3, 'y': 1.3, 't': 3})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    # Connected
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'connected'}))
+    assert bdf.n_firms() == 10
+
+    # Biconnected
+    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long().clean_data(bpd.clean_params({'connectedness': 'leave_one_observation_out'}))
+    assert bdf.n_firms() == 6
+    # Make sure articulation observations aren't dropped
+    assert bdf.n_workers() == 7
+
+def test_connectedness_8():
     '''
     This test uses simulated data that is very badly behaved. When computing the leave-one-observation-out connected set, if you drop firms with fewer than 2 moves then recollapse, this creates new firms with fewer than 2 moves. This test checks that the method is handling this correctly. In this data, if the cleaning process doesn't loop until convergence, the cleaned data will have firms with only 1 move.
     '''
     with open('tests/test_data/wid_drops.pkl', 'rb') as f:
         wid_drops = pickle.load(f)
-    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, correct_cols=False, no_na=False, no_duplicates=False, i_t_unique=False).clean_data({'connectedness': 'biconnected_observations', 'data_validity': True})
+    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, correct_cols=False, no_na=False, no_duplicates=False, i_t_unique=False).clean_data(bpd.clean_params({'connectedness': 'leave_one_observation_out', 'force': True}))
     bad_df2 = bad_df.min_moves_frame(2)
 
     assert len(bad_df) == len(bad_df2) > 0
@@ -2822,7 +2884,7 @@ def test_connectedness_7():
 def test_cluster_1():
     # Test cluster function is working correctly for long format.
     nk = 10
-    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
 
@@ -2885,7 +2947,7 @@ def test_cluster_1():
 def test_cluster_2():
     # Test cluster function is working correctly for event study format.
     nk = 10
-    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
     bdf = bdf.get_es()
@@ -2950,7 +3012,7 @@ def test_cluster_2():
 def test_cluster_3():
     # Test cluster function is working correctly for collapsed long format.
     nk = 10
-    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long()
@@ -3021,7 +3083,7 @@ def test_cluster_3():
 def test_cluster_4():
     # Test cluster function is working correctly for collapsed event study format.
     nk = 10
-    sim_data = bpd.SimBipartite({'nk': nk}).sim_network()
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
     bdf = bpd.BipartiteLong(sim_data)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long().get_es()

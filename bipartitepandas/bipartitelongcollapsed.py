@@ -42,12 +42,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudyCollapsed
 
-    def recollapse(self, drop_multiples=False, copy=True):
+    def recollapse(self, drop_multiples=False, is_sorted=False, copy=True):
         '''
         Recollapse data by job spells (so each spell for a particular worker at a particular firm is one observation). This method is necessary in the case of biconnected data - it can occur that a worker works at firms A and B in the order A B A, but the biconnected components removes firm B. So the data is now A A, and needs to be recollapsed so this is marked as a stayer.
 
         Arguments:
             drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when computing biconnected components)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -55,9 +56,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         frame = pd.DataFrame(self, copy=copy)
 
-        # FIXME I assume if the data is in long-collapsed form it is already sorted
-        # # Sort data by i and t
-        # frame = frame.sort_values(['i', 't1'])
+        if not is_sorted:
+            if self._col_included('t'):
+                # Sort data by i and t
+                frame.sort_values(['i', 't1'], inplace=True)
+            else:
+                # Sort data by i
+                frame.sort_values(['i'], inplace=True)
 
         # Add w
         if 'w' not in frame.columns:
@@ -88,14 +93,22 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             data_spell.reset_index(drop=True, inplace=True)
         else:
             # First, aggregate required columns
-            data_spell = spell.agg(
-                i=pd.NamedAgg(column='i', aggfunc='first'),
-                j=pd.NamedAgg(column='j', aggfunc='first'),
-                y=pd.NamedAgg(column='y', aggfunc='mean'),
-                t1=pd.NamedAgg(column='t1', aggfunc='min'),
-                t2=pd.NamedAgg(column='t2', aggfunc='max'),
-                w=pd.NamedAgg(column='w', aggfunc='sum')
-            )
+            if self._col_included('t'):
+                data_spell = spell.agg(
+                    i=pd.NamedAgg(column='i', aggfunc='first'),
+                    j=pd.NamedAgg(column='j', aggfunc='first'),
+                    y=pd.NamedAgg(column='y', aggfunc='mean'),
+                    t1=pd.NamedAgg(column='t1', aggfunc='min'),
+                    t2=pd.NamedAgg(column='t2', aggfunc='max'),
+                    w=pd.NamedAgg(column='w', aggfunc='sum')
+                )
+            else:
+                data_spell = spell.agg(
+                    i=pd.NamedAgg(column='i', aggfunc='first'),
+                    j=pd.NamedAgg(column='j', aggfunc='first'),
+                    y=pd.NamedAgg(column='y', aggfunc='mean'),
+                    w=pd.NamedAgg(column='w', aggfunc='sum')
+                )
             # Next, aggregate optional columns
             all_cols = self._included_cols()
             for col in all_cols:
@@ -118,13 +131,20 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def uncollapse(self):
+    def uncollapse(self, is_sorted=False):
         '''
         Return collapsed long data reformatted into long data, by assuming variables constant over spells.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             long_frame (BipartiteLong): collapsed long data reformatted as BipartiteLong data
         '''
+        # Sort data by i and t
+        self.sort_rows(is_sorted=is_sorted, copy=False)
+
         all_cols = self._included_cols(flat=True)
         # Skip t1 and t2
         all_cols.remove('t1')
@@ -159,12 +179,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return long_frame
 
-    def _drop_i_t_duplicates(self, how='max', copy=True):
+    def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
             how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -177,12 +198,12 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         if frame._col_included('t'):
             # Convert to long
-            frame = frame.uncollapse()
+            frame = frame.uncollapse(is_sorted=is_sorted)
 
-            frame = bpd.BipartiteBase._drop_i_t_duplicates(frame, how, copy=False)
+            frame = bpd.BipartiteBase._drop_i_t_duplicates(frame, how, is_sorted=True, copy=False)
 
             # Return to collapsed long
-            frame = frame.get_collapsed_long(copy=False)
+            frame = frame.get_collapsed_long(is_sorted=True, copy=False)
 
         # Data now has unique i-t observations
         frame.i_t_unique = True

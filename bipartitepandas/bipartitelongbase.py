@@ -76,12 +76,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def get_es(self, move_to_worker=False):
+    def get_es(self, move_to_worker=False, is_sorted=False):
         '''
         Return (collapsed) long form data reformatted into (collapsed) event study data.
 
         Arguments:
             move_to_worker (bool): if True, each move is treated as a new worker
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
@@ -93,8 +94,15 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         # Add lagged values
         all_cols = self._included_cols()
-        movers = movers.sort_values(['i', bpd.to_list(self.reference_dict['t'])[0]]) # Sort by i, t
-        keep_cols = ['i'] # Columns to keep
+        if not is_sorted:
+            if self._col_included('t'):
+                # Sort data by i and t
+                movers.sort_values(['i', bpd.to_list(self.reference_dict['t'])[0]], inplace=True)
+            else:
+                # Sort data by i
+                movers.sort_values('i', inplace=True)
+        # Columns to keep
+        keep_cols = ['i']
         for col in all_cols:
             for subcol in bpd.to_list(self.reference_dict[col]):
                 subcol_number = subcol.strip(col) # E.g. j1 will give 1
@@ -107,7 +115,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     # Stayers (no lags)
                     stayers.loc[:, plus_1] = stayers.loc[:, subcol]
                     stayers.rename({subcol: plus_2}, axis=1, inplace=True)
-                    if subcol != 'i': # Columns to keep
+                    if subcol != 'i':
+                        # Columns to keep
                         keep_cols += [plus_1, plus_2]
                 else:
                     keep_cols.append('m')
@@ -146,8 +155,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
         es_frame = self._constructor_es(data_es)
         es_frame._set_attributes(self, no_dict=True)
 
-        # Sort rows
-        es_frame.sort_values(['i', bpd.to_list(es_frame.reference_dict['t'])[0]], inplace=True)
+        # Sort data by i and t
+        es_frame = es_frame.sort_rows(is_sorted=False, copy=False)
 
         # Recompute 'm'
         es_frame = es_frame.gen_m(force=True, copy=False)
@@ -157,72 +166,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return es_frame
 
-    def _leave_one_firm_out(self, bcc_list, how_max='length', drop_multiples=False):
-        '''
-        Extract largest leave-one-firm-out connected component.
-
-        Arguments:
-            bcc_list (list of lists): each entry is a biconnected component
-            how_max (str): how to determine largest biconnected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
-
-        Returns:
-            frame_largest_bcc (BipartiteLongBase): dataframe of largest leave-one-out connected component
-        '''
-        # This will become the largest leave-one-firm-out component
-        frame_largest_bcc = None
-
-        for bcc in sorted(bcc_list, reverse=True, key=len):
-            # Keep observations in biconnected components
-            frame_bcc = self.keep_ids('j', bcc, drop_multiples, copy=True)
-
-            if frame_largest_bcc is not None:
-                # If frame_bcc is already smaller than frame_largest_bcc
-                skip = bpd.compare_frames(frame_largest_bcc, frame_bcc, prop=how_max, operator='geq')
-
-                if skip:
-                    continue
-
-            # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
-            # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
-            frame_bcc = frame_bcc.min_moves_frame(2, drop_multiples, copy=False)
-
-            if frame_largest_bcc is not None:
-                # If frame_bcc is already smaller than frame_largest_bcc
-                skip = bpd.compare_frames(frame_largest_bcc, frame_bcc, prop=how_max, operator='geq')
-
-                if skip:
-                    continue
-
-            # # Recompute biconnected components
-            # G2 = frame_bcc._construct_biconnected_graph()
-            # bcc_list_2 = G2.biconnected_components()
-
-            # # If new frame is not biconnected after dropping firms with 1 mover observation, recompute biconnected components
-            # if not ((len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms())):
-            #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, how_max, drop_multiples)
-
-            if frame_largest_bcc is None:
-                # If in the first round
-                replace = True
-            elif frame_bcc is None:
-                # If the biconnected components have recursively been eliminated
-                replace = False
-            else:
-                replace = bpd.compare_frames(frame_bcc, frame_largest_bcc, prop=how_max, operator='geq')
-            if replace:
-                frame_largest_bcc = frame_bcc
-
-        # Return largest biconnected component
-        return frame_largest_bcc
-
-    def _leave_one_observation_out(self, cc_list, how_max='length', drop_multiples=False):
+    def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_multiples=False):
         '''
         Extract largest leave-one-observation-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
-            how_max (str): how to determine largest biconnected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
 
         Returns:
@@ -232,29 +182,35 @@ class BipartiteLongBase(bpd.BipartiteBase):
         frame_largest_cc = None
 
         for cc in sorted(cc_list, reverse=True, key=len):
+            if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
+                # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
+                skip = frame_largest_cc.n_firms() >= len(cc)
+
+                if skip:
+                    continue
+
             # Keep observations in connected components
-            frame_cc = self.keep_ids('j', cc, drop_multiples, copy=True)
+            frame_cc = self.keep_ids('j', cc, drop_multiples, is_sorted=True, copy=True)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.compare_frames(frame_largest_cc, frame_cc, prop=how_max, operator='geq')
+                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
 
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
-            # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
-            frame_cc = frame_cc.min_moves_frame(2, drop_multiples, copy=False)
+            frame_cc = frame_cc.min_moves_frame(2, drop_multiples, is_sorted=True, copy=False)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.compare_frames(frame_largest_cc, frame_cc, prop=how_max, operator='geq')
+                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
 
             # Construct graph
-            G2 = frame_cc._construct_graph('biconnected_observations')
+            G2 = frame_cc._construct_graph('leave_one_observation_out')
 
             # Extract articulation firms
             articulation_firms = G2.articulation_points()
@@ -265,21 +221,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 articulation_rows = frame_cc._get_articulation_obs(G2, frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy())
 
                 if len(articulation_rows) > 0:
-                    # If new frame is not leave-one-out connected, drop articulation rows then recompute leave-one-out components
-                    frame_cc = frame_cc.drop_rows(articulation_rows, drop_multiples, copy=False)
-
-                    if frame_largest_cc is not None:
-                        # If frame_cc is already smaller than frame_largest_cc
-                        skip = bpd.compare_frames(frame_largest_cc, frame_cc, prop=how_max, operator='geq')
-
-                        if skip:
-                            continue
-
-                    # Recompute connected components
-                    G2 = frame_cc._construct_graph('biconnected_observations')
+                    # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe)
+                    G2 = frame_cc.drop_rows(articulation_rows, drop_multiples, is_sorted=True, copy=False)._construct_graph('leave_one_observation_out')
                     cc_list_2 = G2.components()
                     # Recursion step
-                    frame_cc = frame_cc._leave_one_observation_out(cc_list_2, how_max, drop_multiples)
+                    frame_cc = frame_cc._leave_one_observation_out(cc_list_2, component_size_variable, drop_multiples)
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -288,12 +234,78 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.compare_frames(frame_cc, frame_largest_cc, prop=how_max, operator='geq')
+                replace = bpd.compare_frames(frame_cc, frame_largest_cc, size_variable=component_size_variable, operator='gt')
             if replace:
                 frame_largest_cc = frame_cc
 
         # Return largest leave-one-observation-out component
         return frame_largest_cc
+
+    def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_multiples=False):
+        '''
+        Extract largest leave-one-firm-out connected component.
+
+        Arguments:
+            bcc_list (list of lists): each entry is a biconnected component
+            component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+
+        Returns:
+            frame_largest_bcc (BipartiteLongBase): dataframe of largest leave-one-out connected component
+        '''
+        # This will become the largest leave-one-firm-out component
+        frame_largest_bcc = None
+
+        for bcc in sorted(bcc_list, reverse=True, key=len):
+            if (frame_largest_bcc is not None) and (component_size_variable == 'firms'):
+                # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
+                skip = frame_largest_bcc.n_firms() >= len(bcc)
+
+                if skip:
+                    continue
+
+            # Keep observations in biconnected components
+            frame_bcc = self.keep_ids('j', bcc, drop_multiples, is_sorted=True, copy=True)
+
+            if frame_largest_bcc is not None:
+                # If frame_bcc is already smaller than frame_largest_bcc
+                skip = bpd.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='geq')
+
+                if skip:
+                    continue
+
+            # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+            # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
+            frame_bcc = frame_bcc.min_moves_frame(2, drop_multiples, is_sorted=True, copy=False)
+
+            if frame_largest_bcc is not None:
+                # If frame_bcc is already smaller than frame_largest_bcc
+                skip = bpd.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='geq')
+
+                if skip:
+                    continue
+
+            # # Recompute biconnected components
+            # G2 = frame_bcc._construct_biconnected_graph()
+            # bcc_list_2 = G2.biconnected_components()
+
+            # # If new frame is not biconnected after dropping firms with 1 mover observation, recompute biconnected components
+            # if not ((len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms())):
+            #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, component_size_variable, drop_multiples)
+
+            if frame_largest_bcc is None:
+                # If in the first round
+                replace = True
+            elif frame_bcc is None:
+                # If the biconnected components have recursively been eliminated
+                replace = False
+            else:
+                replace = bpd.compare_frames(frame_bcc, frame_largest_bcc, size_variable=component_size_variable, operator='gt')
+            if replace:
+                frame_largest_bcc = frame_bcc
+
+        # Return largest biconnected component
+        return frame_largest_bcc
 
     def _construct_connected_linkages(self):
         '''
@@ -456,33 +468,34 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     #     return articulation_obs
 
-    def keep_ids(self, id_col, keep_ids, drop_multiples=False, reset_index=True, copy=True):
+    def keep_ids(self, id_col, keep_ids_list, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Only keep ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
-            keep_ids (list): ids to keep
+            keep_ids_list (list): ids to keep
             drop_multiples (bool): used only if id_col == 'j' and using BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteLongBase): dataframe with ids in the given set
         '''
-        keep_ids = set(keep_ids)
-        if len(keep_ids) == self.n_unique_ids(id_col):
+        keep_ids_list = set(keep_ids_list)
+        if len(keep_ids_list) == self.n_unique_ids(id_col):
             # If keeping everything
             if copy:
                 return self.copy()
             return self
 
-        frame = self.loc[self.loc[:, id_col].isin(keep_ids), :]
+        frame = self.loc[self.loc[:, id_col].isin(keep_ids_list), :]
 
         if id_col in ['j', 'g']:
             if isinstance(frame, bpd.BipartiteLongCollapsed):
                 # If BipartiteLongCollapsed
-                frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
+                frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
                 # We don't need to copy again
                 copy = False
 
@@ -500,33 +513,34 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def drop_ids(self, id_col, drop_ids, drop_multiples=False, reset_index=True, copy=True):
+    def drop_ids(self, id_col, drop_ids_list, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Drop ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
-            drop_ids (list): ids to drop
+            drop_ids_list (list): ids to drop
             drop_multiples (bool): used only if id_col == 'j' and using BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteLongBase): dataframe with ids outside the given set
         '''
-        drop_ids = set(drop_ids)
-        if len(drop_ids) == 0:
+        drop_ids_list = set(drop_ids_list)
+        if len(drop_ids_list) == 0:
             # If nothing input
             if copy:
                 return self.copy()
             return self
 
-        frame = self.loc[~(self.loc[:, id_col].isin(drop_ids)), :]
+        frame = self.loc[~(self.loc[:, id_col].isin(drop_ids_list)), :]
 
         if id_col in ['j', 'g']:
             if isinstance(frame, bpd.BipartiteLongCollapsed):
                 # If BipartiteLongCollapsed
-                frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
+                frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
                 # We don't need to copy again
                 copy = False
 
@@ -544,32 +558,33 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def keep_rows(self, rows, drop_multiples=False, reset_index=True, copy=True):
+    def keep_rows(self, rows_list, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Only keep particular rows.
 
         Arguments:
-            rows (list): rows to keep
+            rows_list (list): rows to keep
             drop_multiples (bool): used only if using BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteLongBase): dataframe with given rows
         '''
-        rows = set(rows)
-        if len(rows) == len(self):
+        rows_list = set(rows_list)
+        if len(rows_list) == len(self):
             # If keeping everything
             if copy:
                 return self.copy()
             return self
-        rows = sorted(list(rows))
+        rows_list = sorted(list(rows_list))
 
-        frame = self.iloc[rows]
+        frame = self.iloc[rows_list]
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
-            frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
+            frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
             # We don't need to copy again
             copy = False
 
@@ -601,13 +616,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
         return valid_firms
 
     @bpd.recollapse_loop(False)
-    def min_obs_frame(self, threshold=2, drop_multiples=False, copy=True):
+    def min_obs_frame(self, threshold=2, drop_multiples=False, is_sorted=False, copy=True):
         '''
-        Interior function for min_obs_frame().
+        Keep firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
             drop_multiples (bool): used only for BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -623,7 +639,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
-            frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
+            frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
             # We don't need to copy again
             copy = False
 
@@ -654,13 +670,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
         return valid_firms
 
     @bpd.recollapse_loop(False)
-    def min_workers_frame(self, threshold=15, drop_multiples=False, copy=True):
+    def min_workers_frame(self, threshold=15, drop_multiples=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
             drop_multiples (bool): used only for BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -676,7 +693,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
-            frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
+            frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
             # We don't need to copy again
             copy = False
 
@@ -704,13 +721,15 @@ class BipartiteLongBase(bpd.BipartiteBase):
         return self.loc[self.loc[:, 'm'].to_numpy() > 0].min_obs_firms(threshold=threshold)
 
     @bpd.recollapse_loop(True)
-    def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
+    def min_moves_frame(self, threshold=2, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
             drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
@@ -724,55 +743,4 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         valid_firms = self.min_moves_firms(threshold)
 
-        return self.keep_ids('j', keep_ids=valid_firms, drop_multiples=drop_multiples, copy=copy)
-
-    # def min_moves_firms(self, threshold=2):
-    #     '''
-    #     List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm. Also note that if a worker moves to a firm then leaves it, that counts as two moves - even if the worker was at the firm for only one period.
-
-    #     Arguments:
-    #         threshold (int): minimum number of moves required to keep a firm
-
-    #     Returns:
-    #         valid_firms (NumPy Array): firms with sufficiently many moves
-    #     '''
-    #     if threshold == 0:
-    #         # If no threshold
-    #         return self.unique_ids('j')
-
-    #     n_moves = self.groupby('j')['m'].sum()
-    #     valid_firms = n_moves[n_moves.to_numpy() >= threshold].index.to_numpy()
-
-    #     return valid_firms
-
-    # def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
-    #     '''
-    #     Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
-
-    #     Arguments:
-    #         threshold (int): minimum number of moves required to keep a firm
-    #         drop_multiples (bool): used only for BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteLongBase): dataframe of firms with sufficiently many moves
-    #     '''
-    #     if threshold == 0:
-    #         # If no threshold
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     frame = self.loc[self.groupby('j')['m'].transform('sum').to_numpy() >= threshold, :]
-
-    #    if isinstance(frame, bpd.BipartiteLongCollapsed):
-    #        frame = frame.recollapse(drop_multiples=drop_multiples, copy=copy)
-    #        # We don't need to copy again
-    #        copy = False
-
-    #     # Recompute 'm' since it might change from dropping observations or from re-collapsing
-    #     frame = frame.gen_m(force=True, copy=copy)
-
-    #     frame.reset_index(drop=True, inplace=True)
-
-    #     return frame
+        return self.keep_ids('j', keep_ids_list=valid_firms, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=reset_index, copy=copy)

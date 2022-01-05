@@ -3,7 +3,7 @@ Utility functions
 '''
 import logging
 from pathlib import Path
-import collections
+from collections.abc import MutableMapping
 # from numpy_groupies.aggregate_numpy import aggregate
 import numpy as np
 import pandas as pd
@@ -12,46 +12,111 @@ import warnings
 
 col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'w', 'w1', 'w2', 'g', 'g1', 'g2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
 
-# class ParamsDict()
+class ParamsDict(MutableMapping):
+    '''
+    Dictionary with fixed keys, and where values must follow given rules. Source: https://stackoverflow.com/a/14816620/17333120.
 
-# class FixedDict(collections.MutableMapping):
-#     '''
-#     Dictionary with fixed keys. Source: https://stackoverflow.com/a/14816620/17333120.
+    Arguments:
+        default_dict (dict): default dictionary. Each key should provide a tuple of (default_value, options_type, options, description), where `default_value` gives the default value associated with the key; if `options_type` is 'type', then the key must be associated with a particular type, if it is 'type_none' then the key can either be None or must be associated with a particular type, if it is 'set' it must be a member of a given set of values, and if it is 'any' it can be anything; `options` gives the valid values that can associated with the key (this can be a type or a set of particular values); and `description` gives a description of the key-value pair
+    '''
+    def __init__(self, default_dict):
+        self.__data = {k: v[0] for k, v in default_dict.items()}
+        self.__options = {k: v[1:] for k, v in default_dict.items()}
 
-#     Arguments:
-#         data (dict): default dictionary
-#         options (dict): valid options for each key
-#     '''
-#     def __init__(self, data, options):
-#         self.__data = data
-#         self.__options = options
+    def __len__(self):
+        return len(self.__data)
 
-#     def __len__(self):
-#         return len(self.__data)
+    def __iter__(self):
+        return iter(self.__data)
 
-#     def __iter__(self):
-#         return iter(self.__data)
+    def __setitem__(self, k, v):
+        if k not in self.__data:
+            if isinstance(k, str):
+                raise KeyError("Cannot add key '{}', as ParamsDict keys are fixed.".format(k))
+            else:
+                raise KeyError('Cannot add key {}, as ParamsDict keys are fixed.'.format(k))
 
-#     def __setitem__(self, k, v):
-#         if k not in self.__data:
-#             raise KeyError(k)
+        options_type, options, _ = self.__options[k]
+        if options_type == 'type':
+            if np.issubdtype(type(v), options):
+                self.__data[k] = v
+            else:
+                if isinstance(v, str):
+                    raise KeyError("Value associated with key '{}' must be of type {}, but input is '{}' which is of type {}.".format(k, options, v, type(v)))
+                else:
+                    raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, v, type(v)))
+        elif options_type == 'type_none':
+            if (v is None) or np.issubdtype(type(v), options):
+                self.__data[k] = v
+            else:
+                if isinstance(v, str):
+                    raise KeyError("Value associated with key '{}' must be of type {} or None, but input is '{}' which is of type {}.".format(k, options, v, type(v)))
+                else:
+                    raise KeyError("Value associated with key '{}' must be of type {} or None, but input is {} which is of type {}.".format(k, options, v, type(v)))
+        elif options_type == 'set':
+            if v in to_list(options):
+                self.__data[k] = v
+            else:
+                if isinstance(v, str):
+                    raise KeyError("Value associated with key '{}' must be a subset of {}, but input is '{}'.".format(k, options, v))
+                else:
+                    raise KeyError("Value associated with key '{}' must be a subset of {}, but input is {}.".format(k, options, v))
+        elif options_type == 'any':
+            self.__data[k] = v
+        else:
+            raise NotImplementedError('Invalid options type')
 
-#         # if isinstance(self.__options[k], type):
-#         #     if 
+    def __delitem__(self, k):
+        raise NotImplementedError
 
-#         self.__data[k] = v
+    def __getitem__(self, k):
+        return self.__data[k]
 
-#     def __delitem__(self, k):
-#         raise NotImplementedError
+    def __contains__(self, k):
+        return k in self.__data
 
-#     def __getitem__(self, k):
-#         return self.__data[k]
+    def __repr__(self):
+        return dict(self).__repr__()
 
-#     def __contains__(self, k):
-#         return k in self.__data
+    def keys(self):
+        return self.__data.keys()
 
-#     def __repr__(self):
-#         return dict(self).__repr__()
+    def values(self):
+        return self.__data.values()
+
+    def items(self):
+        return self.__data.items()
+
+    def copy(self):
+        data_copy = self.__data.copy()
+        options_copy = self.__options.copy()
+        return ParamsDict({k: (v, *options_copy[k]) for k, v in data_copy.items()})
+
+    def describe(self, k):
+        '''
+        Describe what a particular key-value pair does.
+
+        Arguments:
+            k (str): key
+        '''
+        _, options, description = self.__options[k]
+        if isinstance(k, str):
+            print("KEY: '{}'".format(k))
+        else:
+            print('KEY: {}'.format(k))
+        if isinstance(self[k], str):
+            print("CURRENT VALUE: '{}'".format(self[k]))
+        else:
+            print('CURRENT VALUE: {}'.format(self[k]))
+        print('VALID VALUES: {}'.format(options))
+        print('DESCRIPTION: {}'.format(description))
+
+    def describe_all(self):
+        '''
+        Describe all key-value pairs.
+        '''
+        for k in self.keys():
+            self.describe(k)
 
 def update_dict(default_params, user_params):
     '''
@@ -226,15 +291,15 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col
         return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name].to_numpy()
     return agg_array
 
-def compare_frames(frame1, frame2, prop='len', operator='geq'):
+def compare_frames(frame1, frame2, size_variable='len', operator='geq'):
     '''
-    Compare two frames using a particular property and operator.
+    Compare two frames using a particular size property and operator.
 
     Arguments:
         frame1 (BipartiteBase): first frame
         frame2 (BipartiteBase): second frame
-        prop (str): what property to use to compare frames. Options are 'len'/'length' (compare length of frames), 'firms' (compare number of unique firms), 'workers' (compare number of unique workers), 'stayers' (compare number of unique stayers), and 'movers' (compare number of unique movers)
-        operator (str): how to compare properties. Options are 'eq' (equality), 'gt' (greater than), 'lt' (less than), 'geq' (greater than or equal to), and 'leq' (less than or equal to)
+        size_variable (str): what size variable to use to compare frames. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
+        operator (str): how to compare properties. Options are 'eq' (equality), 'gt' (greater than), 'lt' (less than), 'geq' (greater than or equal to), and 'leq' (less than or equal to).
     '''
     # First, get the values for the frames corresponding to the given property
     property_dict = {
@@ -245,8 +310,8 @@ def compare_frames(frame1, frame2, prop='len', operator='geq'):
         'stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
         'movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i')
     }
-    val1 = property_dict[prop](frame1)
-    val2 = property_dict[prop](frame2)
+    val1 = property_dict[size_variable](frame1)
+    val2 = property_dict[size_variable](frame2)
 
     # Second, compare the values using the given operator
     operator_dict = {

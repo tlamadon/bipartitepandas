@@ -139,12 +139,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     #     return frame
 
-    def _drop_i_t_duplicates(self, how='max', copy=True):
+    def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
             how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -158,20 +159,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         if frame._col_included('t'):
             # Convert to long
             # Note: we use unstack rather than convert to long because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - converting to long will arbitrarily decide which rows are already correct
-            frame = frame.unstack_es(is_clean=False).drop_duplicates()
-            if isinstance(frame, bpd.BipartiteLongCollapsed):
-                # If self is BipartiteEventStudyCollapsed, then frame is BipartiteLongCollapsed
-                frame = frame.uncollapse()
-                collapsed = True
-            else:
-                collapsed = False
-
-            frame = bpd.BipartiteBase._drop_i_t_duplicates(frame, how, copy=False)
-
-            # Return to event study
-            if collapsed:
-                frame = frame.get_collapsed_long(copy=False)
-            frame = frame.get_es()
+            frame = frame.unstack_es(is_clean=False, is_sorted=is_sorted)
+            frame.drop_duplicates(inplace=True)
+            frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).get_es()
 
         # Data now has unique i-t observations
         frame.i_t_unique = True
@@ -319,17 +309,21 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return long_frame
 
-    def unstack_es(self, is_clean=True, return_df=False):
+    def unstack_es(self, is_clean=True, return_df=False, is_sorted=False):
         '''
         Unstack (collapsed) event study data by stacking (and renaming) period 2 data below period 1 data for movers, then dropping period 2 columns, returning a (collapsed) long dataframe. Duplicates created from unstacking are dropped.
 
         Arguments:
             is_clean (bool): if True, data is already clean
             return_df (bool): if True, return a Pandas dataframe instead of a BipartiteLong(Collapsed) dataframe
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
+        # Sort data by i and t
+        self.sort_rows(is_sorted=is_sorted, copy=False)
+
         # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
         rename_dict_1 = {}
         # Dictionary to reformat names into (collapsed) long form
@@ -407,33 +401,33 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return long_frame
 
-    def _leave_one_firm_out(self, bcc_list, how_max='length', drop_multiples=False):
-        '''
-        Extract largest leave-one-firm-out connected component.
-
-        Arguments:
-            bcc_list (list of lists): each entry is a biconnected component
-            how_max (str): how to determine largest biconnected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
-
-        Returns:
-            frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
-        '''
-        return self.get_long()._leave_one_firm_out(bcc_list=bcc_list, how_max=how_max, drop_multiples=drop_multiples).get_es()
-
-    def _leave_one_observation_out(self, cc_list, how_max='length', drop_multiples=False):
+    def _leave_one_observation_out(self, cc_list, component_size_variable='length', drop_multiples=False):
         '''
         Extract largest leave-one-observation-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
-            how_max (str): how to determine largest biconnected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
 
         Returns:
             frame_largest_cc (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
         '''
-        return self.get_long()._leave_one_observation_out(cc_list=cc_list, how_max=how_max, drop_multiples=drop_multiples).get_es()
+        return self.get_long()._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
+
+    def _leave_one_firm_out(self, bcc_list, component_size_variable='length', drop_multiples=False):
+        '''
+        Extract largest leave-one-firm-out connected component.
+
+        Arguments:
+            bcc_list (list of lists): each entry is a biconnected component
+            component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+
+        Returns:
+            frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
+        '''
+        return self.get_long()._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
 
     def _construct_connected_linkages(self):
         '''
@@ -461,59 +455,62 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
         return linkages
 
-    def keep_ids(self, id_col, keep_ids, drop_multiples=False, reset_index=False, copy=True):
+    def keep_ids(self, id_col, keep_ids_list, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Only keep ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
-            keep_ids (list): ids to keep
+            keep_ids_list (list): ids to keep
             drop_multiples (bool): used only if id_col == 'j' and using BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteEventStudyBase): dataframe with ids in the given set
         '''
-        keep_ids = set(keep_ids)
-        if len(keep_ids) == self.n_unique_ids(id_col):
+        keep_ids_list = set(keep_ids_list)
+        if len(keep_ids_list) == self.n_unique_ids(id_col):
             # If keeping everything
             if copy:
                 return self.copy()
             return self
 
-        return self.get_long().keep_ids(id_col=id_col, keep_ids=keep_ids, drop_multiples=drop_multiples, reset_index=False, copy=copy).get_es()
+        return self.get_long().keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
 
-    def drop_ids(self, id_col, drop_ids, drop_multiples=False, reset_index=False, copy=True):
+    def drop_ids(self, id_col, drop_ids_list, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Drop ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
-            drop_ids (list): ids to drop
+            drop_ids_list (list): ids to drop
             drop_multiples (bool): used only if id_col == 'j' and using BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
             frame (BipartiteEventStudyBase): dataframe with ids outside the given set
         '''
-        drop_ids = set(drop_ids)
-        if len(drop_ids) == 0:
+        drop_ids_list = set(drop_ids_list)
+        if len(drop_ids_list) == 0:
             # If nothing input
             if copy:
                 return self.copy()
             return self
 
-        return self.get_long().drop_ids(id_col=id_col, drop_ids=drop_ids, drop_multiples=drop_multiples, reset_index=False, copy=copy).get_es()
+        return self.get_long().drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
 
-    def keep_rows(self, rows, drop_multiples=False, reset_index=False, copy=True):
+    def keep_rows(self, rows, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Only keep particular rows.
 
         Arguments:
             rows (list): rows to keep
             drop_multiples (bool): used only if using BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
 
@@ -527,7 +524,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().keep_rows(rows=rows, drop_multiples=drop_multiples, reset_index=False, copy=copy).get_es()
+        return self.get_long().keep_rows(rows=rows, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
 
     def min_obs_firms(self, threshold=2):
         '''
@@ -570,13 +567,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return np.array(valid_firms)
 
-    def min_obs_frame(self, threshold=2, drop_multiples=False, copy=True):
+    def min_obs_frame(self, threshold=2, drop_multiples=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
             drop_multiples (bool): used only for BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -588,7 +586,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
+        return self.get_long().min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy).get_es()
 
     def min_workers_firms(self, threshold=2):
         '''
@@ -622,13 +620,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return np.array(valid_firms)
 
-    def min_workers_frame(self, threshold=15, drop_multiples=False, copy=True):
+    def min_workers_frame(self, threshold=15, drop_multiples=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
             drop_multiples (bool): used only for BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -640,7 +639,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
+        return self.get_long().min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy).get_es()
 
     def min_moves_firms(self, threshold=2):
         '''
@@ -658,13 +657,15 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long().min_moves_firms(threshold=threshold)
 
-    def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
+    def min_moves_frame(self, threshold=2, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
             drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
@@ -676,7 +677,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, copy=copy).get_es()
+        return self.get_long().min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
 
     # def min_moves_firms(self, threshold=2):
     #     '''

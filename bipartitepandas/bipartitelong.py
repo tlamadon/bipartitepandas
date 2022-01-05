@@ -40,21 +40,20 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudy
 
-    def get_collapsed_long(self, copy=True):
+    def get_collapsed_long(self, is_sorted=False, copy=True):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
 
         Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
             collapsed_frame (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
         '''
-        # Convert to Pandas dataframe
-        data = pd.DataFrame(self, copy=copy)
         # Sort data by i and t
-        data = data.sort_values(['i', 't'])
-        self.logger.info('copied data sorted by i and t')
+        data = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
+        self.logger.info('copied data sorted by i (and t, if included)')
 
         # Introduce lagged i and j
         i_col = data.loc[:, 'i'].to_numpy()
@@ -73,14 +72,22 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Aggregate at the spell level
         spell = data.groupby(spell_id)
         # First, aggregate required columns
-        data_spell = spell.agg(
-            i=pd.NamedAgg(column='i', aggfunc='first'),
-            j=pd.NamedAgg(column='j', aggfunc='first'),
-            y=pd.NamedAgg(column='y', aggfunc='mean'),
-            t1=pd.NamedAgg(column='t', aggfunc='min'),
-            t2=pd.NamedAgg(column='t', aggfunc='max'),
-            w=pd.NamedAgg(column='i', aggfunc='size')
-        )
+        if self._col_included('t'):
+            data_spell = spell.agg(
+                i=pd.NamedAgg(column='i', aggfunc='first'),
+                j=pd.NamedAgg(column='j', aggfunc='first'),
+                y=pd.NamedAgg(column='y', aggfunc='mean'),
+                t1=pd.NamedAgg(column='t', aggfunc='min'),
+                t2=pd.NamedAgg(column='t', aggfunc='max'),
+                w=pd.NamedAgg(column='i', aggfunc='size')
+            )
+        else:
+            data_spell = spell.agg(
+                i=pd.NamedAgg(column='i', aggfunc='first'),
+                j=pd.NamedAgg(column='j', aggfunc='first'),
+                y=pd.NamedAgg(column='y', aggfunc='mean'),
+                w=pd.NamedAgg(column='i', aggfunc='size')
+            )
         # Next, aggregate optional columns
         all_cols = self._included_cols()
         for col in all_cols:
@@ -108,7 +115,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def fill_periods(self, fill_j=-1, fill_y=pd.NA, fill_m=pd.NA, copy=True):
+    def fill_periods(self, fill_j=-1, fill_y=pd.NA, fill_m=pd.NA, is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1, and y and m are filled in as pd.NA, but these values can be specified.
 
@@ -116,6 +123,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             fill_j (value): value to fill in for missing j
             fill_y (value): value to fill in for missing y
             fill_m (value): value to fill in for missing m
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -123,8 +131,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         m = self._col_included('m') # Check whether m column included
         fill_frame = pd.DataFrame(self, copy=copy)
-        fill_frame.sort_values(['i', 't'], inplace=True)
-        fill_frame.reset_index(drop=True, inplace=True) # Sort by i, t
+        if not is_sorted:
+            # Sort data by i, t
+            fill_frame.sort_values(['i', 't'], inplace=True)
+            fill_frame.reset_index(drop=True, inplace=True)
         i_col = fill_frame.loc[:, 'i'].to_numpy()
         t_col = fill_frame.loc[:, 't'].to_numpy()
         i_prev = np.roll(i_col, 1)
@@ -142,12 +152,13 @@ class BipartiteLong(bpd.BipartiteLongBase):
                     fill_data.append(new_row)
             fill_df = pd.concat([pd.DataFrame(fill_row, index=[i]) for i, fill_row in enumerate(fill_data)])
             fill_frame = pd.concat([fill_frame, fill_df])
-            fill_frame.sort_values(['i', 't'], inplace=True) # Sort by i, t
+            # Sort data by i, t
+            fill_frame.sort_values(['i', 't'], inplace=True)
             fill_frame.reset_index(drop=True, inplace=True)
 
         return fill_frame
 
-    def get_es_extended(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', copy=True):
+    def get_es_extended(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
 
@@ -158,6 +169,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -190,8 +202,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame = es_extended_frame.loc[es_extended_frame.loc[:, 'worker_total_periods'].to_numpy() >= periods_pre + periods_post, :]
         es_extended_frame.reset_index(drop=True, inplace=True)
 
-        # Sort by worker-period
-        es_extended_frame.sort_values(['i', 't'], inplace=True)
+        if not is_sorted:
+            # Sort data by i and t
+            es_extended_frame.sort_values(['i', 't'], inplace=True)
 
         # For each worker-period, generate (how many total years - 1) they have worked at that point (e.g. if a worker started in 2005, and had data each year, then 2008 would give 3, 2009 would give 4, etc.)
         es_extended_frame.loc[:, 'worker_periods_worked'] = es_extended_frame.groupby('i')['one'].cumsum().to_numpy() - 1
