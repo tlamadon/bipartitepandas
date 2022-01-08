@@ -51,59 +51,58 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             collapsed_frame (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
         '''
-        # Sort data by i and t
-        data = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
+        # Sort data by i (and t, if included)
+        frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
         self.logger.info('copied data sorted by i (and t, if included)')
 
         # Introduce lagged i and j
-        i_col = data.loc[:, 'i'].to_numpy()
-        j_col = data.loc[:, 'j'].to_numpy()
+        i_col = frame.loc[:, 'i'].to_numpy()
+        j_col = frame.loc[:, 'j'].to_numpy()
         i_prev = np.roll(i_col, 1)
         j_prev = np.roll(j_col, 1)
         self.logger.info('lagged i and j introduced')
 
-        # Generate spell ids
+        # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
         # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
-        new_spell = (j_col != j_prev) | (i_col != i_prev) # Allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells
+        new_spell = (j_col != j_prev) | (i_col != i_prev)
         del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum() - 1
         self.logger.info('spell ids generated')
 
-        # Aggregate at the spell level
-        spell = data.groupby(spell_id)
-        # First, aggregate required columns
+        ## Aggregate at the spell level
+        spell = frame.groupby(spell_id)
+
+        # First, prepare required columns for aggregation
+        agg_funcs = {
+            'i': pd.NamedAgg(column='i', aggfunc='first'),
+            'j': pd.NamedAgg(column='j', aggfunc='first'),
+            'y': pd.NamedAgg(column='y', aggfunc='mean'),
+            'w': pd.NamedAgg(column='i', aggfunc='size')
+        }
+
+        # Next, prepare the time column for aggregation
         if self._col_included('t'):
-            data_spell = spell.agg(
-                i=pd.NamedAgg(column='i', aggfunc='first'),
-                j=pd.NamedAgg(column='j', aggfunc='first'),
-                y=pd.NamedAgg(column='y', aggfunc='mean'),
-                t1=pd.NamedAgg(column='t', aggfunc='min'),
-                t2=pd.NamedAgg(column='t', aggfunc='max'),
-                w=pd.NamedAgg(column='i', aggfunc='size')
-            )
-        else:
-            data_spell = spell.agg(
-                i=pd.NamedAgg(column='i', aggfunc='first'),
-                j=pd.NamedAgg(column='j', aggfunc='first'),
-                y=pd.NamedAgg(column='y', aggfunc='mean'),
-                w=pd.NamedAgg(column='i', aggfunc='size')
-            )
-        # Next, aggregate optional columns
+            agg_funcs['t1'] = pd.NamedAgg(column='t', aggfunc='min')
+            agg_funcs['t2'] = pd.NamedAgg(column='t', aggfunc='max')
+
+        # Next, prepare optional columns for aggregation
         all_cols = self._included_cols()
         for col in all_cols:
             if col in self.columns_opt:
                 if self.col_dtype_dict[col] == 'int':
                     for subcol in bpd.to_list(self.reference_dict[col]):
-                        data_spell[subcol] = spell[subcol].first()
+                        agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='first')
                 if self.col_dtype_dict[col] == 'float':
                     for subcol in bpd.to_list(self.reference_dict[col]):
-                        data_spell[subcol] = spell[subcol].mean()
+                        agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='mean')
 
-        data_spell.reset_index(drop=True, inplace=True)
+        # Finally, aggregate
+        data_spell = spell.agg(**agg_funcs)
 
         # Sort columns
         sorted_cols = sorted(data_spell.columns, key=bpd.col_order)
         data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
+        data_spell.reset_index(drop=True, inplace=True)
 
         self.logger.info('data aggregated at the spell level')
 

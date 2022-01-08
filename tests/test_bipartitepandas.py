@@ -72,7 +72,7 @@ def test_refactor_2():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -109,7 +109,7 @@ def test_refactor_3():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -153,7 +153,7 @@ def test_refactor_4():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -204,7 +204,7 @@ def test_refactor_5():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -256,7 +256,7 @@ def test_refactor_6():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -308,7 +308,7 @@ def test_refactor_7():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -360,7 +360,7 @@ def test_refactor_8():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -412,7 +412,7 @@ def test_refactor_9():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 
@@ -461,7 +461,7 @@ def test_refactor_10():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['j1'] == 2
@@ -480,6 +480,102 @@ def test_refactor_10():
     assert movers.iloc[1]['j2'] == 2
     assert movers.iloc[1]['y1'] == 1
     assert movers.iloc[1]['y2'] == 1
+
+def test_refactor_11():
+    # 1 mover between firms 0 and 1 and 2 and 3, 1 between firms 1 and 2, and 1 stayer at firm 2.
+    # Check going to event study and back to long, for data where movers have extended periods where they stay at the same firm
+    worker_data = []
+    # Firm 0 -> 1 -> 2 -> 3
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2})
+    worker_data.append({'i': 0, 'j': 2, 'y': 0.5, 't': 3})
+    worker_data.append({'i': 0, 'j': 2, 'y': 0.5, 't': 4})
+    worker_data.append({'i': 0, 'j': 2, 'y': 0.75, 't': 5})
+    worker_data.append({'i': 0, 'j': 3, 'y': 1.5, 't': 6})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
+    # Firm 2 -> 2
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1})
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 2})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(data=df).clean_data().get_es()
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] > 0]
+
+    assert stayers.iloc[0]['i'] == 0
+    assert stayers.iloc[0]['j1'] == 2
+    assert stayers.iloc[0]['j2'] == 2
+    assert stayers.iloc[0]['y1'] == 0.5
+    assert stayers.iloc[0]['y2'] == 0.5
+    assert stayers.iloc[0]['t1'] == 4
+    assert stayers.iloc[0]['t2'] == 4
+
+    assert stayers.iloc[1]['i'] == 2
+    assert stayers.iloc[1]['j1'] == 2
+    assert stayers.iloc[1]['j2'] == 2
+    assert stayers.iloc[1]['y1'] == 1.
+    assert stayers.iloc[1]['y2'] == 1.
+    assert stayers.iloc[1]['t1'] == 1
+    assert stayers.iloc[1]['t2'] == 1
+
+    assert stayers.iloc[2]['i'] == 2
+    assert stayers.iloc[2]['j1'] == 2
+    assert stayers.iloc[2]['j2'] == 2
+    assert stayers.iloc[2]['y1'] == 1.
+    assert stayers.iloc[2]['y2'] == 1.
+    assert stayers.iloc[2]['t1'] == 2
+    assert stayers.iloc[2]['t2'] == 2
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['j1'] == 0
+    assert movers.iloc[0]['j2'] == 1
+    assert movers.iloc[0]['y1'] == 2.
+    assert movers.iloc[0]['y2'] == 1.
+    assert movers.iloc[0]['t1'] == 1
+    assert movers.iloc[0]['t2'] == 2
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['j1'] == 1
+    assert movers.iloc[1]['j2'] == 2
+    assert movers.iloc[1]['y1'] == 1.
+    assert movers.iloc[1]['y2'] == 0.5
+    assert movers.iloc[1]['t1'] == 2
+    assert movers.iloc[1]['t2'] == 3
+
+    assert movers.iloc[2]['i'] == 0
+    assert movers.iloc[2]['j1'] == 2
+    assert movers.iloc[2]['j2'] == 3
+    assert movers.iloc[2]['y1'] == 0.75
+    assert movers.iloc[2]['y2'] == 1.5
+    assert movers.iloc[2]['t1'] == 5
+    assert movers.iloc[2]['t2'] == 6
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['j1'] == 1
+    assert movers.iloc[3]['j2'] == 2
+    assert movers.iloc[3]['y1'] == 1.
+    assert movers.iloc[3]['y2'] == 1.
+    assert movers.iloc[3]['t1'] == 1
+    assert movers.iloc[3]['t2'] == 2
+
+    bdf = bdf.get_long()
+
+    for row in range(len(bdf)):
+        df_row = df.iloc[row]
+        bdf_row = bdf.iloc[row]
+        for col in ['i', 'j', 'y', 't']:
+            assert df_row[col] == bdf_row[col]
+
+def test_refactor_12():
+    # Check going to event study and back to long
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    bdf = bpd.BipartiteLong(df).clean_data()
+
+    assert len(bdf) == len(bdf.get_es().get_long())
 
 def test_contiguous_fids_11():
     # Check contiguous_ids() with firm ids.
@@ -502,7 +598,7 @@ def test_contiguous_fids_11():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['j1'] == 2
@@ -544,7 +640,7 @@ def test_contiguous_wids_12():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['j1'] == 2
@@ -588,7 +684,7 @@ def test_contiguous_cids_13():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['j1'] == 2
@@ -638,7 +734,7 @@ def test_contiguous_cids_14():
     bdf = bdf.get_es().original_ids()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert movers.iloc[0]['i'] == 0
     assert movers.iloc[0]['j1'] == 0
@@ -692,7 +788,7 @@ def test_col_dict_15():
     bdf = bdf.get_es()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['j1'] == 2
@@ -738,7 +834,7 @@ def test_worker_year_unique_16_1():
         bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how}))
 
         stayers = bdf[bdf['m'] == 0]
-        movers = bdf[bdf['m'] == 1]
+        movers = bdf[bdf['m'] > 0]
 
         assert len(stayers) == 0
 
@@ -799,7 +895,7 @@ def test_worker_year_unique_16_2():
         bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how}))
 
         stayers = bdf[bdf['m'] == 0]
-        movers = bdf[bdf['m'] == 1]
+        movers = bdf[bdf['m'] > 0]
 
         assert len(stayers) == 0
 
@@ -864,7 +960,7 @@ def test_worker_year_unique_16_3():
         bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how}))
 
         stayers = bdf[bdf['m'] == 0]
-        movers = bdf[bdf['m'] == 1]
+        movers = bdf[bdf['m'] > 0]
 
         assert stayers.iloc[0]['i'] == 2
         assert stayers.iloc[0]['j'] == 1
@@ -923,7 +1019,7 @@ def test_worker_year_unique_16_4():
         bdf = bdf.clean_data(bpd.clean_params({'i_t_how': how})).original_ids()
 
         stayers = bdf[bdf['m'] == 0]
-        movers = bdf[bdf['m'] == 1]
+        movers = bdf[bdf['m'] > 0]
 
         assert stayers.iloc[0]['i'] == 2
         assert stayers.iloc[0]['original_i'] == 3
@@ -993,7 +1089,7 @@ def test_string_ids_17():
     bdf = bdf.clean_data()
 
     stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] == 1]
+    movers = bdf[bdf['m'] > 0]
 
     assert len(stayers) == 0
 

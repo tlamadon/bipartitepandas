@@ -903,12 +903,15 @@ class BipartiteBase(DataFrame):
             frame = self
 
         if not is_sorted:
-            if self._col_included('t'):
-                # Sort data by i and t
-                frame.sort_values(['i', bpd.to_list(self.reference_dict['t'])[0]], inplace=True)
-            else:
-                # Sort data by i
-                frame.sort_values('i', inplace=True)
+            sort_order = ['i']
+            if frame._col_included('t'):
+                # If t column
+                sort_order.append(to_list(frame.reference_dict['t'])[0])
+            ##### Disable Pandas warning #####
+            pd.options.mode.chained_assignment = None
+            frame.sort_values(sort_order, inplace=True)
+            ##### Re-enable Pandas warning #####
+            pd.options.mode.chained_assignment = 'warn'
 
         return frame
 
@@ -980,60 +983,7 @@ class BipartiteBase(DataFrame):
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
-    def _prep_cluster_data(self, stayers_movers=None, t=None, weighted=True):
-        '''
-        Prepare data for clustering.
-
-        Arguments:
-            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
-            t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
-            weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-        Returns:
-            data (Pandas DataFrame): data prepared for clustering
-            weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
-            jids (NumPy Array): firm ids of firms in subset of data used to cluster
-        '''
-        # Prepare data
-        # Stack data if event study (need all data in 1 column)
-        if isinstance(self, bpd.BipartiteEventStudyBase):
-            # Returns Pandas dataframe, not BipartiteLong(Collapsed)
-            frame = self.get_long(return_df=True)
-        else:
-            frame = self
-
-        if stayers_movers is not None:
-            if stayers_movers == 'stayers':
-                data = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :])
-            elif stayers_movers == 'movers':
-                data = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :])
-        else:
-            data = pd.DataFrame(frame)
-
-        # If period-level, then only use data for that particular period
-        if t is not None:
-            if len(to_list(self.reference_dict['t'])) == 1:
-                data = data.loc[data.loc[:, 't'].to_numpy() == t, :]
-            else:
-                warnings.warn('Cannot use data from a particular period on collapsed data, proceeding to cluster on all data')
-
-        # Create weights
-        if weighted:
-            if self._col_included('w'):
-                data.loc[:, 'row_weights'] = data.loc[:, 'w']
-                weights = data.groupby('j')['w'].sum().to_numpy()
-            else:
-                data.loc[:, 'row_weights'] = 1
-                weights = data.groupby('j').size().to_numpy()
-        else:
-            data.loc[:, 'row_weights'] = 1
-            weights = None
-
-        # Get unique firm ids
-        jids = sorted(data.loc[:, 'j'].unique()) # Must sort
-
-        return data, weights, jids
-
-    def cluster(self, measures=bpd.measures.cdfs(), grouping=bpd.grouping.kmeans(), stayers_movers=None, t=None, weighted=True, dropna=False, clean_params=None, copy=False):
+    def cluster(self, measures=bpd.measures.cdfs(), grouping=bpd.grouping.kmeans(), stayers_movers=None, t=None, weighted=True, dropna=False, clean_params=None, is_sorted=False, copy=False):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
 
@@ -1045,6 +995,7 @@ class BipartiteBase(DataFrame):
             weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
             dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
             clean_params (None or ParamsDict): dictionary of parameters for cleaning. This is used when observations get dropped because they were not clustered. Default is None, which sets connectedness to be the connectedness measure previously used. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
+            is_sorted (bool): for event study format. If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -1056,7 +1007,7 @@ class BipartiteBase(DataFrame):
             frame = self
 
         # Prepare data for clustering
-        cluster_data, weights, jids = self._prep_cluster_data(stayers_movers=stayers_movers, t=t, weighted=weighted)
+        cluster_data, weights, jids = frame._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, is_sorted=is_sorted, copy=False)
 
         # Compute measures
         for i, measure in enumerate(to_list(measures)):
@@ -1077,26 +1028,29 @@ class BipartiteBase(DataFrame):
         clusters = grouping(computed_measures, weights)
         frame.logger.info('firm groups computed')
 
+        # Link firms to clusters
+        clusters_dict = dict(pd._lib.fast_zip([jids, clusters]))
+        frame.logger.info('dictionary linking firms to clusters generated')
+
         # Drop columns (because prepared data is not always a copy, must drop from self)
         for col in ['row_weights', 'one']:
             if col in self.columns:
                 self.drop(col, axis=1, inplace=True)
+            if col in frame.columns:
+                frame.drop(col, axis=1, inplace=True)
 
         # Drop existing clusters
         if frame._col_included('g'):
             frame.drop('g', axis=1, inplace=True)
 
         for i, j_col in enumerate(to_list(frame.reference_dict['j'])):
-            if len(to_list(self.reference_dict['j'])) == 1:
+            if len(to_list(frame.reference_dict['j'])) == 1:
                 g_col = 'g'
-            elif len(to_list(self.reference_dict['j'])) == 2:
+            elif len(to_list(frame.reference_dict['j'])) == 2:
                 g_col = 'g' + str(i + 1)
-            clusters_dict = {j_col: jids, g_col: clusters}
-            clusters_df = pd.DataFrame(clusters_dict, index=np.arange(len(jids)))
-            frame.logger.info('dataframe linking fids to clusters generated')
 
             # Merge into event study data
-            frame = frame.merge(clusters_df, how='left', on=j_col, copy=False)
+            frame[g_col] = frame[j_col].map(clusters_dict)
             # Keep column as int even with nans
             frame.loc[:, g_col] = frame.loc[:, g_col].astype('Int64', copy=False)
             frame.col_dict[g_col] = g_col

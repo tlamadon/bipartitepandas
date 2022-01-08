@@ -54,15 +54,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Returns:
             frame (BipartiteBase): BipartiteBase with ids in the given set
         '''
-        frame = pd.DataFrame(self, copy=copy)
-
-        if not is_sorted:
-            if self._col_included('t'):
-                # Sort data by i and t
-                frame.sort_values(['i', 't1'], inplace=True)
-            else:
-                # Sort data by i
-                frame.sort_values(['i'], inplace=True)
+        # Sort data by i (and t, if included)
+        frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
+        self.logger.info('copied data sorted by i (and t, if included)')
 
         # Add w
         if 'w' not in frame.columns:
@@ -73,11 +67,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         j_col = frame.loc[:, 'j'].to_numpy()
         i_prev = np.roll(i_col, 1)
         j_prev = np.roll(j_col, 1)
+        self.logger.info('lagged i and j introduced')
 
         # Generate spell ids
         new_spell = (j_col != j_prev) | (i_col != i_prev) # Allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells
         del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum()
+        self.logger.info('spell ids generated')
 
         # Quickly check whether a recollapse is necessary
         if (len(frame) < 2) or (spell_id[-1] == len(frame)):
@@ -85,46 +81,48 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                 return self.copy()
             return self
 
-        # Aggregate at the spell level
+        ## Aggregate at the spell level
         spell = frame.groupby(spell_id)
 
         if drop_multiples:
             data_spell = frame.loc[spell['i'].transform('size').to_numpy() == 1, :]
-            data_spell.reset_index(drop=True, inplace=True)
         else:
-            # First, aggregate required columns
+            # First, prepare required columns for aggregation
+            agg_funcs = {
+                'i': pd.NamedAgg(column='i', aggfunc='first'),
+                'j': pd.NamedAgg(column='j', aggfunc='first'),
+                'y': pd.NamedAgg(column='y', aggfunc='mean'),
+            }
+
+            # Next, prepare the time column for aggregation
             if self._col_included('t'):
-                data_spell = spell.agg(
-                    i=pd.NamedAgg(column='i', aggfunc='first'),
-                    j=pd.NamedAgg(column='j', aggfunc='first'),
-                    y=pd.NamedAgg(column='y', aggfunc='mean'),
-                    t1=pd.NamedAgg(column='t1', aggfunc='min'),
-                    t2=pd.NamedAgg(column='t2', aggfunc='max'),
-                    w=pd.NamedAgg(column='w', aggfunc='sum')
-                )
+                agg_funcs['t1'] = pd.NamedAgg(column='t1', aggfunc='min')
+                agg_funcs['t2'] = pd.NamedAgg(column='t2', aggfunc='max')
+
+            # Next, prepare the weight column for aggregation
+            if self._col_included('w'):
+                agg_funcs['w'] = pd.NamedAgg(column='w', aggfunc='sum')
             else:
-                data_spell = spell.agg(
-                    i=pd.NamedAgg(column='i', aggfunc='first'),
-                    j=pd.NamedAgg(column='j', aggfunc='first'),
-                    y=pd.NamedAgg(column='y', aggfunc='mean'),
-                    w=pd.NamedAgg(column='w', aggfunc='sum')
-                )
-            # Next, aggregate optional columns
+                agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
+
+            # Next, prepare optional columns for aggregation
             all_cols = self._included_cols()
             for col in all_cols:
                 if col in self.columns_opt:
                     if self.col_dtype_dict[col] == 'int':
                         for subcol in bpd.to_list(self.reference_dict[col]):
-                            data_spell.loc[:, subcol] = spell[subcol].first()
+                            agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='first')
                     if self.col_dtype_dict[col] == 'float':
                         for subcol in bpd.to_list(self.reference_dict[col]):
-                            data_spell.loc[:, subcol] = spell[subcol].mean()
+                            agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='mean')
 
-            data_spell.reset_index(drop=True, inplace=True)
+            # Finally, aggregate
+            data_spell = spell.agg(**agg_funcs)
 
         # Sort columns
         sorted_cols = sorted(data_spell.columns, key=bpd.col_order)
         data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
+        data_spell.reset_index(drop=True, inplace=True)
 
         collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
         collapsed_frame._set_attributes(self, no_dict=False)
@@ -153,13 +151,16 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         for col in all_cols:
             long_dict[col] = []
 
-        # Iterate over all data
+        # Iterate over rows with multiple periods
+        nt = self.loc[:, 't2'].to_numpy() - self.loc[:, 't1'].to_numpy() + 1
         for i in range(len(self)):
             row = self.iloc[i]
-            for t in range(int(row.loc['t1']), int(row.loc['t2']) + 1):
-                long_dict['t'].append(t)
-                for col in all_cols: # Add variables other than period
-                    long_dict[col].append(row[col])
+            nt_i = nt[i]
+            long_dict['t'].extend(np.arange(row.loc['t1'], row.loc['t2'] + 1))
+            for col in all_cols:
+                # Add variables other than period
+                long_dict[col].extend([row[col]] * nt_i)
+        del nt
 
         # Convert to Pandas dataframe
         data_long = pd.DataFrame(long_dict)

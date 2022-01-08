@@ -68,6 +68,33 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
+    def _get_unstack_rows(self):
+        '''
+        Get mask of rows where the second observation isn't included in the first observation for any rows (e.g., the last observation for a mover is given only as an j2, never as j1). More details: if a worker's last observation is a move OR if a worker switches from a move to a stay between observations, we need to append the second observation from the move. We can use the fact that the time changes between observations to indicate that we need to unstack, because event studies are supposed to go A -> B, B -> C, so if it goes A -> B, C -> D that means B should be unstacked.
+
+        Returns:
+            (NumPy Array): mask of rows to unstack
+        '''
+        # Get i for this and next period
+        i_col = self.loc[:, 'i'].to_numpy()
+        i_next = np.roll(i_col, -1)
+        # Get m
+        m_col = (self.loc[:, 'm'].to_numpy() > 0)
+        # Get t for this and next period
+        t_cols = bpd.to_list(self.reference_dict['t'])
+        halfway = len(t_cols) // 2
+        t1 = t_cols[0]
+        t2 = t_cols[halfway]
+        t1_next = np.roll(self.loc[:, t1].to_numpy(), -1)
+        t2_col = self.loc[:, t2].to_numpy()
+        # Check if t changed
+        t_change = (i_col == i_next) & (t1_next != t2_col)
+        # Check if i changed
+        # Source: https://stackoverflow.com/a/47115520/17333120
+        i_last = (i_col != i_next)
+
+        return m_col & (t_change | i_last)
+
     # def clean_data(self, user_clean={}):
     #     '''
     #     Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
@@ -158,8 +185,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         if frame._col_included('t'):
             # Convert to long
-            # Note: we use unstack rather than convert to long because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - converting to long will arbitrarily decide which rows are already correct
-            frame = frame.unstack_es(is_clean=False, is_sorted=is_sorted)
+            # Note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - converting to long will arbitrarily decide which rows are already correct
+            frame = frame.get_long(is_clean=False, is_sorted=is_sorted, copy=False)
             frame.drop_duplicates(inplace=True)
             frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).get_es()
 
@@ -208,121 +235,24 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return data_cs
 
-    def get_long(self, is_clean=True, return_df=False):
+    def get_long(self, is_clean=True, is_sorted=False, copy=True):
         '''
         Return (collapsed) event study data reformatted into (collapsed) long form.
 
         Arguments:
-            is_clean (bool): if True, data is already clean
-            return_df (bool): if True, return a Pandas dataframe instead of a BipartiteLong(Collapsed) dataframe
-
-        Returns:
-            long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
-        '''
-        # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
-        rename_dict_1 = {}
-        # Dictionary to reformat names into (collapsed) long form
-        rename_dict_2 = {}
-        # For casting column types
-        astype_dict = {}
-        # Columns to drop
-        drops = []
-        for col in self._included_cols():
-            subcols = bpd.to_list(self.reference_dict[col])
-            n_subcols = len(subcols)
-            # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
-            if n_subcols % 2 == 0:
-                halfway = n_subcols // 2
-                for i in range(halfway):
-                    rename_dict_1[subcols[i]] = subcols[halfway + i]
-                    rename_dict_1[subcols[halfway + i]] = subcols[i]
-                    subcol_number = subcols[i].strip(col) # E.g. j1 will give 1
-                    rename_dict_2[subcols[i]] = col + subcol_number[1:] # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
-                    if self.col_dtype_dict[col] == 'int':
-                        astype_dict[rename_dict_2[subcols[i]]] = int
-
-                    drops.append(subcols[halfway + i])
-
-            else:
-                # Check correct type for other columns
-                if self.col_dtype_dict[col] == 'int':
-                    astype_dict[col] = int
-
-        # Sort by i, t if t included; otherwise sort by i
-        sort_order_1 = ['i']
-        sort_order_2 = ['i']
-        if self._col_included('t'):
-            sort_order_1.append(bpd.to_list(self.reference_dict['t'])[0]) # Pre-reformatting
-            sort_order_2.append(bpd.to_list(self.reference_dict['t'])[0][: -1]) # Remove last number, e.g. t11 to t1
-
-        if is_clean:
-            # Append the last row if a mover (this is because the last observation is only given as an f2i, never as an f1i)
-            # Details: if a worker's last observation is a move OR if a worker switches from a move to a stay between observations, we need to append the second observation from the move
-            i_col = self.loc[:, 'i'].to_numpy()
-            m_col = (self.loc[:, 'm'].to_numpy() > 0)
-            i_next = np.roll(i_col, -1)
-            m_next = np.roll(m_col, -1)
-            m_change = (i_col == i_next) & (m_col) & (~m_next)
-            # Source: https://stackoverflow.com/a/47115520/17333120
-            i_last = (i_col != i_next)
-            last_obs_df = pd.DataFrame(self.loc[(m_change) | (i_last & m_col), :]) \
-                .sort_values(sort_order_1) \
-                .drop_duplicates(subset='i', keep='last') \
-                .rename(rename_dict_1, axis=1) # Sort by i, t to ensure last observation is actually last
-        else:
-            # If data isn't clean, just stack all moves and deal with duplicates later
-            last_obs_df = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :]) \
-                .sort_values(sort_order_1) \
-                .drop_duplicates(subset='i', keep='last') \
-                .rename(rename_dict_1, axis=1) # Sort by i, t to ensure last observation is actually last
-
-        try:
-            data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
-                .drop(drops, axis=1) \
-                .rename(rename_dict_2, axis=1) \
-                .astype(astype_dict, copy=False)
-        except ValueError: # If nan values, use Int8
-            for col in astype_dict.keys():
-                astype_dict[col] = 'Int64'
-            data_long = pd.concat([pd.DataFrame(self), last_obs_df], ignore_index=True) \
-                .drop(drops, axis=1) \
-                .rename(rename_dict_2, axis=1) \
-                .astype(astype_dict, copy=False)
-        # data_long = pd.DataFrame(self).groupby('i').apply(lambda a: a.append(a.iloc[-1].rename(rename_dict_1, axis=1)) if a.iloc[0]['m'] == 1 else a) \
-        #     .reset_index(drop=True) \
-        #     .drop(drops, axis=1) \
-        #     .rename(rename_dict_2, axis=1) \
-        #     .astype(astype_dict, copy=False)
-
-        # Sort columns and rows
-        sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
-        data_long.sort_values(sort_order_2, inplace=True)
-        data_long.reset_index(drop=True, inplace=True)
-
-        if return_df:
-            return data_long
-
-        long_frame = self._constructor_long(data_long)
-        long_frame._set_attributes(self, no_dict=True)
-        long_frame = long_frame.gen_m(force=True, copy=False)
-
-        return long_frame
-
-    def unstack_es(self, is_clean=True, return_df=False, is_sorted=False):
-        '''
-        Unstack (collapsed) event study data by stacking (and renaming) period 2 data below period 1 data for movers, then dropping period 2 columns, returning a (collapsed) long dataframe. Duplicates created from unstacking are dropped.
-
-        Arguments:
-            is_clean (bool): if True, data is already clean
-            return_df (bool): if True, return a Pandas dataframe instead of a BipartiteLong(Collapsed) dataframe
+            is_clean (bool): if True, data is already clean (this ensures that observations that are in two consecutive event studies appear only once, e.g. the event study A -> B, B -> C turns into A -> B -> C; otherwise, it will become A -> B -> B -> C). Set to False if duplicates will be handled manually.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
-        # Sort data by i and t
-        self.sort_rows(is_sorted=is_sorted, copy=False)
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        frame = frame.sort_rows(is_sorted=is_sorted, copy=False)
 
         # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
         rename_dict_1 = {}
@@ -332,8 +262,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         astype_dict = {}
         # Columns to drop
         drops = []
-        for col in self._included_cols():
-            subcols = bpd.to_list(self.reference_dict[col])
+        for col in frame._included_cols():
+            subcols = bpd.to_list(frame.reference_dict[col])
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
             if n_subcols % 2 == 0:
@@ -341,65 +271,76 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 for i in range(halfway):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
                     rename_dict_1[subcols[halfway + i]] = subcols[i]
-                    subcol_number = subcols[i].strip(col) # E.g. j1 will give 1
-                    rename_dict_2[subcols[i]] = col + subcol_number[1:] # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
-                    if self.col_dtype_dict[col] == 'int':
+                    # Get column number, e.g. j1 will give 1
+                    subcol_number = subcols[i].strip(col)
+                    # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
+                    rename_dict_2[subcols[i]] = col + subcol_number[1:]
+                    if frame.col_dtype_dict[col] == 'int':
                         astype_dict[rename_dict_2[subcols[i]]] = int
 
                     drops.append(subcols[halfway + i])
 
             else:
                 # Check correct type for other columns
-                if self.col_dtype_dict[col] == 'int':
+                if frame.col_dtype_dict[col] == 'int':
                     astype_dict[col] = int
 
-        # Sort by i, t if t included; otherwise sort by i
-        sort_order = ['i']
-        if self._col_included('t'):
-            sort_order.append(bpd.to_list(self.reference_dict['t'])[0][: - 1]) # Remove last number, e.g. t11 to t1
-
         if is_clean:
-            # Stack period 2 data if a mover (this is because the last observation is only given as an f2i, never as an f1i)
-            # Details: if a worker's last observation is a move OR if a worker switches from a move to a stay between observations, we need to append the second observation from the move
-            i_col = self.loc[:, 'i'].to_numpy()
-            m_col = (self.loc[:, 'm'].to_numpy() > 0)
-            i_next = np.roll(i_col, -1)
-            m_next = np.roll(m_col, -1)
-            m_change = (i_col == i_next) & (m_col) & (~m_next)
-            # Source: https://stackoverflow.com/a/47115520/17333120
-            i_last = (i_col != i_next)
-            stacked_df = pd.DataFrame(self.loc[(m_change) | (i_last & m_col), :]).rename(rename_dict_1, axis=1)
+            # Find rows to unstack
+            unstack_df = pd.DataFrame(frame.loc[frame._get_unstack_rows(), :])
         else:
-            # If data isn't clean, just stack all moves and deal with duplicates later
-            stacked_df = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :]).rename(rename_dict_1, axis=1)
+            # If data isn't clean, just unstack all moves and deal with duplicates later
+            unstack_df = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :])
+        unstack_df.rename(rename_dict_1, axis=1, inplace=True)
 
         try:
-            data_long = pd.concat([pd.DataFrame(self), stacked_df], ignore_index=True) \
-                .drop(drops, axis=1) \
-                .rename(rename_dict_2, axis=1) \
-                .astype(astype_dict, copy=False)
-        except ValueError: # If nan values, use Int8
+            data_long = pd.concat([pd.DataFrame(frame), unstack_df], ignore_index=True)
+            data_long.drop(drops, axis=1, inplace=True)
+            data_long.rename(rename_dict_2, axis=1, inplace=True)
+            data_long = data_long.astype(astype_dict, copy=False)
+        except ValueError:
+            # If nan values, use Int64
             for col in astype_dict.keys():
                 astype_dict[col] = 'Int64'
-            data_long = pd.concat([pd.DataFrame(self), stacked_df], ignore_index=True) \
-                .drop(drops, axis=1) \
-                .rename(rename_dict_2, axis=1) \
-                .astype(astype_dict, copy=False)
+            data_long = pd.concat([pd.DataFrame(frame), unstack_df], ignore_index=True)
+            data_long.drop(drops, axis=1, inplace=True)
+            data_long.rename(rename_dict_2, axis=1, inplace=True)
+            data_long = data_long.astype(astype_dict, copy=False)
 
-        # Sort columns and rows
+        ## Sort columns and rows
+        # Sort columns
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
+        # Sort rows by i (and t, if included)
+        sort_order = ['i']
+        if frame._col_included('t'):
+            # Remove last number, e.g. t11 to t1
+            sort_order.append(bpd.to_list(frame.reference_dict['t'])[0][: -1])
         data_long.sort_values(sort_order, inplace=True)
         data_long.reset_index(drop=True, inplace=True)
 
-        if return_df:
-            return data_long
-
-        long_frame = self._constructor_long(data_long)
-        long_frame._set_attributes(self, no_dict=True)
+        long_frame = frame._constructor_long(data_long)
+        long_frame._set_attributes(frame, no_dict=True)
         long_frame = long_frame.gen_m(force=True, copy=False)
 
         return long_frame
+
+    def _prep_cluster(self, stayers_movers=None, t=None, weighted=True, is_sorted=False, copy=False):
+        '''
+        Prepare data for clustering.
+
+        Arguments:
+            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
+            weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
+        Returns:
+            data (Pandas DataFrame): data prepared for clustering
+            weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
+            jids (NumPy Array): firm ids of firms in subset of data used to cluster
+        '''
+        return self.get_long(is_sorted=is_sorted, copy=copy)._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, copy=False)
 
     def _leave_one_observation_out(self, cc_list, component_size_variable='length', drop_multiples=False):
         '''
@@ -413,7 +354,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             frame_largest_cc (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
         '''
-        return self.get_long()._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
+        return self.get_long(is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
 
     def _leave_one_firm_out(self, bcc_list, component_size_variable='length', drop_multiples=False):
         '''
@@ -427,7 +368,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
         '''
-        return self.get_long()._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
+        return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
 
     def _construct_connected_linkages(self):
         '''
@@ -477,7 +418,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
 
     def drop_ids(self, id_col, drop_ids_list, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -501,7 +442,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
 
     def keep_rows(self, rows, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -524,7 +465,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().keep_rows(rows=rows, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
 
     def min_obs_firms(self, threshold=2):
         '''
@@ -540,18 +481,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
-        # We consider j1 for all rows, but j2 only for the last row for movers
+        # We consider j1 for all rows, but j2 only for unstack rows
         j_obs = self.loc[:, 'j1'].value_counts().to_dict()
-        # Details: if a worker's last observation is a move OR if a worker switches from a move to a stay between observations, we need to append the second observation from the move
-        i_col = self.loc[:, 'i'].to_numpy()
-        m_col = (self.loc[:, 'm'].to_numpy() > 0)
-        i_next = np.roll(i_col, -1)
-        m_next = np.roll(m_col, -1)
-        m_change = (i_col == i_next) & (m_col) & (~m_next)
-        # Source: https://stackoverflow.com/a/47115520/17333120
-        i_last = (i_col != i_next)
-        # Get last observation per worker
-        j2_obs = self.loc[(m_change) | (i_last & m_col), 'j2'].value_counts().to_dict()
+        j2_obs = self.loc[self._get_unstack_rows(), 'j2'].value_counts().to_dict()
         for j, n_obs in j2_obs.items():
             try:
                 # If firm j in j1, add the observations in j2
@@ -586,7 +518,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, copy=False).get_es()
 
     def min_workers_firms(self, threshold=2):
         '''
@@ -602,9 +534,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
-        # We consider j1 for all rows, but j2 only for the last row for movers
+        # We consider j1 for all rows, but j2 only for unstack rows
         j_i_ids = self.groupby('j1')['i'].unique().apply(list).to_dict()
-        j2_i_ids = self.loc[self.loc[:, 'm'].to_numpy() > 0, :].groupby('i')['j2'].last().reset_index().groupby('j2')['i'].unique().apply(list).to_dict()
+        j2_i_ids = self.loc[self._get_unstack_rows(), :].groupby('j2')['i'].unique().apply(list).to_dict()
         for j, i_ids in j2_i_ids.items():
             try:
                 # If firm j in j1, add the worker ids in j2
@@ -639,14 +571,16 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, copy=False).get_es()
 
-    def min_moves_firms(self, threshold=2):
+    def min_moves_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
         List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many moves
@@ -655,7 +589,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
-        return self.get_long().min_moves_firms(threshold=threshold)
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_firms(threshold=threshold)
 
     def min_moves_frame(self, threshold=2, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -677,56 +611,4 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long().min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=False, copy=copy).get_es()
-
-    # def min_moves_firms(self, threshold=2):
-    #     '''
-    #     List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm. Also note that if a worker moves to a firm then leaves it, that counts as two moves - even if the worker was at the firm for only one period.
-
-    #     Arguments:
-    #         threshold (int): minimum number of moves required to keep a firm
-
-    #     Returns:
-    #         valid_firms (NumPy Array): firms with sufficiently many moves
-    #     '''
-    #     if threshold == 0:
-    #         # If no threshold
-    #         return self.unique_ids('j')
-
-    #     # We consider j1 for all rows, but j2 only for the last row for movers
-    #     j_moves = self.groupby('j1')['m'].sum().to_dict()
-    #     j2_moves = self.loc[self.loc[:, 'm'].to_numpy() > 0, :].groupby('i')[['j2', 'm']].last().reset_index().groupby('j2')['m'].sum().to_dict() # self.groupby('j2')['m'].sum().to_dict()
-    #     for j, n_moves in j2_moves.items():
-    #         try:
-    #             # If firm j in j1, add the worker ids in j2
-    #             j_moves[j] += n_moves
-    #         except KeyError:
-    #             # If firm j not in j1, set worker ids to be j2
-    #             j_moves[j] = n_moves
-
-    #     valid_firms = []
-    #     for j, n_moves in j_moves.items():
-    #         if n_moves >= threshold:
-    #             valid_firms.append(j)
-
-    #     return np.array(valid_firms)
-
-    # def min_moves_frame(self, threshold=2, drop_multiples=False, copy=True):
-    #     '''
-    #     Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
-
-    #     Arguments:
-    #         threshold (int): minimum number of moves required to keep a firm
-    #         drop_multiples (bool): used only for BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteEventStudyBase): dataframe of firms with sufficiently many moves
-    #     '''
-    #     if threshold == 0:
-    #         # If no threshold
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     return self.get_long().min_moves_frame(threshold, drop_multiples, copy).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()

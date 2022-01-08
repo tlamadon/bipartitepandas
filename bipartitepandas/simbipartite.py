@@ -2,7 +2,6 @@
 Class for a simulated two-way fixed effect network
 '''
 import numpy as np
-from numpy import matlib
 import pandas as pd
 # from random import choices
 from scipy.stats import norm
@@ -221,7 +220,7 @@ class SimBipartite:
         # Compiling IDs and timestamps
         ids = np.reshape(np.outer(range(1, num_ind + 1), np.ones(num_time)), (num_time * num_ind, 1))
         ids = ids.astype(int)[:, 0]
-        ts = np.reshape(np.matlib.repmat(range(1, num_time + 1), num_ind, 1), (num_time * num_ind, 1))
+        ts = np.reshape(np.tile(range(1, num_time + 1), (num_ind, 1)), (num_time * num_ind, 1))
         ts = ts.astype(int)[:, 0]
 
         # Compiling worker types

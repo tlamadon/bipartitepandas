@@ -20,16 +20,17 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
     # Source: https://stackoverflow.com/a/61879723
     global compute_measures_cdfs
 
-    def compute_measures_cdfs(data, jids):
+    def compute_measures_cdfs(frame, jids):
         '''
         Arguments:
-            data (Pandas DataFrame): data to use
-            jids (list): sorted list of firm ids in data (since data could be a subset of self, this is not necessarily all firms in self)
+            frame (Pandas DataFrame): data to use
+            jids (list): sorted list of firm ids in frame (since frame could be a subset of self, this is not necessarily all firms in self)
         Returns:
             cdfs (NumPy Array): NumPy array of firm cdfs
         '''
-        # Initialize cdf array
-        n_firms = len(jids) # Can't use self.n_firms() since data could be a subset of self
+        ## Initialize cdf array
+        # Can't use self.n_firms() since data could be a subset of self
+        n_firms = len(jids)
         cdfs = np.zeros([n_firms, cdf_resolution])
 
         # Create quantiles of interest
@@ -38,64 +39,71 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
         # Group by income cdfs
         if measure == 'quantile_all':
             # Get quantiles from all data
-            quantile_groups = DescrStatsW(data['y'], weights=data['row_weights']).quantile(quantiles, return_pandas=False)
+            quantile_groups = DescrStatsW(frame.loc[:, 'y'].to_numpy(), weights=frame.loc[:, 'row_weights'].to_numpy()).quantile(quantiles, return_pandas=False)
 
-            # Generate firm-level cdfs
-            data.sort_values('j', inplace=True) # Required for aggregate_transform
+            ## Generate firm-level cdfs
+            # Required for aggregate_transform
+            # NOTE: don't do in-place, otherwise modifies external data
+            frame = frame.sort_values('j')
             for i, quant in enumerate(quantile_groups):
-                data['quant'] = (data['y'].to_numpy() <= quant).astype(int)
-                cdfs_col = aggregate_transform(data, col_groupby='j', col_grouped='quant', func='sum', weights='row_weights', merge=False) # aggregate(data['fid'], firm_quant, func='sum', fill_value=- 1)
+                frame.loc[:, 'quant'] = (frame.loc[:, 'y'].to_numpy() <= quant).astype(int, copy=False)
+                cdfs_col = aggregate_transform(frame, col_groupby='j', col_grouped='quant', func='sum', weights='row_weights', merge=False) # aggregate(frame['fid'], firm_quant, func='sum', fill_value=-1)
                 cdfs[:, i] = cdfs_col[cdfs_col >= 0]
-            data.drop('quant', axis=1, inplace=True)
+            frame.drop('quant', axis=1, inplace=True)
             del cdfs_col
 
             # Normalize by firm size (convert to cdf)
-            jsize = data.groupby('j')['row_weights'].sum().to_numpy()
+            jsize = frame.groupby('j')['row_weights'].sum().to_numpy()
             cdfs = (cdfs.T / jsize.T).T
 
         elif measure in ['quantile_firm_small', 'quantile_firm_large']:
-            # Sort data by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
-            data.sort_values('y', inplace=True)
+            # Sort frame by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
+            # NOTE: don't do in-place, otherwise modifies external data
+            frame = frame.sort_values('y')
 
             if measure == 'quantile_firm_small':
                 # Convert pandas dataframe into a dictionary to access data faster
                 # Source for idea: https://stackoverflow.com/questions/57208997/looking-for-the-fastest-way-to-slice-a-row-in-a-huge-pandas-dataframe
                 # Source for how to actually format data correctly: https://stackoverflow.com/questions/56064677/pandas-series-to-dict-with-repeated-indices-make-dict-with-list-values
-                # data_dict = data['y'].groupby(level=0).agg(list).to_dict()
-                data_dict = data.groupby('j')['y'].agg(list).to_dict()
-                weights_dict = data.groupby('j')['row_weights'].agg(list).to_dict()
-                # data.sort_values(['j', 'y'], inplace=True) # Required for aggregate_transform
-                # data_dict = pd.Series(aggregate_transform(data, col_groupby='j', col_grouped='y', func='array', merge=False), index=np.unique(data['j'])).to_dict()
+                # frame_dict = frame['y'].groupby(level=0).agg(list).to_dict()
+                frame_groupby_j = frame.groupby('j')
+                frame_dict = frame_groupby_j['y'].agg(list).to_dict()
+                weights_dict = frame_groupby_j['row_weights'].agg(list).to_dict()
+                del frame_groupby_j
+                # frame.sort_values(['j', 'y'], inplace=True) # Required for aggregate_transform
+                # frame_dict = pd.Series(aggregate_transform(frame, col_groupby='j', col_grouped='y', func='array', merge=False), index=np.unique(frame['j'])).to_dict()
                 # with warnings.catch_warnings():
                 #     warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
-                #     data_dict = pd.Series(aggregate(data['j'], data['y'], func='array', fill_value=[]), index=np.unique(data['j'])).to_dict()
+                #     frame_dict = pd.Series(aggregate(frame['j'], frame['y'], func='array', fill_value=[]), index=np.unique(frame['j'])).to_dict()
 
             # Generate the cdfs
             for i, jid in enumerate(jids):
                 # Get the firm-level compensation data (don't need to sort because already sorted)
                 if measure == 'quantile_firm_small':
-                    y = np.array(data_dict[jid])
+                    y = np.array(frame_dict[jid])
                     w = np.array(weights_dict[jid])
                 elif measure == 'quantile_firm_large':
-                    y = data.loc[data['j'].to_numpy() == jid, 'y'].to_numpy()
-                    w = data.loc[data['j'].to_numpy() == jid, 'row_weights'].to_numpy()
-                cum_w = w.cumsum() # Cumulative weight
-                weighted_n = w.sum() # Weighted number of observations
+                    y = frame.loc[frame.loc[:, 'j'].to_numpy() == jid, 'y'].to_numpy()
+                    w = frame.loc[frame.loc[:, 'j'].to_numpy() == jid, 'row_weights'].to_numpy()
+                # Cumulative weight
+                cum_w = w.cumsum()
+                # Weighted number of observations
+                weighted_n = w.sum()
                 # Generate the firm-level cdf
                 # Note: update numpy array element by element
                 # Source: https://stackoverflow.com/questions/30012362/faster-way-to-convert-list-of-objects-to-numpy-array/30012403
                 for j, quantile in enumerate(quantiles):
                     # index = max(len(y) * (j + 1) // cdf_resolution - 1, 0) # Don't want negative index
-                    index = 0 # Income index at particular quantile
-                    for cum_w_val in cum_w[1:]: # Skip first weight because it is always true
+                    # Income index at particular quantile
+                    index = 0
+                    for cum_w_val in cum_w[1:]:
+                        # Skip first weight because it is always true
                         if cum_w_val / weighted_n <= quantile:
                             index += 1
                         else:
                             break
                     # Update cdfs with the firm-level cdf
                     cdfs[i, j] = y[index]
-
-        data.sort_index(inplace=True) # Reset sort
 
         return cdfs
     return compute_measures_cdfs
@@ -114,33 +122,36 @@ def moments(measures='mean'):
     # Source: https://stackoverflow.com/a/61879723
     global compute_measures_moments
 
-    def compute_measures_moments(data, jids):
+    def compute_measures_moments(frame, jids):
         '''
         Arguments:
-            data (Pandas DataFrame): data to use
-            jids (list): sorted list of firm ids in data (since data could be a subset of full dataset, this is not necessarily all firms in self)
+            frame (Pandas DataFrame): data to use
+            jids (list): sorted list of firm ids in frame (since frame could be a subset of full dataset, this is not necessarily all firms in self)
 
         Returns:
             moments (NumPy Array): NumPy array of firm moments
         '''
-        n_firms = len(jids) # Can't use data.n_firms() since data could be a subset of self
+        # Can't use data.n_firms() since data could be a subset of self
+        n_firms = len(jids)
         n_measures = len(to_list(measures))
         moments = np.zeros([n_firms, n_measures])
 
-        data.sort_values('j', inplace=True) # Required for aggregate_transform
+        # Required for aggregate_transform
+        # NOTE: don't do in-place, otherwise modifies external data
+        frame = frame.sort_values('j')
 
         for j, measure in enumerate(to_list(measures)):
             if measure == 'mean':
                 # Group by mean income
-                data['one'] = 1
-                moments[:, j] = aggregate_transform(data, 'j', 'y', 'sum', weights='row_weights', merge=False) / aggregate_transform(data, 'j', 'one', 'sum', weights='row_weights', merge=False)
+                frame['one'] = 1
+                moments[:, j] = aggregate_transform(frame, 'j', 'y', 'sum', weights='row_weights', merge=False) / aggregate_transform(frame, 'j', 'one', 'sum', weights='row_weights', merge=False)
             elif measure == 'var':
                 # Group by variance of income
-                moments[:, j] = aggregate_transform(data, 'j', 'y', 'var', weights='row_weights', merge=False)
+                moments[:, j] = aggregate_transform(frame, 'j', 'y', 'var', weights='row_weights', merge=False)
             elif measure == 'max':
-                moments[:, j] = data.groupby('j')['y'].max().to_numpy()
+                moments[:, j] = frame.groupby('j')['y'].max().to_numpy()
             elif measure == 'min':
-                moments[:, j] = data.groupby('j')['y'].min().to_numpy()
+                moments[:, j] = frame.groupby('j')['y'].min().to_numpy()
 
         return moments
     return compute_measures_moments

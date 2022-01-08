@@ -89,54 +89,62 @@ class BipartiteLongBase(bpd.BipartiteBase):
         '''
         # Split workers by movers and stayers
         stayers = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() == 0, :])
-        movers = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :])
+        movers = pd.DataFrame(self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0, :])
         self.logger.info('workers split by movers and stayers')
 
         # Add lagged values
         all_cols = self._included_cols()
         if not is_sorted:
+            # Sort data by i (and t, if included)
+            sort_order = ['i']
             if self._col_included('t'):
-                # Sort data by i and t
-                movers.sort_values(['i', bpd.to_list(self.reference_dict['t'])[0]], inplace=True)
-            else:
-                # Sort data by i
-                movers.sort_values('i', inplace=True)
+                # If t column
+                sort_order.append(bpd.to_list(self.reference_dict['t'])[0])
+            movers.sort_values(sort_order, inplace=True)
+
         # Columns to keep
         keep_cols = ['i']
         for col in all_cols:
             for subcol in bpd.to_list(self.reference_dict[col]):
-                subcol_number = subcol.strip(col) # E.g. j1 will give 1
-                if subcol != 'm': # Don't want lagged m
-                    # Movers
-                    plus_1 = col + '1' + subcol_number # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
-                    plus_2 = col + '2' + subcol_number
-                    movers.loc[:, plus_1] = movers.loc[:, subcol].shift(periods=1) # Lagged value
-                    movers.rename({subcol: plus_2}, axis=1, inplace=True)
-                    # Stayers (no lags)
+                # Get column number, e.g. j1 will give 1
+                subcol_number = subcol.strip(col)
+                ## Movers
+                # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
+                plus_1 = col + '1' + subcol_number
+                plus_2 = col + '2' + subcol_number
+                # Lagged value
+                movers.loc[:, plus_1] = np.roll(movers.loc[:, subcol].to_numpy(), 1)
+                movers.rename({subcol: plus_2}, axis=1, inplace=True)
+
+                if subcol not in ['i', 'm']:
+                    ## Stayers (no lags)
                     stayers.loc[:, plus_1] = stayers.loc[:, subcol]
                     stayers.rename({subcol: plus_2}, axis=1, inplace=True)
-                    if subcol != 'i':
-                        # Columns to keep
-                        keep_cols += [plus_1, plus_2]
-                else:
-                    keep_cols.append('m')
 
-        # Ensure lagged values are for the same worker
-        # NOTE: cannot use .to_numpy()
-        movers = movers.loc[movers.loc[:, 'i1'] == movers.loc[:, 'i2'], :]
+                    # Columns to keep
+                    keep_cols += [plus_1, plus_2]
+                elif subcol == 'm':
+                    # Columns to keep
+                    keep_cols += ['m']
+
+        # Ensure lagged values are for the same worker, and that neither observation is a stay (this ensures that if there is a mover who stays at a firm for multiple periods, e.g. A -> B -> B -> B -> C, then the event study will be A -> B, B -> C, with the middle B listed as a stayer)
+        movers = movers.loc[(movers.loc[:, 'i1'].to_numpy() == movers.loc[:, 'i2'].to_numpy()) & (movers.loc[:, 'j1'].to_numpy() != movers.loc[:, 'j2'].to_numpy()), :]
+
+        # Set 'm' = 1 for movers
+        movers.drop(['m1', 'm2'], axis=1, inplace=True)
+        movers.loc[:, 'm'] = 1
 
         # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
         for col in all_cols:
             if (self.col_dtype_dict[col] == 'int') and (col != 'm'):
                 for subcol in bpd.to_list(self.reference_dict[col]):
-                    subcol_number = subcol.strip(col) # E.g. j1 will give 1
+                    # Get column number, e.g. j1 will give 1
+                    subcol_number = subcol.strip(col)
                     movers.loc[:, col + '1' + subcol_number] = movers.loc[:, col + '1' + subcol_number].astype(int, copy=False)
 
         # Correct i
         movers.drop('i2', axis=1, inplace=True)
         movers.rename({'i1': 'i'}, axis=1, inplace=True)
-        stayers.drop('i2', axis=1, inplace=True)
-        stayers.rename({'i1': 'i'}, axis=1, inplace=True)
 
         # Keep only relevant columns
         stayers = stayers.reindex(keep_cols, axis=1, copy=False)
@@ -158,13 +166,66 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Sort data by i and t
         es_frame = es_frame.sort_rows(is_sorted=False, copy=False)
 
-        # Recompute 'm'
-        es_frame = es_frame.gen_m(force=True, copy=False)
-
         if move_to_worker:
             es_frame.loc[:, 'i'] = es_frame.index
 
         return es_frame
+
+    def _prep_cluster(self, stayers_movers=None, t=None, weighted=True, is_sorted=False, copy=False):
+        '''
+        Prepare data for clustering.
+
+        Arguments:
+            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            t (int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
+            weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
+            is_sorted (bool): used for event study format, does nothing for long
+            copy (bool): if False, avoid copy
+        Returns:
+            data (Pandas DataFrame): data prepared for clustering
+            weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
+            jids (NumPy Array): firm ids of firms in subset of data used to cluster
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if stayers_movers is not None:
+            if stayers_movers == 'stayers':
+                frame = frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :]
+            elif stayers_movers == 'movers':
+                frame = frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :]
+            else:
+                raise NotImplementedError("Invalid 'stayers_movers' option, {}. Valid options are 'stayers', 'movers', or None.".format(stayers_movers))
+
+        # If period-level, then only use data for that particular period
+        if t is not None:
+            if isinstance(self, bpd.BipartiteLong):
+                frame = frame.loc[frame.loc[:, 't'].to_numpy() == t, :]
+            else:
+                raise NotImplementedError("Cannot use data from a particular period with collapsed data. Data can be converted to long format using the '.uncollapse()' method.")
+
+        # Create weights
+        ##### Disable Pandas warning #####
+        pd.options.mode.chained_assignment = None
+        if weighted:
+            if self._col_included('w'):
+                frame.loc[:, 'row_weights'] = frame.loc[:, 'w']
+                weights = frame.groupby('j')['w'].sum().to_numpy()
+            else:
+                frame.loc[:, 'row_weights'] = 1
+                weights = frame.groupby('j').size().to_numpy()
+        else:
+            frame.loc[:, 'row_weights'] = 1
+            weights = None
+        ##### Re-enable Pandas warning #####
+        pd.options.mode.chained_assignment = 'warn'
+
+        # Get unique firm ids (must sort)
+        jids = np.sort(frame.loc[:, 'j'].unique())
+
+        return frame, weights, jids
 
     def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_multiples=False):
         '''
