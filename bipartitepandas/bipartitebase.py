@@ -66,9 +66,9 @@ clean_params_default = ParamsDict({
         '''
             (default=True) If True, force all cleaning methods to run; much faster if set to False.
         '''),
-    'copy': (False, 'type', bool,
+    'copy': (True, 'type', bool,
         '''
-            (default=False) If False, avoid copying data when possible.
+            (default=True) If False, avoid copying data when possible.
         ''')
 })
 
@@ -102,7 +102,7 @@ class BipartiteBase(DataFrame):
         include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connected', 'correct_cols', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
         # Initialize DataFrame
@@ -172,25 +172,94 @@ class BipartiteBase(DataFrame):
 
     def summary(self):
         '''
-        Print summary statistics.
+        Print summary statistics. This uses class attributes. To run a diagnostic to verify these values, run `.diagnostic()`.
         '''
-        mean_wage = np.mean(self.loc[:, self.reference_dict['y']].to_numpy())
-        max_wage = np.max(self.loc[:, self.reference_dict['y']].to_numpy())
-        min_wage = np.min(self.loc[:, self.reference_dict['y']].to_numpy())
-        ret_str = 'format: ' + type(self).__name__ + '\n'
-        ret_str += 'number of workers: ' + str(self.n_workers()) + '\n'
-        ret_str += 'number of firms: ' + str(self.n_firms()) + '\n'
-        ret_str += 'number of observations: ' + str(len(self)) + '\n'
-        ret_str += 'mean wage: ' + str(mean_wage) + '\n'
-        ret_str += 'max wage: ' + str(max_wage) + '\n'
-        ret_str += 'min wage: ' + str(min_wage) + '\n'
-        ret_str += 'connected (None if not ignoring connected set): ' + str(self.connected) + '\n'
+        ret_str = ''
+        y = self.loc[:, self.reference_dict['y']].to_numpy()
+        mean_wage = np.mean(y)
+        median_wage = np.median(y)
+        max_wage = np.max(y)
+        min_wage = np.min(y)
+        var_wage = np.var(y)
+        ret_str += 'format: {}\n'.format(type(self).__name__)
+        ret_str += 'number of workers: {}\n'.format(self.n_workers())
+        ret_str += 'number of firms: {}\n'.format(self.n_firms())
+        ret_str += 'number of observations: {}\n'.format(len(self))
+        ret_str += 'mean wage: {}\n'.format(mean_wage)
+        ret_str += 'median wage: {}\n'.format(median_wage)
+        ret_str += 'min wage: {}\n'.format(min_wage)
+        ret_str += 'max wage: {}\n'.format(max_wage)
+        ret_str += 'var(wage): {}\n'.format(var_wage)
+        ret_str += 'no NaN values: {}\n'.format(self.no_na)
+        ret_str += 'no duplicates: {}\n'.format(self.no_duplicates)
+        ret_str += 'i-t (worker-year) observations unique (None if t column(s) not included): {}\n'.format(self.i_t_unique)
         for contig_col, is_contig in self.columns_contig.items():
-            ret_str += 'contiguous {} ids (None if not included): '.format(contig_col) + str(is_contig) + '\n'
-        ret_str += 'correct column names and types: ' + str(self.correct_cols) + '\n'
-        ret_str += 'no nans: ' + str(self.no_na) + '\n'
-        ret_str += 'no duplicates: ' + str(self.no_duplicates) + '\n'
-        ret_str += 'i-t (worker-year) observations unique (None if t column(s) not included): ' + str(self.i_t_unique) + '\n'
+            ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, is_contig)
+        ret_str += 'connectedness (None if ignoring connectedness): {}'.format(self.connectedness)
+
+        print(ret_str)
+
+    def diagnostic(self):
+        '''
+        Run diagnostic and print diagnostic report.
+        '''
+        ret_str = '----- General Diagnostic -----\n'
+        ##### Sorted by i (and t, if included) #####
+        sort_order = ['i']
+        if self._col_included('t'):
+            # If t column
+            sort_order.append(to_list(self.reference_dict['t'])[0])
+        is_sorted = (self.loc[:, sort_order] == self.loc[:, sort_order].sort_values(sort_order)).to_numpy().all()
+
+        ret_str += 'sorted by i (and t, if included): {}\n'.format(is_sorted)
+
+        ##### No NaN values #####
+        # Source: https://stackoverflow.com/a/29530601/17333120
+        no_na = (not self.isnull().to_numpy().any())
+
+        ret_str += 'no NaN values: {}\n'.format(no_na)
+
+        ##### No duplicates #####
+        # https://stackoverflow.com/a/50243108/17333120
+        no_duplicates = (not self.duplicated().any())
+
+        ret_str += 'no duplicates: {}\n'.format(no_duplicates)
+
+        ##### i-t unique #####
+        no_i_t_duplicates = (not self.duplicated(subset=sort_order).any())
+
+        ret_str += 'i-t (worker-year) observations unique (if t column(s) not included, then i observations unique): {}\n'.format(no_i_t_duplicates)
+
+        ##### Contiguous ids #####
+        for contig_col in self.columns_contig.keys():
+            if self._col_included(contig_col):
+                contig_ids = self.unique_ids(contig_col)
+                is_contig = (len(contig_ids) == (max(contig_ids) + 1))
+                ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, is_contig)
+            else:
+                ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, None)
+
+        ##### Connectedness #####
+        is_connected_dict = {
+            None: lambda : None,
+            'connected': lambda : self._construct_graph(self.connectedness).is_connected(),
+            'leave_one_observation_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness))),
+            'leave_one_firm_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness)))
+        }
+        is_connected = is_connected_dict[self.connectedness]()
+
+        if is_connected or (is_connected is None):
+            ret_str += 'frame is (None if ignoring connectedness): {}\n'.format(self.connectedness)
+        else:
+            ret_str += 'frame failed connectedness: {}\n'.format(self.connectedness)
+
+        if self._col_included('m'):
+            ##### m column #####
+            m_correct = (self.loc[:, 'm'] == self.gen_m(force=True).loc[:, 'm']).to_numpy().all()
+
+            ret_str += 'm column correct (None if not included): {}\n'.format(m_correct)
+        else:
+            ret_str += 'm column correct (None if not included): {}'.format(None)
 
         print(ret_str)
 
@@ -308,20 +377,18 @@ class BipartiteBase(DataFrame):
         # # Logger
         # self.logger = frame.logger
         # Booleans
-        self.connected = frame.connected # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
-        self.correct_cols = frame.correct_cols # If True, column names are correct
+        self.connectedness = frame.connectedness # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
         self.no_na = frame.no_na # If True, no NaN observations in the data
         self.no_duplicates = frame.no_duplicates # If True, no duplicate rows in the data
         self.i_t_unique = frame.i_t_unique # If True, each worker has at most one observation per period
 
-    def _reset_attributes(self, columns_contig=True, connected=True, correct_cols=True, no_na=True, no_duplicates=True, i_t_unique=True):
+    def _reset_attributes(self, columns_contig=True, connected=True, no_na=True, no_duplicates=True, i_t_unique=True):
         '''
         Reset class attributes conditions to be False/None.
 
         Arguments:
             columns_contig (bool): if True, reset self.columns_contig
-            connected (bool): if True, reset self.connected
-            correct_cols (bool): if True, reset self.correct_cols
+            connected (bool): if True, reset self.connectedness
             no_na (bool): if True, reset self.no_na
             no_duplicates (bool): if True, reset self.no_duplicates
             i_t_unique (bool): if True, reset self.i_t_unique
@@ -336,9 +403,7 @@ class BipartiteBase(DataFrame):
                 else:
                     self.columns_contig[contig_col] = None
         if connected:
-            self.connected = None # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
-        if correct_cols:
-            self.correct_cols = False # If True, column names are correct
+            self.connectedness = None # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
         if no_na:
             self.no_na = False # If True, no NaN observations in the data
         if no_duplicates:
@@ -462,7 +527,7 @@ class BipartiteBase(DataFrame):
             else:
                 frame = DataFrame.drop(frame, indices, axis=0, inplace=False)
             frame._reset_attributes()
-            # frame.clean_data({'connectedness': frame.connected})
+            # frame.clean_data({'connectedness': frame.connectedness})
 
         return frame
 
@@ -642,7 +707,9 @@ class BipartiteBase(DataFrame):
         # Next, drop NaN observations
         if (not frame.no_na) or force:
             frame.logger.info('dropping NaN observations')
-            frame.dropna(inplace=True)
+            if frame.isna().to_numpy().any():
+                # Checking first is considerably faster if there are no NaN observations
+                frame.dropna(inplace=True)
 
             # Update no_na
             frame.no_na = True
@@ -674,7 +741,7 @@ class BipartiteBase(DataFrame):
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
-        if frame.connected in [False, None] or force:
+        if (frame.connectedness in [False, None]) or force:
             # Generate largest connected set
             frame.logger.info('generating largest connected set')
             frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_multiples=clean_params['drop_multiples'], copy=False)
@@ -732,48 +799,6 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
-        '''
-        Keep only the highest paying job for i-t (worker-year) duplicates.
-
-        Arguments:
-            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            copy (bool): if False, avoid copy
-
-        Returns:
-            frame (BipartiteBase): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
-        '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
-
-        # Check whether any observations are dropped
-        prev_len = len(frame)
-
-        if frame._col_included('t'):
-            frame = frame.sort_rows(is_sorted=is_sorted, copy=False)
-            # Temporarily disable warnings
-            warnings.filterwarnings('ignore')
-            if how not in ['max', max]:
-                # Group by worker id, time, and firm id, and take `how` of compensation
-                frame.loc[:, 'y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
-            # Take max over duplicates
-            # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
-            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy(), :].groupby(['i', 't'], as_index=False).first()
-            # Restore warnings
-            warnings.filterwarnings('default')
-
-        # Data now has unique i-t observations
-        frame.i_t_unique = True
-
-        # If observations dropped, recompute 'm'
-        if prev_len != len(frame):
-            frame = frame.gen_m(force=True, copy=False)
-
-        return frame
-
     def _conset(self, connectedness='connected', component_size_variable='firms', drop_multiples=False, copy=True):
         '''
         Update data to include only the largest connected component of movers.
@@ -794,7 +819,7 @@ class BipartiteBase(DataFrame):
 
         if connectedness is None:
             # Skipping connected set
-            frame.connected = None
+            frame.connectedness = None
             # frame._check_contiguous_ids() # This is necessary
             return frame
 
@@ -835,7 +860,7 @@ class BipartiteBase(DataFrame):
             frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples)
 
         # Data is now connected
-        frame.connected = connectedness
+        frame.connectedness = connectedness
 
         # If connected data != full data, set contiguous to False
         if prev_workers != frame.n_workers():

@@ -4,6 +4,7 @@ Class for a bipartite network in long form
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
+import warnings
 
 class BipartiteLong(bpd.BipartiteLongBase):
     '''
@@ -113,6 +114,48 @@ class BipartiteLong(bpd.BipartiteLongBase):
         collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
 
         return collapsed_frame
+
+    def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
+        '''
+        Keep only the highest paying job for i-t (worker-year) duplicates.
+
+        Arguments:
+            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteBase): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        # Check whether any observations are dropped
+        prev_len = len(frame)
+
+        if frame._col_included('t'):
+            frame = frame.sort_rows(is_sorted=is_sorted, copy=False)
+            # Temporarily disable warnings
+            warnings.filterwarnings('ignore')
+            if how not in ['max', max]:
+                # Group by worker id, time, and firm id, and take `how` of compensation
+                frame.loc[:, 'y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
+            # Take max over duplicates
+            # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
+            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy(), :].groupby(['i', 't'], as_index=False).first()
+            # Restore warnings
+            warnings.filterwarnings('default')
+
+        # Data now has unique i-t observations
+        frame.i_t_unique = True
+
+        # If observations dropped, recompute 'm'
+        if prev_len != len(frame):
+            frame = frame.gen_m(force=True, copy=False)
+
+        return frame
 
     def fill_periods(self, fill_j=-1, fill_y=pd.NA, fill_m=pd.NA, is_sorted=False, copy=True):
         '''

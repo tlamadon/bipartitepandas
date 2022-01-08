@@ -201,7 +201,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         # If period-level, then only use data for that particular period
         if t is not None:
-            if isinstance(self, bpd.BipartiteLong):
+            if isinstance(frame, bpd.BipartiteLong):
                 frame = frame.loc[frame.loc[:, 't'].to_numpy() == t, :]
             else:
                 raise NotImplementedError("Cannot use data from a particular period with collapsed data. Data can be converted to long format using the '.uncollapse()' method.")
@@ -210,7 +210,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         ##### Disable Pandas warning #####
         pd.options.mode.chained_assignment = None
         if weighted:
-            if self._col_included('w'):
+            if frame._col_included('w'):
                 frame.loc[:, 'row_weights'] = frame.loc[:, 'w']
                 weights = frame.groupby('j')['w'].sum().to_numpy()
             else:

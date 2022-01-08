@@ -95,76 +95,30 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return m_col & (t_change | i_last)
 
-    # def clean_data(self, user_clean={}):
-    #     '''
-    #     Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
+    def diagnostic(self):
+        '''
+        Run diagnostic and print diagnostic report.
+        '''
+        super().diagnostic()
 
-    #     Arguments:
-    #         user_clean (dict): dictionary of parameters for cleaning
+        if self._col_included('m'):
+            ret_str = '----- Event Study Diagnostic -----\n'
+            stayers = self.loc[self.loc[:, 'm'].to_numpy() == 0, :]
+            movers = self.loc[self.loc[:, 'm'].to_numpy() > 0, :]
 
-    #             Dictionary parameters:
+            ##### Firms #####
+            firms_stayers = (stayers.loc[:, 'j1'].to_numpy() != stayers.loc[:, 'j2'].to_numpy()).sum()
+            firms_movers = (movers.loc[:, 'j1'].to_numpy() == movers.loc[:, 'j2'].to_numpy()).sum()
 
-    #                 connectedness (str or None, default='connected'): if 'connected', keep observations in the largest connected set of firms; if 'connected_strong' keep observations in the largest strongly connected set of firms; if None, keep all observations
+            ret_str += 'm==0 with different firms (should be 0): {}\n'.format(firms_stayers)
+            ret_str += 'm>0 with same firm (should be 0): {}\n'.format(firms_movers)
 
-    #                 i_t_how (str, default='max'): if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            ##### Income #####
+            income_stayers = (stayers.loc[:, 'y1'].to_numpy() != stayers.loc[:, 'y2'].to_numpy()).sum()
 
-    #                 drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for biconnected components)
+            ret_str += 'm==0 with different income (should be 0): {}'.format(income_stayers)
 
-    #                 data_validity (bool, default=True): if True, run data validity checks; much faster if set to False
-
-    #                 copy (bool, default=False): if False, avoid copy
-
-    #     Returns:
-    #         frame (BipartiteEventStudyBase): BipartiteEventStudyBase with cleaned data
-    #     '''
-    #     frame = bpd.BipartiteBase.clean_data(self, user_clean)
-
-    #     if ('data_validity' not in user_clean.keys()) or user_clean['data_validity']:
-    #         frame.logger.info('beginning BipartiteEventStudyBase data cleaning')
-    #         frame.logger.info('checking quality of data')
-    #         frame = frame._data_validity()
-
-    #     frame.logger.info('BipartiteEventStudyBase data cleaning complete')
-
-    #     return frame
-
-    # def _data_validity(self):
-    #     '''
-    #     Checks that data is formatted correctly and updates relevant attributes.
-
-    #     Returns:
-    #         frame (BipartiteEventStudyBase): BipartiteEventStudyBase with corrected columns and attributes
-    #     '''
-    #     frame = self # .copy()
-
-    #     success_stayers = True
-    #     success_movers = True
-
-    #     stayers = frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :]
-    #     movers = frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :]
-
-    #     frame.logger.info('--- checking firms ---')
-    #     firms_stayers = (stayers.loc[:, 'j1'].to_numpy() != stayers.loc[:, 'j2'].to_numpy()).sum()
-    #     firms_movers = (movers.loc[:, 'j1'].to_numpy() == movers.loc[:, 'j2'].to_numpy()).sum()
-
-    #     frame.logger.info('stayers with different firms (should be 0):' + str(firms_stayers))
-    #     frame.logger.info('movers with same firm (should be 0):' + str(firms_movers))
-    #     if firms_stayers > 0:
-    #         success_stayers = False
-    #     if firms_movers > 0:
-    #         success_movers = False
-
-    #     frame.logger.info('--- checking income ---')
-    #     income_stayers = (stayers.loc[:, 'y1'].to_numpy() != stayers.loc[:, 'y2'].to_numpy()).sum()
-
-    #     frame.logger.info('stayers with different income (should be 0):' + str(income_stayers))
-    #     if income_stayers > 0:
-    #         success_stayers = False
-
-    #     frame.logger.info('Overall success for stayers:' + str(success_stayers))
-    #     frame.logger.info('Overall success for movers:' + str(success_movers))
-
-    #     return frame
+            print(ret_str)
 
     def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
         '''
@@ -185,7 +139,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         if frame._col_included('t'):
             # Convert to long
-            # Note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - converting to long will arbitrarily decide which rows are already correct
+            # Note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - setting is_clean=True would arbitrarily decide which rows are already correct
             frame = frame.get_long(is_clean=False, is_sorted=is_sorted, copy=False)
             frame.drop_duplicates(inplace=True)
             frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).get_es()

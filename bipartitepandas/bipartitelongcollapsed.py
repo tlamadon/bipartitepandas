@@ -201,7 +201,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # Convert to long
             frame = frame.uncollapse(is_sorted=is_sorted)
 
-            frame = bpd.BipartiteBase._drop_i_t_duplicates(frame, how, is_sorted=True, copy=False)
+            frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False)
 
             # Return to collapsed long
             frame = frame.get_collapsed_long(is_sorted=True, copy=False)

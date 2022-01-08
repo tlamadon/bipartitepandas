@@ -2968,7 +2968,7 @@ def test_connectedness_8():
     '''
     with open('tests/test_data/wid_drops.pkl', 'rb') as f:
         wid_drops = pickle.load(f)
-    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, correct_cols=False, no_na=False, no_duplicates=False, i_t_unique=False).clean_data(bpd.clean_params({'connectedness': 'leave_one_observation_out', 'force': True}))
+    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, no_na=False, no_duplicates=False, i_t_unique=False).clean_data(bpd.clean_params({'connectedness': 'leave_one_observation_out', 'force': True}))
     bad_df2 = bad_df.min_moves_frame(2)
 
     assert len(bad_df) == len(bad_df2) > 0
