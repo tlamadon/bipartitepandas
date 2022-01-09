@@ -2988,7 +2988,7 @@ def test_cluster_1():
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.cdfs(measure=measure)
             grouping = bpd.grouping.kmeans(n_clusters=nk)
-            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
+            bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
 
             clusters_true = sim_data[~bdf['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
             clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
@@ -3052,7 +3052,7 @@ def test_cluster_2():
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.cdfs(measure=measure)
             grouping = bpd.grouping.kmeans(n_clusters=nk)
-            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
+            bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
 
             to_long = bdf.get_long()
             clusters_true = sim_data[~to_long['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -3123,7 +3123,7 @@ def test_cluster_3():
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.cdfs(measure=measure)
             grouping = bpd.grouping.kmeans(n_clusters=nk)
-            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
+            bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
             remaining_jids = bdf.dropna()['j'].unique()
 
             clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -3194,7 +3194,7 @@ def test_cluster_4():
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.cdfs(measure=measure)
             grouping = bpd.grouping.kmeans(n_clusters=nk)
-            bdf = bdf.cluster(measures=measures, grouping=grouping, stayers_movers=stayers_movers)
+            bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
 
             to_collapsed_long = bdf.get_long()
             remaining_jids = to_collapsed_long.dropna()['j'].unique()
@@ -3273,7 +3273,7 @@ def test_cluster_5():
 
     measures = bpd.measures.moments(measures='mean')
     grouping = bpd.grouping.quantiles(n_quantiles=3)
-    bdf = bdf.cluster(measures=measures, grouping=grouping)
+    bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping}))
 
     # Clusters:
     # j 0 1 2 3

@@ -8,16 +8,37 @@ from collections.abc import MutableMapping
 import numpy as np
 import pandas as pd
 from statsmodels.stats.weightstats import DescrStatsW
+import types
 import warnings
 
 col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'w', 'w1', 'w2', 'g', 'g1', 'g2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
+
+# Source: https://stackoverflow.com/a/54009756/17333120
+fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
+
+def is_subtype(obj, types):
+    '''
+    Check if obj is a subtype of types.
+
+    Arguments:
+        obj (object): object to compare
+        types (type or list of types): types to check
+
+    Returns:
+        (bool): if subtype, returns True
+    '''
+    obj_type = type(obj)
+    for type_i in to_list(types):
+        if np.issubdtype(obj_type, type_i):
+            return True
+    return False
 
 class ParamsDict(MutableMapping):
     '''
     Dictionary with fixed keys, and where values must follow given rules. Source: https://stackoverflow.com/a/14816620/17333120.
 
     Arguments:
-        default_dict (dict): default dictionary. Each key should provide a tuple of (default_value, options_type, options, description), where `default_value` gives the default value associated with the key; if `options_type` is 'type', then the key must be associated with a particular type, if it is 'type_none' then the key can either be None or must be associated with a particular type, if it is 'set' it must be a member of a given set of values, and if it is 'any' it can be anything; `options` gives the valid values that can associated with the key (this can be a type or a set of particular values); and `description` gives a description of the key-value pair
+        default_dict (dict): default dictionary. Each key should provide a tuple of (default_value, options_type, options, description), where `default_value` gives the default value associated with the key; if `options_type` is 'type', then the key must be associated with a particular type, if it is `list_of_type` then the value must be a particular type or a list of values of that type, if it is 'type_none' then the value can either be None or must be a particular type, if it is 'set' it must be a member of a given set of values, and if it is 'any' it can be anything; `options` gives the valid values that can associated with the key (this can be a type or a set of particular values); and `description` gives a description of the key-value pair
     '''
     def __init__(self, default_dict):
         self.__data = {k: v[0] for k, v in default_dict.items()}
@@ -38,15 +59,23 @@ class ParamsDict(MutableMapping):
 
         options_type, options, _ = self.__options[k]
         if options_type == 'type':
-            if np.issubdtype(type(v), options):
+            if is_subtype(v, options):
                 self.__data[k] = v
             else:
                 if isinstance(v, str):
                     raise KeyError("Value associated with key '{}' must be of type {}, but input is '{}' which is of type {}.".format(k, options, v, type(v)))
                 else:
                     raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, v, type(v)))
+        elif options_type == 'list_of_type':
+            for sub_v in to_list(v):
+                if not is_subtype(sub_v, options):
+                    if isinstance(sub_v, str):
+                        raise KeyError("Value associated with key '{}' must be of type {}, but input is '{}' which is of type {}.".format(k, options, sub_v, type(sub_v)))
+                    else:
+                        raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, sub_v, type(sub_v)))
+            self.__data[k] = v
         elif options_type == 'type_none':
-            if (v is None) or np.issubdtype(type(v), options):
+            if (v is None) or is_subtype(v, options):
                 self.__data[k] = v
             else:
                 if isinstance(v, str):

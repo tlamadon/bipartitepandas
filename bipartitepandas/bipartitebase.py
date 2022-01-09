@@ -87,6 +87,60 @@ def clean_params(update_dict={}):
         new_dict[k] = v
     return new_dict
 
+cluster_params_default = ParamsDict({
+    'measures': (bpd.measures.cdfs(), 'list_of_type', bpd.fn_type,
+        '''
+            (default=bpd.measures.cdfs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
+        '''),
+    'grouping': (bpd.grouping.kmeans(), 'type', bpd.fn_type,
+        '''
+            (default=bpd.grouping.kmeans()) How to group firms based on measures. Options can be seen in bipartitepandas.grouping.
+        '''),
+    'stayers_movers': (None, 'type_none', str,
+        '''
+            (default=None) If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers.
+        '''),
+    't': (None, 'type_none', int,
+        '''
+            (default=None) If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data).
+        '''),
+    'weighted': (True, 'type', bool,
+        '''
+            (default=True) If True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation is given weight 1).
+        '''),
+    'dropna': (False, 'type', bool,
+        '''
+            (default=False) If True, drop observations where firms aren't clustered; if False, keep all observations.
+        '''),
+    'clean_params': (None, 'type_none', bpd.ParamsDict,
+        '''
+            (default=None) Dictionary of parameters for cleaning. This is used when observations get dropped because they were not clustered. Default is None, which sets connectedness to be the connectedness measure previously used. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
+        '''),
+    'is_sorted': (False, 'type', bool,
+        '''
+            (default=False) For event study format. If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+        '''),
+    'copy': (True, 'type', bool,
+        '''
+            (default=True) If False, avoid copy.
+        ''')
+})
+
+def cluster_params(update_dict={}):
+    '''
+    Dictionary of default cluster_params.
+
+    Arguments:
+        update_dict (dict): user parameter values
+
+    Returns:
+        (ParamsDict) dictionary of cluster_params
+    '''
+    new_dict = cluster_params_default.copy()
+    for k, v in update_dict.items():
+        new_dict[k] = v
+    return new_dict
+
 class BipartiteBase(DataFrame):
     '''
     Base class for BipartitePandas, where BipartitePandas gives a bipartite network of firms and workers. Contains generalized methods. Inherits from DataFrame.
@@ -1038,34 +1092,26 @@ class BipartiteBase(DataFrame):
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
-    def cluster(self, measures=bpd.measures.cdfs(), grouping=bpd.grouping.kmeans(), stayers_movers=None, t=None, weighted=True, dropna=False, clean_params=None, is_sorted=False, copy=False):
+    def cluster(self, cluster_params=cluster_params()):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
 
         Arguments:
-            measures (function or list of functions): how to compute measures for clustering. Options can be seen in bipartitepandas.measures.
-            grouping (function): how to group firms based on measures. Options can be seen in bipartitepandas.grouping.
-            stayers_movers (str or None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
-            t (int or None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data)
-            weighted (bool): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-            dropna (bool): if True, drop observations where firms aren't clustered; if False, keep all observations
-            clean_params (None or ParamsDict): dictionary of parameters for cleaning. This is used when observations get dropped because they were not clustered. Default is None, which sets connectedness to be the connectedness measure previously used. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
-            is_sorted (bool): for event study format. If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            copy (bool): if False, avoid copy
+            cluster_params (ParamsDict): dictionary of parameters for clustering. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters.
 
         Returns:
             frame (BipartiteBase): BipartiteBase with clusters
         '''
-        if copy:
+        if cluster_params['copy']:
             frame = self.copy()
         else:
             frame = self
 
         # Prepare data for clustering
-        cluster_data, weights, jids = frame._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, is_sorted=is_sorted, copy=False)
+        cluster_data, weights, jids = frame._prep_cluster(stayers_movers=cluster_params['stayers_movers'], t=cluster_params['t'], weighted=cluster_params['weighted'], is_sorted=cluster_params['is_sorted'], copy=False)
 
         # Compute measures
-        for i, measure in enumerate(to_list(measures)):
+        for i, measure in enumerate(to_list(cluster_params['measures'])):
             if i == 0:
                 computed_measures = measure(cluster_data, jids)
             else:
@@ -1074,13 +1120,12 @@ class BipartiteBase(DataFrame):
         frame.log('firm moments computed', level='info')
 
         # Can't group using quantiles if more than 1 column
-        if (grouping.__name__ == 'compute_quantiles') and (computed_measures.shape[1] > 1):
-            grouping = bpd.measures.kmeans()
-            warnings.warn('Cannot cluster using quantiles if multiple measures computed. Defaulting to KMeans.')
+        if (cluster_params['grouping'].__name__ == 'compute_quantiles') and (computed_measures.shape[1] > 1):
+            raise NotImplementedError('Cannot cluster using quantiles if multiple measures computed. Defaulting to KMeans.')
 
         # Compute firm groups
         frame.log('computing firm groups', level='info')
-        clusters = grouping(computed_measures, weights)
+        clusters = cluster_params['grouping'](computed_measures, weights)
         frame.log('firm groups computed', level='info')
 
         # Link firms to clusters
@@ -1113,16 +1158,16 @@ class BipartiteBase(DataFrame):
         # Sort columns
         frame = frame.sort_cols(copy=False)
 
-        if dropna:
+        if cluster_params['dropna']:
             # Drop firms that don't get clustered
             frame.dropna(inplace=True)
             frame.reset_index(drop=True, inplace=True)
             frame.loc[:, frame.reference_dict['g']] = frame.loc[:, frame.reference_dict['g']].astype(int, copy=False)
             # Clean data
-            if clean_params is None:
-                frame = frame.clean_data(clean_params({'connectedness': frame.connectedness}))
+            if cluster_params['clean_params'] is None:
+                frame = frame.clean_data(bpd.clean_params({'connectedness': frame.connectedness}))
             else:
-                frame = frame.clean_data(clean_params)
+                frame = frame.clean_data(cluster_params['clean_params'])
 
         frame.columns_contig['g'] = True
 
