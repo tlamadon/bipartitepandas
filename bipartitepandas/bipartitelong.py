@@ -34,7 +34,7 @@ def es_extended_params(update_dict={}):
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict) dictionary of clean_params
+        (ParamsDict) dictionary of es_extended_params
     '''
     new_dict = _es_extended_params_default.copy()
     for k, v in update_dict.items():
