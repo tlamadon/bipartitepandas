@@ -16,7 +16,7 @@ col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2',
 # Source: https://stackoverflow.com/a/54009756/17333120
 fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
 
-def is_subtype(obj, types):
+def _is_subtype(obj, types):
     '''
     Check if obj is a subtype of types.
 
@@ -59,7 +59,7 @@ class ParamsDict(MutableMapping):
 
         options_type, options, _ = self.__options[k]
         if options_type == 'type':
-            if is_subtype(v, options):
+            if _is_subtype(v, options):
                 self.__data[k] = v
             else:
                 if isinstance(v, str):
@@ -68,14 +68,14 @@ class ParamsDict(MutableMapping):
                     raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, v, type(v)))
         elif options_type == 'list_of_type':
             for sub_v in to_list(v):
-                if not is_subtype(sub_v, options):
+                if not _is_subtype(sub_v, options):
                     if isinstance(sub_v, str):
                         raise KeyError("Value associated with key '{}' must be of type {}, but input is '{}' which is of type {}.".format(k, options, sub_v, type(sub_v)))
                     else:
                         raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, sub_v, type(sub_v)))
             self.__data[k] = v
         elif options_type == 'type_none':
-            if (v is None) or is_subtype(v, options):
+            if (v is None) or _is_subtype(v, options):
                 self.__data[k] = v
             else:
                 if isinstance(v, str):
