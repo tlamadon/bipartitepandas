@@ -27,7 +27,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Initialize DataFrame
         super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
-        # self.logger.info('BipartiteLongBase object initialized')
+        # self.log('BipartiteLongBase object initialized', level='info')
 
     @property
     def _constructor(self):
@@ -72,7 +72,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame = frame.sort_cols(copy=False)
 
         else:
-            frame.logger.info("'m' column already included. Returning unaltered frame.")
+            frame.log("'m' column already included. Returning unaltered frame.", level='info')
 
         return frame
 
@@ -90,7 +90,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Split workers by movers and stayers
         stayers = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() == 0, :])
         movers = pd.DataFrame(self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0, :])
-        self.logger.info('workers split by movers and stayers')
+        self.log('workers split by movers and stayers', level='info')
 
         # Add lagged values
         all_cols = self._included_cols()
@@ -149,7 +149,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Keep only relevant columns
         stayers = stayers.reindex(keep_cols, axis=1, copy=False)
         movers = movers.reindex(keep_cols, axis=1, copy=False)
-        self.logger.info('columns updated')
+        self.log('columns updated', level='info')
 
         # Merge stayers and movers
         data_es = pd.concat([stayers, movers], ignore_index=True) # .reset_index(drop=True)
@@ -158,7 +158,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         sorted_cols = sorted(data_es.columns, key=bpd.col_order)
         data_es = data_es.reindex(sorted_cols, axis=1, copy=False)
 
-        self.logger.info('data reformatted as event study')
+        self.log('data reformatted as event study', level='info')
 
         es_frame = self._constructor_es(data_es)
         es_frame._set_attributes(self, no_dict=True)

@@ -100,19 +100,24 @@ class BipartiteBase(DataFrame):
         col_dtype_dict (dict): link column to datatype
         col_dict (dict or None): make data columns readable. Keep None if column names already correct
         include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
+        log (bool): if True, will create log file(s)
         **kwargs: keyword arguments for Pandas DataFrame
     '''
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique'] # Attributes, required for Pandas inheritance
+    # Attributes, required for Pandas inheritance
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', '_log_on_indicator', '_level_fn_dict']
 
-    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
+    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, log=True, **kwargs):
         # Initialize DataFrame
         super().__init__(*args, **kwargs)
 
         # Start logger
         logger_init(self)
-        # self.logger.info('initializing BipartiteBase object')
+        # Option to turn on/off logger
+        self._log_on_indicator = log
+        # self.log('initializing BipartiteBase object', level='info')
 
-        if len(args) > 0 and isinstance(args[0], BipartiteBase): # Note that isinstance works for subclasses
+        if len(args) > 0 and isinstance(args[0], BipartiteBase):
+            # Note that isinstance works for subclasses
             self._set_attributes(args[0], include_id_reference_dict)
         else:
             self.columns_req = ['i', 'j', 'y'] + columns_req
@@ -135,6 +140,15 @@ class BipartiteBase(DataFrame):
             # Set attributes
             self._reset_attributes()
 
+        # Dictionary of logger functions based on level
+        self._level_fn_dict = {
+            'debug': self.logger.debug,
+            'info': self.logger.info,
+            'warning': self.logger.warning,
+            'error': self.logger.error,
+            'critical': self.logger.critical
+        }
+
         self.default_cluster = {
             'measure_cdf': False, # If True, approximate firm-level income cdfs
             'measure_moments': False, # If True, approximate firm-level moments
@@ -148,7 +162,7 @@ class BipartiteBase(DataFrame):
             'str': 'str'
         }
 
-        # self.logger.info('BipartiteBase object initialized')
+        # self.log('BipartiteBase object initialized', level='info')
 
     @property
     def _constructor(self):
@@ -159,16 +173,39 @@ class BipartiteBase(DataFrame):
 
     def copy(self):
         '''
-        Copy.
+        Return copy of self.
 
         Returns:
             bdf_copy (BipartiteBase): copy of instance
         '''
         df_copy = DataFrame(self, copy=True)
-        bdf_copy = self._constructor(df_copy)
-        bdf_copy._set_attributes(self) # This copies attribute dictionaries, default copy does not
+        # Set logging on/off depending on current selection
+        bdf_copy = self._constructor(df_copy, log=self._log_on_indicator)
+        # This copies attribute dictionaries, default copy does not
+        bdf_copy._set_attributes(self)
 
         return bdf_copy
+
+    def log_on(self, on=True):
+        '''
+        Toggle logger on or off.
+
+        Arguments:
+            on (bool): if True, turn logger on; if False, turn logger off
+        '''
+        self._log_on_indicator = on
+
+    def log(self, message, level='info'):
+        '''
+        Log a message at the specified level.
+
+        Arguments:
+            message (str): message to log
+            level (str): logger level. Options, in increasing severity, are 'debug', 'info', 'warning', 'error', and 'critical'.
+        '''
+        if self._log_on_indicator:
+            # Log message
+            self._level_fn_dict[level](message)
 
     def summary(self):
         '''
@@ -257,9 +294,9 @@ class BipartiteBase(DataFrame):
             ##### m column #####
             m_correct = (self.loc[:, 'm'] == self.gen_m(force=True).loc[:, 'm']).to_numpy().all()
 
-            ret_str += 'm column correct (None if not included): {}\n'.format(m_correct)
+            ret_str += "'m' column correct (None if not included): {}\n".format(m_correct)
         else:
-            ret_str += 'm column correct (None if not included): {}'.format(None)
+            ret_str += "'m' column correct (None if not included): {}".format(None)
 
         print(ret_str)
 
@@ -683,7 +720,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): BipartiteBase with cleaned data
         '''
-        self.logger.info('beginning BipartiteBase data cleaning')
+        self.log('beginning BipartiteBase data cleaning', level='info')
 
         force = clean_params['force']
 
@@ -693,20 +730,20 @@ class BipartiteBase(DataFrame):
             frame = self
 
         # First, correct column names
-        frame.logger.info('correcting column names')
+        frame.log('correcting column names', level='info')
         frame._update_cols()
 
         # Next, check that required columns are included and datatypes are correct
-        frame.logger.info('checking required columns and datatypes')
+        frame.log('checking required columns and datatypes', level='info')
         frame = frame._check_cols()
 
         # Next, sort rows
-        frame.logger.info('sorting rows')
+        frame.log('sorting rows', level='info')
         frame = frame.sort_rows(is_sorted=clean_params['is_sorted'], copy=False)
 
         # Next, drop NaN observations
         if (not frame.no_na) or force:
-            frame.logger.info('dropping NaN observations')
+            frame.log('dropping NaN observations', level='info')
             if frame.isna().to_numpy().any():
                 # Checking first is considerably faster if there are no NaN observations
                 frame.dropna(inplace=True)
@@ -716,19 +753,19 @@ class BipartiteBase(DataFrame):
 
         # Generate 'm' column - this is necessary for the next steps
         # 'm' will get updated in the following steps as it changes
-        frame.logger.info("generating 'm' column")
+        frame.log("generating 'm' column", level='info')
         frame = frame.gen_m(force=True, copy=False)
 
         # Next, make sure i-t (worker-year) observations are unique
         if (frame.i_t_unique is not None) and ((not frame.i_t_unique) or force):
-            frame.logger.info('keeping highest paying job for i-t (worker-year) duplicates')
+            frame.log('keeping highest paying job for i-t (worker-year) duplicates', level='info')
             frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], is_sorted=True, copy=False)
 
             # Update no_duplicates
             frame.no_duplicates = True
         elif (not frame.no_duplicates) or force:
             # Drop duplicate observations
-            frame.logger.info('dropping duplicate observations')
+            frame.log('dropping duplicate observations', level='info')
             frame.drop_duplicates(inplace=True)
 
             # Update no_duplicates
@@ -737,29 +774,29 @@ class BipartiteBase(DataFrame):
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         for contig_col, is_contig in frame.columns_contig.items():
             if (is_contig is not None) and ((not is_contig) or force):
-                frame.logger.info('making {} ids contiguous'.format(contig_col))
+                frame.log('making {} ids contiguous'.format(contig_col), level='info')
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
         if (frame.connectedness in [False, None]) or force:
             # Generate largest connected set
-            frame.logger.info('generating largest connected set')
+            frame.log('generating largest connected set', level='info')
             frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_multiples=clean_params['drop_multiples'], copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids
             for contig_col, is_contig in frame.columns_contig.items():
                 if (is_contig is not None) and (not is_contig):
-                    frame.logger.info('making {} ids contiguous'.format(contig_col))
+                    frame.log('making {} ids contiguous'.format(contig_col), level='info')
                     frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Sort columns
-        frame.logger.info('sorting columns')
+        frame.log('sorting columns', level='info')
         frame = frame.sort_cols(copy=False)
 
         # Reset index
         frame.reset_index(drop=True, inplace=True)
 
-        frame.logger.info('BipartiteBase data cleaning complete')
+        frame.log('BipartiteBase data cleaning complete', level='info')
 
         return frame
 
@@ -779,7 +816,7 @@ class BipartiteBase(DataFrame):
             for subcol in to_list(frame.reference_dict[col]):
                 if subcol not in frame.columns:
                     # If column missing
-                    frame.logger.info('{} missing from data'.format(subcol))
+                    frame.log('{} missing from data'.format(subcol), level='info')
                     cols_included = False
                 else:
                     # If column included, check type
@@ -788,10 +825,10 @@ class BipartiteBase(DataFrame):
                     if col_type not in valid_types:
                         if col in frame.columns_contig.keys():
                             # If column contiguous, we don't worry about datatype, but will log it
-                            frame.logger.info('{} has dtype {}, so we have converted it to contiguous integers'.format(subcol, col_type))
+                            frame.log('{} has dtype {}, so we have converted it to contiguous integers'.format(subcol, col_type), level='info')
                             frame = frame._contiguous_ids(id_col=col, copy=False)
                         else:
-                            frame.logger.info('{} has wrong dtype, it is currently {} but should be one of the following: {}'.format(subcol, col_type, valid_types))
+                            frame.log('{} has wrong dtype, it is currently {} but should be one of the following: {}'.format(subcol, col_type, valid_types), level='info')
                             correct_dtypes = False
 
         if (not cols_included) or (not correct_dtypes):
@@ -1041,7 +1078,7 @@ class BipartiteBase(DataFrame):
             else:
                 # For computing both cdfs and moments
                 computed_measures = np.concatenate([computed_measures, measure(cluster_data, jids)], axis=1)
-        frame.logger.info('firm moments computed')
+        frame.log('firm moments computed', level='info')
 
         # Can't group using quantiles if more than 1 column
         if (grouping.__name__ == 'compute_quantiles') and (computed_measures.shape[1] > 1):
@@ -1049,13 +1086,13 @@ class BipartiteBase(DataFrame):
             warnings.warn('Cannot cluster using quantiles if multiple measures computed. Defaulting to KMeans.')
 
         # Compute firm groups
-        frame.logger.info('computing firm groups')
+        frame.log('computing firm groups', level='info')
         clusters = grouping(computed_measures, weights)
-        frame.logger.info('firm groups computed')
+        frame.log('firm groups computed', level='info')
 
         # Link firms to clusters
         clusters_dict = dict(pd._lib.fast_zip([jids, clusters]))
-        frame.logger.info('dictionary linking firms to clusters generated')
+        frame.log('dictionary linking firms to clusters generated', level='info')
 
         # Drop columns (because prepared data is not always a copy, must drop from self)
         for col in ['row_weights', 'one']:
@@ -1096,6 +1133,6 @@ class BipartiteBase(DataFrame):
 
         frame.columns_contig['g'] = True
 
-        frame.logger.info('clusters merged into data')
+        frame.log('clusters merged into data', level='info')
 
         return frame

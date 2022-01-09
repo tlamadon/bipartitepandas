@@ -29,7 +29,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Initialize DataFrame
         super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, columns_contig=columns_contig, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
-        # self.logger.info('BipartiteEventStudyBase object initialized')
+        # self.log('BipartiteEventStudyBase object initialized', level='info')
 
     @property
     def _constructor(self):
@@ -64,7 +64,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             frame = frame.sort_cols(copy=False)
 
         else:
-            self.logger.info("'m' column already included. Returning unaltered frame.")
+            self.log("'m' column already included. Returning unaltered frame.", level='info')
 
         return frame
 
@@ -185,7 +185,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         sorted_cols = sorted(data_cs.columns, key=bpd.col_order)
         data_cs = data_cs.reindex(sorted_cols, axis=1, copy=False)
 
-        self.logger.info('mover and stayer event study datasets combined into cross section')
+        self.log('mover and stayer event study datasets combined into cross section', level='info')
 
         return data_cs
 

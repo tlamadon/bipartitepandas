@@ -91,7 +91,7 @@ class SimBipartite:
     def __init__(self, sim_params=sim_params()):
         # Start logger
         logger_init(self)
-        # self.logger.info('initializing SimBipartite object')
+        # self.log('initializing SimBipartite object', level='info')
 
         # Store parameters
         self.sim_params = sim_params

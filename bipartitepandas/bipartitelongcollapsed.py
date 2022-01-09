@@ -23,7 +23,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         # Initialize DataFrame
         super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
-        # self.logger.info('BipartiteLongCollapsed object initialized')
+        # self.log('BipartiteLongCollapsed object initialized', level='info')
 
     @property
     def _constructor(self):
@@ -56,7 +56,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         # Sort data by i (and t, if included)
         frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
-        self.logger.info('copied data sorted by i (and t, if included)')
+        self.log('copied data sorted by i (and t, if included)', level='info')
 
         # Add w
         if 'w' not in frame.columns:
@@ -67,13 +67,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         j_col = frame.loc[:, 'j'].to_numpy()
         i_prev = np.roll(i_col, 1)
         j_prev = np.roll(j_col, 1)
-        self.logger.info('lagged i and j introduced')
+        self.log('lagged i and j introduced', level='info')
 
         # Generate spell ids
         new_spell = (j_col != j_prev) | (i_col != i_prev) # Allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells
         del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum()
-        self.logger.info('spell ids generated')
+        self.log('spell ids generated', level='info')
 
         # Quickly check whether a recollapse is necessary
         if (len(frame) < 2) or (spell_id[-1] == len(frame)):
@@ -172,7 +172,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
 
-        self.logger.info('data uncollapsed to long format')
+        self.log('data uncollapsed to long format', level='info')
 
         long_frame = bpd.BipartiteLong(data_long)
         long_frame._set_attributes(self, no_dict=True)

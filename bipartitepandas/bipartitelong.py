@@ -22,7 +22,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         reference_dict = {'t': 't'}
         super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
-        # self.logger.info('BipartiteLong object initialized')
+        # self.log('BipartiteLong object initialized', level='info')
 
     @property
     def _constructor(self):
@@ -54,21 +54,21 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         # Sort data by i (and t, if included)
         frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
-        self.logger.info('copied data sorted by i (and t, if included)')
+        self.log('copied data sorted by i (and t, if included)', level='info')
 
         # Introduce lagged i and j
         i_col = frame.loc[:, 'i'].to_numpy()
         j_col = frame.loc[:, 'j'].to_numpy()
         i_prev = np.roll(i_col, 1)
         j_prev = np.roll(j_col, 1)
-        self.logger.info('lagged i and j introduced')
+        self.log('lagged i and j introduced', level='info')
 
         # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
         # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
         new_spell = (j_col != j_prev) | (i_col != i_prev)
         del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum() - 1
-        self.logger.info('spell ids generated')
+        self.log('spell ids generated', level='info')
 
         ## Aggregate at the spell level
         spell = frame.groupby(spell_id)
@@ -105,7 +105,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
         data_spell.reset_index(drop=True, inplace=True)
 
-        self.logger.info('data aggregated at the spell level')
+        self.log('data aggregated at the spell level', level='info')
 
         collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
         collapsed_frame._set_attributes(self, no_dict=True)

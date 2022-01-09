@@ -20,7 +20,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         # Initialize DataFrame
         super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
-        # self.logger.info('BipartiteEventStudy object initialized')
+        # self.log('BipartiteEventStudy object initialized', level='info')
 
     @property
     def _constructor(self):
