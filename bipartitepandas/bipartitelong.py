@@ -7,14 +7,14 @@ import bipartitepandas as bpd
 import warnings
 
 # Define default parameter dictionary
-_es_extended_params_default = bpd.ParamsDict({
-    'title_height': (1, 'type', float,
+_es_extended_plot_params_default = bpd.ParamsDict({
+    'title_height': (1.0, 'type', float,
         '''
-            (default=1) Location of titles for subfigures.
+            (default=1.0) Location of titles for subfigures.
         '''),
-    'fontsize': (9, 'type', float,
+    'fontsize': (9.0, 'type', float,
         '''
-            (default=9) Font size of titles for subfigures.
+            (default=9.0) Font size of titles for subfigures.
         '''),
     'sharex': (True, 'type', bool,
         '''
@@ -23,20 +23,24 @@ _es_extended_params_default = bpd.ParamsDict({
     'sharey': (True, 'type', bool,
         '''
             (default=True) Share y axis between subfigures.
+        '''),
+    'yticks_round': (1, 'type', int,
+        '''
+            (default=1) How many digits to round y ticks.
         ''')
 })
 
-def es_extended_params(update_dict={}):
+def es_extended_plot_params(update_dict={}):
     '''
-    Dictionary of default es_extended_params.
+    Dictionary of default es_extended_plot_params.
 
     Arguments:
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict) dictionary of es_extended_params
+        (ParamsDict) dictionary of es_extended_plot_params
     '''
-    new_dict = _es_extended_params_default.copy()
+    new_dict = _es_extended_plot_params_default.copy()
     for k, v in update_dict.items():
         new_dict[k] = v
     return new_dict
@@ -367,9 +371,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_params=es_extended_params()):
+    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_plot_params=es_extended_plot_params()):
         '''
-        Generate event study plots.
+        Generate event study plots. If data is not clustered, will plot all transitions in a single figure.
 
         Arguments:
             periods_pre (int): number of periods before the transition
@@ -378,14 +382,26 @@ class BipartiteLong(bpd.BipartiteLongBase):
             stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
-            es_extended_params (ParamsDict): dictionary of parameters for graphing. Run bpd.es_extended_params().describe_all() for descriptions of all valid parameters.
+            es_extended_plot_params (ParamsDict): dictionary of parameters for plotting. Run bpd.es_extended_plot_params().describe_all() for descriptions of all valid parameters.
         '''
+        # FIXME this method raises the following warnings:
+        # ResourceWarning: unclosed event loop <_UnixSelectorEventLoop running=False closed=False debug=False> source=self)
+        # ResourceWarning: Enable tracemalloc to get the object allocation traceback
         from matplotlib import pyplot as plt
 
-        es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col)
         n_clusters = self.n_clusters()
+        added_g = False
+        if n_clusters is None:
+            # If data not clustered
+            added_g = True
+            n_clusters = 1
+            self.loc[:, 'g'] = 0
+            self.col_dict['g'] = 'g'
+
+        es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col)
+
         # Want n_clusters x n_clusters subplots
-        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=es_extended_params['sharex'], sharey=es_extended_params['sharey'])
+        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=es_extended_plot_params['sharex'], sharey=es_extended_plot_params['sharey'])
         # Create lists of the x values and y columns we want
         x_vals = []
         y_cols = []
@@ -399,18 +415,36 @@ class BipartiteLong(bpd.BipartiteLongBase):
         y_min = 1000
         y_max = -1000
         # Generate plots
-        for i, row in enumerate(axs):
-            for j, ax in enumerate(row):
-                # Keep if previous firm type is i and next firm type is j
-                es_plot = es.loc[(es.loc[:, 'g_l1'].to_numpy() == i) & (es.loc[:, 'g_f1'].to_numpy() == j), :]
-                y = es_plot.loc[:, y_cols].mean(axis=0)
-                yerr = es_plot.loc[:, y_cols].std(axis=0) / (len(es_plot) ** 0.5)
-                ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
-                ax.axvline(0, color='orange', zorder=1)
-                ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=es_extended_params['title_height'], fontdict={'fontsize': es_extended_params['fontsize']})
-                ax.grid()
-                y_min = min(y_min, ax.get_ylim()[0])
-                y_max = max(y_max, ax.get_ylim()[1])
-        plt.setp(axs, xticks=np.arange(-periods_pre, periods_post + 1), yticks=np.round(np.linspace(y_min, y_max, 4), 1))
+        if n_clusters > 1:
+            for i, row in enumerate(axs):
+                for j, ax in enumerate(row):
+                    # Keep if previous firm type is i and next firm type is j
+                    es_plot = es.loc[(es.loc[:, 'g_l1'].to_numpy() == i) & (es.loc[:, 'g_f1'].to_numpy() == j), :]
+                    y = es_plot.loc[:, y_cols].mean(axis=0)
+                    yerr = es_plot.loc[:, y_cols].std(axis=0) / (len(es_plot) ** 0.5)
+                    ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
+                    ax.axvline(0, color='orange', zorder=1)
+                    ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
+                    ax.grid()
+                    y_min = min(y_min, ax.get_ylim()[0])
+                    y_max = max(y_max, ax.get_ylim()[1])
+        else:
+            # Plot everything
+            y = es.loc[:, y_cols].mean(axis=0)
+            yerr = es.loc[:, y_cols].std(axis=0) / (len(es) ** 0.5)
+            axs.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
+            axs.axvline(0, color='orange', zorder=1)
+            axs.set_title('All Transitions (n={})'.format(len(es)), y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
+            axs.grid()
+            y_min = min(y_min, axs.get_ylim()[0])
+            y_max = max(y_max, axs.get_ylim()[1])
+
+        if added_g:
+            # Drop g column
+            self.drop('g', axis=1, inplace=True)
+            self.col_dict['g'] = None
+
+        # Plot
+        plt.setp(axs, xticks=np.arange(-periods_pre, periods_post + 1), yticks=np.round(np.linspace(y_min, y_max, 4), es_extended_plot_params['yticks_round']))
         plt.tight_layout()
         plt.show()
