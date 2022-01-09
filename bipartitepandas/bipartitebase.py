@@ -149,13 +149,6 @@ class BipartiteBase(DataFrame):
             'critical': self.logger.critical
         }
 
-        self.default_cluster = {
-            'measure_cdf': False, # If True, approximate firm-level income cdfs
-            'measure_moments': False, # If True, approximate firm-level moments
-            'cluster_KMeans': False, # If True, cluster using KMeans. Valid only if cluster_quantiles=False.
-            'cluster_quantiles': False # If True, cluster using quantiles. Valid only if cluster_KMeans=False, measure_cdf=False, and measure_moments=True, and measuring only a single moment.
-        }
-
         self.dtype_dict = {
             'int': ['int', 'int8', 'int16', 'int32', 'int64', 'Int64'],
             'float': ['float', 'float8', 'float16', 'float32', 'float64', 'float128', 'int', 'int8', 'int16', 'int32', 'int64', 'Int64'],
