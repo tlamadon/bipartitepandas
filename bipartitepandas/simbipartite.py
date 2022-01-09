@@ -61,7 +61,7 @@ _sim_params_default = ParamsDict({
         '''),
     'rng': (np.random.default_rng(None), 'type', np.random.Generator,
         '''
-            (default=np.random.default_rng(None)) NumPy Generator seed.
+            (default=np.random.default_rng(None)) NumPy random number generator.
         ''')
 })
 
