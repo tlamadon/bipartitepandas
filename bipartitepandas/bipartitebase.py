@@ -40,8 +40,8 @@ def recollapse_loop(force=False):
         return recollapse_loop_inner_inner
     return recollapse_loop_inner
 
-# Define default parameter dictionary
-clean_params_default = ParamsDict({
+# Define default parameter dictionaries
+_clean_params_default = ParamsDict({
     'connectedness': ('connected', 'set', ['connected', 'leave_one_observation_out', 'leave_one_firm_out', None],
         '''
             (default='connected') When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
@@ -82,12 +82,12 @@ def clean_params(update_dict={}):
     Returns:
         (ParamsDict) dictionary of clean_params
     '''
-    new_dict = clean_params_default.copy()
+    new_dict = _clean_params_default.copy()
     for k, v in update_dict.items():
         new_dict[k] = v
     return new_dict
 
-cluster_params_default = ParamsDict({
+_cluster_params_default = ParamsDict({
     'measures': (bpd.measures.cdfs(), 'list_of_type', bpd.fn_type,
         '''
             (default=bpd.measures.cdfs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
@@ -136,7 +136,7 @@ def cluster_params(update_dict={}):
     Returns:
         (ParamsDict) dictionary of cluster_params
     '''
-    new_dict = cluster_params_default.copy()
+    new_dict = _cluster_params_default.copy()
     for k, v in update_dict.items():
         new_dict[k] = v
     return new_dict

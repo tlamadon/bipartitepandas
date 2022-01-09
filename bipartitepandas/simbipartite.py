@@ -7,10 +7,10 @@ import pandas as pd
 from scipy.stats import norm
 from scipy.linalg import eig
 ax = np.newaxis
-from bipartitepandas import update_dict, logger_init, ParamsDict
+from bipartitepandas import logger_init, ParamsDict
 
 # Define default parameter dictionary
-sim_params_default = ParamsDict({
+_sim_params_default = ParamsDict({
     'num_ind': (10000, 'type', int,
         '''
             (default=10000) Number of workers.
@@ -75,7 +75,7 @@ def sim_params(update_dict={}):
     Returns:
         (ParamsDict) dictionary of sim_params
     '''
-    new_dict = sim_params_default.copy()
+    new_dict = _sim_params_default.copy()
     for k, v in update_dict.items():
         new_dict[k] = v
     return new_dict

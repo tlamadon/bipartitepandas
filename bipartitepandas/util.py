@@ -128,7 +128,7 @@ class ParamsDict(MutableMapping):
         Arguments:
             k (str): key
         '''
-        _, options, description = self.__options[k]
+        options_type, options, description = self.__options[k]
         if isinstance(k, str):
             print("KEY: '{}'".format(k))
         else:
@@ -137,7 +137,16 @@ class ParamsDict(MutableMapping):
             print("CURRENT VALUE: '{}'".format(self[k]))
         else:
             print('CURRENT VALUE: {}'.format(self[k]))
-        print('VALID VALUES: {}'.format(options))
+        if options_type == 'type':
+            print('VALID VALUES: one of type {}'.format(options))
+        elif options_type == 'list_of_type':
+            print('VALID VALUES: one of or list of type {}'.format(options))
+        elif options_type == 'type_none':
+            print('VALID VALUES: {} or one of type {}'.format(None, options))
+        elif options_type == 'set':
+            print('VALID VALUES: one of {}'.format(options))
+        elif options_type == 'any':
+            print('VALID VALUES: anything')
         print('DESCRIPTION: {}'.format(description))
 
     def describe_all(self):

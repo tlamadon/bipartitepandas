@@ -6,6 +6,41 @@ import pandas as pd
 import bipartitepandas as bpd
 import warnings
 
+# Define default parameter dictionary
+_es_extended_params_default = bpd.ParamsDict({
+    'title_height': (1, 'type', float,
+        '''
+            (default=1) Location of titles for subfigures.
+        '''),
+    'fontsize': (9, 'type', float,
+        '''
+            (default=9) Font size of titles for subfigures.
+        '''),
+    'sharex': (True, 'type', bool,
+        '''
+            (default=True) Share x axis between subfigures.
+        '''),
+    'sharey': (True, 'type', bool,
+        '''
+            (default=True) Share y axis between subfigures.
+        ''')
+})
+
+def es_extended_params(update_dict={}):
+    '''
+    Dictionary of default es_extended_params.
+
+    Arguments:
+        update_dict (dict): user parameter values
+
+    Returns:
+        (ParamsDict) dictionary of clean_params
+    '''
+    new_dict = _es_extended_params_default.copy()
+    for k, v in update_dict.items():
+        new_dict[k] = v
+    return new_dict
+
 class BipartiteLong(bpd.BipartiteLongBase):
     '''
     Class for bipartite networks of firms and workers in long form. Inherits from BipartiteLongBase.
@@ -332,7 +367,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', user_graph={}):
+    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_params=es_extended_params()):
         '''
         Generate event study plots.
 
@@ -343,33 +378,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
             stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
-            user_graph (dict): dictionary of parameters for graphing
-
-                Dictionary parameters:
-
-                    title_height (float, default=1): location of titles for subfigures
-
-                    fontsize (float, default=9): font size of titles for subfigures
-
-                    sharex (bool, default=True): share x axis between plots
-
-                    sharey (bool, default=True): share y axis between plots
+            es_extended_params (ParamsDict): dictionary of parameters for graphing. Run bpd.es_extended_params().describe_all() for descriptions of all valid parameters.
         '''
         from matplotlib import pyplot as plt
-
-        # Default parameter dictionaries
-        default_graph = {
-            'title_height': 1,
-            'fontsize': 9,
-            'sharex': True,
-            'sharey': True
-        }
-        graph_params = bpd.update_dict(default_graph, user_graph)
 
         es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col)
         n_clusters = self.n_clusters()
         # Want n_clusters x n_clusters subplots
-        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=graph_params['sharex'], sharey=graph_params['sharey'])
+        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=es_extended_params['sharex'], sharey=es_extended_params['sharey'])
         # Create lists of the x values and y columns we want
         x_vals = []
         y_cols = []
@@ -391,7 +407,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 yerr = es_plot.loc[:, y_cols].std(axis=0) / (len(es_plot) ** 0.5)
                 ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
                 ax.axvline(0, color='orange', zorder=1)
-                ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=graph_params['title_height'], fontdict={'fontsize': graph_params['fontsize']})
+                ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=es_extended_params['title_height'], fontdict={'fontsize': es_extended_params['fontsize']})
                 ax.grid()
                 y_min = min(y_min, ax.get_ylim()[0])
                 y_max = max(y_max, ax.get_ylim()[1])
