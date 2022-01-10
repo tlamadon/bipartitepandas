@@ -85,7 +85,7 @@ class SimBipartite:
     Class of SimBipartite, where SimBipartite simulates a bipartite network of firms and workers.
 
     Arguments:
-        sim_params (ParamsDict): parameters for simulating data. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
+        sim_params (ParamsDict): dictionary of parameters for simulating data. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
     '''
 
     def __init__(self, sim_params=sim_params()):
