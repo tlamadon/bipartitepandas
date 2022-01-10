@@ -76,8 +76,7 @@ def sim_params(update_dict={}):
         (ParamsDict) dictionary of sim_params
     '''
     new_dict = _sim_params_default.copy()
-    for k, v in update_dict.items():
-        new_dict[k] = v
+    new_dict.update(update_dict)
     return new_dict
 
 class SimBipartite:

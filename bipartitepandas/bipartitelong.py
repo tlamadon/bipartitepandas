@@ -41,8 +41,7 @@ def es_extended_plot_params(update_dict={}):
         (ParamsDict) dictionary of es_extended_plot_params
     '''
     new_dict = _es_extended_plot_params_default.copy()
-    for k, v in update_dict.items():
-        new_dict[k] = v
+    new_dict.update(update_dict)
     return new_dict
 
 class BipartiteLong(bpd.BipartiteLongBase):

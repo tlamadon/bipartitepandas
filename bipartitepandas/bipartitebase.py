@@ -83,8 +83,7 @@ def clean_params(update_dict={}):
         (ParamsDict) dictionary of clean_params
     '''
     new_dict = _clean_params_default.copy()
-    for k, v in update_dict.items():
-        new_dict[k] = v
+    new_dict.update(update_dict)
     return new_dict
 
 _cluster_params_default = ParamsDict({
@@ -137,8 +136,7 @@ def cluster_params(update_dict={}):
         (ParamsDict) dictionary of cluster_params
     '''
     new_dict = _cluster_params_default.copy()
-    for k, v in update_dict.items():
-        new_dict[k] = v
+    new_dict.update(update_dict)
     return new_dict
 
 class BipartiteBase(DataFrame):
