@@ -370,7 +370,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_plot_params=es_extended_plot_params()):
+    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_plot_params=es_extended_plot_params(), is_sorted=False, copy=True):
         '''
         Generate event study plots. If data is not clustered, will plot all transitions in a single figure.
 
@@ -382,6 +382,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
             es_extended_plot_params (ParamsDict): dictionary of parameters for plotting. Run bpd.es_extended_plot_params().describe_all() for descriptions of all valid parameters.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
         '''
         # FIXME this method raises the following warnings:
         # ResourceWarning: unclosed event loop <_UnixSelectorEventLoop running=False closed=False debug=False> source=self)
@@ -397,7 +399,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             self.loc[:, 'g'] = 0
             self.col_dict['g'] = 'g'
 
-        es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col)
+        es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col,is_sorted=is_sorted, copy=copy)
 
         # Want n_clusters x n_clusters subplots
         fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=es_extended_plot_params['sharex'], sharey=es_extended_plot_params['sharey'])

@@ -142,7 +142,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # Note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - setting is_clean=True would arbitrarily decide which rows are already correct
             frame = frame.get_long(is_clean=False, is_sorted=is_sorted, copy=False)
             frame.drop_duplicates(inplace=True)
-            frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).get_es()
+            frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
         # Data now has unique i-t observations
         frame.i_t_unique = True
@@ -308,7 +308,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             frame_largest_cc (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
         '''
-        return self.get_long(is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
+        return self.get_long(is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es(is_sorted=True, copy=False)
 
     def _leave_one_firm_out(self, bcc_list, component_size_variable='length', drop_multiples=False):
         '''
@@ -322,7 +322,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
         '''
-        return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es()
+        return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples).get_es(is_sorted=True, copy=False)
 
     def _construct_connected_linkages(self):
         '''
@@ -372,7 +372,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
     def drop_ids(self, id_col, drop_ids_list, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -396,7 +396,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
     def keep_rows(self, rows, drop_multiples=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -419,7 +419,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
     def min_obs_firms(self, threshold=2):
         '''
@@ -472,7 +472,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, copy=False).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
     def min_workers_firms(self, threshold=2):
         '''
@@ -525,7 +525,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, copy=False).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
     def min_moves_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
@@ -565,4 +565,4 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es()
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_multiples=drop_multiples, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)

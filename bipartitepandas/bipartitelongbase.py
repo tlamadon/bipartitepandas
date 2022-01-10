@@ -76,36 +76,42 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def get_es(self, move_to_worker=False, is_sorted=False):
+    def get_es(self, move_to_worker=False, is_sorted=False, copy=True):
         '''
         Return (collapsed) long form data reformatted into (collapsed) event study data.
 
         Arguments:
             move_to_worker (bool): if True, each move is treated as a new worker
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
         '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
         # Split workers by movers and stayers
-        stayers = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() == 0, :])
-        movers = pd.DataFrame(self.loc[self.groupby('i')['m'].transform('max').to_numpy() > 0, :])
-        self.log('workers split by movers and stayers', level='info')
+        stayers = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :])
+        movers = pd.DataFrame(frame.loc[frame.groupby('i')['m'].transform('max').to_numpy() > 0, :])
+        frame.log('workers split by movers and stayers', level='info')
 
         # Add lagged values
-        all_cols = self._included_cols()
+        all_cols = frame._included_cols()
         if not is_sorted:
             # Sort data by i (and t, if included)
             sort_order = ['i']
-            if self._col_included('t'):
+            if frame._col_included('t'):
                 # If t column
-                sort_order.append(bpd.to_list(self.reference_dict['t'])[0])
+                sort_order.append(bpd.to_list(frame.reference_dict['t'])[0])
             movers.sort_values(sort_order, inplace=True)
 
         # Columns to keep
         keep_cols = ['i']
         for col in all_cols:
-            for subcol in bpd.to_list(self.reference_dict[col]):
+            for subcol in bpd.to_list(frame.reference_dict[col]):
                 # Get column number, e.g. j1 will give 1
                 subcol_number = subcol.strip(col)
                 ## Movers
@@ -136,8 +142,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
         for col in all_cols:
-            if (self.col_dtype_dict[col] == 'int') and (col != 'm'):
-                for subcol in bpd.to_list(self.reference_dict[col]):
+            if (frame.col_dtype_dict[col] == 'int') and (col != 'm'):
+                for subcol in bpd.to_list(frame.reference_dict[col]):
                     # Get column number, e.g. j1 will give 1
                     subcol_number = subcol.strip(col)
                     movers.loc[:, col + '1' + subcol_number] = movers.loc[:, col + '1' + subcol_number].astype(int, copy=False)
@@ -149,7 +155,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Keep only relevant columns
         stayers = stayers.reindex(keep_cols, axis=1, copy=False)
         movers = movers.reindex(keep_cols, axis=1, copy=False)
-        self.log('columns updated', level='info')
+        frame.log('columns updated', level='info')
 
         # Merge stayers and movers
         data_es = pd.concat([stayers, movers], ignore_index=True) # .reset_index(drop=True)
@@ -158,10 +164,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
         sorted_cols = sorted(data_es.columns, key=bpd.col_order)
         data_es = data_es.reindex(sorted_cols, axis=1, copy=False)
 
-        self.log('data reformatted as event study', level='info')
+        frame.log('data reformatted as event study', level='info')
 
-        es_frame = self._constructor_es(data_es)
-        es_frame._set_attributes(self, no_dict=True)
+        es_frame = frame._constructor_es(data_es)
+        es_frame._set_attributes(frame, no_dict=True)
 
         # Sort data by i and t
         es_frame = es_frame.sort_rows(is_sorted=False, copy=False)
