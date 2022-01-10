@@ -331,7 +331,7 @@ class BipartiteBase(DataFrame):
         is_connected = is_connected_dict[self.connectedness]()
 
         if is_connected or (is_connected is None):
-            ret_str += 'frame is (None if ignoring connectedness): {}\n'.format(self.connectedness)
+            ret_str += 'frame connectedness is (None if ignoring connectedness): {}\n'.format(self.connectedness)
         else:
             ret_str += 'frame failed connectedness: {}\n'.format(self.connectedness)
 
