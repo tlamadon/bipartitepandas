@@ -109,7 +109,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         self.log('spell ids generated', level='info')
 
         ## Aggregate at the spell level
-        spell = frame.groupby(spell_id)
+        spell = frame.groupby(spell_id, sort=False)
 
         # First, prepare required columns for aggregation
         agg_funcs = {
@@ -182,7 +182,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 frame.loc[:, 'y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
             # Take max over duplicates
             # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
-            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'])['y'].transform(max).to_numpy(), :].groupby(['i', 't'], as_index=False).first()
+            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'], sort=False)['y'].transform(max).to_numpy(), :].groupby(['i', 't'], as_index=False, sort=False).first()
             # Restore warnings
             warnings.filterwarnings('default')
 
@@ -274,20 +274,20 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Create return frame
         es_extended_frame = pd.DataFrame(self, copy=copy)
 
+        if not is_sorted:
+            # Sort data by i and t
+            es_extended_frame.sort_values(['i', 't'], inplace=True)
+
         # Generate how many periods each worker worked
         es_extended_frame.loc[:, 'one'] = 1
-        es_extended_frame.loc[:, 'worker_total_periods'] = es_extended_frame.groupby('i')['one'].transform('size')
+        es_extended_frame.loc[:, 'worker_total_periods'] = es_extended_frame.groupby('i', sort=False)['one'].transform('size')
 
         # Keep workers with enough periods (must have at least periods_pre + periods_post periods)
         es_extended_frame = es_extended_frame.loc[es_extended_frame.loc[:, 'worker_total_periods'].to_numpy() >= periods_pre + periods_post, :]
         es_extended_frame.reset_index(drop=True, inplace=True)
 
-        if not is_sorted:
-            # Sort data by i and t
-            es_extended_frame.sort_values(['i', 't'], inplace=True)
-
         # For each worker-period, generate (how many total years - 1) they have worked at that point (e.g. if a worker started in 2005, and had data each year, then 2008 would give 3, 2009 would give 4, etc.)
-        es_extended_frame.loc[:, 'worker_periods_worked'] = es_extended_frame.groupby('i')['one'].cumsum().to_numpy() - 1
+        es_extended_frame.loc[:, 'worker_periods_worked'] = es_extended_frame.groupby('i', sort=False)['one'].cumsum().to_numpy() - 1
         es_extended_frame.drop('one', axis=1, inplace=True)
 
         # Find periods where the worker transitioned, which can serve as fulcrums for the event study
@@ -308,7 +308,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame.drop(['worker_total_periods', 'worker_periods_worked', 'moved_firms'], axis=1, inplace=True)
 
         # Only keep workers who have a valid move
-        es_extended_frame = es_extended_frame.loc[es_extended_frame.groupby('i')['valid_move'].transform(max).to_numpy() > 0, :]
+        es_extended_frame = es_extended_frame.loc[es_extended_frame.groupby('i', sort=False)['valid_move'].transform(max).to_numpy() > 0, :]
 
         # Compute lags and leads
         column_order = [[] for _ in range(len(include))] # For column order

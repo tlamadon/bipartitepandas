@@ -88,25 +88,16 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Returns:
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
         '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Split workers by movers and stayers
         stayers = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :])
-        movers = pd.DataFrame(frame.loc[frame.groupby('i')['m'].transform('max').to_numpy() > 0, :])
+        movers = pd.DataFrame(frame.loc[frame.groupby('i', sort=False)['m'].transform('max').to_numpy() > 0, :])
         frame.log('workers split by movers and stayers', level='info')
 
         # Add lagged values
         all_cols = frame._included_cols()
-        if not is_sorted:
-            # Sort data by i (and t, if included)
-            sort_order = ['i']
-            if frame._col_included('t'):
-                # If t column
-                sort_order.append(bpd.to_list(frame.reference_dict['t'])[0])
-            movers.sort_values(sort_order, inplace=True)
 
         # Columns to keep
         keep_cols = ['i']

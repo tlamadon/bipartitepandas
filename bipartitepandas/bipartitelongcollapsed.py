@@ -82,7 +82,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             return self
 
         ## Aggregate at the spell level
-        spell = frame.groupby(spell_id)
+        spell = frame.groupby(spell_id, sort=False)
 
         if drop_multiples:
             data_spell = frame.loc[spell['i'].transform('size').to_numpy() == 1, :]

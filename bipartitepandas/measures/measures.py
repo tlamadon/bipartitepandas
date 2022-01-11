@@ -45,7 +45,7 @@ class cdfs:
             ## Generate firm-level cdfs
             # Required for aggregate_transform
             # NOTE: don't sort in-place, otherwise modifies external data
-            frame = frame.sort_values('j')
+            frame = frame.sort_values('j', inplace=False)
             for i, quant in enumerate(quantile_groups):
                 frame.loc[:, 'quant'] = (frame.loc[:, 'y'].to_numpy() <= quant).astype(int, copy=False)
                 cdfs_col = aggregate_transform(frame, col_groupby='j', col_grouped='quant', func='sum', weights='row_weights', merge=False) # aggregate(frame['fid'], firm_quant, func='sum', fill_value=-1)
@@ -54,13 +54,13 @@ class cdfs:
             del cdfs_col
 
             # Normalize by firm size (convert to cdf)
-            jsize = frame.groupby('j')['row_weights'].sum().to_numpy()
+            jsize = frame.groupby('j', sort=False)['row_weights'].sum().to_numpy()
             cdfs = (cdfs.T / jsize.T).T
 
         elif measure in ['quantile_firm_small', 'quantile_firm_large']:
             # Sort frame by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
             # NOTE: don't sort in-place, otherwise modifies external data
-            frame = frame.sort_values('y')
+            frame = frame.sort_values('y', inplace=False)
 
             if measure == 'quantile_firm_small':
                 # Convert pandas dataframe into a dictionary to access data faster
@@ -136,8 +136,8 @@ class moments:
         moments = np.zeros([n_firms, n_measures])
 
         # Required for aggregate_transform
-        # NOTE: don't do in-place, otherwise modifies external data
-        frame = frame.sort_values('j')
+        # NOTE: don't sort in-place, otherwise modifies external data
+        frame = frame.sort_values('j', inplace=False)
 
         for j, measure in enumerate(to_list(measures)):
             if measure == 'mean':
@@ -148,8 +148,8 @@ class moments:
                 # Group by variance of income
                 moments[:, j] = aggregate_transform(frame, 'j', 'y', 'var', weights='row_weights', merge=False)
             elif measure == 'max':
-                moments[:, j] = frame.groupby('j')['y'].max().to_numpy()
+                moments[:, j] = frame.groupby('j', sort=False)['y'].max().to_numpy()
             elif measure == 'min':
-                moments[:, j] = frame.groupby('j')['y'].min().to_numpy()
+                moments[:, j] = frame.groupby('j', sort=False)['y'].min().to_numpy()
 
         return moments
