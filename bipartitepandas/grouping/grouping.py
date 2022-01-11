@@ -4,21 +4,18 @@ Functions for computing cluster groups
 import numpy as np
 from sklearn.cluster import KMeans
 
-def kmeans(**kwargs):
+class kmeans:
     '''
     Compute kmeans groups for data. Used for clustering.
 
     Arguments:
         **kwargs: parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
-
-    Returns:
-        compute_kmeans (function): subfunction
     '''
-    # Workaround for multiprocessing
-    # Source: https://stackoverflow.com/a/61879723
-    global compute_kmeans
 
-    def compute_kmeans(data, weights):
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+    def compute_groups(self, data, weights):
         '''
         Compute kmeans groups for data.
 
@@ -29,25 +26,21 @@ def kmeans(**kwargs):
         Returns:
             groups (NumPy Array): kmeans groups for data
         '''
-        groups = KMeans(**kwargs).fit(data, sample_weight=weights).labels_
+        groups = KMeans(**self.kwargs).fit(data, sample_weight=weights).labels_
         return groups
-    return compute_kmeans
 
-def quantiles(n_quantiles=4):
+class quantiles:
     '''
     Compute quantile groups for data. Used for clustering.
 
     Arguments:
         n_quantiles (int): number of quantiles to compute for groups
-
-    Returns:
-        compute_quantiles (function): subfunction
     '''
-    # Workaround for multiprocessing
-    # Source: https://stackoverflow.com/a/61879723
-    global compute_quantiles
 
-    def compute_quantiles(data, weights):
+    def __init__(self, n_quantiles=4):
+        self.n_quantiles = n_quantiles
+
+    def compute_groups(self, data, weights):
         '''
         Compute quantiles groups for data.
 
@@ -58,6 +51,7 @@ def quantiles(n_quantiles=4):
         Returns:
             groups (NumPy Array): quantile groups for data
         '''
+        n_quantiles = self.n_quantiles
         groups = np.zeros(shape=len(data))
         quantiles = np.linspace(1 / n_quantiles, 1, n_quantiles)
         quantile_groups = np.quantile(data, quantiles)
@@ -71,4 +65,3 @@ def quantiles(n_quantiles=4):
                     break
             groups[i] = quantile_group
         return groups
-    return compute_quantiles

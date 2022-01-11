@@ -5,22 +5,20 @@ import numpy as np
 from bipartitepandas import to_list, aggregate_transform
 from statsmodels.stats.weightstats import DescrStatsW
 
-def cdfs(cdf_resolution=10, measure='quantile_all'):
+class cdfs:
     '''
     Generate cdfs of compensation for firms. Used for clustering.
 
     Arguments:
         cdf_resolution (int): how many values to use to approximate the cdfs
         measure (str): how to compute the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm_small' to get quantiles at the firm-level and have values be compensations if small data; 'quantile_firm_large' to get quantiles at the firm-level and have values be compensations if large data, note that this is up to 50 times slower than 'quantile_firm_small' and should only be used if the dataset is too large to copy into a dictionary
-
-    Returns:
-        compute_measures_cdfs (function): subfunction
     '''
-    # Workaround for multiprocessing
-    # Source: https://stackoverflow.com/a/61879723
-    global compute_measures_cdfs
 
-    def compute_measures_cdfs(frame, jids):
+    def __init__(self, cdf_resolution=10, measure='quantile_all'):
+        self.cdf_resolution = cdf_resolution
+        self.measure = measure
+
+    def compute_measure(self, frame, jids):
         '''
         Arguments:
             frame (Pandas DataFrame): data to use
@@ -28,6 +26,9 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
         Returns:
             cdfs (NumPy Array): NumPy array of firm cdfs
         '''
+        cdf_resolution = self.cdf_resolution
+        measure = self.measure
+
         ## Initialize cdf array
         # Can't use self.n_firms() since data could be a subset of self
         n_firms = len(jids)
@@ -43,7 +44,7 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
 
             ## Generate firm-level cdfs
             # Required for aggregate_transform
-            # NOTE: don't do in-place, otherwise modifies external data
+            # NOTE: don't sort in-place, otherwise modifies external data
             frame = frame.sort_values('j')
             for i, quant in enumerate(quantile_groups):
                 frame.loc[:, 'quant'] = (frame.loc[:, 'y'].to_numpy() <= quant).astype(int, copy=False)
@@ -58,7 +59,7 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
 
         elif measure in ['quantile_firm_small', 'quantile_firm_large']:
             # Sort frame by compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort then manually compute quantiles than to use built-in quantile functions)
-            # NOTE: don't do in-place, otherwise modifies external data
+            # NOTE: don't sort in-place, otherwise modifies external data
             frame = frame.sort_values('y')
 
             if measure == 'quantile_firm_small':
@@ -106,23 +107,19 @@ def cdfs(cdf_resolution=10, measure='quantile_all'):
                     cdfs[i, j] = y[index]
 
         return cdfs
-    return compute_measures_cdfs
 
-def moments(measures='mean'):
+class moments:
     '''
     Generate compensation moments for firms. Used for clustering.
 
     Arguments:
         measures (str or list of str): how to compute the measures ('mean' to compute average income within each firm; 'var' to compute variance of income within each firm; 'max' to compute max income within each firm; 'min' to compute min income within each firm)
-
-    Returns:
-        compute_measures_moments (function): subfunction
     '''
-    # Workaround for multiprocessing
-    # Source: https://stackoverflow.com/a/61879723
-    global compute_measures_moments
 
-    def compute_measures_moments(frame, jids):
+    def __init__(self, measures='mean'):
+        self.measures = measures
+
+    def compute_measure(self, frame, jids):
         '''
         Arguments:
             frame (Pandas DataFrame): data to use
@@ -131,6 +128,8 @@ def moments(measures='mean'):
         Returns:
             moments (NumPy Array): NumPy array of firm moments
         '''
+        measures = self.measures
+
         # Can't use data.n_firms() since data could be a subset of self
         n_firms = len(jids)
         n_measures = len(to_list(measures))
@@ -154,4 +153,3 @@ def moments(measures='mean'):
                 moments[:, j] = frame.groupby('j')['y'].min().to_numpy()
 
         return moments
-    return compute_measures_moments

@@ -87,11 +87,11 @@ def clean_params(update_dict={}):
     return new_dict
 
 _cluster_params_default = ParamsDict({
-    'measures': (bpd.measures.cdfs(), 'list_of_type', bpd.fn_type,
+    'measures': (bpd.measures.cdfs(), 'list_of_type', (bpd.measures.cdfs, bpd.measures.moments),
         '''
             (default=bpd.measures.cdfs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
         '''),
-    'grouping': (bpd.grouping.kmeans(), 'type', bpd.fn_type,
+    'grouping': (bpd.grouping.kmeans(), 'type', (bpd.grouping.kmeans, bpd.grouping.quantiles),
         '''
             (default=bpd.grouping.kmeans()) How to group firms based on measures. Options can be seen in bipartitepandas.grouping.
         '''),
@@ -1111,19 +1111,19 @@ class BipartiteBase(DataFrame):
         # Compute measures
         for i, measure in enumerate(to_list(cluster_params['measures'])):
             if i == 0:
-                computed_measures = measure(cluster_data, jids)
+                computed_measures = measure.compute_measure(cluster_data, jids)
             else:
                 # For computing both cdfs and moments
-                computed_measures = np.concatenate([computed_measures, measure(cluster_data, jids)], axis=1)
+                computed_measures = np.concatenate([computed_measures, measure.compute_measure(cluster_data, jids)], axis=1)
         frame.log('firm moments computed', level='info')
 
         # Can't group using quantiles if more than 1 column
-        if (cluster_params['grouping'].__name__ == 'compute_quantiles') and (computed_measures.shape[1] > 1):
-            raise NotImplementedError('Cannot cluster using quantiles if multiple measures computed. Defaulting to KMeans.')
+        if isinstance(cluster_params['grouping'], bpd.grouping.quantiles) and (computed_measures.shape[1] > 1):
+            raise NotImplementedError('Cannot cluster using quantiles if multiple measures computed.')
 
         # Compute firm groups
         frame.log('computing firm groups', level='info')
-        clusters = cluster_params['grouping'](computed_measures, weights)
+        clusters = cluster_params['grouping'].compute_groups(computed_measures, weights)
         frame.log('firm groups computed', level='info')
 
         # Link firms to clusters
