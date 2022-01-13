@@ -42,12 +42,12 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudyCollapsed
 
-    def recollapse(self, drop_multiples=False, is_sorted=False, copy=True):
+    def recollapse(self, drop_returners_to_stayers=False, is_sorted=False, copy=True):
         '''
         Recollapse data by job spells (so each spell for a particular worker at a particular firm is one observation). This method is necessary in the case of biconnected data - it can occur that a worker works at firms A and B in the order A B A, but the biconnected components removes firm B. So the data is now A A, and needs to be recollapsed so this is marked as a stayer.
 
         Arguments:
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when computing biconnected components)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -55,8 +55,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             frame (BipartiteBase): BipartiteBase with ids in the given set
         '''
         # Sort data by i (and t, if included)
+        self.log('beginning recollapse', level='info')
         frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
-        self.log('copied data sorted by i (and t, if included)', level='info')
 
         # Add w
         if 'w' not in frame.columns:
@@ -84,7 +84,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         ## Aggregate at the spell level
         spell = frame.groupby(spell_id, sort=False)
 
-        if drop_multiples:
+        if drop_returners_to_stayers:
             data_spell = frame.loc[spell['i'].transform('size').to_numpy() == 1, :]
         else:
             # First, prepare required columns for aggregation

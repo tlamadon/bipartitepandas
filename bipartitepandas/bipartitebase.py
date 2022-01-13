@@ -54,9 +54,9 @@ _clean_params_default = ParamsDict({
         '''
             (default='max') When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format.
         '''),
-    'drop_multiples': (False, 'type', bool,
+    'drop_returners_to_stayers': (False, 'type', bool,
         '''
-            (default=False) If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for biconnected components).
+            (default=False) If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components).
         '''),
     'is_sorted': (False, 'type', bool,
         '''
@@ -223,6 +223,7 @@ class BipartiteBase(DataFrame):
         Returns:
             bdf_copy (BipartiteBase): copy of instance
         '''
+        self.log('beginning copy', level='info')
         df_copy = DataFrame(self, copy=True)
         # Set logging on/off depending on current selection
         bdf_copy = self._constructor(df_copy, log=self._log_on_indicator)
@@ -355,6 +356,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (NumPy Array): unique ids
         '''
+        self.log('finding unique ids in column {}'.format(id_col), level='info')
         id_lst = []
         for id_subcol in to_list(self.reference_dict[id_col]):
             id_lst += list(self.loc[:, id_subcol].unique())
@@ -370,6 +372,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int): number of unique ids
         '''
+        self.log('finding number of unique ids in column {}'.format(id_col), level='info')
         return len(self.unique_ids(id_col))
 
     def n_workers(self):
@@ -379,6 +382,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int): number of unique workers
         '''
+        self.log('finding unique workers', level='info')
         return self.loc[:, 'i'].nunique()
 
     def n_firms(self):
@@ -388,6 +392,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int): number of unique firms
         '''
+        self.log('finding unique firms', level='info')
         return self.n_unique_ids('j')
 
     def n_clusters(self):
@@ -397,6 +402,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int or None): number of unique clusters, None if not clustered
         '''
+        self.log('finding unique clusters', level='info')
         if not self._col_included('g'): # If cluster column not in dataframe
             return None
         return self.n_unique_ids('g')
@@ -411,6 +417,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (BipartiteBase or None): copy of self merged with original column ids, or None if id_reference_dict is empty
         '''
+        self.log('returning self merged with original column ids', level='info')
         frame = pd.DataFrame(self, copy=copy)
         if self.id_reference_dict:
             for id_col, reference_df in self.id_reference_dict.items():
@@ -680,6 +687,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): BipartiteBase with contiguous ids
         '''
+        self.log('making {} ids contiguous'.format(id_col), level='info')
         if copy:
             frame = self.copy()
         else:
@@ -817,16 +825,16 @@ class BipartiteBase(DataFrame):
             frame.no_duplicates = True
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
+        frame.log('making column ids contiguous', level='info')
         for contig_col, is_contig in frame.columns_contig.items():
             if (is_contig is not None) and ((not is_contig) or force):
-                frame.log('making {} ids contiguous'.format(contig_col), level='info')
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
         if (frame.connectedness in [False, None]) or force:
             # Generate largest connected set
             frame.log('generating largest connected set', level='info')
-            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_multiples=clean_params['drop_multiples'], copy=False)
+            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returners_to_stayers=clean_params['drop_returners_to_stayers'], copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids
             for contig_col, is_contig in frame.columns_contig.items():
@@ -881,14 +889,14 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _conset(self, connectedness='connected', component_size_variable='firms', drop_multiples=False, copy=True):
+    def _conset(self, connectedness='connected', component_size_variable='firms', drop_returners_to_stayers=False, copy=True):
         '''
         Update data to include only the largest connected component of movers.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if None, keep all observations.
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for leave-one-out connected components)
+            drop_returners_to_stayers (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for leave-one-out connected components)
             copy (bool): if False, avoid copy
 
         Returns:
@@ -898,6 +906,8 @@ class BipartiteBase(DataFrame):
             frame = self.copy()
         else:
             frame = self
+
+        frame.log('computing {} connected components (None if ignoring connectedness)'.format(connectedness), level='info')
 
         if connectedness is None:
             # Skipping connected set
@@ -932,14 +942,14 @@ class BipartiteBase(DataFrame):
             # Compute all connected components of firms (each entry is a connected component)
             cc_list = G.components()
             # Keep largest leave-one-out set of firms
-            frame = frame._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples)
+            frame = frame._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers)
         elif connectedness == 'leave_one_firm_out':
             if isinstance(frame, bpd.BipartiteEventStudyBase):
                 warnings.warn('You should avoid computing leave-one-firm-out components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all biconnected components of firms (each entry is a biconnected component)
             bcc_list = G.biconnected_components()
             # Keep largest leave-one-out set of firms
-            frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_multiples=drop_multiples)
+            frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers)
 
         # Data is now connected
         frame.connectedness = connectedness
@@ -951,6 +961,8 @@ class BipartiteBase(DataFrame):
             frame.columns_contig['j'] = False
         if prev_clusters is not None and prev_clusters != frame.n_clusters():
             frame.columns_contig['g'] = False
+
+        frame.log('{} connected components (None if ignoring connectedness) computed'.format(connectedness), level='info')
 
         return frame
 
@@ -964,6 +976,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (igraph Graph): graph
         '''
+        self.log('constructing {} graph'.format(connectedness), level='info')
         linkages_fn_dict = {
             'connected': self._construct_connected_linkages,
             'leave_one_observation_out': self._construct_biconnected_linkages,
@@ -982,6 +995,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): BipartiteBase with columns sorted
         '''
+        self.log('sorting columns', level='info')
         if copy:
             frame = self.copy()
         else:
@@ -1004,6 +1018,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): dataframe with rows sorted
         '''
+        self.log('sorting rows', level='info')
         if copy:
             frame = self.copy()
         else:
@@ -1022,13 +1037,13 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def drop_rows(self, rows, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
+    def drop_rows(self, rows, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Drop particular rows.
 
         Arguments:
             rows (list): rows to keep
-            drop_multiples (bool): used only if using collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): used only if using collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -1036,6 +1051,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): dataframe with given rows dropped
         '''
+        self.log('dropping rows', level='info')
         rows = set(rows)
         if len(rows) == 0:
             # If nothing input
@@ -1045,7 +1061,7 @@ class BipartiteBase(DataFrame):
         self_rows = set(self.index.to_numpy())
         rows_diff = self_rows.difference(rows)
 
-        return self.keep_rows(rows_diff, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+        return self.keep_rows(rows_diff, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
     def min_movers_firms(self, threshold=15):
         '''
@@ -1057,6 +1073,7 @@ class BipartiteBase(DataFrame):
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many movers
         '''
+        self.log('computing firms with a minimum number of movers', level='info')
         if threshold == 0:
             # If no threshold
             return self.unique_ids('j')
@@ -1066,13 +1083,13 @@ class BipartiteBase(DataFrame):
         return frame.min_workers_firms(threshold)
 
     @recollapse_loop(True)
-    def min_movers_frame(self, threshold=15, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
+    def min_movers_frame(self, threshold=15, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many movers.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
-            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -1080,6 +1097,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (BipartiteBase): dataframe of firms with sufficiently many movers
         '''
+        self.log('generating frame of firms with a minimum number of movers', level='info')
         if threshold == 0:
             # If no threshold
             if copy:
@@ -1088,7 +1106,7 @@ class BipartiteBase(DataFrame):
 
         valid_firms = self.min_movers_firms(threshold)
 
-        return self.keep_ids('j', keep_ids_list=valid_firms, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+        return self.keep_ids('j', keep_ids_list=valid_firms, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
     def cluster(self, cluster_params=cluster_params()):
         '''
@@ -1100,6 +1118,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): BipartiteBase with clusters
         '''
+        self.log('beginning clustering', level='info')
         if cluster_params['copy']:
             frame = self.copy()
         else:

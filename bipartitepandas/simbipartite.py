@@ -217,9 +217,9 @@ class SimBipartite:
                     spellcount[i, t] = spellcount[i, t - 1]
 
         # Compiling IDs and timestamps
-        ids = np.reshape(np.outer(range(1, num_ind + 1), np.ones(num_time)), (num_time * num_ind, 1))
+        ids = np.reshape(np.outer(range(1, num_ind + 1), np.ones(num_time)), (num_time * num_ind, 1)) # np.repeat(np.arange(num_ind), num_time)
         ids = ids.astype(int)[:, 0]
-        ts = np.reshape(np.tile(range(1, num_time + 1), (num_ind, 1)), (num_time * num_ind, 1))
+        ts = np.reshape(np.tile(range(1, num_time + 1), (num_ind, 1)), (num_time * num_ind, 1)) # np.tile(np.arange(num_time), num_ind)
         ts = ts.astype(int)[:, 0]
 
         # Compiling worker types

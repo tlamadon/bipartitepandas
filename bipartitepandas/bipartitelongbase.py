@@ -224,21 +224,19 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame, weights, jids
 
-    def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_multiples=False):
+    def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_returners_to_stayers=False, frame_largest_cc=None):
         '''
         Extract largest leave-one-observation-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
 
         Returns:
             frame_largest_cc (BipartiteLongBase): dataframe of largest leave-one-observation-out connected component
         '''
-        # This will become the largest leave-one-observation-out component
-        frame_largest_cc = None
-
         for cc in sorted(cc_list, reverse=True, key=len):
             if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
                 # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
@@ -248,7 +246,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Keep observations in connected components
-            frame_cc = self.keep_ids('j', cc, drop_multiples, is_sorted=True, copy=True)
+            frame_cc = self.keep_ids('j', cc, drop_returners_to_stayers, is_sorted=True, copy=True)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
@@ -258,7 +256,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
-            frame_cc = frame_cc.min_moves_frame(2, drop_multiples, is_sorted=True, copy=False)
+            frame_cc = frame_cc.min_moves_frame(2, drop_returners_to_stayers, is_sorted=True, copy=False)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
@@ -280,10 +278,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
                 if len(articulation_rows) > 0:
                     # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe)
-                    G2 = frame_cc.drop_rows(articulation_rows, drop_multiples, is_sorted=True, copy=False)._construct_graph('leave_one_observation_out')
+                    G2 = frame_cc.drop_rows(articulation_rows, drop_returners_to_stayers, is_sorted=True, copy=False)._construct_graph('leave_one_observation_out')
                     cc_list_2 = G2.components()
                     # Recursion step
-                    frame_cc = frame_cc._leave_one_observation_out(cc_list_2, component_size_variable, drop_multiples)
+                    frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers, frame_largest_cc=frame_largest_cc)
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -299,14 +297,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Return largest leave-one-observation-out component
         return frame_largest_cc
 
-    def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_multiples=False):
+    def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_returners_to_stayers=False):
         '''
         Extract largest leave-one-firm-out connected component.
 
         Arguments:
             bcc_list (list of lists): each entry is a biconnected component
             component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_multiples (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
             frame_largest_bcc (BipartiteLongBase): dataframe of largest leave-one-out connected component
@@ -323,7 +321,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Keep observations in biconnected components
-            frame_bcc = self.keep_ids('j', bcc, drop_multiples, is_sorted=True, copy=True)
+            frame_bcc = self.keep_ids('j', bcc, drop_returners_to_stayers, is_sorted=True, copy=True)
 
             if frame_largest_bcc is not None:
                 # If frame_bcc is already smaller than frame_largest_bcc
@@ -334,7 +332,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
             # This fixes a discrepency between igraph's biconnected components and the definition of leave-one-out connected set, where biconnected components is True if a firm has only 1 mover, since then it disappears from the graph - but leave-one-out requires the set of firms to remain unchanged
-            frame_bcc = frame_bcc.min_moves_frame(2, drop_multiples, is_sorted=True, copy=False)
+            frame_bcc = frame_bcc.min_moves_frame(2, drop_returners_to_stayers, is_sorted=True, copy=False)
 
             if frame_largest_bcc is not None:
                 # If frame_bcc is already smaller than frame_largest_bcc
@@ -349,7 +347,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             # # If new frame is not biconnected after dropping firms with 1 mover observation, recompute biconnected components
             # if not ((len(bcc_list_2) == 1) and (len(bcc_list_2[0]) == frame_bcc.n_firms())):
-            #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, component_size_variable, drop_multiples)
+            #     frame_bcc = frame_bcc._leave_one_out(bcc_list_2, component_size_variable, drop_returners_to_stayers)
 
             if frame_largest_bcc is None:
                 # If in the first round
@@ -526,14 +524,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     #     return articulation_obs
 
-    def keep_ids(self, id_col, keep_ids_list, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
+    def keep_ids(self, id_col, keep_ids_list, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Only keep ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             keep_ids_list (list): ids to keep
-            drop_multiples (bool): used only if id_col == 'j' and using BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): used only if id_col is 'j' or 'g' and using BipartiteLongCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -553,7 +551,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         if id_col in ['j', 'g']:
             if isinstance(frame, bpd.BipartiteLongCollapsed):
                 # If BipartiteLongCollapsed
-                frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
+                frame = frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, copy=copy)
                 # We don't need to copy again
                 copy = False
 
@@ -571,14 +569,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def drop_ids(self, id_col, drop_ids_list, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
+    def drop_ids(self, id_col, drop_ids_list, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Drop ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             drop_ids_list (list): ids to drop
-            drop_multiples (bool): used only if id_col == 'j' and using BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): used only if id_col is 'j' or 'g' and using BipartiteLongCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -598,7 +596,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         if id_col in ['j', 'g']:
             if isinstance(frame, bpd.BipartiteLongCollapsed):
                 # If BipartiteLongCollapsed
-                frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
+                frame = frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, copy=copy)
                 # We don't need to copy again
                 copy = False
 
@@ -616,13 +614,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def keep_rows(self, rows_list, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
+    def keep_rows(self, rows_list, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Only keep particular rows.
 
         Arguments:
             rows_list (list): rows to keep
-            drop_multiples (bool): used only if using BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -642,7 +640,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
-            frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
+            frame = frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, copy=copy)
             # We don't need to copy again
             copy = False
 
@@ -668,19 +666,19 @@ class BipartiteLongBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
-        n_obs = self.loc[:, 'j'].value_counts()
+        n_obs = self.loc[:, 'j'].value_counts(sort=False)
         valid_firms = n_obs[n_obs.to_numpy() >= threshold].index.to_numpy()
 
         return valid_firms
 
     @bpd.recollapse_loop(False)
-    def min_obs_frame(self, threshold=2, drop_multiples=False, is_sorted=False, copy=True):
+    def min_obs_frame(self, threshold=2, drop_returners_to_stayers=False, is_sorted=False, copy=True):
         '''
         Keep firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
-            drop_multiples (bool): used only for BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -697,7 +695,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
-            frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
+            frame = frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, copy=copy)
             # We don't need to copy again
             copy = False
 
@@ -728,13 +726,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
         return valid_firms
 
     @bpd.recollapse_loop(False)
-    def min_workers_frame(self, threshold=15, drop_multiples=False, is_sorted=False, copy=True):
+    def min_workers_frame(self, threshold=15, drop_returners_to_stayers=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
-            drop_multiples (bool): used only for BipartiteLongCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -751,7 +749,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
-            frame = frame.recollapse(drop_multiples=drop_multiples, is_sorted=is_sorted, copy=copy)
+            frame = frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, copy=copy)
             # We don't need to copy again
             copy = False
 
@@ -779,13 +777,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
         return self.loc[self.loc[:, 'm'].to_numpy() > 0].min_obs_firms(threshold=threshold)
 
     @bpd.recollapse_loop(True)
-    def min_moves_frame(self, threshold=2, drop_multiples=False, is_sorted=False, reset_index=True, copy=True):
+    def min_moves_frame(self, threshold=2, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
-            drop_multiples (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -801,4 +799,4 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         valid_firms = self.min_moves_firms(threshold)
 
-        return self.keep_ids('j', keep_ids_list=valid_firms, drop_multiples=drop_multiples, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+        return self.keep_ids('j', keep_ids_list=valid_firms, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
