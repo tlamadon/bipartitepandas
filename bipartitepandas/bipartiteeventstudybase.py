@@ -303,7 +303,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             cc_list (list of lists): each entry is a connected component
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_returners_to_stayers (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
             frame_largest_cc (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
@@ -317,7 +317,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             bcc_list (list of lists): each entry is a biconnected component
             component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_returners_to_stayers (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
             frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
@@ -357,7 +357,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             keep_ids_list (list): ids to keep
-            drop_returners_to_stayers (bool): used only if id_col == 'j' and using BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -381,7 +381,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             drop_ids_list (list): ids to drop
-            drop_returners_to_stayers (bool): used only if id_col == 'j' and using BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -404,7 +404,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             rows (list): rows to keep
-            drop_returners_to_stayers (bool): used only if using BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -459,7 +459,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
-            drop_returners_to_stayers (bool): used only for BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -512,7 +512,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
-            drop_returners_to_stayers (bool): used only for BipartiteEventStudyCollapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -551,7 +551,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
-            drop_returners_to_stayers (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy

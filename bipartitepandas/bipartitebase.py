@@ -56,7 +56,7 @@ _clean_params_default = ParamsDict({
         '''),
     'drop_returners_to_stayers': (False, 'type', bool,
         '''
-            (default=False) If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components).
+            (default=False) If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
         '''),
     'is_sorted': (False, 'type', bool,
         '''
@@ -756,7 +756,11 @@ class BipartiteBase(DataFrame):
                 new_col_dict[key] = None
         frame.col_dict = new_col_dict
         keep_cols = sorted(keep_cols, key=col_order) # Sort columns
+        ##### Disable Pandas warning #####
+        pd.options.mode.chained_assignment = None
         DataFrame.rename(frame, rename_dict, axis=1, inplace=True)
+        ##### Re-enable Pandas warning #####
+        pd.options.mode.chained_assignment = 'warn'
         for col in frame.columns:
             if col not in keep_cols:
                 frame.drop(col, axis=1, inplace=True)
@@ -896,7 +900,7 @@ class BipartiteBase(DataFrame):
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if None, keep all observations.
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
-            drop_returners_to_stayers (bool): if True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency when re-collapsing data for leave-one-out connected components)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             copy (bool): if False, avoid copy
 
         Returns:
@@ -1043,7 +1047,7 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             rows (list): rows to keep
-            drop_returners_to_stayers (bool): used only if using collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -1089,7 +1093,7 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
-            drop_returners_to_stayers (bool): used only for collapsed format. If True, rather than collapsing over spells, drop any spells with multiple observations (this is for computational efficiency)
+            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
