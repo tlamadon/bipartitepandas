@@ -245,7 +245,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 if skip:
                     continue
 
-            # Keep observations in connected components
+            # Keep observations in connected components (NOTE: this requires the copy)
             frame_cc = self.keep_ids('j', cc, drop_returners_to_stayers, is_sorted=True, copy=True)
 
             if frame_largest_cc is not None:
@@ -277,7 +277,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 articulation_rows = frame_cc._get_articulation_obs(G2, frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy())
 
                 if len(articulation_rows) > 0:
-                    # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe)
+                    # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
                     G2 = frame_cc.drop_rows(articulation_rows, drop_returners_to_stayers, is_sorted=True, copy=False)._construct_graph('leave_one_observation_out')
                     cc_list_2 = G2.components()
                     # Recursion step
@@ -320,7 +320,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 if skip:
                     continue
 
-            # Keep observations in biconnected components
+            # Keep observations in biconnected components (NOTE: this requires the copy)
             frame_bcc = self.keep_ids('j', bcc, drop_returners_to_stayers, is_sorted=True, copy=True)
 
             if frame_largest_bcc is not None:
