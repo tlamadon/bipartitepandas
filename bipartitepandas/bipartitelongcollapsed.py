@@ -84,8 +84,14 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         ## Aggregate at the spell level
         spell = frame.groupby(spell_id, sort=False)
 
+        # Indicator if must re-recollapse
+        recursion = False
+
         if drop_returners_to_stayers:
             data_spell = frame.loc[spell['i'].transform('size').to_numpy() == 1, :]
+            if len(data_spell) < len(frame):
+                # If recollapsed, it's possible another recollapse might be necessary
+                recursion = True
         else:
             # First, prepare required columns for aggregation
             agg_funcs = {
@@ -126,6 +132,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
         collapsed_frame._set_attributes(self, no_dict=False)
+
+        if recursion:
+            return collapsed_frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, copy=False)
 
         return collapsed_frame
 

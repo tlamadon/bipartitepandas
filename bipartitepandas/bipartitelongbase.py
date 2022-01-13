@@ -278,7 +278,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
                 if len(articulation_rows) > 0:
                     # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-                    G2 = frame_cc.drop_rows(articulation_rows, drop_returners_to_stayers, is_sorted=True, copy=False)._construct_graph('leave_one_observation_out')
+                    G2 = frame_cc.drop_rows(articulation_rows, drop_returners_to_stayers, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out')
                     cc_list_2 = G2.components()
                     # Recursion step
                     frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers, frame_largest_cc=frame_largest_cc)
