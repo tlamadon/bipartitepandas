@@ -42,9 +42,9 @@ def recollapse_loop(force=False):
 
 # Define default parameter dictionaries
 _clean_params_default = ParamsDict({
-    'connectedness': ('connected', 'set', ['connected', 'leave_one_observation_out', 'leave_one_firm_out', None],
+    'connectedness': (None, 'set', ['connected', 'leave_one_observation_out', 'leave_one_firm_out', None],
         '''
-            (default='connected') When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
+            (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
         '''),
     'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers'],
         '''

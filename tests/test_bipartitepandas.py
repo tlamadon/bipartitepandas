@@ -29,7 +29,7 @@ def test_refactor_1():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     bdf = bpd.BipartiteLong(data=df)
-    bdf = bdf.clean_data()
+    bdf = bdf.clean_data(bpd.clean_params({'connectedness': 'connected'}))
     bdf = bdf.get_collapsed_long()
     bdf = bdf.get_es()
 
@@ -67,7 +67,7 @@ def test_refactor_2():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     bdf = bpd.BipartiteLong(data=df)
-    bdf = bdf.clean_data()
+    bdf = bdf.clean_data(bpd.clean_params({'connectedness': 'connected'}))
     bdf = bdf.get_collapsed_long()
     bdf = bdf.get_es()
 
