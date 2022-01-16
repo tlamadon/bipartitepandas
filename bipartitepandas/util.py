@@ -187,6 +187,29 @@ def to_list(data):
         return [data]
     return list(data)
 
+def fast_shift(arr, num, fill_value=-2):
+    '''
+    Shift array by a given number of elements, filling values rolled around with fill_value. Source: https://stackoverflow.com/a/42642326/17333120.
+
+    Arguments:
+        arr (NumPy Array): array to shift
+        num (int): how many elements to shift
+        fill_value (any): value to input for elements that roll around
+
+    Returns:
+        (NumPy Array): shifted array
+    '''
+    result = np.empty_like(arr)
+    if num > 0:
+        result[:num] = fill_value
+        result[num:] = arr[:-num]
+    elif num < 0:
+        result[num:] = fill_value
+        result[:num] = arr[-num:]
+    else:
+        result[:] = arr
+    return result
+
 loggers = {}
 
 def logger_init(obj):

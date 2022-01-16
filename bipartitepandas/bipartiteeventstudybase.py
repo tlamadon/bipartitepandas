@@ -77,7 +77,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         # Get i for this and next period
         i_col = self.loc[:, 'i'].to_numpy()
-        i_next = np.roll(i_col, -1)
+        i_next = bpd.fast_shift(i_col, -1)
         # Get m
         m_col = (self.loc[:, 'm'].to_numpy() > 0)
         # Get t for this and next period
@@ -343,7 +343,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         base_linkages = self.loc[move_rows, ['j1', 'j2']].to_numpy()
         i_col = self.loc[move_rows, 'i'].to_numpy()
-        i_next = np.roll(i_col, -1)
+        i_next = bpd.fast_shift(i_col, -1)
         j2_next = np.roll(base_linkages[:, 1], -1)
         valid_i = (i_col == i_next)
         secondary_linkages = np.stack([base_linkages[valid_i, 1], j2_next[valid_i]], axis=1)

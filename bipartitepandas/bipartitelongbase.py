@@ -55,8 +55,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
         if not frame._col_included('m') or force:
             i_col = frame.loc[:, 'i'].to_numpy()
             j_col = frame.loc[:, 'j'].to_numpy()
-            i_prev = np.roll(i_col, 1)
-            i_next = np.roll(i_col, -1)
+            i_prev = bpd.fast_shift(i_col, 1)
+            i_next = bpd.fast_shift(i_col, -1)
             j_prev = np.roll(j_col, 1)
             j_next = np.roll(j_col, -1)
 
@@ -125,7 +125,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     keep_cols += ['m']
 
         # Ensure lagged values are for the same worker, and that neither observation is a stay (this ensures that if there is a mover who stays at a firm for multiple periods, e.g. A -> B -> B -> B -> C, then the event study will be A -> B, B -> C, with the middle B listed as a stayer)
-        movers = movers.loc[(movers.loc[:, 'i1'].to_numpy() == movers.loc[:, 'i2'].to_numpy()) & (movers.loc[:, 'j1'].to_numpy() != movers.loc[:, 'j2'].to_numpy()), :]
+        # Correct i because first row rolls over
+        same_i = (movers.loc[:, 'i1'].to_numpy() == movers.loc[:, 'i2'].to_numpy())
+        same_i[0] = False
+        movers = movers.loc[same_i & (movers.loc[:, 'j1'].to_numpy() != movers.loc[:, 'j2'].to_numpy()), :]
+        del same_i
 
         # Set 'm' = 1 for movers
         movers.drop(['m1', 'm2'], axis=1, inplace=True)
@@ -374,7 +378,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         i_col = self.loc[move_rows, 'i'].to_numpy()
         j_col = self.loc[move_rows, 'j'].to_numpy()
         j_next = np.roll(j_col, -1)
-        i_match = (i_col == np.roll(i_col, -1))
+        i_match = (i_col == bpd.fast_shift(i_col, -1))
         j_col = j_col[i_match]
         j_next = j_next[i_match]
         linkages = np.stack([j_col, j_next], axis=1)
@@ -391,11 +395,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
         j_col = self.loc[move_rows, 'j'].to_numpy()
-        i_next = np.roll(i_col, -1)
+        i_next = bpd.fast_shift(i_col, -1)
         j_next = np.roll(j_col, -1)
         valid_next = (i_col == i_next)
         base_linkages = np.stack([j_col[valid_next], j_next[valid_next]], axis=1)
-        i_next_2 = np.roll(i_col, -2)
+        i_next_2 = bpd.fast_shift(i_col, -2)
         j_next_2 = np.roll(j_col, -2)
         valid_next_2 = (i_col == i_next_2)
         secondary_linkages = np.stack([j_col[valid_next_2], j_next_2[valid_next_2]], axis=1)
@@ -412,11 +416,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
         indices = self.loc[move_rows, :].index.to_numpy()
-        i_next = np.roll(i_col, -1)
+        i_next = bpd.fast_shift(i_col, -1)
         indices_next = np.roll(indices, -1)
         valid_next = (i_col == i_next)
         base_indices = np.stack([indices[valid_next], indices_next[valid_next]], axis=1)
-        i_next_2 = np.roll(i_col, -2)
+        i_next_2 = bpd.fast_shift(i_col, -2)
         indices_next_2 = np.roll(indices, -2)
         valid_next_2 = (i_col == i_next_2)
         secondary_indices = np.stack([indices[valid_next_2], indices_next_2[valid_next_2]], axis=1)

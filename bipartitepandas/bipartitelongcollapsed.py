@@ -54,9 +54,11 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Returns:
             frame (BipartiteBase): BipartiteBase with ids in the given set
         '''
-        # Sort data by i (and t, if included)
         self.log('beginning recollapse', level='info')
-        frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
+
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+        self.log('data sorted by i (and t, if included)', level='info')
 
         # Add w
         if 'w' not in frame.columns:
@@ -65,21 +67,19 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         # Introduce lagged i and j
         i_col = frame.loc[:, 'i'].to_numpy()
         j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = np.roll(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1)
         j_prev = np.roll(j_col, 1)
         self.log('lagged i and j introduced', level='info')
 
-        # Generate spell ids
-        new_spell = (j_col != j_prev) | (i_col != i_prev) # Allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells
+        # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
+        new_spell = (j_col != j_prev) | (i_col != i_prev)
         del i_col, j_col, i_prev, j_prev
         spell_id = new_spell.cumsum()
         self.log('spell ids generated', level='info')
 
         # Quickly check whether a recollapse is necessary
         if (len(frame) < 2) or (spell_id[-1] == len(frame)):
-            if copy:
-                return self.copy()
-            return self
+            return frame
 
         ## Aggregate at the spell level
         spell = frame.groupby(spell_id, sort=False)
@@ -130,10 +130,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
         data_spell.reset_index(drop=True, inplace=True)
 
+        self.log('data aggregated at the spell level', level='info')
+
         collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
         collapsed_frame._set_attributes(self, no_dict=False)
 
         if recursion:
+            self.log('must re-collapse again', level='info')
             return collapsed_frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, copy=False)
 
         return collapsed_frame

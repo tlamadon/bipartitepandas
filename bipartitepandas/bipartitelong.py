@@ -90,14 +90,16 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             collapsed_frame (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
         '''
+        self.log('beginning collapse', level='info')
+
         # Sort data by i (and t, if included)
-        frame = pd.DataFrame(self.sort_rows(is_sorted=is_sorted, copy=copy))
-        self.log('copied data sorted by i (and t, if included)', level='info')
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+        self.log('data sorted by i (and t, if included)', level='info')
 
         # Introduce lagged i and j
         i_col = frame.loc[:, 'i'].to_numpy()
         j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = np.roll(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1)
         j_prev = np.roll(j_col, 1)
         self.log('lagged i and j introduced', level='info')
 
@@ -105,8 +107,12 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
         new_spell = (j_col != j_prev) | (i_col != i_prev)
         del i_col, j_col, i_prev, j_prev
-        spell_id = new_spell.cumsum() - 1
+        spell_id = new_spell.cumsum()
         self.log('spell ids generated', level='info')
+
+        # Quickly check whether a collapse is necessary
+        if (len(frame) < 2) or (spell_id[-1] == len(frame)):
+            return frame
 
         ## Aggregate at the spell level
         spell = frame.groupby(spell_id, sort=False)
@@ -215,12 +221,15 @@ class BipartiteLong(bpd.BipartiteLongBase):
             # Sort data by i, t
             fill_frame.sort_values(['i', 't'], inplace=True)
             fill_frame.reset_index(drop=True, inplace=True)
+        # Find missing periods
         i_col = fill_frame.loc[:, 'i'].to_numpy()
         t_col = fill_frame.loc[:, 't'].to_numpy()
-        i_prev = np.roll(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1)
         t_prev = np.roll(t_col, 1)
         missing_periods = (i_col == i_prev) & (t_col != t_prev + 1)
-        if np.sum(missing_periods) > 0: # If have data to fill in
+        del i_prev
+        if np.sum(missing_periods) > 0:
+            # If have data to fill in
             fill_data = []
             for index in fill_frame.loc[missing_periods, :].index:
                 row = fill_frame.iloc[index]
@@ -293,10 +302,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Find periods where the worker transitioned, which can serve as fulcrums for the event study
         i_col = es_extended_frame.loc[:, 'i'].to_numpy()
         transition_col = es_extended_frame.loc[:, transition_col].to_numpy()
-        i_prev = np.roll(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1)
         transition_prev = np.roll(transition_col, 1)
-        es_extended_frame.loc[:, 'moved_firms'] = ((i_col == i_prev) & (transition_col != transition_prev)).astype(int, copy=False)
-        del i_col, transition_col, i_prev, transition_prev
+        moved_firms = (i_col == i_prev) & (transition_col != transition_prev)
+        es_extended_frame.loc[:, 'moved_firms'] = moved_firms
+        del i_col, transition_col, i_prev, transition_prev, moved_firms
 
         # Compute valid moves - periods where the worker transitioned, and they also have periods_pre periods before the move, and periods_post periods after (and including) the move
         es_extended_frame.loc[:, 'valid_move'] = \
@@ -310,35 +320,39 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Only keep workers who have a valid move
         es_extended_frame = es_extended_frame.loc[es_extended_frame.groupby('i', sort=False)['valid_move'].transform(max).to_numpy() > 0, :]
 
-        # Compute lags and leads
-        column_order = [[] for _ in range(len(include))] # For column order
+        ## Compute lags and leads
+        # For column order
+        column_order = [[] for _ in range(len(include))]
         for i, col in enumerate(all_cols):
             # Compute lagged values
             for j in range(1, periods_pre + 1):
-                es_extended_frame.loc[:, '{}_l{}'.format(col, j)] = es_extended_frame.loc[:, col].shift(periods=j)
+                es_extended_frame.loc[:, '{}_l{}'.format(col, j)] = bpd.fast_shift(es_extended_frame.loc[:, col].to_numpy(), j)
                 if col in include:
                     column_order[i].insert(0, '{}_l{}'.format(col, j))
             # Compute lead values
             for j in range(periods_post): # No + 1 because base period has no shift (e.g. y becomes y_f1)
-                if j > 0: # No shift necessary for base period because already exists
-                    es_extended_frame.loc[:, '{}_f{}'.format(col, j + 1)] = es_extended_frame.loc[:, col].shift(periods=-j)
+                if j > 0:
+                    # No shift necessary for base period because already exists
+                    es_extended_frame.loc[:, '{}_f{}'.format(col, j + 1)] = bpd.fast_shift(es_extended_frame.loc[:, col].to_numpy(), -j)
                 if col in include:
                     column_order[i].append('{}_f{}'.format(col, j + 1))
 
         # Demarcate valid rows (all should start off True)
         valid_rows = ~pd.isna(es_extended_frame.loc[:, col])
-        # Construct i and i_prev
+        # Construct i and i_prev (these have changed from before)
         i_col = es_extended_frame.loc[:, 'i'].to_numpy()
-        i_prev = np.roll(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1)
         # Stable pre-trend
         for col in stable_pre:
-            for i in range(2, periods_pre + 1): # Shift 1 is baseline
-                valid_rows = (valid_rows) & (np.roll(es_extended_frame.loc[:, col].to_numpy(), 1) == np.roll(es_extended_frame.loc[:, col].to_numpy(), i)) & (i_prev == np.roll(i_col, i))
+            for i in range(2, periods_pre + 1):
+                # Shift 1 is baseline
+                valid_rows = (valid_rows) & (np.roll(es_extended_frame.loc[:, col].to_numpy(), 1) == np.roll(es_extended_frame.loc[:, col].to_numpy(), i)) & (i_prev == bpd.fast_shift(i_col, i))
 
         # Stable post-trend
         for col in stable_post:
-            for i in range(1, periods_post): # Shift 0 is baseline
-                valid_rows = (valid_rows) & (es_extended_frame.loc[:, col].to_numpy() == np.roll(es_extended_frame.loc[:, col].to_numpy(), -i)) & (i_col == np.roll(i_col, -i))
+            for i in range(1, periods_post):
+                # Shift 0 is baseline
+                valid_rows = (valid_rows) & (es_extended_frame.loc[:, col].to_numpy() == np.roll(es_extended_frame.loc[:, col].to_numpy(), -i)) & (i_col == bpd.fast_shift(i_col, -i))
 
         # Delete i_col, i_prev
         del i_col, i_prev
