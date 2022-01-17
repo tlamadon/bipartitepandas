@@ -156,7 +156,7 @@ class BipartiteBase(DataFrame):
         **kwargs: keyword arguments for Pandas DataFrame
     '''
     # Attributes, required for Pandas inheritance
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', '_log_on_indicator', '_level_fn_dict']
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', '_log_on_indicator', '_log_level_fn_dict']
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, log=True, **kwargs):
         # Initialize DataFrame
@@ -193,7 +193,7 @@ class BipartiteBase(DataFrame):
             self._reset_attributes()
 
         # Dictionary of logger functions based on level
-        self._level_fn_dict = {
+        self._log_level_fn_dict = {
             'debug': self.logger.debug,
             'info': self.logger.info,
             'warning': self.logger.warning,
@@ -251,7 +251,7 @@ class BipartiteBase(DataFrame):
         '''
         if self._log_on_indicator:
             # Log message
-            self._level_fn_dict[level](message)
+            self._log_level_fn_dict[level](message)
 
     def summary(self):
         '''
