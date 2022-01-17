@@ -824,7 +824,7 @@ class BipartiteBase(DataFrame):
         frame = frame.sort_rows(is_sorted=clean_params['is_sorted'], copy=False)
 
         # Next, drop NaN observations
-        if (not frame.no_na) or force:
+        if force or (not frame.no_na):
             frame.log('dropping NaN observations', level='info')
             if frame.isna().to_numpy().any():
                 # Checking first is considerably faster if there are no NaN observations
@@ -839,13 +839,13 @@ class BipartiteBase(DataFrame):
         frame = frame.gen_m(force=True, copy=False)
 
         # Next, make sure i-t (worker-year) observations are unique
-        if (frame.i_t_unique is not None) and ((not frame.i_t_unique) or force):
+        if (force or (not frame.i_t_unique)) and (frame.i_t_unique is not None):
             frame.log('keeping highest paying job for i-t (worker-year) duplicates', level='info')
             frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], is_sorted=True, copy=False)
 
             # Update no_duplicates
             frame.no_duplicates = True
-        elif (not frame.no_duplicates) or force:
+        elif force or (not frame.no_duplicates):
             # Drop duplicate observations
             frame.log('dropping duplicate observations', level='info')
             frame.drop_duplicates(inplace=True)
@@ -854,17 +854,17 @@ class BipartiteBase(DataFrame):
             frame.no_duplicates = True
 
         # Next, drop returns
-        if (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']) or force:
+        if force or (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']):
             frame = frame._drop_returns(how=clean_params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         frame.log('making column ids contiguous', level='info')
         for contig_col, is_contig in frame.columns_contig.items():
-            if (is_contig is not None) and ((not is_contig) or force):
+            if (force or (not is_contig)) and (is_contig is not None):
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
-        if (frame.connectedness in [False, None]) or force:
+        if force or (frame.connectedness in [False, None]):
             # Generate largest connected set
             frame.log('generating largest connected set', level='info')
             frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], copy=False)
