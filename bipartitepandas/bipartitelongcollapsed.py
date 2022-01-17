@@ -42,12 +42,12 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudyCollapsed
 
-    def recollapse(self, drop_returners_to_stayers=False, is_sorted=False, copy=True):
+    def recollapse(self, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Recollapse data by job spells (so each spell for a particular worker at a particular firm is one observation). This method is necessary in the case of biconnected data - it can occur that a worker works at firms A and B in the order A B A, but the biconnected components removes firm B. So the data is now A A, and needs to be recollapsed so this is marked as a stayer.
 
         Arguments:
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -64,30 +64,24 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         if 'w' not in frame.columns:
             frame.loc[:, 'w'] = 1
 
-        # Introduce lagged i and j
-        i_col = frame.loc[:, 'i'].to_numpy()
-        j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
-        j_prev = np.roll(j_col, 1)
-        self.log('lagged i and j introduced', level='info')
+        # If no returns
+        if frame.no_returns:
+            return frame
 
-        # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
-        new_spell = (j_col != j_prev) | (i_col != i_prev)
-        del i_col, j_col, i_prev, j_prev
-        spell_id = new_spell.cumsum()
-        self.log('spell ids generated', level='info')
+        # Generate spell ids
+        spell_ids = frame._get_spell_ids(is_sorted=True, copy=False)
 
         # Quickly check whether a recollapse is necessary
-        if (len(frame) < 2) or (spell_id[-1] == len(frame)):
+        if (len(frame) < 2) or (spell_ids[-1] == len(frame)):
             return frame
 
         ## Aggregate at the spell level
-        spell = frame.groupby(spell_id, sort=False)
+        spell = frame.groupby(spell_ids, sort=False)
 
         # Indicator if must re-recollapse
         recursion = False
 
-        if drop_returners_to_stayers:
+        if drop_returns_to_stays:
             data_spell = frame.loc[spell['i'].transform('size').to_numpy() == 1, :]
             if len(data_spell) < len(frame):
                 # If recollapsed, it's possible another recollapse might be necessary
@@ -137,7 +131,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         if recursion:
             self.log('must re-collapse again', level='info')
-            return collapsed_frame.recollapse(drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, copy=False)
+            return collapsed_frame.recollapse(drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
 
         return collapsed_frame
 

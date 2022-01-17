@@ -96,26 +96,15 @@ class BipartiteLong(bpd.BipartiteLongBase):
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
         self.log('data sorted by i (and t, if included)', level='info')
 
-        # Introduce lagged i and j
-        i_col = frame.loc[:, 'i'].to_numpy()
-        j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
-        j_prev = np.roll(j_col, 1)
-        self.log('lagged i and j introduced', level='info')
-
-        # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
-        # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
-        new_spell = (j_col != j_prev) | (i_col != i_prev)
-        del i_col, j_col, i_prev, j_prev
-        spell_id = new_spell.cumsum()
-        self.log('spell ids generated', level='info')
+        # Generate spell ids
+        spell_ids = frame._get_spell_ids(is_sorted=True, copy=False)
 
         # Quickly check whether a collapse is necessary
-        if (len(frame) < 2) or (spell_id[-1] == len(frame)):
+        if (len(frame) < 2) or (spell_ids[-1] == len(frame)):
             return frame
 
         ## Aggregate at the spell level
-        spell = frame.groupby(spell_id, sort=False)
+        spells = frame.groupby(spell_ids, sort=False)
 
         # First, prepare required columns for aggregation
         agg_funcs = {
@@ -142,7 +131,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                         agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='mean')
 
         # Finally, aggregate
-        data_spell = spell.agg(**agg_funcs)
+        data_spell = spells.agg(**agg_funcs)
 
         # Sort columns
         sorted_cols = sorted(data_spell.columns, key=bpd.col_order)
@@ -156,6 +145,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         # m can change from long to collapsed long
         collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
+
+        # If no time column, then returns will be collapsed
+        if not collapsed_frame._col_included('t'):
+            collapsed_frame.no_returns = True
 
         return collapsed_frame
 

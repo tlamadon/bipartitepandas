@@ -279,6 +279,21 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return long_frame
 
+    def _drop_returns(self, how=False, is_sorted=False, reset_index=False, copy=True):
+        '''
+        Drop observations where workers leave a firm then return to it.
+
+        Arguments:
+            how (str): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            reset_index (bool): used for long format, does nothing for event study
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteEventStudyBase): dataframe that drops observations where workers leave a firm then return to it
+        '''
+        return self.get_long(is_sorted=is_sorted, copy=copy)._drop_returns(how=how, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
     def _prep_cluster(self, stayers_movers=None, t=None, weighted=True, is_sorted=False, copy=False):
         '''
         Prepare data for clustering.
@@ -296,33 +311,33 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         return self.get_long(is_sorted=is_sorted, copy=copy)._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, copy=False)
 
-    def _leave_one_observation_out(self, cc_list, component_size_variable='length', drop_returners_to_stayers=False):
+    def _leave_one_observation_out(self, cc_list, component_size_variable='length', drop_returns_to_stays=False):
         '''
         Extract largest leave-one-observation-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
             frame_largest_cc (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
         '''
-        return self.get_long(is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
 
-    def _leave_one_firm_out(self, bcc_list, component_size_variable='length', drop_returners_to_stayers=False):
+    def _leave_one_firm_out(self, bcc_list, component_size_variable='length', drop_returns_to_stays=False):
         '''
         Extract largest leave-one-firm-out connected component.
 
         Arguments:
             bcc_list (list of lists): each entry is a biconnected component
             component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
             frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
         '''
-        return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
 
     def _construct_connected_linkages(self):
         '''
@@ -350,14 +365,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
         return linkages
 
-    def keep_ids(self, id_col, keep_ids_list, drop_returners_to_stayers=False, is_sorted=False, reset_index=False, copy=True):
+    def keep_ids(self, id_col, keep_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Only keep ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             keep_ids_list (list): ids to keep
-            drop_returners_to_stayers (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
+            drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -372,16 +387,16 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
-    def drop_ids(self, id_col, drop_ids_list, drop_returners_to_stayers=False, is_sorted=False, reset_index=False, copy=True):
+    def drop_ids(self, id_col, drop_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Drop ids belonging to a given set of ids.
 
         Arguments:
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             drop_ids_list (list): ids to drop
-            drop_returners_to_stayers (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
+            drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -396,15 +411,15 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
-    def keep_rows(self, rows, drop_returners_to_stayers=False, is_sorted=False, reset_index=False, copy=True):
+    def keep_rows(self, rows, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Only keep particular rows.
 
         Arguments:
             rows (list): rows to keep
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -419,7 +434,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
     def min_obs_firms(self, threshold=2):
         '''
@@ -453,13 +468,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return np.array(valid_firms)
 
-    def min_obs_frame(self, threshold=2, drop_returners_to_stayers=False, is_sorted=False, copy=True):
+    def min_obs_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -472,7 +487,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
     def min_workers_firms(self, threshold=2):
         '''
@@ -506,13 +521,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return np.array(valid_firms)
 
-    def min_workers_frame(self, threshold=15, drop_returners_to_stayers=False, is_sorted=False, copy=True):
+    def min_workers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -525,7 +540,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
     def min_moves_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
@@ -545,13 +560,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_firms(threshold=threshold)
 
-    def min_moves_frame(self, threshold=2, drop_returners_to_stayers=False, is_sorted=False, reset_index=False, copy=True):
+    def min_moves_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy
@@ -565,4 +580,4 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)

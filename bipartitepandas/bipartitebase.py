@@ -26,7 +26,7 @@ def recollapse_loop(force=False):
             self = args[0]
             frame = func(*args, **kwargs)
 
-            if force or isinstance(self, (bpd.BipartiteLongCollapsed, bpd.BipartiteEventStudyCollapsed)):
+            if force or (isinstance(self, (bpd.BipartiteLongCollapsed, bpd.BipartiteEventStudyCollapsed)) and (not self.no_returns)):
                 kwargs['copy'] = False
                 if len(frame) != len(self):
                     # If the frame changes, we have to re-loop until stability
@@ -54,9 +54,13 @@ _clean_params_default = ParamsDict({
         '''
             (default='max') When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format.
         '''),
-    'drop_returners_to_stayers': (False, 'type', bool,
+    'drop_returns': (False, 'set', [False, 'returns', 'returners'],
         '''
-            (default=False) If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
+            (default=False) If 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm.
+        '''),
+    'drop_returns_to_stays': (False, 'type', bool,
+        '''
+            (default=False) Applies only if 'drop_returns' is set to False. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
         '''),
     'is_sorted': (False, 'type', bool,
         '''
@@ -156,7 +160,7 @@ class BipartiteBase(DataFrame):
         **kwargs: keyword arguments for Pandas DataFrame
     '''
     # Attributes, required for Pandas inheritance
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', '_log_on_indicator', '_log_level_fn_dict']
+    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', 'no_returns', '_log_on_indicator', '_log_level_fn_dict']
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, log=True, **kwargs):
         # Initialize DataFrame
@@ -276,6 +280,7 @@ class BipartiteBase(DataFrame):
         ret_str += 'no NaN values: {}\n'.format(self.no_na)
         ret_str += 'no duplicates: {}\n'.format(self.no_duplicates)
         ret_str += 'i-t (worker-year) observations unique (None if t column(s) not included): {}\n'.format(self.i_t_unique)
+        ret_str += 'no returns (None if not yet computed): {}\n'.format(self.no_returns)
         for contig_col, is_contig in self.columns_contig.items():
             ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, is_contig)
         ret_str += 'connectedness (None if ignoring connectedness): {}'.format(self.connectedness)
@@ -312,6 +317,10 @@ class BipartiteBase(DataFrame):
         no_i_t_duplicates = (not self.duplicated(subset=sort_order).any())
 
         ret_str += 'i-t (worker-year) observations unique (if t column(s) not included, then i observations unique): {}\n'.format(no_i_t_duplicates)
+
+        ##### No returns #####
+        no_returns = (len(self) == len(self._drop_returns(how='returns', reset_index=False)))
+        ret_str += 'no returns: {}\n'.format(no_returns)
 
         ##### Contiguous ids #####
         for contig_col in self.columns_contig.keys():
@@ -465,13 +474,19 @@ class BipartiteBase(DataFrame):
             self._reset_id_reference_dict(include_id_reference_dict)
         # # Logger
         # self.logger = frame.logger
-        # Booleans
-        self.connectedness = frame.connectedness # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
-        self.no_na = frame.no_na # If True, no NaN observations in the data
-        self.no_duplicates = frame.no_duplicates # If True, no duplicate rows in the data
-        self.i_t_unique = frame.i_t_unique # If True, each worker has at most one observation per period
+        ## Booleans
+        # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
+        self.connectedness = frame.connectedness
+        # If True, no NaN observations in the data
+        self.no_na = frame.no_na
+        # If True, no duplicate rows in the data
+        self.no_duplicates = frame.no_duplicates
+        # If True, each worker has at most one observation per period
+        self.i_t_unique = frame.i_t_unique
+        # If True, no workers who leave a firm then return to it
+        self.no_returns = frame.no_returns
 
-    def _reset_attributes(self, columns_contig=True, connected=True, no_na=True, no_duplicates=True, i_t_unique=True):
+    def _reset_attributes(self, columns_contig=True, connected=True, no_na=True, no_duplicates=True, i_t_unique=True, no_returns=True):
         '''
         Reset class attributes conditions to be False/None.
 
@@ -481,6 +496,7 @@ class BipartiteBase(DataFrame):
             no_na (bool): if True, reset self.no_na
             no_duplicates (bool): if True, reset self.no_duplicates
             i_t_unique (bool): if True, reset self.i_t_unique
+            no_returns (bool): if True, reset self.no_returns
 
         Returns:
             self (BipartiteBase): self with reset class attributes
@@ -492,17 +508,24 @@ class BipartiteBase(DataFrame):
                 else:
                     self.columns_contig[contig_col] = None
         if connected:
-            self.connectedness = None # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
+            # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_one_observation_out', observations are in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
+            self.connectedness = None
         if no_na:
-            self.no_na = False # If True, no NaN observations in the data
+            # If True, no NaN observations in the data
+            self.no_na = False
         if no_duplicates:
-            self.no_duplicates = False # If True, no duplicate rows in the data
+            # If True, no duplicate rows in the data
+            self.no_duplicates = False
         if i_t_unique:
-            self.i_t_unique = None # If True, each worker has at most one observation per period; if None, t column not included (set to False later in method if t column included)
+            # If True, each worker has at most one observation per period; if None, t column not included (set to False later in method if t column included)
+            self.i_t_unique = None
 
             # Verify whether period included
             if self._col_included('t'):
                 self.i_t_unique = False
+        if no_returns:
+            # If True, no workers who leave a firm then return to it
+            self.no_returns = None
 
         # logger_init(self)
 
@@ -828,6 +851,10 @@ class BipartiteBase(DataFrame):
             # Update no_duplicates
             frame.no_duplicates = True
 
+        # Next, drop returns
+        if (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']) or force:
+            frame = frame._drop_returns(how=clean_params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
+
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         frame.log('making column ids contiguous', level='info')
         for contig_col, is_contig in frame.columns_contig.items():
@@ -838,9 +865,9 @@ class BipartiteBase(DataFrame):
         if (frame.connectedness in [False, None]) or force:
             # Generate largest connected set
             frame.log('generating largest connected set', level='info')
-            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returners_to_stayers=clean_params['drop_returners_to_stayers'], copy=False)
+            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], copy=False)
 
-            # Next, check contiguous ids after igraph, in case the connected components dropped ids
+            # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
                 if (is_contig is not None) and (not is_contig):
                     frame.log('making {} ids contiguous'.format(contig_col), level='info')
@@ -893,14 +920,14 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _conset(self, connectedness='connected', component_size_variable='firms', drop_returners_to_stayers=False, copy=True):
+    def _conset(self, connectedness='connected', component_size_variable='firms', drop_returns_to_stays=False, copy=True):
         '''
         Update data to include only the largest connected component of movers.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if None, keep all observations.
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             copy (bool): if False, avoid copy
 
         Returns:
@@ -946,14 +973,14 @@ class BipartiteBase(DataFrame):
             # Compute all connected components of firms (each entry is a connected component)
             cc_list = G.components()
             # Keep largest leave-one-out set of firms
-            frame = frame._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers)
+            frame = frame._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays)
         elif connectedness == 'leave_one_firm_out':
             if isinstance(frame, bpd.BipartiteEventStudyBase):
                 warnings.warn('You should avoid computing leave-one-firm-out components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all biconnected components of firms (each entry is a biconnected component)
             bcc_list = G.biconnected_components()
             # Keep largest leave-one-out set of firms
-            frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returners_to_stayers=drop_returners_to_stayers)
+            frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays)
 
         # Data is now connected
         frame.connectedness = connectedness
@@ -1041,13 +1068,13 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def drop_rows(self, rows, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
+    def drop_rows(self, rows, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Drop particular rows.
 
         Arguments:
             rows (list): rows to keep
-            drop_returners_to_stayers (bool): If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -1065,7 +1092,7 @@ class BipartiteBase(DataFrame):
         self_rows = set(self.index.to_numpy())
         rows_diff = self_rows.difference(rows)
 
-        return self.keep_rows(rows_diff, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+        return self.keep_rows(rows_diff, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
     def min_movers_firms(self, threshold=15):
         '''
@@ -1087,13 +1114,13 @@ class BipartiteBase(DataFrame):
         return frame.min_workers_firms(threshold)
 
     @recollapse_loop(True)
-    def min_movers_frame(self, threshold=15, drop_returners_to_stayers=False, is_sorted=False, reset_index=True, copy=True):
+    def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many movers.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
-            drop_returners_to_stayers (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -1110,7 +1137,7 @@ class BipartiteBase(DataFrame):
 
         valid_firms = self.min_movers_firms(threshold)
 
-        return self.keep_ids('j', keep_ids_list=valid_firms, drop_returners_to_stayers=drop_returners_to_stayers, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+        return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
     def cluster(self, cluster_params=cluster_params()):
         '''

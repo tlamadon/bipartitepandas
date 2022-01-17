@@ -1172,8 +1172,8 @@ def test_general_methods_18():
     bdf.rename({'g': 'r'})
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
 
-def test_save_19():
-    # Make sure changing attributes in a saved version does not overwrite values in the original.
+def test_copy_19():
+    # Make sure changing attributes in a copied version does not overwrite values in the original.
     worker_data = []
     # Worker 0
     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
@@ -1680,6 +1680,99 @@ def test_drop_ids_27():
     # Make sure long and es give same results
     bdf_keep2 = bdf.drop_ids('j', ids_to_drop)
     assert len(bdf_keep) == len(bdf_keep2)
+
+def test_drop_returns_28_1():
+    # Drop observations where a worker leaves a firm then returns to it
+    worker_data = []
+    # Firm 0 -> 1 -> 0
+    # Time 1 -> 2 -> 4
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
+    # Firm 2 -> 1
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data(bpd.clean_params({'drop_returns': 'returns'}))
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] > 0]
+
+    assert stayers.iloc[0]['i'] == 0
+    assert stayers.iloc[0]['j'] == 0
+    assert stayers.iloc[0]['y'] == 1
+    assert stayers.iloc[0]['t'] == 2
+
+    assert movers.iloc[0]['i'] == 1
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['y'] == 1
+    assert movers.iloc[0]['t'] == 1
+
+    assert movers.iloc[1]['i'] == 1
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 2
+
+    assert movers.iloc[2]['i'] == 2
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['t'] == 1
+
+    assert movers.iloc[3]['i'] == 2
+    assert movers.iloc[3]['j'] == 0
+    assert movers.iloc[3]['y'] == 2
+    assert movers.iloc[3]['t'] == 2
+
+def test_drop_returns_28_2():
+    # Drop workers who ever leave a firm then return to it
+    worker_data = []
+    # Firm 0 -> 1 -> 0
+    # Time 1 -> 2 -> 4
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
+    # Firm 2 -> 1
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data(bpd.clean_params({'drop_returns': 'returners'}))
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] > 0]
+
+    assert len(stayers) == 0
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['y'] == 1
+    assert movers.iloc[0]['t'] == 1
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 2
+
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['t'] == 1
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['j'] == 0
+    assert movers.iloc[3]['y'] == 2
+    assert movers.iloc[3]['t'] == 2
 
 def test_min_obs_firms_28_1():
     # List only firms that meet a minimum threshold of observations.
