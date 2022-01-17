@@ -694,8 +694,10 @@ class BipartiteBase(DataFrame):
             frame (BipartiteBase): merged dataframe
         '''
         frame = DataFrame.merge(self, *args, **kwargs)
-        frame = self._constructor(frame) # Use correct constructor
-        if kwargs['how'] == 'left': # Non-left merge could cause issues with data, by default resets attributes
+        # Use correct constructor
+        frame = self._constructor(frame)
+        if kwargs['how'] == 'left':
+            # Non-left merge could cause issues with data, by default resets attributes
             frame._set_attributes(self)
         return frame
 
