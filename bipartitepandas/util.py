@@ -187,7 +187,7 @@ def to_list(data):
         return [data]
     return list(data)
 
-def fast_shift(arr, num, fill_value=-2):
+def fast_shift(arr, num, fill_value=np.nan):
     '''
     Shift array by a given number of elements, filling values rolled around with fill_value. Source: https://stackoverflow.com/a/42642326/17333120.
 

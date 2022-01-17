@@ -99,7 +99,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Introduce lagged i and j
         i_col = frame.loc[:, 'i'].to_numpy()
         j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
         j_prev = np.roll(j_col, 1)
         self.log('lagged i and j introduced', level='info')
 
@@ -224,7 +224,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Find missing periods
         i_col = fill_frame.loc[:, 'i'].to_numpy()
         t_col = fill_frame.loc[:, 't'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
         t_prev = np.roll(t_col, 1)
         missing_periods = (i_col == i_prev) & (t_col != t_prev + 1)
         del i_prev
@@ -302,7 +302,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Find periods where the worker transitioned, which can serve as fulcrums for the event study
         i_col = es_extended_frame.loc[:, 'i'].to_numpy()
         transition_col = es_extended_frame.loc[:, transition_col].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
         transition_prev = np.roll(transition_col, 1)
         moved_firms = (i_col == i_prev) & (transition_col != transition_prev)
         es_extended_frame.loc[:, 'moved_firms'] = moved_firms
@@ -324,16 +324,17 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # For column order
         column_order = [[] for _ in range(len(include))]
         for i, col in enumerate(all_cols):
+            col_np = es_extended_frame.loc[:, col].to_numpy()
             # Compute lagged values
             for j in range(1, periods_pre + 1):
-                es_extended_frame.loc[:, '{}_l{}'.format(col, j)] = bpd.fast_shift(es_extended_frame.loc[:, col].to_numpy(), j)
+                es_extended_frame.loc[:, '{}_l{}'.format(col, j)] = bpd.fast_shift(col_np, j, fill_value=-2)
                 if col in include:
                     column_order[i].insert(0, '{}_l{}'.format(col, j))
             # Compute lead values
             for j in range(periods_post): # No + 1 because base period has no shift (e.g. y becomes y_f1)
                 if j > 0:
                     # No shift necessary for base period because already exists
-                    es_extended_frame.loc[:, '{}_f{}'.format(col, j + 1)] = bpd.fast_shift(es_extended_frame.loc[:, col].to_numpy(), -j)
+                    es_extended_frame.loc[:, '{}_f{}'.format(col, j + 1)] = bpd.fast_shift(col_np, -j, fill_value=-2)
                 if col in include:
                     column_order[i].append('{}_f{}'.format(col, j + 1))
 
@@ -341,18 +342,20 @@ class BipartiteLong(bpd.BipartiteLongBase):
         valid_rows = ~pd.isna(es_extended_frame.loc[:, col])
         # Construct i and i_prev (these have changed from before)
         i_col = es_extended_frame.loc[:, 'i'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
         # Stable pre-trend
         for col in stable_pre:
+            col_np = es_extended_frame.loc[:, col].to_numpy()
             for i in range(2, periods_pre + 1):
                 # Shift 1 is baseline
-                valid_rows = (valid_rows) & (np.roll(es_extended_frame.loc[:, col].to_numpy(), 1) == np.roll(es_extended_frame.loc[:, col].to_numpy(), i)) & (i_prev == bpd.fast_shift(i_col, i))
+                valid_rows = (valid_rows) & (np.roll(col_np, 1) == np.roll(col_np, i)) & (i_prev == bpd.fast_shift(i_col, i, fill_value=-3))
 
         # Stable post-trend
         for col in stable_post:
+            col_np = es_extended_frame.loc[:, col].to_numpy()
             for i in range(1, periods_post):
                 # Shift 0 is baseline
-                valid_rows = (valid_rows) & (es_extended_frame.loc[:, col].to_numpy() == np.roll(es_extended_frame.loc[:, col].to_numpy(), -i)) & (i_col == bpd.fast_shift(i_col, -i))
+                valid_rows = (valid_rows) & (col_np == np.roll(col_np, -i)) & (i_col == bpd.fast_shift(i_col, -i, fill_value=-2))
 
         # Delete i_col, i_prev
         del i_col, i_prev

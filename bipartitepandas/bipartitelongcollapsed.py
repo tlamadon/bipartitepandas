@@ -67,7 +67,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         # Introduce lagged i and j
         i_col = frame.loc[:, 'i'].to_numpy()
         j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1)
+        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
         j_prev = np.roll(j_col, 1)
         self.log('lagged i and j introduced', level='info')
 
