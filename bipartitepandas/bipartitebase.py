@@ -695,7 +695,7 @@ class BipartiteBase(DataFrame):
         '''
         frame = DataFrame.merge(self, *args, **kwargs)
         # Use correct constructor
-        frame = self._constructor(frame)
+        frame = self._constructor(frame, log=self._log_on_indicator)
         if kwargs['how'] == 'left':
             # Non-left merge could cause issues with data, by default resets attributes
             frame._set_attributes(self)

@@ -273,7 +273,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         data_long.sort_values(sort_order, inplace=True)
         data_long.reset_index(drop=True, inplace=True)
 
-        long_frame = frame._constructor_long(data_long)
+        long_frame = frame._constructor_long(data_long, log=frame._log_on_indicator)
         long_frame._set_attributes(frame, no_dict=True)
         long_frame = long_frame.gen_m(force=True, copy=False)
 

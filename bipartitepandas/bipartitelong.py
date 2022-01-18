@@ -140,7 +140,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         self.log('data aggregated at the spell level', level='info')
 
-        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
+        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell, log=frame._log_on_indicator)
         collapsed_frame._set_attributes(self, no_dict=True)
 
         # m can change from long to collapsed long

@@ -126,7 +126,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         self.log('data aggregated at the spell level', level='info')
 
-        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell)
+        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell, log=frame._log_on_indicator)
         collapsed_frame._set_attributes(self, no_dict=False)
 
         if recursion:
@@ -135,7 +135,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def uncollapse(self, is_sorted=False):
+    def uncollapse(self, is_sorted=False, copy=True):
         '''
         Return collapsed long data reformatted into long data, by assuming variables constant over spells.
 
@@ -147,9 +147,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             long_frame (BipartiteLong): collapsed long data reformatted as BipartiteLong data
         '''
         # Sort data by i and t
-        self.sort_rows(is_sorted=is_sorted, copy=False)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
-        all_cols = self._included_cols(flat=True)
+        all_cols = frame._included_cols(flat=True)
         # Skip t1 and t2
         all_cols.remove('t1')
         all_cols.remove('t2')
@@ -158,9 +158,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             long_dict[col] = []
 
         # Iterate over rows with multiple periods
-        nt = self.loc[:, 't2'].to_numpy() - self.loc[:, 't1'].to_numpy() + 1
-        for i in range(len(self)):
-            row = self.iloc[i]
+        nt = frame.loc[:, 't2'].to_numpy() - frame.loc[:, 't1'].to_numpy() + 1
+        for i in range(len(frame)):
+            row = frame.iloc[i]
             nt_i = nt[i]
             long_dict['t'].extend(np.arange(row.loc['t1'], row.loc['t2'] + 1))
             for col in all_cols:
@@ -172,7 +172,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         data_long = pd.DataFrame(long_dict)
         # Correct datatypes
         data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
-        data_long = data_long.astype({col: self.col_dtype_dict[col] for col in all_cols}, copy=False)
+        data_long = data_long.astype({col: frame.col_dtype_dict[col] for col in all_cols}, copy=False)
 
         # Sort columns
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
@@ -180,8 +180,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         self.log('data uncollapsed to long format', level='info')
 
-        long_frame = bpd.BipartiteLong(data_long)
-        long_frame._set_attributes(self, no_dict=True)
+        long_frame = bpd.BipartiteLong(data_long, log=frame._log_on_indicator)
+        long_frame._set_attributes(frame, no_dict=True)
         long_frame = long_frame.gen_m(force=True, copy=False)
 
         return long_frame
@@ -205,7 +205,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         if frame._col_included('t'):
             # Convert to long
-            frame = frame.uncollapse(is_sorted=is_sorted)
+            frame = frame.uncollapse(is_sorted=is_sorted, copy=False)
 
             frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False)
 

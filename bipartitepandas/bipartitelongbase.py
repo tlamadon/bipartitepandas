@@ -161,7 +161,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         frame.log('data reformatted as event study', level='info')
 
-        es_frame = frame._constructor_es(data_es)
+        es_frame = frame._constructor_es(data_es, log=frame._log_on_indicator)
         es_frame._set_attributes(frame, no_dict=True)
 
         # Sort data by i and t
