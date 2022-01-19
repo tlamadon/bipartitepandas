@@ -794,7 +794,7 @@ class BipartiteBase(DataFrame):
 
     def clean_data(self, clean_params=clean_params()):
         '''
-        Clean data to make sure there are no NaN or duplicate observations, firms are connected by movers and firm ids are contiguous.
+        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
 
         Arguments:
             clean_params (ParamsDict): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
@@ -965,10 +965,15 @@ class BipartiteBase(DataFrame):
             frame_largest_cc = frame.keep_ids('j', largest_cc, is_sorted=True, copy=False)
             for cc in cc_list[1:]:
                 frame_cc = frame.keep_ids('j', cc, is_sorted=True, copy=False)
-                replace = bpd.compare_frames(frame_cc, frame_largest_cc, size_variable=component_size_variable, operator='geq')
+                replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
                 if replace:
                     frame_largest_cc = frame_cc
             frame = frame_largest_cc
+            try:
+                # Remove comp_size attribute
+                del frame_largest_cc.comp_size
+            except AttributeError:
+                pass
         elif connectedness == 'leave_one_observation_out':
             if isinstance(frame, bpd.BipartiteEventStudyBase):
                 warnings.warn('You should avoid computing leave-one-observation-out connected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')

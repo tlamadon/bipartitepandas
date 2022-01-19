@@ -371,7 +371,11 @@ def compare_frames(frame1, frame2, size_variable='len', operator='geq'):
         'stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
         'movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i')
     }
-    val1 = property_dict[size_variable](frame1)
+    try:
+        val1 = frame1.comp_size
+    except AttributeError:
+        val1 = property_dict[size_variable](frame1)
+        frame1.comp_size = val1
     val2 = property_dict[size_variable](frame2)
 
     # Second, compare the values using the given operator

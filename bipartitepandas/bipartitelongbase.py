@@ -1,6 +1,7 @@
 '''
 Base class for bipartite networks in long or collapsed long form
 '''
+from xml.dom.minidom import Attr
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
@@ -335,7 +336,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         for cc in sorted(cc_list, reverse=True, key=len):
             if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
                 # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
-                skip = frame_largest_cc.n_firms() >= len(cc)
+                try:
+                    skip = frame_largest_cc.comp_size >= len(cc)
+                except AttributeError:
+                    frame_largest_cc.comp_size = frame_largest_cc.n_firms()
+                    skip = frame_largest_cc.comp_size >= len(cc)
 
                 if skip:
                     continue
@@ -385,9 +390,20 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.compare_frames(frame_cc, frame_largest_cc, size_variable=component_size_variable, operator='gt')
+                replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
             if replace:
                 frame_largest_cc = frame_cc
+                try:
+                    # Reset comp_size attribute
+                    del frame_largest_cc.comp_size
+                except AttributeError:
+                    pass
+
+        try:
+            # Remove comp_size attribute
+            del frame_largest_cc.comp_size
+        except AttributeError:
+            pass
 
         # Return largest leave-one-observation-out component
         return frame_largest_cc
@@ -410,7 +426,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         for bcc in sorted(bcc_list, reverse=True, key=len):
             if (frame_largest_bcc is not None) and (component_size_variable == 'firms'):
                 # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
-                skip = frame_largest_bcc.n_firms() >= len(bcc)
+                try:
+                    skip = frame_largest_bcc.comp_size >= len(bcc)
+                except AttributeError:
+                    frame_largest_bcc.comp_size = frame_largest_bcc.n_firms()
+                    skip = frame_largest_bcc.comp_size >= len(bcc)
 
                 if skip:
                     continue
@@ -451,9 +471,20 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.compare_frames(frame_bcc, frame_largest_bcc, size_variable=component_size_variable, operator='gt')
+                replace = bpd.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='lt')
             if replace:
                 frame_largest_bcc = frame_bcc
+                try:
+                    # Reset comp_size attribute
+                    del frame_largest_bcc.comp_size
+                except AttributeError:
+                    pass
+
+        try:
+            # Remove comp_size attribute
+            del frame_largest_bcc.comp_size
+        except AttributeError:
+            pass
 
         # Return largest biconnected component
         return frame_largest_bcc
@@ -555,7 +586,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 pass
 
             # Delete row(s)
-            # print(G_row.es().get_attribute_values('to'))
+            # print(G_row.es())
             G_obs.delete_edges(obs_indices)
 
             # Check whether removing row(s) disconnects graph
