@@ -334,9 +334,9 @@ class BipartiteBase(DataFrame):
         ##### Connectedness #####
         is_connected_dict = {
             None: lambda : None,
-            'connected': lambda : self._construct_graph(self.connectedness).is_connected(),
-            'leave_one_observation_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness))),
-            'leave_one_firm_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness)))
+            'connected': lambda : self._construct_graph(self.connectedness, is_sorted=False)[0].is_connected(),
+            'leave_one_observation_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness, is_sorted=False))),
+            'leave_one_firm_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness, is_sorted=False)))
         }
         is_connected = is_connected_dict[self.connectedness]()
 
@@ -867,7 +867,7 @@ class BipartiteBase(DataFrame):
         if force or (frame.connectedness in [False, None]):
             # Generate largest connected set
             frame.log('generating largest connected set', level='info')
-            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], copy=False)
+            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
@@ -922,7 +922,7 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _conset(self, connectedness='connected', component_size_variable='firms', drop_returns_to_stays=False, copy=True):
+    def _conset(self, connectedness='connected', component_size_variable='firms', drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Update data to include only the largest connected component of movers.
 
@@ -930,6 +930,7 @@ class BipartiteBase(DataFrame):
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if None, keep all observations.
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -956,13 +957,13 @@ class BipartiteBase(DataFrame):
         # Update data
         # Find largest connected set of firms
         # First, create graph
-        G = frame._construct_graph(connectedness)
+        G, max_j = frame._construct_graph(connectedness, is_sorted=is_sorted)
         if connectedness == 'connected':
             # Compute all connected components of firms
             cc_list = sorted(G.components(), reverse=True, key=len)
             # Iterate over connected components to find the largest
             largest_cc = cc_list[0]
-            frame_largest_cc = frame.keep_ids('j', largest_cc, is_sorted=True, copy=False)
+            frame_largest_cc = frame.keep_ids('j', largest_cc, is_sorted=is_sorted, copy=False)
             for cc in cc_list[1:]:
                 frame_cc = frame.keep_ids('j', cc, is_sorted=True, copy=False)
                 replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
@@ -980,7 +981,7 @@ class BipartiteBase(DataFrame):
             # Compute all connected components of firms (each entry is a connected component)
             cc_list = G.components()
             # Keep largest leave-one-out set of firms
-            frame = frame._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays)
+            frame = frame._leave_one_observation_out(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
         elif connectedness == 'leave_one_firm_out':
             if isinstance(frame, bpd.BipartiteEventStudyBase):
                 warnings.warn('You should avoid computing leave-one-firm-out components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
@@ -1004,24 +1005,26 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _construct_graph(self, connectedness='connected'):
+    def _construct_graph(self, connectedness='connected', is_sorted=False):
         '''
         Construct igraph graph linking firms by movers.
 
         Arguments:
             connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
-            (igraph Graph): graph
+            (tuple of igraph Graph, int): (graph, maximum firm id)
         '''
         self.log('constructing {} graph'.format(connectedness), level='info')
         linkages_fn_dict = {
-            'connected': self._construct_connected_linkages,
-            'leave_one_observation_out': self._construct_biconnected_linkages,
-            'leave_one_firm_out': self._construct_biconnected_linkages
+            'connected': self._construct_firm_linkages,
+            'leave_one_observation_out': self._construct_firm_worker_linkages,
+            'leave_one_firm_out': self._construct_firm_double_linkages
         }
+        linkages, max_j = linkages_fn_dict[connectedness](is_sorted=is_sorted)
         # n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
-        return ig.Graph(edges=linkages_fn_dict[connectedness]()) # n=n_firms
+        return ig.Graph(edges=linkages), max_j # n=n_firms
 
     def sort_cols(self, copy=True):
         '''

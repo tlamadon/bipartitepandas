@@ -339,21 +339,27 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
 
-    def _construct_connected_linkages(self):
+    def _construct_firm_linkages(self, is_sorted=False):
         '''
         Construct numpy array linking firms by movers, for use with connected components.
 
+        Arguments:
+            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
+
         Returns:
-            (NumPy Array): firm linkages
+            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
         '''
         return self.loc[(self.loc[:, 'm'].to_numpy() > 0), ['j1', 'j2']].to_numpy()
 
-    def _construct_biconnected_linkages(self):
+    def _construct_firm_double_linkages(self, is_sorted=False):
         '''
-        Construct numpy array linking firms by movers, for use with biconnected components.
+        Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
+
+        Arguments:
+            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
 
         Returns:
-            (NumPy Array): firm linkages
+            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         base_linkages = self.loc[move_rows, ['j1', 'j2']].to_numpy()
@@ -363,7 +369,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         valid_i = (i_col == i_next)
         secondary_linkages = np.stack([base_linkages[valid_i, 1], j2_next[valid_i]], axis=1)
         linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
-        return linkages
+        max_j = np.max(linkages)
+
+        return linkages, max_j
 
     def keep_ids(self, id_col, keep_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''

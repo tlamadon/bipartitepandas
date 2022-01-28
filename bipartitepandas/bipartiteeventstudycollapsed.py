@@ -1,6 +1,7 @@
 '''
 Class for a bipartite network in collapsed event study form
 '''
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -43,3 +44,21 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
             (BipartiteLongCollapsed): class
         '''
         return bpd.BipartiteLongCollapsed
+
+    def _construct_firm_worker_linkages(self, is_sorted=False):
+        '''
+        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
+
+        Arguments:
+            is_sorted (bool): used for event study format, does nothing for collapsed event study
+
+        Returns:
+            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
+        '''
+        move_rows = (self.loc[:, 'm'].to_numpy() > 0)
+        base_linkages = self.loc[move_rows, ['i', 'j1']].to_numpy()
+        secondary_linkages = self.loc[move_rows, ['i', 'j2']].to_numpy()
+        linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
+        max_j = np.max(linkages)
+
+        return linkages, max_j

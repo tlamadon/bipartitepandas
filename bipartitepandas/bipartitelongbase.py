@@ -5,6 +5,8 @@ from xml.dom.minidom import Attr
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
+from igraph import Graph
+from collections import Counter
 
 class BipartiteLongBase(bpd.BipartiteBase):
     '''
@@ -320,33 +322,38 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame, weights, jids
 
-    def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None):
+    def _leave_one_observation_out(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, prev_articulation_rows = [], is_sorted=False):
         '''
         Extract largest leave-one-observation-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
+            max_j (int): maximum j
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
+            prev_articulation_rows (list): articulation rows from previous recursion
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             frame_largest_cc (BipartiteLongBase): dataframe of largest leave-one-observation-out connected component
         '''
         for cc in sorted(cc_list, reverse=True, key=len):
+            cc = np.array(cc)
+            cc_j = cc[cc <= max_j]
             if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
                 # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
                 try:
-                    skip = frame_largest_cc.comp_size >= len(cc)
+                    skip = (frame_largest_cc.comp_size >= len(cc_j))
                 except AttributeError:
                     frame_largest_cc.comp_size = frame_largest_cc.n_firms()
-                    skip = frame_largest_cc.comp_size >= len(cc)
+                    skip = (frame_largest_cc.comp_size >= len(cc_j))
 
                 if skip:
                     continue
 
             # Keep observations in connected components (NOTE: this does not require a copy)
-            frame_cc = self.keep_ids('j', cc, drop_returns_to_stays, is_sorted=True, copy=False)
+            frame_cc = self.keep_ids('j', cc_j, drop_returns_to_stays, is_sorted=True, copy=False)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
@@ -366,22 +373,28 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Construct graph
-            G2 = frame_cc._construct_graph('leave_one_observation_out')
+            G2, max_j2 = frame_cc._construct_graph('leave_one_observation_out', is_sorted=is_sorted)
 
-            # Extract articulation firms
-            articulation_firms = G2.articulation_points()
+            # Extract articulation rows
+            articulation_rows = frame_cc._get_articulation_obs(G2, max_j2, is_sorted=is_sorted)
 
-            if len(articulation_firms) > 0:
-                # If there are articulation firms
-                # Extract articulation rows
-                articulation_rows = frame_cc._get_articulation_obs(G2, frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy())
-
-                if len(articulation_rows) > 0:
+            if len(articulation_rows) > 0:
+                if (len(articulation_rows) == len(prev_articulation_rows)) and np.all(articulation_rows == prev_articulation_rows):
+                    # If new frame has the same articulation rows, we are stuck in a loop - this is because the current set of firms is actually already leave-one-observation-out connected
+                    pass
+                    # # If new frame has the same articulation rows, we are stuck in a loop - check if dropping the articulation rows changes the graph
+                    # # This needs to construct a graph that uses only firms, because we check whether the largest connected component includes all firms
+                    # G2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out')
+                    # cc_list_2 = G2.components()
+                    # if frame_cc.n_firms() != len(max(cc_list_2, key=len)):
+                    #     # If stuck in a loop, it should be because the largest connected components in the new graph is identical to the current set of firms - if not, something is wrong
+                    #     raise NotImplementedError('Stuck in an invalid loop while constructing leave-one-observation-out connected components.')
+                else:
                     # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-                    G2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out')
+                    G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out', is_sorted=is_sorted)
                     cc_list_2 = G2.components()
                     # Recursion step
-                    frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc)
+                    frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, max_j=max_j2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, prev_articulation_rows=articulation_rows, is_sorted=is_sorted)
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -408,6 +421,96 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Return largest leave-one-observation-out component
         return frame_largest_cc
 
+    # def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None):
+    #     ''' # FIXME this is orders of magnitude slower than the new implementation, on sample data it looks at 275x more observations to check whether the set is leave-one-out connected (it also results in a smaller connected set)
+    #     Extract largest leave-one-observation-out connected component.
+
+    #     Arguments:
+    #         cc_list (list of lists): each entry is a connected component
+    #         component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+    #         frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
+
+    #     Returns:
+    #         frame_largest_cc (BipartiteLongBase): dataframe of largest leave-one-observation-out connected component
+    #     '''
+    #     for cc in sorted(cc_list, reverse=True, key=len):
+    #         if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
+    #             # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
+    #             try:
+    #                 skip = (frame_largest_cc.comp_size >= len(cc))
+    #             except AttributeError:
+    #                 frame_largest_cc.comp_size = frame_largest_cc.n_firms()
+    #                 skip = (frame_largest_cc.comp_size >= len(cc))
+
+    #             if skip:
+    #                 continue
+
+    #         # Keep observations in connected components (NOTE: this does not require a copy)
+    #         frame_cc = self.keep_ids('j', cc, drop_returns_to_stays, is_sorted=True, copy=False)
+
+    #         if frame_largest_cc is not None:
+    #             # If frame_cc is already smaller than frame_largest_cc
+    #             skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+
+    #             if skip:
+    #                 continue
+
+    #         # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+    #         frame_cc = frame_cc.min_moves_frame(2, drop_returns_to_stays, is_sorted=True, copy=False)
+
+    #         if frame_largest_cc is not None:
+    #             # If frame_cc is already smaller than frame_largest_cc
+    #             skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+
+    #             if skip:
+    #                 continue
+
+    #         # Construct graph
+    #         G2 = frame_cc._construct_graph('leave_one_observation_out')
+
+    #         # Extract articulation firms
+    #         articulation_firms = G2.articulation_points()
+
+    #         if len(articulation_firms) > 0:
+    #             # If there are articulation firms
+    #             # Extract articulation rows
+    #             print('n rows:', len(frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy()))
+    #             articulation_rows = frame_cc._get_articulation_obs(G2, frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy())
+
+    #             if len(articulation_rows) > 0:
+    #                 print('n articulation rows:', len(articulation_rows))
+    #                 # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
+    #                 G2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out')
+    #                 cc_list_2 = G2.components()
+    #                 # Recursion step
+    #                 frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc)
+
+    #         if frame_largest_cc is None:
+    #             # If in the first round
+    #             replace = True
+    #         elif frame_cc is None:
+    #             # If the biconnected components have recursively been eliminated
+    #             replace = False
+    #         else:
+    #             replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+    #         if replace:
+    #             frame_largest_cc = frame_cc
+    #             try:
+    #                 # Reset comp_size attribute
+    #                 del frame_largest_cc.comp_size
+    #             except AttributeError:
+    #                 pass
+
+    #     try:
+    #         # Remove comp_size attribute
+    #         del frame_largest_cc.comp_size
+    #     except AttributeError:
+    #         pass
+
+    #     # Return largest leave-one-observation-out component
+    #     return frame_largest_cc
+
     def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_returns_to_stays=False):
         '''
         Extract largest leave-one-firm-out connected component.
@@ -427,10 +530,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
             if (frame_largest_bcc is not None) and (component_size_variable == 'firms'):
                 # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
                 try:
-                    skip = frame_largest_bcc.comp_size >= len(bcc)
+                    skip = (frame_largest_bcc.comp_size >= len(bcc))
                 except AttributeError:
                     frame_largest_bcc.comp_size = frame_largest_bcc.n_firms()
-                    skip = frame_largest_bcc.comp_size >= len(bcc)
+                    skip = (frame_largest_bcc.comp_size >= len(bcc))
 
                 if skip:
                     continue
@@ -489,12 +592,15 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Return largest biconnected component
         return frame_largest_bcc
 
-    def _construct_connected_linkages(self):
+    def _construct_firm_linkages(self, is_sorted=False):
         '''
         Construct numpy array linking firms by movers, for use with connected components.
 
+        Arguments:
+            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
+
         Returns:
-            (NumPy Array): firm linkages
+            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
@@ -504,15 +610,19 @@ class BipartiteLongBase(bpd.BipartiteBase):
         j_col = j_col[i_match]
         j_next = j_next[i_match]
         linkages = np.stack([j_col, j_next], axis=1)
+        max_j = np.max(linkages)
 
-        return linkages
+        return linkages, max_j
 
-    def _construct_biconnected_linkages(self):
+    def _construct_firm_double_linkages(self, is_sorted=False):
         '''
-        Construct numpy array linking firms by movers, for use with biconnected components.
+        Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
+
+        Arguments:
+            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
 
         Returns:
-            (NumPy Array): firm linkages
+            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
@@ -526,74 +636,76 @@ class BipartiteLongBase(bpd.BipartiteBase):
         valid_next_2 = (i_col == i_next_2)
         secondary_linkages = np.stack([j_col[valid_next_2], j_next_2[valid_next_2]], axis=1)
         linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
-        return linkages
+        max_j = np.max(linkages)
 
-    def _biconnected_linkages_indices(self):
-        '''
-        Construct numpy array of original indices for biconnected linkages. The first column tells you, for each link in the graph, what index the first observation in the link is coming from; and the second column tells you, for each link in the graph, what index the second observation in the link is coming from.
+        return linkages, max_j
 
-        Returns:
-            (NumPy Array): original indices
-        '''
-        move_rows = (self.loc[:, 'm'].to_numpy() > 0)
-        i_col = self.loc[move_rows, 'i'].to_numpy()
-        indices = self.loc[move_rows, :].index.to_numpy()
-        i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
-        indices_next = np.roll(indices, -1)
-        valid_next = (i_col == i_next)
-        base_indices = np.stack([indices[valid_next], indices_next[valid_next]], axis=1)
-        i_next_2 = bpd.fast_shift(i_col, -2, fill_value=-2)
-        indices_next_2 = np.roll(indices, -2)
-        valid_next_2 = (i_col == i_next_2)
-        secondary_indices = np.stack([indices[valid_next_2], indices_next_2[valid_next_2]], axis=1)
-        original_indices = np.concatenate([base_indices, secondary_indices], axis=0)
-        return original_indices
+    # def _biconnected_linkages_indices(self):
+    #     '''
+    #     Construct numpy array of original indices for biconnected linkages. The first column tells you, for each link in the graph, what index the first observation in the link is coming from; and the second column tells you, for each link in the graph, what index the second observation in the link is coming from.
 
-    def _get_articulation_obs(self, G, obs_list):
-        '''
-        Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
+    #     Returns:
+    #         (NumPy Array): original indices
+    #     '''
+    #     move_rows = (self.loc[:, 'm'].to_numpy() > 0)
+    #     i_col = self.loc[move_rows, 'i'].to_numpy()
+    #     indices = self.loc[move_rows, :].index.to_numpy()
+    #     i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
+    #     indices_next = np.roll(indices, -1)
+    #     valid_next = (i_col == i_next)
+    #     base_indices = np.stack([indices[valid_next], indices_next[valid_next]], axis=1)
+    #     i_next_2 = bpd.fast_shift(i_col, -2, fill_value=-2)
+    #     indices_next_2 = np.roll(indices, -2)
+    #     valid_next_2 = (i_col == i_next_2)
+    #     secondary_indices = np.stack([indices[valid_next_2], indices_next_2[valid_next_2]], axis=1)
+    #     original_indices = np.concatenate([base_indices, secondary_indices], axis=0)
+    #     return original_indices
 
-        Arguments:
-            G (igraph Graph): graph linking firms by movers
-            obs_list (list): list of observations to drop
+    # def _get_articulation_obs(self, G, obs_list):
+    #     ''' # FIXME this is for the old leave-one-out method
+    #     Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
 
-        Returns:
-            (list): articulation observations for self
-        '''
-        # Get original indices for biconnected linkages
-        original_indices = self._biconnected_linkages_indices()
-        index_first = original_indices[:, 0]
-        index_second = original_indices[:, 1]
+    #     Arguments:
+    #         G (igraph Graph): graph linking firms by movers
+    #         obs_list (list): list of observations to drop
 
-        # Save articulation observations (observations that disconnect the graph when they are removed)
-        articulation_obs = []
+    #     Returns:
+    #         (list): articulation observations for self
+    #     '''
+    #     # Get original indices for biconnected linkages
+    #     original_indices = self._biconnected_linkages_indices()
+    #     index_first = original_indices[:, 0]
+    #     index_second = original_indices[:, 1]
 
-        # Check if each observation is an articulation observation
-        for obs in obs_list:
-            G_obs = G.copy()
-            # Observation gives an index in the frame, but we need an index for the graph
-            try:
-                # If observation is first in pair
-                obs_indices = list(np.where(index_first == obs)[0])
-            except IndexError:
-                # If observation isn't first in pair
-                obs_indices = []
-            try:
-                # If observation is second in pair
-                obs_indices += list(np.where(index_second == obs)[0])
-            except IndexError:
-                # If observation isn't second in pair
-                pass
+    #     # Save articulation observations (observations that disconnect the graph when they are removed)
+    #     articulation_obs = []
 
-            # Delete row(s)
-            # print(G_row.es())
-            G_obs.delete_edges(obs_indices)
+    #     # Check if each observation is an articulation observation
+    #     for obs in obs_list:
+    #         G_obs = G.copy()
+    #         # Observation gives an index in the frame, but we need an index for the graph
+    #         try:
+    #             # If observation is first in pair
+    #             obs_indices = list(np.where(index_first == obs)[0])
+    #         except IndexError:
+    #             # If observation isn't first in pair
+    #             obs_indices = []
+    #         try:
+    #             # If observation is second in pair
+    #             obs_indices += list(np.where(index_second == obs)[0])
+    #         except IndexError:
+    #             # If observation isn't second in pair
+    #             pass
 
-            # Check whether removing row(s) disconnects graph
-            if not G_obs.is_connected():
-                articulation_obs += [obs]
+    #         # Delete row(s)
+    #         # print(G_row.es())
+    #         G_obs.delete_edges(obs_indices)
 
-        return articulation_obs
+    #         # Check whether removing row(s) disconnects graph
+    #         if not G_obs.is_connected():
+    #             articulation_obs += [obs]
+
+    #     return articulation_obs
 
     # def _get_articulation_obs(self, G, obs_list):
     #     ''' # FIXME this is around twice as slow as other implementation

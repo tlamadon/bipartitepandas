@@ -194,6 +194,50 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return frame
 
+    def _construct_firm_worker_linkages(self, is_sorted=False):
+        '''
+        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+
+        Returns:
+            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
+        '''
+        move_rows = (self.groupby('i', sort=(not is_sorted))['m'].transform('max') > 0)
+        i_col = self.loc[move_rows, 'i'].to_numpy()
+        j_col = self.loc[move_rows, 'j'].to_numpy()
+        max_j = np.max(j_col)
+        linkages = np.stack([i_col + max_j + 1, j_col], axis=1)
+
+        return linkages, max_j
+
+    def _get_articulation_obs(self, G, max_j, is_sorted=False):
+        '''
+        Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
+
+        Arguments:
+            G (igraph Graph): graph linking firms by movers
+            max_j (int): maximum j
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+
+        Returns:
+            (NumPy Array): indices of articulation observations
+        '''
+        # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
+        bridges = [tuple(sorted(a, reverse=True)) for a in G.biconnected_components() if len(a) == 2]
+        bridges_workers = set([bridge[0] - (max_j + 1) for bridge in bridges])
+        bridges_firms = set([bridge[1] for bridge in bridges])
+
+        # Get possible articulation observations
+        possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
+        # possible_articulation_obs = self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
+
+        # Find articulation observations - an observation is an articulation observation if the firm-worker pair has only a single observation
+        articulation_rows = possible_articulation_obs.index.to_numpy()[possible_articulation_obs.groupby(['i', 'j'], sort=(not (is_sorted and self.no_returns)))['m'].transform('size').to_numpy() == 1]
+
+        return articulation_rows
+
     def fill_periods(self, fill_j=-1, fill_y=pd.NA, fill_m=pd.NA, is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1, and y and m are filled in as pd.NA, but these values can be specified.
