@@ -322,7 +322,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame, weights, jids
 
-    def _leave_one_observation_out(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, prev_articulation_rows = [], is_sorted=False):
+    def _leave_one_observation_out(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False):
         '''
         Extract largest leave-one-observation-out connected component.
 
@@ -332,12 +332,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
-            prev_articulation_rows (list): articulation rows from previous recursion
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             frame_largest_cc (BipartiteLongBase): dataframe of largest leave-one-observation-out connected component
         '''
+        # Sort data by i (and t, if included)
+        self.sort_rows(is_sorted=is_sorted, copy=False)
+
         for cc in sorted(cc_list, reverse=True, key=len):
             cc = np.array(cc)
             cc_j = cc[cc <= max_j]
@@ -373,28 +375,17 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Construct graph
-            G2, max_j2 = frame_cc._construct_graph('leave_one_observation_out', is_sorted=is_sorted)
+            G2, max_j2 = frame_cc._construct_graph('leave_one_observation_out', is_sorted=True)
 
             # Extract articulation rows
-            articulation_rows = frame_cc._get_articulation_obs(G2, max_j2, is_sorted=is_sorted)
+            articulation_rows = frame_cc._get_articulation_obs(G2, max_j2, is_sorted=True)
 
             if len(articulation_rows) > 0:
-                if (len(articulation_rows) == len(prev_articulation_rows)) and np.all(articulation_rows == prev_articulation_rows):
-                    # If new frame has the same articulation rows, we are stuck in a loop - this is because the current set of firms is actually already leave-one-observation-out connected
-                    pass
-                    # # If new frame has the same articulation rows, we are stuck in a loop - check if dropping the articulation rows changes the graph
-                    # # This needs to construct a graph that uses only firms, because we check whether the largest connected component includes all firms
-                    # G2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out')
-                    # cc_list_2 = G2.components()
-                    # if frame_cc.n_firms() != len(max(cc_list_2, key=len)):
-                    #     # If stuck in a loop, it should be because the largest connected components in the new graph is identical to the current set of firms - if not, something is wrong
-                    #     raise NotImplementedError('Stuck in an invalid loop while constructing leave-one-observation-out connected components.')
-                else:
-                    # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-                    G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out', is_sorted=is_sorted)
-                    cc_list_2 = G2.components()
-                    # Recursion step
-                    frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, max_j=max_j2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, prev_articulation_rows=articulation_rows, is_sorted=is_sorted)
+                # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
+                G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out', is_sorted=True)
+                cc_list_2 = G2.components()
+                # Recursion step
+                frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, max_j=max_j2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True)
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -412,8 +403,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 except AttributeError:
                     pass
 
+        # Remove comp_size attribute before return
         try:
-            # Remove comp_size attribute
             del frame_largest_cc.comp_size
         except AttributeError:
             pass
@@ -511,7 +502,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
     #     # Return largest leave-one-observation-out component
     #     return frame_largest_cc
 
-    def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_returns_to_stays=False):
+    def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_returns_to_stays=False, is_sorted=False):
         '''
         Extract largest leave-one-firm-out connected component.
 
@@ -519,10 +510,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
             bcc_list (list of lists): each entry is a biconnected component
             component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             frame_largest_bcc (BipartiteLongBase): dataframe of largest leave-one-out connected component
         '''
+        # Sort data by i (and t, if included)
+        self.sort_rows(is_sorted=is_sorted, copy=False)
+
         # This will become the largest leave-one-firm-out component
         frame_largest_bcc = None
 
