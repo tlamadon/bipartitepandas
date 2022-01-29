@@ -121,12 +121,24 @@ class ParamsDict(MutableMapping):
         options_copy = self.__options.copy()
         return ParamsDict({k: (v, *options_copy[k]) for k, v in data_copy.items()})
 
+    def get_multiple(self, ks):
+        '''
+        Access the values associated with multiple keys.
+
+        Arguments:
+            ks (immutable or list of immutable): key(s) to access values
+
+        Returns
+            (tuple): value(s) associated with key(s)
+        '''
+        return (self[k] for k in to_list(ks))
+
     def describe(self, k):
         '''
         Describe what a particular key-value pair does.
 
         Arguments:
-            k (str): key
+            k (immutable): key
         '''
         options_type, options, description = self.__options[k]
         if isinstance(k, str):

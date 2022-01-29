@@ -7,7 +7,6 @@ import numpy as np
 # from numpy_groupies.aggregate_numpy import aggregate
 import pandas as pd
 from pandas import DataFrame, Int64Dtype
-# from scipy.sparse.csgraph import connected_components
 import warnings
 import bipartitepandas as bpd
 from bipartitepandas import col_order, update_dict, to_list, logger_init, col_dict_optional_cols, aggregate_transform, ParamsDict

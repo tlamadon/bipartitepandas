@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 # from random import choices
 from scipy.stats import norm
-from scipy.linalg import eig
 ax = np.newaxis
 from bipartitepandas import logger_init, ParamsDict
 
@@ -101,38 +100,9 @@ class SimBipartite:
         # Prevent plotting unless results exist
         self.monte_carlo_res = False
 
-    def __sim_network_gen_fe(self, sim_params):
+    def _gen_fe(self):
         '''
         Generate fixed effects values for simulated panel data corresponding to the calibrated model.
-
-        Arguments:
-            sim_params (dict): parameters for simulated data
-
-                Dictionary parameters:
-
-                    num_ind (int, default=10000): number of workers
-
-                    num_time (int, default=5): time length of panel
-
-                    firm_size (int, default=50): max number of individuals per firm
-
-                    nk (int, default=10): number of firm types
-
-                    nl (int, default=5): number of worker types
-
-                    alpha_sig (float, default=1): standard error of individual fixed effect (volatility of worker effects)
-
-                    psi_sig (float, default=1): standard error of firm fixed effect (volatility of firm effects)
-
-                    w_sig (float, default=1): standard error of residual in AKM wage equation (volatility of wage shocks)
-
-                    csort (float, default=1): sorting effect
-
-                    cnetw (float, default=1): network effect
-
-                    csig (float, default=1): standard error of sorting/network effects
-
-                    p_move (float, default=0.5): probability a worker moves firms in any period
 
         Returns:
             psi (NumPy Array): array of firm fixed effects
@@ -141,8 +111,7 @@ class SimBipartite:
             H (NumPy Array): stationary distribution
         '''
         # Extract parameters
-        nk, nl, alpha_sig, psi_sig = sim_params['nk'], sim_params['nl'], sim_params['alpha_sig'], sim_params['psi_sig']
-        csort, cnetw, csig = sim_params['csort'], sim_params['cnetw'], sim_params['csig']
+        nk, nl, alpha_sig, psi_sig, csort, cnetw, csig = self.sim_params.get_multiple(('nk', 'nl', 'alpha_sig', 'psi_sig', 'csort', 'cnetw', 'csig'))
 
         # Draw fixed effects
         psi = norm.ppf(np.linspace(1, nk, nk) / (nk + 1)) * psi_sig
@@ -150,36 +119,33 @@ class SimBipartite:
 
         # Generate transition matrices
         G = norm.pdf((psi[ax, ax, :] - cnetw * psi[ax, :, ax] - csort * alpha[:, ax, ax]) / csig)
-        G = np.divide(G, G.sum(axis=2)[:, :, ax])
+        G = G / G.sum(axis=2)[:, :, ax]
 
         # Generate empty stationary distributions
         H = np.ones((nl, nk)) / nl
 
         # Solve stationary distributions
         for l in range(0, nl):
-            # Solve eigenvectors
-            # Source: https://stackoverflow.com/questions/31791728/python-code-explanation-for-stationary-distribution-of-a-markov-chain
-            S, U = eig(G[l, :, :].T)
-            stationary = np.array(U[:, np.where(np.abs(S-1.) < 1e-8)[0][0]].flat)
+            # Solve eigenvectors (source: https://stackoverflow.com/a/58334399/17333120)
+            evals, evecs = np.linalg.eig(G[l, :, :].T)
+            stationary = evecs[:, np.isclose(evals, 1)][:, 0]
             stationary = stationary / np.sum(stationary)
             H[l, :] = stationary
 
         return psi, alpha, G, H
 
-    def __sim_network_draw_fids(self, freq, num_time, firm_size):
+    def _draw_fids(self, freq):
         '''
-        Draw firm ids for individual, given data that is grouped by worker id, spell id, and firm type.
+        Draw firm ids for individual spells, setting the maximum firm id computing how many observations each firm type has.
 
         Arguments:
             freq (NumPy Array): size of groups (groups by worker id, spell id, and firm type)
-            num_time (int): time length of panel
-            firm_size (int): max number of individuals per firm
 
         Returns:
             (NumPy Array): random firms for each group
         '''
-        max_int = int(np.maximum(1, freq.sum() / (firm_size * num_time)))
-        return np.array(self.rng.choice(max_int, size=freq.count()) + 1)
+        max_int = int(np.maximum(1, freq.sum() / (self.sim_params['firm_size'] * self.sim_params['num_time'])))
+        return self.rng.choice(max_int, size=freq.count())
 
     def sim_network(self):
         '''
@@ -188,16 +154,15 @@ class SimBipartite:
         Returns:
             data (Pandas DataFrame): simulated network
         '''
-        # Generate fixed effects
-        psi, alpha, G, H = self.__sim_network_gen_fe(self.sim_params)
-
         # Extract parameters
-        num_ind, num_time, firm_size = self.sim_params['num_ind'], self.sim_params['num_time'], self.sim_params['firm_size']
-        nk, nl, w_sig, p_move = self.sim_params['nk'], self.sim_params['nl'], self.sim_params['w_sig'], self.sim_params['p_move']
+        num_ind, num_time, nk, nl, w_sig, p_move = self.sim_params.get_multiple(('num_ind', 'num_time', 'nk', 'nl', 'w_sig', 'p_move'))
+
+        # Generate fixed effects
+        psi, alpha, G, H = self._gen_fe()
 
         # Generate empty NumPy arrays
         network = np.zeros((num_ind, num_time), dtype=int)
-        spellcount = np.ones((num_ind, num_time))
+        spellcount = np.zeros((num_ind, num_time), dtype=int)
 
         # Random draws of worker types for all individuals in panel
         sim_worker_types = self.rng.integers(low=0, high=nl, size=num_ind)
@@ -205,56 +170,54 @@ class SimBipartite:
         for i in range(0, num_ind):
             l = sim_worker_types[i]
             # At time 1, we draw from H for initial firm
-            network[i, 0] = self.rng.choice(range(0, nk), p=H[l, :]) # choices(range(0, nk), H[l, :])[0]
+            network[i, 0] = self.rng.choice(range(0, nk), p=H[l, :])
+            spellcount[i, 0] = spellcount[i - 1, num_time - 1] + 1
 
             for t in range(1, num_time):
                 # Hit moving shock
                 if self.rng.random() < p_move:
-                    network[i, t] = self.rng.choice(range(0, nk), p=G[l, network[i, t - 1], :]) # choices(range(0, nk), G[l, network[i, t - 1], :])[0]
+                    network[i, t] = self.rng.choice(range(0, nk), p=G[l, network[i, t - 1], :])
                     spellcount[i, t] = spellcount[i, t - 1] + 1
                 else:
                     network[i, t] = network[i, t - 1]
                     spellcount[i, t] = spellcount[i, t - 1]
 
         # Compiling IDs and timestamps
-        ids = np.reshape(np.outer(range(1, num_ind + 1), np.ones(num_time)), (num_time * num_ind, 1)) # np.repeat(np.arange(num_ind), num_time)
-        ids = ids.astype(int)[:, 0]
-        ts = np.reshape(np.tile(range(1, num_time + 1), (num_ind, 1)), (num_time * num_ind, 1)) # np.tile(np.arange(num_time), num_ind)
-        ts = ts.astype(int)[:, 0]
+        ids = np.repeat(range(num_ind), num_time)
+        ts = np.tile(range(num_time), num_ind)
 
         # Compiling worker types
-        types = np.reshape(np.outer(sim_worker_types, np.ones(num_time)), (num_time * num_ind, 1))
-        alpha_data = alpha[types.astype(int)][:, 0]
+        l_data = np.repeat(sim_worker_types, num_time)
+        alpha_data = alpha[l_data]
 
         # Compiling firm types
-        psi_data = psi[np.reshape(network, (num_time * num_ind, 1))][:, 0]
-        k_data = np.reshape(network, (num_time * num_ind, 1))[:, 0]
+        k_data = network.flatten()
+        psi_data = psi[k_data]
 
         # Compiling spell data
-        spell_data = np.reshape(spellcount, (num_time * num_ind, 1))[:, 0]
+        spell_data = spellcount.flatten()
 
         # Merging all columns into a dataframe
         data = pd.DataFrame(data={'i': ids, 't': ts, 'k': k_data,
                                 'alpha': alpha_data, 'psi': psi_data,
-                                'spell': spell_data.astype(int)})
+                                'spell': spell_data})
 
         # Generate size of spells
-        dspell = data.groupby(['i', 'spell', 'k']).size().to_frame(name='freq')
+        dspell = data.groupby(['spell', 'k'], sort=False).size().to_frame(name='freq')
         dspell.reset_index(inplace=True)
         # Draw firm ids
-        dspell['j'] = dspell.groupby(['k'])['freq'].transform(self.__sim_network_draw_fids, *[num_time, firm_size])
-        # Make firm ids contiguous (and have them start at 1)
-        dspell['j'] = dspell.groupby(['k', 'j'])['freq'].ngroup() + 1
+        dspell.loc[:, 'j'] = dspell.groupby('k')['freq'].transform(self._draw_fids)
+        # Make firm ids contiguous
+        dspell.loc[:, 'j'] = dspell.groupby(['k', 'j'])['freq'].ngroup()
 
         # Merge spells into panel
-        data = data.merge(dspell, on=['i', 'spell', 'k'])
+        data = data.merge(dspell.loc[:, ['spell', 'j']], on='spell')
+        # spell_to_firm = dspell.groupby('spell')['j'].first().to_dict()
+        # data.loc[:, 'j'] = data.loc[:, 'spell'].map(spell_to_firm)
 
-        data['move'] = (data['j'] != data['j'].shift(1)) & (data['i'] == data['i'].shift(1))
+        # data['move'] = (data['j'] != data['j'].shift(1)) & (data['i'] == data['i'].shift(1))
 
         # Compute wages through the AKM formula
-        data['y'] = data['alpha'] + data['psi'] + w_sig * norm.rvs(size=num_ind * num_time, random_state=self.rng)
+        data.loc[:, 'y'] = data.loc[:, 'alpha'] + data.loc[:, 'psi'] + w_sig * self.rng.normal(size=num_ind * num_time)
 
-        data['i'] -= 1 # Start at 0
-        data['j'] -= 1 # Start at 0
-
-        return data
+        return data.loc[:, ['i', 'j', 'y', 't', 'k', 'alpha', 'psi', 'spell']]
