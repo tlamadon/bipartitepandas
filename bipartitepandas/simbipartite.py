@@ -125,7 +125,7 @@ class SimBipartite:
         H = np.ones((nl, nk)) / nl
 
         # Solve stationary distributions
-        for l in range(0, nl):
+        for l in range(nl):
             # Solve eigenvectors (source: https://stackoverflow.com/a/58334399/17333120)
             evals, evecs = np.linalg.eig(G[l, :, :].T)
             stationary = evecs[:, np.isclose(evals, 1)][:, 0]
@@ -167,16 +167,16 @@ class SimBipartite:
         # Random draws of worker types for all individuals in panel
         sim_worker_types = self.rng.integers(low=0, high=nl, size=num_ind)
 
-        for i in range(0, num_ind):
+        for i in range(num_ind):
             l = sim_worker_types[i]
             # At time 1, we draw from H for initial firm
-            network[i, 0] = self.rng.choice(range(0, nk), p=H[l, :])
+            network[i, 0] = self.rng.choice(range(nk), p=H[l, :])
             spellcount[i, 0] = spellcount[i - 1, num_time - 1] + 1
 
             for t in range(1, num_time):
                 # Hit moving shock
                 if self.rng.random() < p_move:
-                    network[i, t] = self.rng.choice(range(0, nk), p=G[l, network[i, t - 1], :])
+                    network[i, t] = self.rng.choice(range(nk), p=G[l, network[i, t - 1], :])
                     spellcount[i, t] = spellcount[i, t - 1] + 1
                 else:
                     network[i, t] = network[i, t - 1]
