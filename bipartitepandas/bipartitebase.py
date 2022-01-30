@@ -1121,8 +1121,6 @@ class BipartiteBase(DataFrame):
             elif j_if_no_t:
                 # If no t column, and choose to sort on j instead
                 sort_order.append(to_list(frame.reference_dict['j'])[0])
-                # If no t column, and sorting by j, then no returns
-                frame.no_returns = True
             with bpd.ChainedAssignment():
                 frame.sort_values(sort_order, inplace=True)
 
