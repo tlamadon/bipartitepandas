@@ -17,11 +17,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
     '''
 
     def __init__(self, *args, col_dict=None, include_id_reference_dict=False, **kwargs):
-        columns_opt = ['w']
-        reference_dict = {'t': ['t1', 't2'], 'w': 'w'}
-        col_dtype_dict = {'w': 'float'}
+        reference_dict = {'t': ['t1', 't2']}
         # Initialize DataFrame
-        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
+        super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
         # self.log('BipartiteLongCollapsed object initialized', level='info')
 
@@ -48,7 +46,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         Arguments:
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included; and by j, if t not included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -56,13 +54,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         self.log('beginning recollapse', level='info')
 
-        # Sort data by i (and t, if included)
-        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-        self.log('data sorted by i (and t, if included)', level='info')
-
-        # Add w
-        if 'w' not in frame.columns:
-            frame.loc[:, 'w'] = 1
+        # Sort data by i (and t, if included; and by j, if t not included)
+        frame = self.sort_rows(j_if_no_t=True, is_sorted=is_sorted, copy=copy)
+        self.log('data sorted by i (and t, if included; and by j, if t not included)', level='info')
 
         # If no returns
         if frame.no_returns:
@@ -95,18 +89,26 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             }
 
             # Next, prepare the time column for aggregation
-            if self._col_included('t'):
+            t = self._col_included('t')
+            if t:
                 agg_funcs['t1'] = pd.NamedAgg(column='t1', aggfunc='min')
                 agg_funcs['t2'] = pd.NamedAgg(column='t2', aggfunc='max')
 
             # Next, prepare the weight column for aggregation
-            if self._col_included('w'):
+            w = self._col_included('w')
+            if w:
                 agg_funcs['w'] = pd.NamedAgg(column='w', aggfunc='sum')
             else:
                 agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
 
             # Next, prepare optional columns for aggregation
             all_cols = self._included_cols()
+            if w:
+                # Skip w
+                all_cols.remove('w')
+            if t:
+                # Skip t
+                all_cols.remove('t')
             for col in all_cols:
                 if col in self.columns_opt:
                     if self.col_dtype_dict[col] == 'int':
@@ -146,43 +148,56 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Returns:
             long_frame (BipartiteLong): collapsed long data reformatted as BipartiteLong data
         '''
-        # Sort data by i and t
+        # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
-        all_cols = frame._included_cols(flat=True)
-        # Skip t1 and t2
-        all_cols.remove('t1')
-        all_cols.remove('t2')
-        long_dict = {'t': []} # Dictionary of lists of each column's data
-        for col in all_cols:
-            long_dict[col] = []
+        t = frame._col_included('t')
+        if not t:
+            # If no t column, no difference between long and collapsed long
+            data_long = frame
 
-        # Iterate over rows with multiple periods
-        nt = frame.loc[:, 't2'].to_numpy() - frame.loc[:, 't1'].to_numpy() + 1
-        for i in range(len(frame)):
-            row = frame.iloc[i]
-            nt_i = nt[i]
-            long_dict['t'].extend(np.arange(row.loc['t1'], row.loc['t2'] + 1))
+        else:
+            all_cols = frame._included_cols(flat=True)
+            # Skip t1 and t2
+            all_cols.remove('t1')
+            all_cols.remove('t2')
+            # Dictionary of lists of each column's data
+            long_dict = {'t': []}
             for col in all_cols:
-                # Add variables other than period
-                long_dict[col].extend([row[col]] * nt_i)
-        del nt
+                long_dict[col] = []
 
-        # Convert to Pandas dataframe
-        data_long = pd.DataFrame(long_dict)
-        # Correct datatypes
-        data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
-        data_long = data_long.astype({col: frame.col_dtype_dict[col] for col in all_cols}, copy=False)
+            # Iterate over rows with multiple periods
+            nt = frame.loc[:, 't2'].to_numpy() - frame.loc[:, 't1'].to_numpy() + 1
+            for i in range(len(frame)):
+                row = frame.iloc[i]
+                nt_i = nt[i]
+                long_dict['t'].extend(np.arange(row.loc['t1'], row.loc['t2'] + 1))
+                for col in all_cols:
+                    # Add variables other than period
+                    if col == 'w':
+                        # Evenly split weight across periods
+                        long_dict[col].extend([row[col] / nt_i] * nt_i)
+                    else:
+                        long_dict[col].extend([row[col]] * nt_i)
+            del nt
 
-        # Sort columns
-        sorted_cols = sorted(data_long.columns, key=bpd.col_order)
-        data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
+            # Convert to Pandas dataframe
+            data_long = pd.DataFrame(long_dict)
+            # Correct datatypes
+            data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
+            data_long = data_long.astype({col: frame.col_dtype_dict[col] for col in all_cols}, copy=False)
+
+            # Sort columns
+            sorted_cols = sorted(data_long.columns, key=bpd.col_order)
+            data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
 
         self.log('data uncollapsed to long format', level='info')
 
         long_frame = bpd.BipartiteLong(data_long, log=frame._log_on_indicator)
         long_frame._set_attributes(frame, no_dict=True)
-        long_frame = long_frame.gen_m(force=True, copy=False)
+        if t:
+            # Only recompute 'm' if data actually uncollapsed
+            long_frame = long_frame.gen_m(force=True, copy=False)
 
         return long_frame
 

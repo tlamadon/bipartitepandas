@@ -24,9 +24,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
     '''
 
     def __init__(self, *args, columns_req=[], columns_opt=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
-        if 't' not in columns_req:
-            columns_req = ['t'] + columns_req
-        reference_dict = bpd.update_dict({'j': 'j', 'y': 'y', 'g': 'g'}, reference_dict)
+        reference_dict = bpd.update_dict({'j': 'j', 'y': 'y', 'g': 'g', 'w': 'w'}, reference_dict)
         # Initialize DataFrame
         super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
@@ -66,7 +64,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             with bpd.ChainedAssignment():
                 frame.loc[:, 'm'] = ((i_col == i_prev) & (j_col != j_prev)).astype(int, copy=False) + ((i_col == i_next) & (j_col != j_next)).astype(int, copy=False)
 
-            frame.col_dict['m'] = 'm'
+            # frame._col_dict['m'] = 'm'
 
             # Sort columns
             frame = frame.sort_cols(copy=False)
@@ -88,6 +86,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Returns:
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
         '''
+        if not self._col_included('t'):
+            raise NotImplementedError("Cannot convert from long to event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to set a time column based on the dataframe's index.")
+
         # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 

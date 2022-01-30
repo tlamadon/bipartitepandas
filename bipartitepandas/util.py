@@ -11,7 +11,7 @@ from statsmodels.stats.weightstats import DescrStatsW
 import types
 import warnings
 
-col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'w', 'w1', 'w2', 'g', 'g1', 'g2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
+col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'g', 'g1', 'g2', 'w', 'w1', 'w2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
 
 # Source: https://stackoverflow.com/a/54009756/17333120
 fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
@@ -309,7 +309,8 @@ def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_
     Returns:
         new_col_dict (dict): updated col_dict
     '''
-    if user_col_dict is None: # If columns already correct
+    if user_col_dict is None:
+        # If columns already correct
         new_col_dict = default_col_dict
     else:
         new_col_dict = update_dict(default_col_dict, user_col_dict)
@@ -318,14 +319,16 @@ def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_
         include = True
         for col in to_list(col_list):
             exists_assigned = new_col_dict[col] is not None
-            exists_not_assigned = (col in data_cols) and (new_col_dict[col] is None) and (col not in new_col_dict.values()) # Last condition checks whether data has a different column with same name
+            # Last condition checks whether data has a different column with same name
+            exists_not_assigned = (col in data_cols) and (new_col_dict[col] is None) and (col not in new_col_dict.values())
             if not exists_assigned and not exists_not_assigned:
                 include = False
         if include:
             for col in to_list(col_list):
                 if new_col_dict[col] is None:
                     new_col_dict[col] = col
-        else: # Reset column names to None if not all essential columns included
+        else:
+            # Reset column names to None if not all essential columns included
             for col in to_list(col_list):
                 new_col_dict[col] = None
     return new_col_dict

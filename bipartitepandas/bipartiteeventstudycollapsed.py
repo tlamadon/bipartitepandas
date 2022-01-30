@@ -17,11 +17,9 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
     '''
 
     def __init__(self, *args, col_dict=None, include_id_reference_dict=False, **kwargs):
-        columns_opt = ['w']
-        reference_dict = {'t': ['t11', 't12', 't21', 't22'], 'w': ['w1', 'w2']}
-        col_dtype_dict = {'w': 'float'}
+        reference_dict = {'t': ['t11', 't12', 't21', 't22']}
         # Initialize DataFrame
-        super().__init__(*args, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
+        super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
         # self.log('BipartiteEventStudyCollapsed object initialized', level='info')
 

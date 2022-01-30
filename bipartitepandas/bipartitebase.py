@@ -159,7 +159,7 @@ class BipartiteBase(DataFrame):
         **kwargs: keyword arguments for Pandas DataFrame
     '''
     # Attributes, required for Pandas inheritance
-    _metadata = ['col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', 'no_returns', '_log_on_indicator', '_log_level_fn_dict']
+    _metadata = ['_col_dict', 'reference_dict', 'id_reference_dict', 'col_dtype_dict', 'columns_req', 'columns_opt', 'columns_contig', 'default_cluster', 'dtype_dict', 'default_clean', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', 'no_returns', '_log_on_indicator', '_log_level_fn_dict']
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, log=True, **kwargs):
         # Initialize DataFrame
@@ -176,21 +176,16 @@ class BipartiteBase(DataFrame):
             self._set_attributes(args[0], include_id_reference_dict)
         else:
             self.columns_req = ['i', 'j', 'y'] + columns_req
-            self.columns_opt = ['g', 'm'] + columns_opt
+            self.columns_opt = ['t', 'g', 'w', 'm'] + columns_opt
             self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
             self.reference_dict = update_dict({'i': 'i', 'm': 'm'}, reference_dict)
-            self._reset_id_reference_dict(include_id_reference_dict) # Link original id values to contiguous id values
-            self.col_dtype_dict = update_dict({'i': 'int', 'j': 'int', 'y': 'float', 't': 'int', 'g': 'int', 'm': 'int'}, col_dtype_dict)
-            default_col_dict = {}
-            for col in to_list(self.columns_req):
-                for subcol in to_list(self.reference_dict[col]):
-                    default_col_dict[subcol] = subcol
-            for col in to_list(self.columns_opt):
-                for subcol in to_list(self.reference_dict[col]):
-                    default_col_dict[subcol] = None
+
+            # Link original id values to contiguous id values
+            self._reset_id_reference_dict(include_id_reference_dict)
+            self.col_dtype_dict = update_dict({'i': 'int', 'j': 'int', 'y': 'float', 't': 'int', 'g': 'int', 'w': 'float', 'm': 'int'}, col_dtype_dict)
 
             # Create self.col_dict
-            self.col_dict = col_dict_optional_cols(default_col_dict, col_dict, self.columns, optional_cols=[self.reference_dict[col] for col in self.columns_opt])
+            self._update_col_dict(col_dict)
 
             # Set attributes
             self._reset_attributes()
@@ -218,6 +213,45 @@ class BipartiteBase(DataFrame):
         For inheritance from Pandas.
         '''
         return BipartiteBase
+
+    def _update_col_dict(self, user_col_dict={}):
+        '''
+        Update self._col_dict based on included columns.
+
+        Arguments:
+            user_col_dict (dict): user col_dict
+        '''
+        # Construct default col dict
+        default_col_dict = {}
+        for col in to_list(self.columns_req):
+            for subcol in to_list(self.reference_dict[col]):
+                default_col_dict[subcol] = subcol
+        for col in to_list(self.columns_opt):
+            for subcol in to_list(self.reference_dict[col]):
+                default_col_dict[subcol] = None
+
+        # Update self._col_dict
+        try:
+            # If self._col_dict already exists, use existing self._col_dict as baseline (but only for keys and values that don't match)
+            self._col_dict = col_dict_optional_cols(default_col_dict, {k: v for k, v in self._col_dict.items() if k != v}, self.columns, optional_cols=[self.reference_dict[col] for col in self.columns_opt])
+        except AttributeError:
+            # If self._col_dict doesn't exist, use user input
+            self._col_dict = col_dict_optional_cols(default_col_dict, user_col_dict, self.columns, optional_cols=[self.reference_dict[col] for col in self.columns_opt])
+
+    def get_col_dict(self, update=True):
+        '''
+        Access self._col_dict.
+        
+        Arguments:
+            update (bool): if True, force self._col_dict to update
+
+        Returns:
+            (dict): self._col_dict
+        '''
+        if update:
+            # Make sure self._col_dict is up-to-date
+            self._update_col_dict()
+        return self._col_dict
 
     def copy(self):
         '''
@@ -461,7 +495,7 @@ class BipartiteBase(DataFrame):
             self.columns_opt = frame.columns_opt.copy()
             self.reference_dict = frame.reference_dict.copy()
             self.col_dtype_dict = frame.col_dtype_dict.copy()
-            self.col_dict = frame.col_dict.copy()
+            self._col_dict = frame._col_dict.copy()
         self.columns_contig = frame.columns_contig.copy() # Required, even if no_dict
         if frame.id_reference_dict:
             self.id_reference_dict = {}
@@ -557,9 +591,12 @@ class BipartiteBase(DataFrame):
         Returns:
             (bool): if True, column is included
         '''
+        # Update self._col_dict
+        col_dict = self.get_col_dict()
+        # Iterate through columns
         if col in self.columns_req + self.columns_opt:
             for subcol in to_list(self.reference_dict[col]):
-                if self.col_dict[subcol] is None:
+                if col_dict[subcol] is None:
                     return False
             return True
         return False
@@ -574,11 +611,14 @@ class BipartiteBase(DataFrame):
         Returns:
             all_cols (list): included columns
         '''
+        # Update self._col_dict
+        col_dict = self.get_col_dict()
+        # Iterate through columns
         all_cols = []
         for col in self.columns_req + self.columns_opt:
             include = True
             for subcol in to_list(self.reference_dict[col]):
-                if self.col_dict[subcol] is None:
+                if col_dict[subcol] is None:
                     include = False
                     break
             if include:
@@ -588,7 +628,7 @@ class BipartiteBase(DataFrame):
                     all_cols.append(col)
         return all_cols
 
-    def drop(self, indices, axis=0, inplace=False, allow_required=False):
+    def drop(self, indices, axis=0, inplace=False, allow_optional=False, allow_required=False):
         '''
         Drop indices along axis.
 
@@ -596,6 +636,7 @@ class BipartiteBase(DataFrame):
             indices (int or str, optionally as a list): row(s) or column(s) to drop. For columns, use general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'. Only optional columns may be dropped
             axis (int): 0 to drop rows, 1 to drop columns
             inplace (bool): if True, modify in-place
+            allow_optional (bool): if True, allow to drop optional columns
             allow_required (bool): if True, allow to drop required columns
 
         Returns:
@@ -606,25 +647,33 @@ class BipartiteBase(DataFrame):
         if axis == 1:
             for col in to_list(indices):
                 if col in frame.columns or col in frame.columns_req or col in frame.columns_opt:
-                    if col in frame.columns_opt: # If column optional
-                        for subcol in to_list(frame.reference_dict[col]):
-                            if inplace:
-                                DataFrame.drop(frame, subcol, axis=1, inplace=True)
-                            else:
-                                frame = DataFrame.drop(frame, subcol, axis=1, inplace=False)
-                            frame.col_dict[subcol] = None
-                        if col in frame.columns_contig.keys(): # If column contiguous
-                            frame.columns_contig[col] = None
-                            if frame.id_reference_dict: # If id_reference_dict has been initialized
-                                frame.id_reference_dict[col] = pd.DataFrame()
-                    elif col not in frame._included_cols() and col not in frame._included_cols(flat=True): # If column is not pre-established
+                    if col in frame.columns_opt:
+                        # If column optional
+                        if allow_optional:
+                            for subcol in to_list(frame.reference_dict[col]):
+                                if inplace:
+                                    DataFrame.drop(frame, subcol, axis=1, inplace=True)
+                                else:
+                                    frame = DataFrame.drop(frame, subcol, axis=1, inplace=False)
+                                frame._col_dict[subcol] = None
+                            if col in frame.columns_contig.keys():
+                                # If column contiguous
+                                frame.columns_contig[col] = None
+                                if frame.id_reference_dict:
+                                    # If id_reference_dict has been initialized
+                                    frame.id_reference_dict[col] = pd.DataFrame()
+                        else:
+                            pass
+                            # warnings.warn('{} is an optional column and cannot be dropped without specifying allow_optional=True'.format(col))
+                    elif col not in frame._included_cols() and col not in frame._included_cols(flat=True):
+                        # If column is not pre-established
                         if inplace:
                             DataFrame.drop(frame, col, axis=1, inplace=True)
                         else:
                             frame = DataFrame.drop(frame, col, axis=1, inplace=False)
                     else:
                         if not allow_required:
-                            warnings.warn("{} is either (a) a required column and cannot be dropped or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col))
+                            warnings.warn("{} is either (a) a required column and cannot be dropped without specifying allow_required=True, or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col))
                         else:
                             if inplace:
                                 DataFrame.drop(frame, col, axis=1, inplace=True)
@@ -664,10 +713,10 @@ class BipartiteBase(DataFrame):
                     if len(to_list(self.reference_dict[col_cur])) > 1:
                         for i, subcol in enumerate(to_list(self.reference_dict[col_cur])):
                             DataFrame.rename(frame, {subcol: col_new + str(i + 1)}, axis=1, inplace=True)
-                            frame.col_dict[subcol] = None
+                            frame._col_dict[subcol] = None
                     else:
                         DataFrame.rename(frame, {col_cur: col_new}, axis=1, inplace=True)
-                        frame.col_dict[col_cur] = None
+                        frame._col_dict[col_cur] = None
                     if col_cur in frame.columns_contig.keys(): # If column contiguous
                             frame.columns_contig[col_cur] = None
                             if frame.id_reference_dict: # If id_reference_dict has been initialized
@@ -768,18 +817,20 @@ class BipartiteBase(DataFrame):
             frame = self.copy()
 
         new_col_dict = {}
-        rename_dict = {} # For renaming columns in data
+        # For renaming columns in data
+        rename_dict = {}
         keep_cols = []
 
-        for key, val in frame.col_dict.items():
+        for key, val in frame._col_dict.items():
             if val is not None:
                 rename_dict[val] = key
                 new_col_dict[key] = key
                 keep_cols.append(key)
             else:
                 new_col_dict[key] = None
-        frame.col_dict = new_col_dict
-        keep_cols = sorted(keep_cols, key=col_order) # Sort columns
+        frame._col_dict = new_col_dict
+        # Sort columns
+        keep_cols = sorted(keep_cols, key=col_order)
         with bpd.ChainedAssignment():
             DataFrame.rename(frame, rename_dict, axis=1, inplace=True)
         for col in frame.columns:
@@ -1044,11 +1095,12 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def sort_rows(self, is_sorted=False, copy=True):
+    def sort_rows(self, j_if_no_t=True, is_sorted=False, copy=True):
         '''
         Sort rows by i and t.
 
         Arguments:
+            j_if_no_t (bool): if no time column, sort on j column instead
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -1066,6 +1118,11 @@ class BipartiteBase(DataFrame):
             if frame._col_included('t'):
                 # If t column
                 sort_order.append(to_list(frame.reference_dict['t'])[0])
+            elif j_if_no_t:
+                # If no t column, and choose to sort on j instead
+                sort_order.append(to_list(frame.reference_dict['j'])[0])
+                # If no t column, and sorting by j, then no returns
+                frame.no_returns = True
             with bpd.ChainedAssignment():
                 frame.sort_values(sort_order, inplace=True)
 
@@ -1204,7 +1261,7 @@ class BipartiteBase(DataFrame):
             frame[g_col] = frame[j_col].map(clusters_dict)
             # Keep column as int even with nans
             frame.loc[:, g_col] = frame.loc[:, g_col].astype('Int64', copy=False)
-            frame.col_dict[g_col] = g_col
+            frame._col_dict[g_col] = g_col
 
         # Sort columns
         frame = frame.sort_cols(copy=False)

@@ -23,9 +23,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
     '''
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig={}, reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
-        if 't' not in columns_opt:
-            columns_opt = ['t'] + columns_opt
-        reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2']}, reference_dict)
+        reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w1']}, reference_dict)
         # Initialize DataFrame
         super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, columns_contig=columns_contig, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
@@ -58,7 +56,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             frame.loc[:, 'm'] = (frame.loc[:, 'j1'].to_numpy() != frame.loc[:, 'j2'].to_numpy()).astype(int, copy=False)
             # frame.loc[:, 'm'] = frame.groupby('i')['m'].transform('max')
 
-            frame.col_dict['m'] = 'm'
+            # frame._col_dict['m'] = 'm'
 
             # Sort columns
             frame = frame.sort_cols(copy=False)
@@ -149,15 +147,18 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
-    def get_cs(self):
+    def get_cs(self, copy=True):
         '''
         Return (collapsed) event study data reformatted into cross section data.
+
+        Arguments:
+            copy (bool): if False, avoid copy
 
         Returns:
             data_cs (Pandas DataFrame): cross section data
         '''
-        sdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() == 0, :])
-        jdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :])
+        sdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() == 0, :], copy=copy)
+        jdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :], copy=copy)
 
         # Columns used for constructing cross section
         cs_cols = self._included_cols(flat=True)
@@ -201,12 +202,11 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
+        if not self._col_included('t'):
+            raise NotImplementedError("Cannot convert from event study to long format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to set a time column based on the dataframe's index.")
 
-        frame = frame.sort_rows(is_sorted=is_sorted, copy=False)
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
         rename_dict_1 = {}

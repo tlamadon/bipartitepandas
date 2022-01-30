@@ -1155,10 +1155,10 @@ def test_general_methods_18():
             break
     assert correct_cols
 
-    bdf.drop('g1', axis=1, inplace=True)
+    bdf.drop('g1', axis=1, inplace=True, allow_optional=True)
     assert 'g1' in bdf.columns and 'g2' in bdf.columns
 
-    bdf.drop('g', axis=1, inplace=True)
+    bdf.drop('g', axis=1, inplace=True, allow_optional=True)
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
 
     bdf.rename({'i': 'w'})
@@ -1166,8 +1166,8 @@ def test_general_methods_18():
 
     bdf['g1'] = 1
     bdf['g2'] = 1
-    bdf.col_dict['g1'] = 'g1'
-    bdf.col_dict['g2'] = 'g2'
+    # bdf.col_dict['g1'] = 'g1'
+    # bdf.col_dict['g2'] = 'g2'
     assert 'g1' in bdf.columns and 'g2' in bdf.columns
     bdf.rename({'g': 'r'})
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
@@ -1191,7 +1191,7 @@ def test_copy_19():
 
     # Long
     bdf = bpd.BipartiteLong(data=df)
-    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True, allow_optional=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1199,7 +1199,7 @@ def test_copy_19():
 
     # Event study
     bdf = bdf.gen_m(copy=False).get_es()
-    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True, allow_optional=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1207,7 +1207,7 @@ def test_copy_19():
 
     # Collapsed long
     bdf = bdf.gen_m(copy=False).get_long().get_collapsed_long()
-    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True, allow_optional=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -1215,7 +1215,7 @@ def test_copy_19():
 
     # Collapsed event study
     bdf = bdf.gen_m(copy=False).get_es()
-    bdf = bdf.clean_data().drop('m', axis=1, inplace=True)
+    bdf = bdf.clean_data().drop('m', axis=1, inplace=True, allow_optional=True)
     bdf2 = bdf.copy()
     bdf2 = bdf2.gen_m(copy=False)
 
@@ -2465,7 +2465,7 @@ def test_get_cs_2():
     df = pd.DataFrame(bdf.get_es()).rename({'t1': 't'}, axis=1)
     bdf = bpd.BipartiteEventStudy(df, col_dict={'t1': 't'})
     bdf = bdf.clean_data()
-    bdf = bdf.get_cs()
+    bdf = bdf.get_cs(copy=False)
 
     stayers = bdf[bdf['m'] == 0]
     movers1 = bdf[(bdf['m'] > 0) & (bdf['cs'] == 1)]
@@ -2601,7 +2601,7 @@ def test_get_cs_2():
     df = pd.DataFrame(bdf.get_es()).rename({'y1': 'comp1'}, axis=1)
     bdf = bpd.BipartiteEventStudyCollapsed(df, col_dict={'y1': 'comp1'})
     bdf = bdf.clean_data()
-    bdf = bdf.get_cs()
+    bdf = bdf.get_cs(copy=False)
 
     stayers = bdf[bdf['m'] == 0]
     movers1 = bdf[(bdf['m'] > 0) & (bdf['cs'] == 1)]

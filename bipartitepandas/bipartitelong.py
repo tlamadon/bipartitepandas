@@ -84,7 +84,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included; and by j, if t not included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -92,9 +92,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         self.log('beginning collapse', level='info')
 
-        # Sort data by i (and t, if included)
-        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-        self.log('data sorted by i (and t, if included)', level='info')
+        # Sort data by i (and t, if included; and by j, if t not included)
+        frame = self.sort_rows(j_if_no_t=True, is_sorted=is_sorted, copy=copy)
+        self.log('data sorted by i (and t, if included; and by j, if t not included)', level='info')
 
         # Generate spell ids
         spell_ids = frame._get_spell_ids(is_sorted=True, copy=False)
@@ -110,17 +110,30 @@ class BipartiteLong(bpd.BipartiteLongBase):
         agg_funcs = {
             'i': pd.NamedAgg(column='i', aggfunc='first'),
             'j': pd.NamedAgg(column='j', aggfunc='first'),
-            'y': pd.NamedAgg(column='y', aggfunc='mean'),
-            'w': pd.NamedAgg(column='i', aggfunc='size')
+            'y': pd.NamedAgg(column='y', aggfunc='mean')
         }
 
         # Next, prepare the time column for aggregation
-        if self._col_included('t'):
+        t = self._col_included('t')
+        if t:
             agg_funcs['t1'] = pd.NamedAgg(column='t', aggfunc='min')
             agg_funcs['t2'] = pd.NamedAgg(column='t', aggfunc='max')
 
+        # Next, prepare the weight column for aggregation
+        w = self._col_included('w')
+        if w:
+            agg_funcs['w'] = pd.NamedAgg(column='w', aggfunc='sum')
+        else:
+            agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
+
         # Next, prepare optional columns for aggregation
         all_cols = self._included_cols()
+        if w:
+            # Skip w
+            all_cols.remove('w')
+        if t:
+            # Skip t
+            all_cols.remove('t')
         for col in all_cols:
             if col in self.columns_opt:
                 if self.col_dtype_dict[col] == 'int':
@@ -451,7 +464,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             added_g = True
             n_clusters = 1
             self.loc[:, 'g'] = 0
-            self.col_dict['g'] = 'g'
+            # self._col_dict['g'] = 'g'
 
         es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col,is_sorted=is_sorted, copy=copy)
 
@@ -497,7 +510,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         if added_g:
             # Drop g column
             self.drop('g', axis=1, inplace=True)
-            self.col_dict['g'] = None
+            # self.col_dict['g'] = None
 
         # Plot
         plt.setp(axs, xticks=np.arange(-periods_pre, periods_post + 1), yticks=np.round(np.linspace(y_min, y_max, 4), es_extended_plot_params['yticks_round']))
