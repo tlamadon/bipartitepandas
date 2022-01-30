@@ -396,9 +396,12 @@ class BipartiteBase(DataFrame):
             id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'
 
         Returns:
-            (NumPy Array): unique ids
+            (NumPy Array or None): unique ids if column included; None otherwise
         '''
         self.log('finding unique ids in column {}'.format(id_col), level='info')
+        if not self._col_included(id_col):
+            # If column not in dataframe
+            return None
         id_lst = []
         for id_subcol in to_list(self.reference_dict[id_col]):
             id_lst += list(self.loc[:, id_subcol].unique())
@@ -412,10 +415,13 @@ class BipartiteBase(DataFrame):
             id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'
 
         Returns:
-            (int): number of unique ids
+            (int or None): number of unique ids if column included; None otherwise
         '''
         self.log('finding number of unique ids in column {}'.format(id_col), level='info')
-        return len(self.unique_ids(id_col))
+        unique_ids = self.unique_ids(id_col)
+        if unique_ids is None:
+            return None
+        return len(unique_ids)
 
     def n_workers(self):
         '''
@@ -442,11 +448,9 @@ class BipartiteBase(DataFrame):
         Get the number of unique clusters.
 
         Returns:
-            (int or None): number of unique clusters, None if not clustered
+            (int or None): (int or None): number of unique clusters if cluster column included; None otherwise
         '''
         self.log('finding unique clusters', level='info')
-        if not self._col_included('g'): # If cluster column not in dataframe
-            return None
         return self.n_unique_ids('g')
 
     def original_ids(self, copy=True):
@@ -463,11 +467,13 @@ class BipartiteBase(DataFrame):
         frame = pd.DataFrame(self, copy=copy)
         if self.id_reference_dict:
             for id_col, reference_df in self.id_reference_dict.items():
-                if len(reference_df) > 0: # Make sure non-empty
+                if len(reference_df) > 0:
+                    # Make sure non-empty
                     for id_subcol in to_list(self.reference_dict[id_col]):
                         try:
                             frame = frame.merge(reference_df.loc[:, ['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
-                        except TypeError: # Int64 error with NaNs
+                        except TypeError:
+                            # Int64 error with NaNs
                             frame.loc[:, id_col] = frame.loc[:, id_col].astype('Int64', copy=False)
                             frame = frame.merge(reference_df.loc[:, ['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
                 # else:
@@ -496,7 +502,8 @@ class BipartiteBase(DataFrame):
             self.reference_dict = frame.reference_dict.copy()
             self.col_dtype_dict = frame.col_dtype_dict.copy()
             self._col_dict = frame._col_dict.copy()
-        self.columns_contig = frame.columns_contig.copy() # Required, even if no_dict
+        # Required, even if no_dict
+        self.columns_contig = frame.columns_contig.copy()
         if frame.id_reference_dict:
             self.id_reference_dict = {}
             # Must do a deep copy
@@ -997,9 +1004,7 @@ class BipartiteBase(DataFrame):
             return frame
 
         # Keep track of whether contiguous ids change
-        prev_workers = frame.n_workers()
-        prev_firms = frame.n_firms()
-        prev_clusters = frame.n_clusters()
+        n_ids_prev = {id_col: frame.n_unique_ids(id_col) for id_col in frame.columns_contig}
 
         # Update data
         # Find largest connected set of firms
@@ -1040,13 +1045,10 @@ class BipartiteBase(DataFrame):
         # Data is now connected
         frame.connectedness = connectedness
 
-        # If connected data != full data, set contiguous to False
-        if prev_workers != frame.n_workers():
-            frame.columns_contig['i'] = False
-        if prev_firms != frame.n_firms():
-            frame.columns_contig['j'] = False
-        if prev_clusters is not None and prev_clusters != frame.n_clusters():
-            frame.columns_contig['g'] = False
+        # If number of ids changed, set contiguous to False
+        for id_col in frame.columns_contig:
+            if (n_ids_prev[id_col] is not None) and (n_ids_prev[id_col] != frame.n_unique_ids(id_col)):
+                frame.columns_contig[id_col] = False
 
         frame.log('{} connected components (None if ignoring connectedness) computed'.format(connectedness), level='info')
 
