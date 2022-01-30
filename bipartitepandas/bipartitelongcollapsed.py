@@ -191,7 +191,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
-            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any built-in option valid for a Pandas transform.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 

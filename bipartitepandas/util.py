@@ -52,44 +52,39 @@ class ParamsDict(MutableMapping):
 
     def __setitem__(self, k, v):
         if k not in self.__data:
-            if isinstance(k, str):
-                raise KeyError("Cannot add key '{}', as ParamsDict keys are fixed.".format(k))
-            else:
-                raise KeyError('Cannot add key {}, as ParamsDict keys are fixed.'.format(k))
+            raise KeyError(str_format('Cannot add key {}, as ParamsDict keys are fixed.', k))
 
-        options_type, options, _ = self.__options[k]
+        options_type, options, _, constraints = self.__options[k]
         if options_type == 'type':
             if _is_subtype(v, options):
                 self.__data[k] = v
             else:
-                if isinstance(v, str):
-                    raise KeyError("Value associated with key '{}' must be of type {}, but input is '{}' which is of type {}.".format(k, options, v, type(v)))
-                else:
-                    raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, v, type(v)))
+                raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}.', k, options, v, type(v)))
         elif options_type == 'list_of_type':
             for sub_v in to_list(v):
                 if not _is_subtype(sub_v, options):
-                    if isinstance(sub_v, str):
-                        raise KeyError("Value associated with key '{}' must be of type {}, but input is '{}' which is of type {}.".format(k, options, sub_v, type(sub_v)))
-                    else:
-                        raise KeyError("Value associated with key '{}' must be of type {}, but input is {} which is of type {}.".format(k, options, sub_v, type(sub_v)))
+                    raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}.', k, options, sub_v, type(sub_v)))
             self.__data[k] = v
         elif options_type == 'type_none':
             if (v is None) or _is_subtype(v, options):
                 self.__data[k] = v
             else:
-                if isinstance(v, str):
-                    raise KeyError("Value associated with key '{}' must be of type {} or None, but input is '{}' which is of type {}.".format(k, options, v, type(v)))
+                raise ValueError(str_format('Value associated with key {} must be of type {} or None, but input is {} which is of type {}.', k, options, v, type(v)))
+        elif options_type == 'type_constrained':
+            if _is_subtype(v, options[0]):
+                if options[1](v):
+                    self.__data[k] = v
                 else:
-                    raise KeyError("Value associated with key '{}' must be of type {} or None, but input is {} which is of type {}.".format(k, options, v, type(v)))
+                    raise ValueError(str_format('Value associated with key {} must fulfill the constraint(s) {}, but input is {} which does not.', k, constraints, v))
+            elif options[1](v):
+                raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}.', k, options[0], v, type(v)))
+            else:
+                raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}. In addition, the input does not fulfill the constraint(s) {}.', k, options[0], v, type(v), constraints))
         elif options_type == 'set':
             if v in to_list(options):
                 self.__data[k] = v
             else:
-                if isinstance(v, str):
-                    raise KeyError("Value associated with key '{}' must be a subset of {}, but input is '{}'.".format(k, options, v))
-                else:
-                    raise KeyError("Value associated with key '{}' must be a subset of {}, but input is {}.".format(k, options, v))
+                raise ValueError(str_format('Value associated with key {} must be a subset of {}, but input is {}.', k, options, v))
         elif options_type == 'any':
             self.__data[k] = v
         else:
@@ -140,21 +135,18 @@ class ParamsDict(MutableMapping):
         Arguments:
             k (immutable): key
         '''
-        options_type, options, description = self.__options[k]
-        if isinstance(k, str):
-            print("KEY: '{}'".format(k))
-        else:
-            print('KEY: {}'.format(k))
-        if isinstance(self[k], str):
-            print("CURRENT VALUE: '{}'".format(self[k]))
-        else:
-            print('CURRENT VALUE: {}'.format(self[k]))
+        options_type, options, description, constraints = self.__options[k]
+        print(str_format('KEY: {}', k))
+        print(str_format('CURRENT VALUE: {}', self[k]))
         if options_type == 'type':
             print('VALID VALUES: one of type {}'.format(options))
         elif options_type == 'list_of_type':
             print('VALID VALUES: one of or list of type {}'.format(options))
         elif options_type == 'type_none':
             print('VALID VALUES: {} or one of type {}'.format(None, options))
+        elif options_type == 'type_constrained':
+            print('VALID VALUES: one of type {}'.format(options[0]))
+            print(str_format('CONSTRAINTS: {}', constraints))
         elif options_type == 'set':
             print('VALID VALUES: one of {}'.format(options))
         elif options_type == 'any':
@@ -199,6 +191,30 @@ def to_list(data):
         return [data]
     return list(data)
 
+def str_format(text, *args):
+    '''
+    Custom string formatting that ensures string variables are printed with dashes surrounding them.
+
+    Arguments:
+        text (str): text to format
+        *args (args): variables to fill in
+
+    Returns:
+        (str): formatted text
+    '''
+    ret_str = ''
+    split_text = text.split('{}')
+    for i, arg in enumerate(args):
+        if isinstance(arg, str):
+            ret_str += split_text[i] + "'{}'".format(arg)
+        else:
+            ret_str += split_text[i] + '{}'.format(arg)
+
+    # Add end of text
+    ret_str += split_text[i + 1]
+
+    return ret_str
+
 def fast_shift(arr, num, fill_value=np.nan):
     '''
     Shift array by a given number of elements, filling values rolled around with fill_value. Source: https://stackoverflow.com/a/42642326/17333120.
@@ -221,6 +237,27 @@ def fast_shift(arr, num, fill_value=np.nan):
     else:
         result[:] = arr
     return result
+
+class ChainedAssignment:
+    '''
+    Context manager to temporarily set pandas chained assignment warning. Source: https://stackoverflow.com/a/53954986/17333120. Usage:
+        with ChainedAssignment():
+            --code with no warnings--
+        with ChainedAssignment('error'):
+            --code with errors--
+    '''
+    def __init__(self, chained=None):
+        acceptable = [None, 'warn', 'raise']
+        assert chained in acceptable, "chained must be in " + str(acceptable)
+        self.swcw = chained
+
+    def __enter__(self):
+        self.saved_swcw = pd.options.mode.chained_assignment
+        pd.options.mode.chained_assignment = self.swcw
+        return self
+
+    def __exit__(self, *args):
+        pd.options.mode.chained_assignment = self.saved_swcw
 
 loggers = {}
 

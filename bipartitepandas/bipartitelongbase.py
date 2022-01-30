@@ -63,11 +63,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
             j_prev = np.roll(j_col, 1)
             j_next = np.roll(j_col, -1)
 
-            ##### Disable Pandas warning #####
-            pd.options.mode.chained_assignment = None
-            frame.loc[:, 'm'] = ((i_col == i_prev) & (j_col != j_prev)).astype(int, copy=False) + ((i_col == i_next) & (j_col != j_next)).astype(int, copy=False)
-            ##### Re-enable Pandas warning #####
-            pd.options.mode.chained_assignment = 'warn'
+            with bpd.ChainedAssignment():
+                frame.loc[:, 'm'] = ((i_col == i_prev) & (j_col != j_prev)).astype(int, copy=False) + ((i_col == i_next) & (j_col != j_next)).astype(int, copy=False)
 
             frame.col_dict['m'] = 'm'
 
@@ -214,7 +211,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Drop observations where workers leave a firm then return to it.
 
         Arguments:
-            how (str): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm
+            how (str or False): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm; if 'keep_first_returns', keep first spell where a worker leaves a firm then returns to it; if 'keep_last_returns', keep last spell where a worker leaves a firm then returns to it; if False, keep all observations
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
@@ -229,10 +226,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
         self.log('data sorted by i (and t, if included)', level='info')
 
         # Generate spell ids
-        frame.loc[:, 'spell_ids'] = frame._get_spell_ids(is_sorted=True, copy=False)
+        frame.loc[:, 'spell_id'] = frame._get_spell_ids(is_sorted=True, copy=False)
 
         # Find returns
-        frame.loc[:, 'return_row'] = (frame.groupby(['i', 'j'], sort=False)['spell_ids'].transform('nunique') > 1).astype(int, copy=False)
+        frame.loc[:, 'return_row'] = (frame.groupby(['i', 'j'], sort=False)['spell_id'].transform('nunique') > 1).astype(int, copy=False)
 
         # Check whether there are already no returns, or if we aren't dropping returns
         no_returns = (frame.loc[:, 'return_row'].sum() == 0)
@@ -241,7 +238,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame.no_returns = no_returns
 
             # Drop columns
-            frame = frame.drop(['spell_ids', 'return_row'], axis=1, inplace=True)
+            frame = frame.drop(['spell_id', 'return_row'], axis=1, inplace=True)
 
             return frame
         del no_returns
@@ -249,12 +246,25 @@ class BipartiteLongBase(bpd.BipartiteBase):
         if how == 'returners':
             # Find returners
             frame.loc[:, 'return_row'] = frame.groupby('i', sort=False)['return_row'].transform('max')
+        elif how in ['keep_first_returns', 'keep_last_returns']:
+            # Find the first/last spell in a return, and keep it
+            frame_return_rows = frame.loc[frame.loc[:, 'return_row'].to_numpy() == 1, :]
+            if how == 'keep_first_returns':
+                return_spells_keep = frame_return_rows.groupby(['i', 'j'], sort=False)['spell_id'].first().unique()
+            elif how == 'keep_last_returns':
+                return_spells_keep = frame_return_rows.groupby(['i', 'j'], sort=False)['spell_id'].last().unique()
+            # No longer mark first/last spells as return rows
+            # frame.loc[frame.loc[:, 'spell_id'].isin(return_spells_keep), 'return_row'] = 0
+            keep_rows = frame_return_rows.loc[frame_return_rows.loc[:, 'spell_id'].isin(return_spells_keep), :].index
+            frame.loc[keep_rows, 'return_row'] = 0
+            del frame_return_rows, return_spells_keep, keep_rows
 
         ## Drop returns
+        # Find rows
         return_rows = np.where(frame.loc[:, 'return_row'].to_numpy() == 1)[0]
 
-        # Drop columns
-        frame = frame.drop(['spell_ids', 'return_row'], axis=1, inplace=True)
+        # Drop columns (before drop rows)
+        frame = frame.drop(['spell_id', 'return_row'], axis=1, inplace=True)
 
         # Drop returns
         frame = frame.drop_rows(return_rows, drop_returns_to_stays=False, is_sorted=True, reset_index=reset_index, copy=False)
@@ -301,21 +311,18 @@ class BipartiteLongBase(bpd.BipartiteBase):
             else:
                 raise NotImplementedError("Cannot use data from a particular period with collapsed data. Data can be converted to long format using the '.uncollapse()' method.")
 
-        # Create weights
-        ##### Disable Pandas warning #####
-        pd.options.mode.chained_assignment = None
-        if weighted:
-            if frame._col_included('w'):
-                frame.loc[:, 'row_weights'] = frame.loc[:, 'w']
-                weights = frame.groupby('j')['w'].sum().to_numpy()
+        with bpd.ChainedAssignment():
+            # Create weights
+            if weighted:
+                if frame._col_included('w'):
+                    frame.loc[:, 'row_weights'] = frame.loc[:, 'w']
+                    weights = frame.groupby('j')['w'].sum().to_numpy()
+                else:
+                    frame.loc[:, 'row_weights'] = 1
+                    weights = frame.groupby('j').size().to_numpy()
             else:
                 frame.loc[:, 'row_weights'] = 1
-                weights = frame.groupby('j').size().to_numpy()
-        else:
-            frame.loc[:, 'row_weights'] = 1
-            weights = None
-        ##### Re-enable Pandas warning #####
-        pd.options.mode.chained_assignment = 'warn'
+                weights = None
 
         # Get unique firm ids (must sort)
         jids = np.sort(frame.loc[:, 'j'].unique())

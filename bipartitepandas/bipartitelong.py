@@ -8,26 +8,26 @@ import warnings
 
 # Define default parameter dictionary
 _es_extended_plot_params_default = bpd.ParamsDict({
-    'title_height': (1.0, 'type', float,
+    'title_height': (1, 'type', (int, float),
         '''
-            (default=1.0) Location of titles for subfigures.
-        '''),
-    'fontsize': (9.0, 'type', float,
+            (default=1) Location of titles for subfigures.
+        ''', None),
+    'fontsize': (9, 'type', (int, float),
         '''
-            (default=9.0) Font size of titles for subfigures.
-        '''),
+            (default=9) Font size of titles for subfigures.
+        ''', None),
     'sharex': (True, 'type', bool,
         '''
             (default=True) Share x axis between subfigures.
-        '''),
+        ''', None),
     'sharey': (True, 'type', bool,
         '''
             (default=True) Share y axis between subfigures.
-        '''),
+        ''', None),
     'yticks_round': (1, 'type', int,
         '''
             (default=1) How many digits to round y ticks.
-        ''')
+        ''', None)
 })
 
 def es_extended_plot_params(update_dict={}):
@@ -157,7 +157,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
-            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any built-in option valid for a Pandas transform.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -181,7 +181,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 frame.loc[:, 'y'] = frame.groupby(['i', 't', 'j'])['y'].transform(how)
             # Take max over duplicates
             # Source: https://stackoverflow.com/questions/23394476/keep-other-columns-when-doing-groupby
-            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'], sort=False)['y'].transform(max).to_numpy(), :].groupby(['i', 't'], as_index=False, sort=False).first()
+            frame = frame.loc[frame.loc[:, 'y'].to_numpy() == frame.groupby(['i', 't'], sort=False)['y'].transform('max').to_numpy(), :].groupby(['i', 't'], as_index=False, sort=False).first()
             # Restore warnings
             warnings.filterwarnings('default')
 

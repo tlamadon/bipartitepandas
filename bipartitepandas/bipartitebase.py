@@ -44,35 +44,35 @@ _clean_params_default = ParamsDict({
     'connectedness': (None, 'set', ['connected', 'leave_one_observation_out', 'leave_one_firm_out', None],
         '''
             (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
-        '''),
+        ''', None),
     'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers'],
         '''
         (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
-        '''),
-    'i_t_how': ('max', 'set', ['max', 'sum', 'mean'],
+        ''', None),
+    'i_t_how': ('max', 'set', ['max', max, 'sum', sum, 'mean', 'first', 'last'],
         '''
-            (default='max') When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. Note that if multiple time and/or firm columns are included (as in event study format), then data is converted to long, cleaned, then reconverted to its original format.
-        '''),
-    'drop_returns': (False, 'set', [False, 'returns', 'returners'],
+            (default='max') When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. If 'first', take the first observation over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. If 'last', take the last observation over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
+        ''', None),
+    'drop_returns': (False, 'set', [False, 'returns', 'returners', 'keep_first_returns', 'keep_last_returns'],
         '''
-            (default=False) If 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm.
-        '''),
+            (default=False) If 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm; if 'keep_first_returns', keep first spell where a worker leaves a firm then returns to it; if 'keep_last_returns', keep last spell where a worker leaves a firm then returns to it; if False, keep all observations.
+        ''', None),
     'drop_returns_to_stays': (False, 'type', bool,
         '''
             (default=False) Applies only if 'drop_returns' is set to False. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-        '''),
+        ''', None),
     'is_sorted': (False, 'type', bool,
         '''
             (default=False) If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-        '''),
+        ''', None),
     'force': (True, 'type', bool,
         '''
             (default=True) If True, force all cleaning methods to run; much faster if set to False.
-        '''),
+        ''', None),
     'copy': (True, 'type', bool,
         '''
             (default=True) If False, avoid copying data when possible.
-        ''')
+        ''', None)
 })
 
 def clean_params(update_dict={}):
@@ -93,39 +93,39 @@ _cluster_params_default = ParamsDict({
     'measures': (bpd.measures.cdfs(), 'list_of_type', (bpd.measures.cdfs, bpd.measures.moments),
         '''
             (default=bpd.measures.cdfs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
-        '''),
+        ''', None),
     'grouping': (bpd.grouping.kmeans(), 'type', (bpd.grouping.kmeans, bpd.grouping.quantiles),
         '''
             (default=bpd.grouping.kmeans()) How to group firms based on measures. Options can be seen in bipartitepandas.grouping.
-        '''),
-    'stayers_movers': (None, 'type_none', str,
+        ''', None),
+    'stayers_movers': (None, 'set', [None, 'stayers', 'movers'],
         '''
             (default=None) If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers.
-        '''),
+        ''', None),
     't': (None, 'type_none', int,
         '''
             (default=None) If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data).
-        '''),
+        ''', None),
     'weighted': (True, 'type', bool,
         '''
             (default=True) If True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation is given weight 1).
-        '''),
+        ''', None),
     'dropna': (False, 'type', bool,
         '''
             (default=False) If True, drop observations where firms aren't clustered; if False, keep all observations.
-        '''),
+        ''', None),
     'clean_params': (None, 'type_none', bpd.ParamsDict,
         '''
             (default=None) Dictionary of parameters for cleaning. This is used when observations get dropped because they were not clustered. Default is None, which sets connectedness to be the connectedness measure previously used. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
-        '''),
+        ''', None),
     'is_sorted': (False, 'type', bool,
         '''
             (default=False) For event study format. If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-        '''),
+        ''', None),
     'copy': (True, 'type', bool,
         '''
             (default=True) If False, avoid copy.
-        ''')
+        ''', None)
 })
 
 def cluster_params(update_dict={}):
@@ -780,11 +780,8 @@ class BipartiteBase(DataFrame):
                 new_col_dict[key] = None
         frame.col_dict = new_col_dict
         keep_cols = sorted(keep_cols, key=col_order) # Sort columns
-        ##### Disable Pandas warning #####
-        pd.options.mode.chained_assignment = None
-        DataFrame.rename(frame, rename_dict, axis=1, inplace=True)
-        ##### Re-enable Pandas warning #####
-        pd.options.mode.chained_assignment = 'warn'
+        with bpd.ChainedAssignment():
+            DataFrame.rename(frame, rename_dict, axis=1, inplace=True)
         for col in frame.columns:
             if col not in keep_cols:
                 frame.drop(col, axis=1, inplace=True)
@@ -1069,11 +1066,8 @@ class BipartiteBase(DataFrame):
             if frame._col_included('t'):
                 # If t column
                 sort_order.append(to_list(frame.reference_dict['t'])[0])
-            ##### Disable Pandas warning #####
-            pd.options.mode.chained_assignment = None
-            frame.sort_values(sort_order, inplace=True)
-            ##### Re-enable Pandas warning #####
-            pd.options.mode.chained_assignment = 'warn'
+            with bpd.ChainedAssignment():
+                frame.sort_values(sort_order, inplace=True)
 
         return frame
 

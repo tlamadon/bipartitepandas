@@ -8,60 +8,64 @@ from scipy.stats import norm
 ax = np.newaxis
 from bipartitepandas import logger_init, ParamsDict
 
+# NOTE: multiprocessing isn't compatible with lambda functions
+def _gteq1(a):
+    return a >= 1
+def _gteq0(a):
+    return a >= 0
+def _0to1(a):
+    return 0 <= a <= 1
+
 # Define default parameter dictionary
 _sim_params_default = ParamsDict({
-    'num_ind': (10000, 'type', int,
+    'num_ind': (10000, 'type_constrained', (int, _gteq1),
         '''
             (default=10000) Number of workers.
-        '''),
-    'num_time': (5, 'type', int,
+        ''', '>= 1'),
+    'num_time': (5, 'type_constrained', (int, _gteq1),
         '''
             (default=5) Time length of panel.
-        '''),
-    'firm_size': (50, 'type', int,
+        ''', '>= 1'),
+    'firm_size': (50, 'type_constrained', (int, _gteq1),
         '''
             (default=50) Maximum number of individuals per firm.
-        '''),
-    'nk': (10, 'type', int,
+        ''', '>= 1'),
+    'nk': (10, 'type_constrained', (int, _gteq1),
         '''
             (default=10) Number of firm types.
-        '''),
-    'nl': (5, 'type', int,
+        ''', '>= 1'),
+    'nl': (5, 'type_constrained', (int, _gteq1),
         '''
             (default=5) Number of worker types.
-        '''),
-    'alpha_sig': (1, 'type', (float, int),
+        ''', '>= 1'),
+    'alpha_sig': (1, 'type_constrained', ((float, int), _gteq0),
         '''
             (default=1) Standard error of individual fixed effect (volatility of worker effects).
-        '''),
-    'psi_sig': (1, 'type', (float, int),
+        ''', '>= 0'),
+    'psi_sig': (1, 'type_constrained', ((float, int), _gteq0),
         '''
             (default=1) Standard error of firm fixed effect (volatility of firm effects).
-        '''),
-    'w_sig': (1, 'type', (float, int),
+        ''', '>= 0'),
+    'w_sig': (1, 'type_constrained', ((float, int), _gteq0),
         '''
             (default=1) Standard error of residual in AKM wage equation (volatility of wage shocks).
-        '''),
+        ''', '>= 0'),
     'csort': (1, 'type', (float, int),
         '''
             (default=1) Sorting effect.
-        '''),
+        ''', None),
     'cnetw': (1, 'type', (float, int),
         '''
             (default=1) Network effect.
-        '''),
-    'csig': (1, 'type', (float, int),
+        ''', None),
+    'csig': (1, 'type_constrained', ((float, int), _gteq0),
         '''
             (default=1) Standard error of sorting/network effects.
-        '''),
-    'p_move': (0.5, 'type', (float, int),
+        ''', '>= 0'),
+    'p_move': (0.5, 'type_constrained', ((float, int), _0to1),
         '''
             (default=0.5) Probability a worker moves firms in any period.
-        '''),
-    'rng': (np.random.default_rng(None), 'type', np.random.Generator,
-        '''
-            (default=np.random.default_rng(None)) NumPy random number generator.
-        ''')
+        ''', 'in [0, 1]')
 })
 
 def sim_params(update_dict={}):
@@ -93,12 +97,6 @@ class SimBipartite:
 
         # Store parameters
         self.sim_params = sim_params
-
-        # Create NumPy Generator instance
-        self.rng = sim_params['rng']
-
-        # Prevent plotting unless results exist
-        self.monte_carlo_res = False
 
     def _gen_fe(self):
         '''
@@ -134,22 +132,26 @@ class SimBipartite:
 
         return psi, alpha, G, H
 
-    def _draw_fids(self, freq):
+    def _draw_fids(self, freq, rng=np.random.default_rng(None)):
         '''
         Draw firm ids for individual spells, setting the maximum firm id computing how many observations each firm type has.
 
         Arguments:
             freq (NumPy Array): size of groups (groups by worker id, spell id, and firm type)
+            rng (np.random.Generator): NumPy random number generator
 
         Returns:
             (NumPy Array): random firms for each group
         '''
         max_int = int(np.maximum(1, freq.sum() / (self.sim_params['firm_size'] * self.sim_params['num_time'])))
-        return self.rng.choice(max_int, size=freq.count())
+        return rng.choice(max_int, size=freq.count())
 
-    def sim_network(self):
+    def sim_network(self, rng=np.random.default_rng(None)):
         '''
         Simulate panel data corresponding to the calibrated model.
+
+        Arguments:
+            rng (np.random.Generator): NumPy random number generator
 
         Returns:
             data (Pandas DataFrame): simulated network
@@ -165,18 +167,18 @@ class SimBipartite:
         spellcount = np.zeros((num_ind, num_time), dtype=int)
 
         # Random draws of worker types for all individuals in panel
-        sim_worker_types = self.rng.integers(low=0, high=nl, size=num_ind)
+        sim_worker_types = rng.integers(low=0, high=nl, size=num_ind)
 
         for i in range(num_ind):
             l = sim_worker_types[i]
             # At time 1, we draw from H for initial firm
-            network[i, 0] = self.rng.choice(range(nk), p=H[l, :])
+            network[i, 0] = rng.choice(range(nk), p=H[l, :])
             spellcount[i, 0] = spellcount[i - 1, num_time - 1] + 1
 
             for t in range(1, num_time):
                 # Hit moving shock
-                if self.rng.random() < p_move:
-                    network[i, t] = self.rng.choice(range(nk), p=G[l, network[i, t - 1], :])
+                if rng.random() < p_move:
+                    network[i, t] = rng.choice(range(nk), p=G[l, network[i, t - 1], :])
                     spellcount[i, t] = spellcount[i, t - 1] + 1
                 else:
                     network[i, t] = network[i, t - 1]
@@ -206,7 +208,7 @@ class SimBipartite:
         dspell = data.groupby(['spell', 'k'], sort=False).size().to_frame(name='freq')
         dspell.reset_index(inplace=True)
         # Draw firm ids
-        dspell.loc[:, 'j'] = dspell.groupby('k')['freq'].transform(self._draw_fids)
+        dspell.loc[:, 'j'] = dspell.groupby('k')['freq'].transform(self._draw_fids, rng)
         # Make firm ids contiguous
         dspell.loc[:, 'j'] = dspell.groupby(['k', 'j'])['freq'].ngroup()
 
@@ -218,6 +220,6 @@ class SimBipartite:
         # data['move'] = (data['j'] != data['j'].shift(1)) & (data['i'] == data['i'].shift(1))
 
         # Compute wages through the AKM formula
-        data.loc[:, 'y'] = data.loc[:, 'alpha'] + data.loc[:, 'psi'] + w_sig * self.rng.normal(size=num_ind * num_time)
+        data.loc[:, 'y'] = data.loc[:, 'alpha'] + data.loc[:, 'psi'] + w_sig * rng.normal(size=num_ind * num_time)
 
         return data.loc[:, ['i', 'j', 'y', 't', 'k', 'alpha', 'psi', 'spell']]

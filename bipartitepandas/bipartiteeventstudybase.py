@@ -125,7 +125,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Keep only the highest paying job for i-t (worker-year) duplicates.
 
         Arguments:
-            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any option valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in event study format), then duplicates are cleaned in order of earlier time columns to later time columns, and earlier firm ids to later firm ids
+            how (str): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any built-in option valid for a Pandas transform.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -284,7 +284,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Drop observations where workers leave a firm then return to it.
 
         Arguments:
-            how (str): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm
+            how (str): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm; if 'keep_first_returns', keep first spell where a worker leaves a firm then returns to it; if 'keep_last_returns', keep last spell where a worker leaves a firm then returns to it; if False, keep all observations
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             reset_index (bool): used for long format, does nothing for event study
             copy (bool): if False, avoid copy

@@ -572,7 +572,7 @@ def test_refactor_11():
 
 def test_refactor_12():
     # Check going to event study and back to long
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     assert len(bdf) == len(bdf.get_es().get_long())
@@ -1657,7 +1657,7 @@ def test_uncollapse_25():
 
 def test_keep_ids_26():
     # Keep only given ids.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
     all_fids = bdf['j'].unique()
     ids_to_keep = all_fids[: len(all_fids) // 2]
@@ -1670,7 +1670,7 @@ def test_keep_ids_26():
 
 def test_drop_ids_27():
     # Drop given ids.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
     all_fids = bdf['j'].unique()
     ids_to_drop = all_fids[: len(all_fids) // 2]
@@ -1774,10 +1774,130 @@ def test_drop_returns_28_2():
     assert movers.iloc[3]['y'] == 2
     assert movers.iloc[3]['t'] == 2
 
+def test_drop_returns_28_3():
+    # Keep first spell where a worker leaves a firm then returns to it
+    worker_data = []
+    # Firm 0 -> 1 -> 0
+    # Time 1 -> 2 -> 3 -> 5 -> 6
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
+    worker_data.append({'i': 0, 'j': 0, 'y': 3., 't': 2})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 3})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 5})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 6})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
+    # Firm 2 -> 1
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data(bpd.clean_params({'drop_returns': 'keep_first_returns'}))
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] > 0]
+
+    assert stayers.iloc[0]['i'] == 0
+    assert stayers.iloc[0]['j'] == 0
+    assert stayers.iloc[0]['y'] == 2
+    assert stayers.iloc[0]['t'] == 1
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['y'] == 3
+    assert movers.iloc[0]['t'] == 2
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 3
+
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['t'] == 1
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['j'] == 2
+    assert movers.iloc[3]['y'] == 1
+    assert movers.iloc[3]['t'] == 2
+
+    assert movers.iloc[4]['i'] == 2
+    assert movers.iloc[4]['j'] == 2
+    assert movers.iloc[4]['y'] == 1
+    assert movers.iloc[4]['t'] == 1
+
+    assert movers.iloc[5]['i'] == 2
+    assert movers.iloc[5]['j'] == 1
+    assert movers.iloc[5]['y'] == 2
+    assert movers.iloc[5]['t'] == 2
+
+def test_drop_returns_28_4():
+    # Keep last spell where a worker leaves a firm then returns to it
+    worker_data = []
+    # Firm 0 -> 1 -> 0
+    # Time 1 -> 2 -> 3 -> 5 -> 6
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
+    worker_data.append({'i': 0, 'j': 0, 'y': 3., 't': 2})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 3})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 5})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 6})
+    # Firm 1 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
+    # Firm 2 -> 1
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(data=df)
+    bdf = bdf.clean_data(bpd.clean_params({'drop_returns': 'keep_last_returns'}))
+
+    stayers = bdf[bdf['m'] == 0]
+    movers = bdf[bdf['m'] > 0]
+
+    assert stayers.iloc[0]['i'] == 0
+    assert stayers.iloc[0]['j'] == 0
+    assert stayers.iloc[0]['y'] == 1
+    assert stayers.iloc[0]['t'] == 6
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['j'] == 1
+    assert movers.iloc[0]['y'] == 1
+    assert movers.iloc[0]['t'] == 3
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['j'] == 0
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['t'] == 5
+
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['t'] == 1
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['j'] == 2
+    assert movers.iloc[3]['y'] == 1
+    assert movers.iloc[3]['t'] == 2
+
+    assert movers.iloc[4]['i'] == 2
+    assert movers.iloc[4]['j'] == 2
+    assert movers.iloc[4]['y'] == 1
+    assert movers.iloc[4]['t'] == 1
+
+    assert movers.iloc[5]['i'] == 2
+    assert movers.iloc[5]['j'] == 1
+    assert movers.iloc[5]['y'] == 2
+    assert movers.iloc[5]['t'] == 2
+
 def test_min_obs_firms_28_1():
     # List only firms that meet a minimum threshold of observations.
     # Using long/event study.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 250
@@ -1800,7 +1920,7 @@ def test_min_obs_firms_28_1():
 def test_min_obs_firms_28_2():
     # List only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
     threshold = 60
@@ -1823,7 +1943,7 @@ def test_min_obs_firms_28_2():
 def test_min_obs_frame_29_1():
     # Keep only firms that meet a minimum threshold of observations.
     # Using long/event study.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 250
@@ -1854,7 +1974,7 @@ def test_min_obs_frame_29_1():
 def test_min_obs_frame_29_2():
     # Keep only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
     threshold = 60
@@ -1884,7 +2004,7 @@ def test_min_obs_frame_29_2():
 def test_min_workers_firms_30():
     # List only firms that meet a minimum threshold of workers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 40
@@ -1910,7 +2030,7 @@ def test_min_workers_firms_30():
 def test_min_workers_frame_31():
     # Keep only firms that meet a minimum threshold of workers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 60
@@ -1943,7 +2063,7 @@ def test_min_workers_frame_31():
 def test_min_moves_firms_32_1():
     # List only firms that meet a minimum threshold of moves.
     # Using long/event study.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 20
@@ -1967,7 +2087,7 @@ def test_min_moves_firms_32_1():
 def test_min_moves_firms_32_2():
     # List only firms that meet a minimum threshold of moves.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
 
     threshold = 20
@@ -1991,7 +2111,7 @@ def test_min_moves_firms_32_2():
 def test_min_moves_frame_33():
     # Keep only firms that meet a minimum threshold of moves.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 12
@@ -2039,7 +2159,7 @@ def test_min_moves_frame_33():
 def test_min_movers_firms_34():
     # List only firms that meet a minimum threshold of movers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 20
@@ -2066,7 +2186,7 @@ def test_min_movers_firms_34():
 def test_min_movers_frame_35():
     # Keep only firms that meet a minimum threshold of movers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05, 'rng': np.random.default_rng(1234)})).sim_network()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
     bdf = bpd.BipartiteLong(df).clean_data()
 
     threshold = 12
