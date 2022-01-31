@@ -2240,13 +2240,13 @@ def test_construct_artificial_time_36():
     # Test construct_artificial_time() methods
     # First, on non-collapsed data
     a = bpd.BipartiteLong(bpd.SimBipartite().sim_network(np.random.default_rng(1234))).clean_data()
-    b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_long()
+    b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(time_per_worker=True, is_sorted=True, copy=False).get_long()
 
-    assert np.all(a[['i', 'j', 'y', 'm']].to_numpy() == b[['i', 'j', 'y', 'm']].to_numpy())
+    assert np.all(a.to_numpy() == b.to_numpy())
 
     # Second, on collapsed data
     a = a.get_collapsed_long()
-    b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_long()
+    b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(time_per_worker=True, is_sorted=True, copy=False).get_long()
 
     assert np.all(a[['i', 'j', 'y', 'm']].to_numpy() == b[['i', 'j', 'y', 'm']].to_numpy())
 

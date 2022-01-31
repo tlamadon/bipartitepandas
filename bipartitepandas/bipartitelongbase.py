@@ -1067,15 +1067,17 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
-    def construct_artificial_time(self, copy=True):
+    def construct_artificial_time(self, time_per_worker=False, is_sorted=False, copy=True):
         '''
         Construct artificial time column(s) to enable conversion to (collapsed) event study format. Only adds column(s) if time column(s) not already included.
 
         Arguments:
+            time_per_worker (bool): if True, set time independently for each worker (note that this is significantly more computationally costly)
+            is_sorted (bool): set to True if dataframe is already sorted by i (this avoids a sort inside a groupby if time_per_worker=True, but this groupby will not sort the returned dataframe)
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe with artificial time column(s)
+            (BipartiteLongBase): dataframe with artificial time column(s)
         '''
         if copy:
             frame = self.copy()
@@ -1083,8 +1085,16 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame = self
 
         if not frame._col_included('t'):
-            t = np.arange(len(frame))
+            if time_per_worker:
+                # Reset time for each worker
+                t = frame.groupby('i', sort=(not is_sorted)).cumcount()
+            else:
+                # Cumulative time over all workers
+                t = np.arange(len(frame))
             for t_col in self.reference_dict['t']:
                 frame.loc[:, t_col] = t
+
+        # Sort columns
+        frame = frame.sort_cols(copy=False)
 
         return frame

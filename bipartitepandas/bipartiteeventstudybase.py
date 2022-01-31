@@ -23,7 +23,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
     '''
 
     def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig={}, reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
-        reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w1']}, reference_dict)
+        reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w2']}, reference_dict)
         # Initialize DataFrame
         super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, columns_contig=columns_contig, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
 
@@ -613,15 +613,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
-    def construct_artificial_time(self, copy=True):
+    def construct_artificial_time(self, time_per_worker=False, is_sorted=False, copy=True):
         '''
         Construct artificial time columns to enable conversion to (collapsed) long format. Only adds columns if time columns not already included.
 
         Arguments:
+            time_per_worker (bool): if True, set time independently for each worker (note that this is significantly more computationally costly)
+            is_sorted (bool): set to True if dataframe is already sorted by i (this avoids a sort inside a groupby if time_per_worker=True, but this groupby will not sort the returned dataframe)
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteEventStudyBase): dataframe with artificial time columns
+            (BipartiteEventStudyBase): dataframe with artificial time columns
         '''
         if copy:
             frame = self.copy()
@@ -630,7 +632,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         if not frame._col_included('t'):
             # Values for t columns
-            t1 = 2 * np.arange(len(frame))
+            if time_per_worker:
+                # Reset time for each worker
+                t1 = frame.groupby('i', sort=(not is_sorted)).cumcount()
+            else:
+                # Cumulative time over all workers
+                t1 = np.arange(len(frame))
             t2 = t1 + 1
             # t column names
             t_subcols = bpd.to_list(self.reference_dict['t'])
@@ -641,7 +648,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 frame.loc[:, t_subcols[i + halfway]] = t2
 
                 # Update time for stayers to be constant
-                stayers = (frame.loc[:, 'm'].to_numpy() == 0)
+                stayers = ~frame.get_worker_m(is_sorted=is_sorted)
                 frame.loc[stayers, t_subcols[i + halfway]] = frame.loc[stayers, t_subcols[i]]
+
+        # Sort columns
+        frame = frame.sort_cols(copy=False)
 
         return frame
