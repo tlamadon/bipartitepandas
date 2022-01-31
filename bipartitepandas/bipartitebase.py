@@ -49,9 +49,9 @@ _clean_params_default = ParamsDict({
         '''
         (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
         ''', None),
-    'i_t_how': ('max', 'set', ['max', max, 'sum', sum, 'mean', 'first', 'last'],
+    'i_t_how': ('max', 'type', (*bpd.fn_type, str),
         '''
-            (default='max') When dropping i-t duplicates: if 'max', keep max paying job; if 'sum', sum over duplicate worker-firm-year observations, then take the highest paying worker-firm sum; if 'mean', average over duplicate worker-firm-year observations, then take the highest paying worker-firm average. If 'first', take the first observation over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. If 'last', take the last observation over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
+            (default='max') When dropping i-t duplicates: if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any input valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
         ''', None),
     'drop_returns': (False, 'set', [False, 'returns', 'returners', 'keep_first_returns', 'keep_last_returns'],
         '''
