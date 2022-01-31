@@ -66,9 +66,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
-    def _get_unstack_rows(self):
+    def _get_unstack_rows(self, is_sorted=False):
         '''
         Get mask of rows where the second observation isn't included in the first observation for any rows (e.g., the last observation for a mover is given only as an j2, never as j1). More details: if a worker's last observation is a move OR if a worker switches from a move to a stay between observations, we need to append the second observation from the move. We can use the fact that the time changes between observations to indicate that we need to unstack, because event studies are supposed to go A -> B, B -> C, so if it goes A -> B, C -> D that means B should be unstacked.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             (NumPy Array): mask of rows to unstack
@@ -77,21 +80,21 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         i_col = self.loc[:, 'i'].to_numpy()
         i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
         # Get m
-        m_col = (self.loc[:, 'm'].to_numpy() > 0)
-        # Get t for this and next period
-        t_cols = bpd.to_list(self.reference_dict['t'])
-        halfway = len(t_cols) // 2
-        t1 = t_cols[0]
-        t2 = t_cols[halfway]
-        t1_next = np.roll(self.loc[:, t1].to_numpy(), -1)
-        t2_col = self.loc[:, t2].to_numpy()
-        # Check if t changed
-        t_change = (i_col == i_next) & (t1_next != t2_col)
+        worker_m = self.get_worker_m(is_sorted) # m_col = (self.loc[:, 'm'].to_numpy() > 0)
+        # # Get t for this and next period
+        # t_cols = bpd.to_list(self.reference_dict['t'])
+        # halfway = len(t_cols) // 2
+        # t1 = t_cols[0]
+        # t2 = t_cols[halfway]
+        # t1_next = np.roll(self.loc[:, t1].to_numpy(), -1)
+        # t2_col = self.loc[:, t2].to_numpy()
+        # # Check if t changed
+        # t_change = (i_col == i_next) & (t1_next != t2_col)
         # Check if i changed
         # Source: https://stackoverflow.com/a/47115520/17333120
         i_last = (i_col != i_next)
 
-        return m_col & (t_change | i_last)
+        return worker_m & i_last # m_col & (t_change | i_last)
 
     def diagnostic(self):
         '''
@@ -203,7 +206,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
         '''
         if not self._col_included('t'):
-            raise NotImplementedError("Cannot convert from event study to long format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to set a time column based on the dataframe's index.")
+            raise NotImplementedError("Cannot convert from event study to long format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
 
         # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
@@ -241,10 +244,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         if is_clean:
             # Find rows to unstack
-            unstack_df = pd.DataFrame(frame.loc[frame._get_unstack_rows(), :])
+            unstack_df = pd.DataFrame(frame.loc[frame._get_unstack_rows(is_sorted=True), :])
         else:
             # If data isn't clean, just unstack all moves and deal with duplicates later
-            unstack_df = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :])
+            unstack_df = pd.DataFrame(frame.loc[frame.get_worker_m(is_sorted=True), :])
         unstack_df.rename(rename_dict_1, axis=1, inplace=True)
 
         try:
@@ -373,6 +376,24 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return linkages, max_j
 
+    def _construct_firm_worker_linkages(self, is_sorted=False):
+        '''
+        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+
+        Returns:
+            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
+        '''
+        worker_m = self.get_worker_m(is_sorted)
+        base_linkages = self.loc[worker_m, ['i', 'j1']].to_numpy()
+        secondary_linkages = self.loc[worker_m, ['i', 'j2']].to_numpy()
+        linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
+        max_j = np.max(linkages)
+
+        return linkages, max_j
+
     def keep_ids(self, id_col, keep_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
         Only keep ids belonging to a given set of ids.
@@ -444,12 +465,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
-    def min_obs_firms(self, threshold=2):
+    def min_obs_firms(self, threshold=2, is_sorted=False):
         '''
         List firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many observations
@@ -460,7 +482,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # We consider j1 for all rows, but j2 only for unstack rows
         j_obs = self.loc[:, 'j1'].value_counts(sort=False).to_dict()
-        j2_obs = self.loc[self._get_unstack_rows(), 'j2'].value_counts(sort=False).to_dict()
+        j2_obs = self.loc[self._get_unstack_rows(is_sorted=is_sorted), 'j2'].value_counts(sort=False).to_dict()
         for j, n_obs in j2_obs.items():
             try:
                 # If firm j in j1, add the observations in j2
@@ -497,12 +519,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
-    def min_workers_firms(self, threshold=2):
+    def min_workers_firms(self, threshold=2, is_sorted=False):
         '''
         List firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many workers
@@ -513,7 +536,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # We consider j1 for all rows, but j2 only for unstack rows
         j_i_ids = self.groupby('j1')['i'].unique().apply(list).to_dict()
-        j2_i_ids = self.loc[self._get_unstack_rows(), :].groupby('j2')['i'].unique().apply(list).to_dict()
+        j2_i_ids = self.loc[self._get_unstack_rows(is_sorted=is_sorted), :].groupby('j2')['i'].unique().apply(list).to_dict()
         for j, i_ids in j2_i_ids.items():
             try:
                 # If firm j in j1, add the worker ids in j2
@@ -589,3 +612,36 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             return self
 
         return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
+    def construct_artificial_time(self, copy=True):
+        '''
+        Construct artificial time columns to enable conversion to (collapsed) long format. Only adds columns if time columns not already included.
+
+        Arguments:
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteEventStudyBase): dataframe with artificial time columns
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if not frame._col_included('t'):
+            # Values for t columns
+            t1 = 2 * np.arange(len(frame))
+            t2 = t1 + 1
+            # t column names
+            t_subcols = bpd.to_list(self.reference_dict['t'])
+            halfway = len(t_subcols) // 2
+            for i in range(halfway):
+                # Iterate over t columns and fill in values
+                frame.loc[:, t_subcols[i]] = t1
+                frame.loc[:, t_subcols[i + halfway]] = t2
+
+                # Update time for stayers to be constant
+                stayers = (frame.loc[:, 'm'].to_numpy() == 0)
+                frame.loc[stayers, t_subcols[i + halfway]] = frame.loc[stayers, t_subcols[i]]
+
+        return frame

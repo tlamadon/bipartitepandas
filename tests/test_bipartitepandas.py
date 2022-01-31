@@ -511,24 +511,32 @@ def test_refactor_11():
     assert stayers.iloc[0]['j2'] == 2
     assert stayers.iloc[0]['y1'] == 0.5
     assert stayers.iloc[0]['y2'] == 0.5
-    assert stayers.iloc[0]['t1'] == 4
+    assert stayers.iloc[0]['t1'] == 3
     assert stayers.iloc[0]['t2'] == 4
 
-    assert stayers.iloc[1]['i'] == 2
+    assert stayers.iloc[1]['i'] == 0
     assert stayers.iloc[1]['j1'] == 2
     assert stayers.iloc[1]['j2'] == 2
-    assert stayers.iloc[1]['y1'] == 1.
-    assert stayers.iloc[1]['y2'] == 1.
-    assert stayers.iloc[1]['t1'] == 1
-    assert stayers.iloc[1]['t2'] == 1
+    assert stayers.iloc[1]['y1'] == 0.5
+    assert stayers.iloc[1]['y2'] == 0.75
+    assert stayers.iloc[1]['t1'] == 4
+    assert stayers.iloc[1]['t2'] == 5
 
     assert stayers.iloc[2]['i'] == 2
     assert stayers.iloc[2]['j1'] == 2
     assert stayers.iloc[2]['j2'] == 2
     assert stayers.iloc[2]['y1'] == 1.
     assert stayers.iloc[2]['y2'] == 1.
-    assert stayers.iloc[2]['t1'] == 2
-    assert stayers.iloc[2]['t2'] == 2
+    assert stayers.iloc[2]['t1'] == 1
+    assert stayers.iloc[2]['t2'] == 1
+
+    assert stayers.iloc[3]['i'] == 2
+    assert stayers.iloc[3]['j1'] == 2
+    assert stayers.iloc[3]['j2'] == 2
+    assert stayers.iloc[3]['y1'] == 1.
+    assert stayers.iloc[3]['y2'] == 1.
+    assert stayers.iloc[3]['t1'] == 2
+    assert stayers.iloc[3]['t2'] == 2
 
     assert movers.iloc[0]['i'] == 0
     assert movers.iloc[0]['j1'] == 0
@@ -564,11 +572,7 @@ def test_refactor_11():
 
     bdf = bdf.get_long()
 
-    for row in range(len(bdf)):
-        df_row = df.iloc[row]
-        bdf_row = bdf.iloc[row]
-        for col in ['i', 'j', 'y', 't']:
-            assert df_row[col] == bdf_row[col]
+    assert np.all(bdf[['i', 'j', 'y', 't']].to_numpy() == df.to_numpy())
 
 def test_refactor_12():
     # Check going to event study and back to long
@@ -2231,6 +2235,20 @@ def test_min_movers_frame_35():
         for col in ['i', 'j', 'y', 't1', 't2']:
             # Skip 'm' since we didn't recompute it
             assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+
+def test_construct_artificial_time_36():
+    # Test construct_artificial_time() methods
+    # First, on non-collapsed data
+    a = bpd.BipartiteLong(bpd.SimBipartite().sim_network(np.random.default_rng(1234))).clean_data()
+    b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_long()
+
+    assert np.all(a[['i', 'j', 'y', 'm']].to_numpy() == b[['i', 'j', 'y', 'm']].to_numpy())
+
+    # Second, on collapsed data
+    a = a.get_collapsed_long()
+    b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_long()
+
+    assert np.all(a[['i', 'j', 'y', 'm']].to_numpy() == b[['i', 'j', 'y', 'm']].to_numpy())
 
 ###################################
 ##### Tests for BipartiteLong #####

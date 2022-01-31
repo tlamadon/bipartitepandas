@@ -1154,12 +1154,13 @@ class BipartiteBase(DataFrame):
 
         return self.keep_rows(rows_diff, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
-    def min_movers_firms(self, threshold=15):
+    def min_movers_firms(self, threshold=15, is_sorted=False):
         '''
         List firms with at least `threshold` many movers.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many movers
@@ -1171,7 +1172,7 @@ class BipartiteBase(DataFrame):
 
         frame = self.loc[self.loc[:, 'm'].to_numpy() > 0, :]
 
-        return frame.min_workers_firms(threshold)
+        return frame.min_workers_firms(threshold, is_sorted=is_sorted)
 
     @recollapse_loop(True)
     def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
@@ -1195,7 +1196,7 @@ class BipartiteBase(DataFrame):
                 return self.copy()
             return self
 
-        valid_firms = self.min_movers_firms(threshold)
+        valid_firms = self.min_movers_firms(threshold, is_sorted=is_sorted)
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 

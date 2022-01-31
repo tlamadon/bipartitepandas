@@ -87,14 +87,15 @@ class BipartiteLongBase(bpd.BipartiteBase):
             es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
         '''
         if not self._col_included('t'):
-            raise NotImplementedError("Cannot convert from long to event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to set a time column based on the dataframe's index.")
+            raise NotImplementedError("Cannot convert from long to event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
 
         # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Split workers by movers and stayers
-        stayers = pd.DataFrame(frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :])
-        movers = pd.DataFrame(frame.loc[frame.groupby('i', sort=False)['m'].transform('max').to_numpy() > 0, :])
+        worker_m = frame.get_worker_m(is_sorted=True)
+        stayers = pd.DataFrame(frame.loc[~worker_m, :])
+        movers = pd.DataFrame(frame.loc[worker_m, :])
         frame.log('workers split by movers and stayers', level='info')
 
         # Add lagged values
@@ -129,12 +130,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Correct i because first row rolls over
         same_i = (movers.loc[:, 'i1'].to_numpy() == movers.loc[:, 'i2'].to_numpy())
         same_i[0] = False
-        movers = movers.loc[same_i & (movers.loc[:, 'j1'].to_numpy() != movers.loc[:, 'j2'].to_numpy()), :]
+        movers = movers.loc[same_i, :] # & (movers.loc[:, 'j1'].to_numpy() != movers.loc[:, 'j2'].to_numpy()), :]
         del same_i
 
-        # Set 'm' = 1 for movers
+        # Set 'm' for movers
         movers.drop(['m1', 'm2'], axis=1, inplace=True)
         movers.loc[:, 'm'] = 1
+        movers.loc[movers.loc[:, 'j1'].to_numpy() == movers.loc[:, 'j2'].to_numpy(), 'm'] = 0
 
         # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
         for col in all_cols:
@@ -167,6 +169,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         # Sort data by i and t
         es_frame = es_frame.sort_rows(is_sorted=False, copy=False)
+
+        # Reset index
+        es_frame.reset_index(drop=True, inplace=True)
 
         if move_to_worker:
             es_frame.loc[:, 'i'] = es_frame.index
@@ -643,6 +648,24 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return linkages, max_j
 
+    def _construct_firm_worker_linkages(self, is_sorted=False):
+        '''
+        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+
+        Returns:
+            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
+        '''
+        worker_m = self.get_worker_m(is_sorted)
+        i_col = self.loc[worker_m, 'i'].to_numpy()
+        j_col = self.loc[worker_m, 'j'].to_numpy()
+        max_j = np.max(j_col)
+        linkages = np.stack([i_col + max_j + 1, j_col], axis=1)
+
+        return linkages, max_j
+
     # def _biconnected_linkages_indices(self):
     #     '''
     #     Construct numpy array of original indices for biconnected linkages. The first column tells you, for each link in the graph, what index the first observation in the link is coming from; and the second column tells you, for each link in the graph, what index the second observation in the link is coming from.
@@ -893,12 +916,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def min_obs_firms(self, threshold=2):
+    def min_obs_firms(self, threshold=2, is_sorted=False):
         '''
         List firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
+            is_sorted (bool): used for event study format, does nothing for long
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many observations
@@ -947,12 +971,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def min_workers_firms(self, threshold=15):
+    def min_workers_firms(self, threshold=15, is_sorted=False):
         '''
         List firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
+            is_sorted (bool): used for event study format, does nothing for long
 
         Returns:
             valid_firms (NumPy Array): list of firms with sufficiently many workers
@@ -1041,3 +1066,25 @@ class BipartiteLongBase(bpd.BipartiteBase):
         valid_firms = self.min_moves_firms(threshold)
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+
+    def construct_artificial_time(self, copy=True):
+        '''
+        Construct artificial time column(s) to enable conversion to (collapsed) event study format. Only adds column(s) if time column(s) not already included.
+
+        Arguments:
+            copy (bool): if False, avoid copy
+
+        Returns:
+            frame (BipartiteLongBase): dataframe with artificial time column(s)
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if not frame._col_included('t'):
+            t = np.arange(len(frame))
+            for t_col in self.reference_dict['t']:
+                frame.loc[:, t_col] = t
+
+        return frame

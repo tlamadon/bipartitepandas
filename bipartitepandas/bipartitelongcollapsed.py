@@ -40,6 +40,18 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudyCollapsed
 
+    def get_worker_m(self, is_sorted=False):
+        '''
+        Get NumPy array indicating whether the worker associated with each observation is a mover.
+
+        Arguments:
+            is_sorted (bool): used for event study format, does nothing for collapsed event study
+
+        Returns:
+            (NumPy Array): indicates whether the worker associated with each observation is a mover
+        '''
+        return self.loc[:, 'm'].to_numpy() > 0
+
     def recollapse(self, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Recollapse data by job spells (so each spell for a particular worker at a particular firm is one observation). This method is necessary in the case of biconnected data - it can occur that a worker works at firms A and B in the order A B A, but the biconnected components removes firm B. So the data is now A A, and needs to be recollapsed so this is marked as a stayer.
@@ -231,24 +243,6 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         frame.i_t_unique = True
 
         return frame
-
-    def _construct_firm_worker_linkages(self, is_sorted=False):
-        '''
-        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
-
-        Arguments:
-            is_sorted (bool): used for long format, does nothing for collapsed long
-
-        Returns:
-            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
-        '''
-        move_rows = (self.loc[:, 'm'].to_numpy() > 0)
-        i_col = self.loc[move_rows, 'i'].to_numpy()
-        j_col = self.loc[move_rows, 'j'].to_numpy()
-        max_j = np.max(j_col)
-        linkages = np.stack([i_col + max_j + 1, j_col], axis=1)
-
-        return linkages, max_j
 
     def _get_articulation_obs(self, G, max_j, is_sorted=False):
         '''

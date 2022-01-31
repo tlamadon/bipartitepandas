@@ -79,6 +79,18 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudy
 
+    def get_worker_m(self, is_sorted=False):
+        '''
+        Get NumPy array indicating whether the worker associated with each observation is a mover.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+
+        Returns:
+            (NumPy Array): indicates whether the worker associated with each observation is a mover
+        '''
+        return self.groupby('i', sort=(not is_sorted))['m'].transform('max').to_numpy() > 0
+
     def get_collapsed_long(self, is_sorted=False, copy=True):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
@@ -206,24 +218,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
             frame = frame.gen_m(force=True, copy=False)
 
         return frame
-
-    def _construct_firm_worker_linkages(self, is_sorted=False):
-        '''
-        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
-
-        Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-
-        Returns:
-            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
-        '''
-        move_rows = (self.groupby('i', sort=(not is_sorted))['m'].transform('max') > 0)
-        i_col = self.loc[move_rows, 'i'].to_numpy()
-        j_col = self.loc[move_rows, 'j'].to_numpy()
-        max_j = np.max(j_col)
-        linkages = np.stack([i_col + max_j + 1, j_col], axis=1)
-
-        return linkages, max_j
 
     def _get_articulation_obs(self, G, max_j, is_sorted=False):
         '''
