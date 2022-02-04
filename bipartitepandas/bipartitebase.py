@@ -1016,11 +1016,13 @@ class BipartiteBase(DataFrame):
             # Iterate over connected components to find the largest
             largest_cc = cc_list[0]
             frame_largest_cc = frame.keep_ids('j', largest_cc, is_sorted=is_sorted, copy=False)
-            for cc in cc_list[1:]:
-                frame_cc = frame.keep_ids('j', cc, is_sorted=True, copy=False)
-                replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
-                if replace:
-                    frame_largest_cc = frame_cc
+            if component_size_variable != 'firms':
+                # If component_size_varible is firms, no need to iterate
+                for cc in cc_list[1:]:
+                    frame_cc = frame.keep_ids('j', cc, is_sorted=True, copy=False)
+                    replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+                    if replace:
+                        frame_largest_cc = frame_cc
             frame = frame_largest_cc
             try:
                 # Remove comp_size attribute
