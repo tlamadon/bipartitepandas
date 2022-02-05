@@ -45,7 +45,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): used for event study format, does nothing for collapsed event study
+            is_sorted (bool): used for long format, does nothing for collapsed long
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover

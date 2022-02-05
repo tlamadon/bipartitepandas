@@ -48,7 +48,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover

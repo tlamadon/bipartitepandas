@@ -71,7 +71,7 @@ _sim_params_default = ParamsDict({
 
 def sim_params(update_dict={}):
     '''
-    Dictionary of default sim_params.
+    Dictionary of default sim_params. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
         update_dict (dict): user parameter values

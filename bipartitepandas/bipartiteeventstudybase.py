@@ -66,21 +66,27 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
-    def _get_unstack_rows(self, is_sorted=False):
+    def _get_unstack_rows(self, worker_m=None, is_sorted=False, copy=True):
         '''
         Get mask of rows where the second observation isn't included in the first observation for any rows (e.g., the last observation for a mover is given only as an j2, never as j1). More details: if a worker's last observation is a move OR if a worker switches from a move to a stay between observations, we need to append the second observation from the move. We can use the fact that the time changes between observations to indicate that we need to unstack, because event studies are supposed to go A -> B, B -> C, so if it goes A -> B, C -> D that means B should be unstacked.
 
         Arguments:
+            worker_m (NumPy Array or None): if a NumPy Array, this gives the worker_m column; if None, generate this column
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             (NumPy Array): mask of rows to unstack
         '''
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
         # Get i for this and next period
-        i_col = self.loc[:, 'i'].to_numpy()
+        i_col = frame.loc[:, 'i'].to_numpy()
         i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
         # Get m
-        worker_m = self.get_worker_m(is_sorted) # m_col = (self.loc[:, 'm'].to_numpy() > 0)
+        if worker_m is None:
+            worker_m = frame.get_worker_m(is_sorted=True) # m_col = (self.loc[:, 'm'].to_numpy() > 0)
         # # Get t for this and next period
         # t_cols = bpd.to_list(self.reference_dict['t'])
         # halfway = len(t_cols) // 2
@@ -244,7 +250,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         if is_clean:
             # Find rows to unstack
-            unstack_df = pd.DataFrame(frame.loc[frame._get_unstack_rows(is_sorted=True), :])
+            unstack_df = pd.DataFrame(frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), :])
         else:
             # If data isn't clean, just unstack all moves and deal with duplicates later
             unstack_df = pd.DataFrame(frame.loc[frame.get_worker_m(is_sorted=True), :])
@@ -342,24 +348,26 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
 
-    def _construct_firm_linkages(self, is_sorted=False):
+    def _construct_firm_linkages(self, is_sorted=False, copy=True):
         '''
         Construct numpy array linking firms by movers, for use with connected components.
 
         Arguments:
             is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
+            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
 
         Returns:
             (tuple of NumPy Array, int): (firm linkages, maximum firm id)
         '''
         return self.loc[(self.loc[:, 'm'].to_numpy() > 0), ['j1', 'j2']].to_numpy()
 
-    def _construct_firm_double_linkages(self, is_sorted=False):
+    def _construct_firm_double_linkages(self, is_sorted=False, copy=True):
         '''
         Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
 
         Arguments:
             is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
+            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
 
         Returns:
             (tuple of NumPy Array, int): (firm linkages, maximum firm id)
@@ -376,19 +384,23 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return linkages, max_j
 
-    def _construct_firm_worker_linkages(self, is_sorted=False):
+    def _construct_firm_worker_linkages(self, is_sorted=False, copy=True):
         '''
         Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
 
         Arguments:
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
         '''
-        worker_m = self.get_worker_m(is_sorted)
-        base_linkages = self.loc[worker_m, ['i', 'j1']].to_numpy()
-        secondary_linkages = self.loc[worker_m, ['i', 'j2']].to_numpy()
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
+        worker_m = frame.get_worker_m(is_sorted=True)
+        base_linkages = frame.loc[worker_m, ['i', 'j1']].to_numpy()
+        secondary_linkages = frame.loc[frame._get_unstack_rows(worker_m=worker_m, is_sorted=True, copy=False), ['i', 'j2']].to_numpy()
         linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
         max_j = np.max(linkages)
 
@@ -465,13 +477,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
 
-    def min_obs_firms(self, threshold=2, is_sorted=False):
+    def min_obs_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
         List firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many observations
@@ -480,9 +493,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
         # We consider j1 for all rows, but j2 only for unstack rows
-        j_obs = self.loc[:, 'j1'].value_counts(sort=False).to_dict()
-        j2_obs = self.loc[self._get_unstack_rows(is_sorted=is_sorted), 'j2'].value_counts(sort=False).to_dict()
+        j_obs = frame.loc[:, 'j1'].value_counts(sort=False).to_dict()
+        j2_obs = frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), 'j2'].value_counts(sort=False).to_dict()
         for j, n_obs in j2_obs.items():
             try:
                 # If firm j in j1, add the observations in j2
@@ -519,13 +535,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
-    def min_workers_firms(self, threshold=2, is_sorted=False):
+    def min_workers_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
         List firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many workers
@@ -534,9 +551,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
+        # Sort data by i (and t, if included)
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
         # We consider j1 for all rows, but j2 only for unstack rows
-        j_i_ids = self.groupby('j1')['i'].unique().apply(list).to_dict()
-        j2_i_ids = self.loc[self._get_unstack_rows(is_sorted=is_sorted), :].groupby('j2')['i'].unique().apply(list).to_dict()
+        j_i_ids = frame.groupby('j1')['i'].unique().apply(list).to_dict()
+        j2_i_ids = frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), :].groupby('j2')['i'].unique().apply(list).to_dict()
         for j, i_ids in j2_i_ids.items():
             try:
                 # If firm j in j1, add the worker ids in j2

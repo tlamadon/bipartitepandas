@@ -388,14 +388,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Construct graph
-            G2, max_j2 = frame_cc._construct_graph('leave_one_observation_out', is_sorted=True)
+            G2, max_j2 = frame_cc._construct_graph('leave_one_observation_out', is_sorted=True, copy=False)
 
             # Extract articulation rows
             articulation_rows = frame_cc._get_articulation_obs(G2, max_j2, is_sorted=True)
 
             if len(articulation_rows) > 0:
                 # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-                G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out', is_sorted=True)
+                G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out', is_sorted=True, copy=False)
                 cc_list_2 = G2.components()
                 # Recursion step
                 frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, max_j=max_j2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True)
@@ -600,12 +600,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Return largest biconnected component
         return frame_largest_bcc
 
-    def _construct_firm_linkages(self, is_sorted=False):
+    def _construct_firm_linkages(self, is_sorted=False, copy=True):
         '''
         Construct numpy array linking firms by movers, for use with connected components.
 
         Arguments:
             is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
+            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
 
         Returns:
             (tuple of NumPy Array, int): (firm linkages, maximum firm id)
@@ -622,12 +623,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return linkages, max_j
 
-    def _construct_firm_double_linkages(self, is_sorted=False):
+    def _construct_firm_double_linkages(self, is_sorted=False, copy=True):
         '''
         Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
 
         Arguments:
             is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
+            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
 
         Returns:
             (tuple of NumPy Array, int): (firm linkages, maximum firm id)
@@ -648,12 +650,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return linkages, max_j
 
-    def _construct_firm_worker_linkages(self, is_sorted=False):
+    def _construct_firm_worker_linkages(self, is_sorted=False, copy=True):
         '''
         Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
+            copy (bool): used for event study format, does nothing for long
 
         Returns:
             (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
@@ -916,13 +919,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def min_obs_firms(self, threshold=2, is_sorted=False):
+    def min_obs_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
         List firms with at least `threshold` many observations.
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
             is_sorted (bool): used for event study format, does nothing for long
+            copy (bool): used for event study format, does nothing for long
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many observations
@@ -971,13 +975,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def min_workers_firms(self, threshold=15, is_sorted=False):
+    def min_workers_firms(self, threshold=15, is_sorted=False, copy=True):
         '''
         List firms with at least `threshold` many workers.
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
             is_sorted (bool): used for event study format, does nothing for long
+            copy (bool): used for event study format, does nothing for long
 
         Returns:
             valid_firms (NumPy Array): list of firms with sufficiently many workers

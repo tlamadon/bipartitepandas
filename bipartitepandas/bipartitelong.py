@@ -32,7 +32,7 @@ _es_extended_plot_params_default = bpd.ParamsDict({
 
 def es_extended_plot_params(update_dict={}):
     '''
-    Dictionary of default es_extended_plot_params.
+    Dictionary of default es_extended_plot_params. Run bpd.es_extended_plot_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
         update_dict (dict): user parameter values
@@ -84,7 +84,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover

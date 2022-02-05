@@ -77,7 +77,7 @@ _clean_params_default = ParamsDict({
 
 def clean_params(update_dict={}):
     '''
-    Dictionary of default clean_params.
+    Dictionary of default clean_params. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
         update_dict (dict): user parameter values
@@ -130,7 +130,7 @@ _cluster_params_default = ParamsDict({
 
 def cluster_params(update_dict={}):
     '''
-    Dictionary of default cluster_params.
+    Dictionary of default cluster_params. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
         update_dict (dict): user parameter values
@@ -367,7 +367,7 @@ class BipartiteBase(DataFrame):
         ##### Connectedness #####
         is_connected_dict = {
             None: lambda : None,
-            'connected': lambda : self._construct_graph(self.connectedness, is_sorted=False)[0].is_connected(),
+            'connected': lambda : self._construct_graph(self.connectedness, is_sorted=False, copy=False)[0].is_connected(),
             'leave_one_observation_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness, is_sorted=False))),
             'leave_one_firm_out': lambda: (len(self) == len(self._conset(connectedness=self.connectedness, is_sorted=False)))
         }
@@ -1009,7 +1009,7 @@ class BipartiteBase(DataFrame):
         # Update data
         # Find largest connected set of firms
         # First, create graph
-        G, max_j = frame._construct_graph(connectedness, is_sorted=is_sorted)
+        G, max_j = frame._construct_graph(connectedness, is_sorted=is_sorted, copy=False)
         if connectedness == 'connected':
             # Compute all connected components of firms
             cc_list = sorted(G.components(), reverse=True, key=len)
@@ -1056,13 +1056,14 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def _construct_graph(self, connectedness='connected', is_sorted=False):
+    def _construct_graph(self, connectedness='connected', is_sorted=False, copy=True):
         '''
         Construct igraph graph linking firms by movers.
 
         Arguments:
             connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             (tuple of igraph Graph, int): (graph, maximum firm id)
@@ -1073,7 +1074,7 @@ class BipartiteBase(DataFrame):
             'leave_one_observation_out': self._construct_firm_worker_linkages,
             'leave_one_firm_out': self._construct_firm_double_linkages
         }
-        linkages, max_j = linkages_fn_dict[connectedness](is_sorted=is_sorted)
+        linkages, max_j = linkages_fn_dict[connectedness](is_sorted=is_sorted, copy=copy)
         # n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
         return ig.Graph(edges=linkages), max_j # n=n_firms
 
@@ -1156,13 +1157,14 @@ class BipartiteBase(DataFrame):
 
         return self.keep_rows(rows_diff, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
-    def min_movers_firms(self, threshold=15, is_sorted=False):
+    def min_movers_firms(self, threshold=15, is_sorted=False, copy=True):
         '''
         List firms with at least `threshold` many movers.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
 
         Returns:
             valid_firms (NumPy Array): firms with sufficiently many movers
@@ -1174,7 +1176,7 @@ class BipartiteBase(DataFrame):
 
         frame = self.loc[self.loc[:, 'm'].to_numpy() > 0, :]
 
-        return frame.min_workers_firms(threshold, is_sorted=is_sorted)
+        return frame.min_workers_firms(threshold, is_sorted=is_sorted, copy=copy)
 
     @recollapse_loop(True)
     def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
