@@ -394,7 +394,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             articulation_rows = frame_cc._get_articulation_obs(G2, max_j2, is_sorted=True)
 
             if len(articulation_rows) > 0:
-                # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
+                # If new frame is not leave-one-observation-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
                 G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out', is_sorted=True, copy=False)
                 cc_list_2 = G2.components()
                 # Recursion step
@@ -416,8 +416,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 except AttributeError:
                     pass
 
-        # Remove comp_size attribute before return
         try:
+            # Remove comp_size attribute before return
             del frame_largest_cc.comp_size
         except AttributeError:
             pass
@@ -515,6 +515,98 @@ class BipartiteLongBase(bpd.BipartiteBase):
     #     # Return largest leave-one-observation-out component
     #     return frame_largest_cc
 
+    def _leave_one_worker_out(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False):
+        '''
+        Extract largest leave-one-worker-out connected component.
+
+        Arguments:
+            cc_list (list of lists): each entry is a connected component
+            max_j (int): maximum j
+            component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+
+        Returns:
+            frame_largest_cc (BipartiteLongBase): dataframe of largest leave-one-worker-out connected component
+        '''
+        # Sort data by i (and t, if included)
+        self.sort_rows(is_sorted=is_sorted, copy=False)
+
+        for cc in sorted(cc_list, reverse=True, key=len):
+            cc = np.array(cc)
+            cc_j = cc[cc <= max_j]
+            if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
+                # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
+                try:
+                    skip = (frame_largest_cc.comp_size >= len(cc_j))
+                except AttributeError:
+                    frame_largest_cc.comp_size = frame_largest_cc.n_firms()
+                    skip = (frame_largest_cc.comp_size >= len(cc_j))
+
+                if skip:
+                    continue
+
+            # Keep observations in connected components (NOTE: this does not require a copy)
+            frame_cc = self.keep_ids('j', cc_j, drop_returns_to_stays, is_sorted=True, copy=False)
+
+            if frame_largest_cc is not None:
+                # If frame_cc is already smaller than frame_largest_cc
+                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+
+                if skip:
+                    continue
+
+            # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+            frame_cc = frame_cc.min_moves_frame(2, drop_returns_to_stays, is_sorted=True, copy=False)
+
+            if frame_largest_cc is not None:
+                # If frame_cc is already smaller than frame_largest_cc
+                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+
+                if skip:
+                    continue
+
+            # Construct graph
+            G2, max_j2 = frame_cc._construct_graph('leave_one_worker_out', is_sorted=True, copy=False)
+
+            # Extract articulation workers
+            articulation_ids = np.array(G2.articulation_points())
+            articulation_workers = articulation_ids[articulation_ids > max_j2]
+            articulation_workers -= (max_j2 + 1)
+
+            if len(articulation_workers) > 0:
+                # If new frame is not leave-one-worker-out connected, recompute connected components after dropping articulation workers (but note that articulation workers should be kept in the final dataframe) (NOTE: this does not require a copy)
+                G2, max_j2 = frame_cc.drop_ids('i', articulation_workers, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_worker_out', is_sorted=True, copy=False)
+                cc_list_2 = G2.components()
+                # Recursion step
+                frame_cc = frame_cc._leave_one_worker_out(cc_list=cc_list_2, max_j=max_j2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True)
+
+            if frame_largest_cc is None:
+                # If in the first round
+                replace = True
+            elif frame_cc is None:
+                # If the biconnected components have recursively been eliminated
+                replace = False
+            else:
+                replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+            if replace:
+                frame_largest_cc = frame_cc
+                try:
+                    # Reset comp_size attribute
+                    del frame_largest_cc.comp_size
+                except AttributeError:
+                    pass
+
+        try:
+            # Remove comp_size attribute before return
+            del frame_largest_cc.comp_size
+        except AttributeError:
+            pass
+
+        # Return largest leave-one-worker-out component
+        return frame_largest_cc
+
     def _leave_one_firm_out(self, bcc_list, component_size_variable='firms', drop_returns_to_stays=False, is_sorted=False):
         '''
         Extract largest leave-one-firm-out connected component.
@@ -526,7 +618,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
 
         Returns:
-            frame_largest_bcc (BipartiteLongBase): dataframe of largest leave-one-out connected component
+            frame_largest_bcc (BipartiteLongBase): dataframe of largest leave-one-firm-out connected component
         '''
         # Sort data by i (and t, if included)
         self.sort_rows(is_sorted=is_sorted, copy=False)
@@ -536,7 +628,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         for bcc in sorted(bcc_list, reverse=True, key=len):
             if (frame_largest_bcc is not None) and (component_size_variable == 'firms'):
-                # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
+                # If looking at number of firms, can check if frame_bcc is already smaller than frame_largest_bcc before any computations
                 try:
                     skip = (frame_largest_bcc.comp_size >= len(bcc))
                 except AttributeError:
@@ -592,7 +684,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     pass
 
         try:
-            # Remove comp_size attribute
+            # Remove comp_size attribute before return
             del frame_largest_bcc.comp_size
         except AttributeError:
             pass

@@ -41,9 +41,9 @@ def recollapse_loop(force=False):
 
 # Define default parameter dictionaries
 _clean_params_default = ParamsDict({
-    'connectedness': (None, 'set', ['connected', 'leave_one_observation_out', 'leave_one_firm_out', None],
+    'connectedness': (None, 'set', ['connected', 'leave_one_observation_out', 'leave_one_worker_out', 'leave_one_firm_out', None],
         '''
-            (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
+            (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_worker_out', keep observations in the largest leave-one-worker-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
         ''', None),
     'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers'],
         '''
@@ -981,7 +981,7 @@ class BipartiteBase(DataFrame):
         Update data to include only the largest connected component of movers.
 
         Arguments:
-            connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if None, keep all observations.
+            connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_worker_out', keep observations in the largest leave-one-worker-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
@@ -1034,15 +1034,24 @@ class BipartiteBase(DataFrame):
                 warnings.warn('You should avoid computing leave-one-observation-out connected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all connected components of firms (each entry is a connected component)
             cc_list = G.components()
-            # Keep largest leave-one-out set of firms
+            # Keep largest leave-one-observation-out set of firms
             frame = frame._leave_one_observation_out(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
+        elif connectedness == 'leave_one_worker_out':
+            if isinstance(frame, bpd.BipartiteEventStudyBase):
+                warnings.warn('You should avoid computing leave-one-worker-out connected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
+            # Compute all connected components of firms (each entry is a connected component)
+            cc_list = G.components()
+            # Keep largest leave-one-worker-out set of firms
+            frame = frame._leave_one_worker_out(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
         elif connectedness == 'leave_one_firm_out':
             if isinstance(frame, bpd.BipartiteEventStudyBase):
                 warnings.warn('You should avoid computing leave-one-firm-out components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all biconnected components of firms (each entry is a biconnected component)
             bcc_list = G.biconnected_components()
-            # Keep largest leave-one-out set of firms
+            # Keep largest leave-one-firm-out set of firms
             frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
+        else:
+            raise NotImplementedError(bpd.str_format("Connectedness measure {} is invalid: it must be one of None, 'connected', 'leave_one_observation_out', 'leave_one_worker_out', or 'leave_one_firm_out'.", connectedness))
 
         # Data is now connected
         frame.connectedness = connectedness
@@ -1061,7 +1070,7 @@ class BipartiteBase(DataFrame):
         Construct igraph graph linking firms by movers.
 
         Arguments:
-            connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
+            connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_worker_out', keep observations in the largest leave-one-worker-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -1072,6 +1081,7 @@ class BipartiteBase(DataFrame):
         linkages_fn_dict = {
             'connected': self._construct_firm_linkages,
             'leave_one_observation_out': self._construct_firm_worker_linkages,
+            'leave_one_worker_out': self._construct_firm_worker_linkages,
             'leave_one_firm_out': self._construct_firm_double_linkages
         }
         linkages, max_j = linkages_fn_dict[connectedness](is_sorted=is_sorted, copy=copy)
@@ -1200,7 +1210,8 @@ class BipartiteBase(DataFrame):
                 return self.copy()
             return self
 
-        valid_firms = self.min_movers_firms(threshold, is_sorted=is_sorted)
+        # FIXME this copy should not always be False, check out how to fix it
+        valid_firms = self.min_movers_firms(threshold, is_sorted=is_sorted, copy=False)
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 
