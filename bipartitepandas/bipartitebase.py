@@ -73,9 +73,9 @@ _clean_params_default = ParamsDict({
         '''
             (default=True) If False, avoid copying data when possible.
         ''', None),
-    'verbose': (False, 'type', bool,
+    'verbose': (True, 'type', bool,
         '''
-            (default=False) If True, print progress during data cleaning.
+            (default=True) If True, print progress during data cleaning.
         ''', None)
 })
 
