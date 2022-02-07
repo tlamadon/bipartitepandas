@@ -72,6 +72,10 @@ _clean_params_default = ParamsDict({
     'copy': (True, 'type', bool,
         '''
             (default=True) If False, avoid copying data when possible.
+        ''', None),
+    'verbose': (False, 'type', bool,
+        '''
+            (default=False) If True, print progress during data cleaning.
         ''', None)
 })
 
@@ -783,6 +787,8 @@ class BipartiteBase(DataFrame):
         # Quickly check whether ids need to be reset
         try:
             if max(factorized[1]) + 1 == len(factorized[1]):
+                # ids are already contiguous
+                frame.columns_contig[id_col] = True
                 return frame
         except TypeError:
             # If ids are not integers, this will return a TypeError and we can ignore it
@@ -859,6 +865,7 @@ class BipartiteBase(DataFrame):
         self.log('beginning BipartiteBase data cleaning', level='info')
 
         force = clean_params['force']
+        verbose = clean_params['verbose']
 
         if clean_params['copy']:
             frame = self.copy()
@@ -867,19 +874,27 @@ class BipartiteBase(DataFrame):
 
         # First, correct column names
         frame.log('correcting column names', level='info')
+        if verbose:
+            print('correcting column names')
         frame._update_cols()
 
         # Next, check that required columns are included and datatypes are correct
         frame.log('checking required columns and datatypes', level='info')
+        if verbose:
+            print('checking required columns and datatypes')
         frame = frame._check_cols()
 
         # Next, sort rows
         frame.log('sorting rows', level='info')
+        if verbose:
+            print('sorting rows')
         frame = frame.sort_rows(is_sorted=clean_params['is_sorted'], copy=False)
 
         # Next, drop NaN observations
         if force or (not frame.no_na):
             frame.log('dropping NaN observations', level='info')
+            if verbose:
+                print('dropping NaN observations')
             if frame.isna().to_numpy().any():
                 # Checking first is considerably faster if there are no NaN observations
                 frame.dropna(inplace=True)
@@ -890,11 +905,15 @@ class BipartiteBase(DataFrame):
         # Generate 'm' column - this is necessary for the next steps
         # 'm' will get updated in the following steps as it changes
         frame.log("generating 'm' column", level='info')
+        if verbose:
+            print("generating 'm' column")
         frame = frame.gen_m(force=True, copy=False)
 
         # Next, make sure i-t (worker-year) observations are unique
         if (force or (not frame.i_t_unique)) and (frame.i_t_unique is not None):
-            frame.log('keeping highest paying job for i-t (worker-year) duplicates', level='info')
+            frame.log('keeping highest paying job for i-t (worker-year) duplicates (how={})'.format(clean_params['i_t_how']), level='info')
+            if verbose:
+                print('keeping highest paying job for i-t (worker-year) duplicates (how={})'.format(clean_params['i_t_how']))
             frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], is_sorted=True, copy=False)
 
             # Update no_duplicates
@@ -902,6 +921,8 @@ class BipartiteBase(DataFrame):
         elif force or (not frame.no_duplicates):
             # Drop duplicate observations
             frame.log('dropping duplicate observations', level='info')
+            if verbose:
+                print('dropping duplicate observations')
             frame.drop_duplicates(inplace=True)
 
             # Update no_duplicates
@@ -909,34 +930,50 @@ class BipartiteBase(DataFrame):
 
         # Next, drop returns
         if force or (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']):
+            frame.log('dropping workers who leave a firm then return to it (how={})'.format(clean_params['drop_returns']), level='info')
+            if verbose:
+                print('dropping workers who leave a firm then return to it (how={})'.format(clean_params['drop_returns']))
             frame = frame._drop_returns(how=clean_params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
-        frame.log('making column ids contiguous', level='info')
         for contig_col, is_contig in frame.columns_contig.items():
             if (force or (not is_contig)) and (is_contig is not None):
+                frame.log('making {} ids contiguous'.format(contig_col), level='info')
+                if verbose:
+                    print('making {} ids contiguous'.format(contig_col))
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
         if force or (frame.connectedness in [False, None]):
             # Generate largest connected set
-            frame.log('generating largest connected set', level='info')
+            frame.log('computing largest connected set (how={})'.format(clean_params['connectedness']), level='info')
+            if verbose:
+                print('computing largest connected set (how={})'.format(clean_params['connectedness']))
             frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
                 if (is_contig is not None) and (not is_contig):
                     frame.log('making {} ids contiguous'.format(contig_col), level='info')
+                    if verbose:
+                        print('making {} ids contiguous'.format(contig_col))
                     frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Sort columns
         frame.log('sorting columns', level='info')
+        if verbose:
+            print('sorting columns')
         frame = frame.sort_cols(copy=False)
 
         # Reset index
+        frame.log('resetting index', level='info')
+        if verbose:
+            print('resetting index')
         frame.reset_index(drop=True, inplace=True)
 
         frame.log('BipartiteBase data cleaning complete', level='info')
+        if verbose:
+            print('BipartiteBase data cleaning complete')
 
         return frame
 
