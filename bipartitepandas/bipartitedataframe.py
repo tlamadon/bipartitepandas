@@ -39,7 +39,7 @@ class BipartiteDataFrame():
         t12 (NumPy Array or Pandas Series of ints): last time in worker-firm spell in first period of event study (optional)
         t21 (NumPy Array or Pandas Series of ints): first time in worker-firm spell in second period of event study (optional)
         t22 (NumPy Array or Pandas Series of ints): last time in worker-firm spell in second period of event study (optional)
-        **kwargs: keyword arguments for BipartiteBase
+        **kwargs: keyword arguments for BipartiteBase, or new columns
     '''
 
     def __init__(self):
@@ -49,6 +49,14 @@ class BipartiteDataFrame():
         pass
 
     def __new__(self, *args, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, **kwargs):
+        # Figure out which kwargs are new columns
+        new_kwargs = {}
+        new_cols = {}
+        for k, v in kwargs.items():
+            if bpd.util._is_subtype(v, bpd.util.col_type):
+                new_cols[k] = v
+            else:
+                new_kwargs[k] = v
         if j is not None:
             ### Base long format ###
             if y is None:
@@ -75,24 +83,28 @@ class BipartiteDataFrame():
                     # Can't mix long and collapsed event study for t
                     raise NotImplementedError("A BipartiteDataFrame with 'j', 'y', and 't' columns is long format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
                 ##### RETURN LONG #####
-                df = pd.DataFrame({'i': i, 'j': j, 'y': y, 't': t})
+                cols = {'i': i, 'j': j, 'y': y, 't': t}
+                cols.update(new_cols)
+                df = pd.DataFrame(cols)
                 if g is not None:
                     df.loc[:, 'g'] = g
                 if w is not None:
                     df.loc[:, 'w'] = w
-                return bpd.BipartiteLong(df, **kwargs)
+                return bpd.BipartiteLong(*args, df, **new_kwargs)
             elif (t1 is not None) and (t2 is not None):
                 ## Collapsed long format ##
                 if (t11 is not None) or (t12 is not None) or (t21 is not None) or (t22 is not None):
                     # Can't mix collapsed long and collapsed event study for t
                     raise NotImplementedError("A BipartiteDataFrame with 'j', 'y', 't1', and 't2' columns is collapsed long format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
                 ##### RETURN COLLAPSED LONG #####
-                df = pd.DataFrame({'i': i, 'j': j, 'y': y, 't1': t1, 't2': t2})
+                cols = {'i': i, 'j': j, 'y': y, 't1': t1, 't2': t2}
+                cols.update(new_cols)
+                df = pd.DataFrame(cols)
                 if g is not None:
                     df.loc[:, 'g'] = g
                 if w is not None:
                     df.loc[:, 'w'] = w
-                return bpd.BipartiteLongCollapsed(df, **kwargs)
+                return bpd.BipartiteLongCollapsed(*args, df, **new_kwargs)
             elif (t1 is not None) or (t2 is not None):
                 # Can't include only one of t1 and t2 for collapsed long
                 raise NotImplementedError("A BipartiteDataFrame with 'j', 'y', 't1', and 't2' columns is collapsed long format. The constructor will not work if only one of 't1' and 't2' is included.")
@@ -100,12 +112,14 @@ class BipartiteDataFrame():
                 # Can't mix base long and collapsed event study for t
                 raise NotImplementedError("A BipartiteDataFrame with 'j' and 'y' columns is long or collapsed long format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
             ##### RETURN UNSPECIFIED LONG #####
-            df = pd.DataFrame({'i': i, 'j': j, 'y': y})
+            cols = {'i': i, 'j': j, 'y': y}
+            cols.update(new_cols)
+            df = pd.DataFrame(cols)
             if g is not None:
                 df.loc[:, 'g'] = g
             if w is not None:
                 df.loc[:, 'w'] = w
-            return bpd.BipartiteLong(df, **kwargs)
+            return bpd.BipartiteLong(*args, df, **new_kwargs)
         elif (j1 is not None) and (j2 is not None):
             ### Base event study format ###
             if (y1 is None) or (y2 is None):
@@ -132,14 +146,16 @@ class BipartiteDataFrame():
                     # Can't mix event study and collapsed event study for t
                     raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't1', and 't2' columns is event study format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
                 ##### RETURN EVENT STUDY #####
-                df = pd.DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2})
+                cols = {'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2}
+                cols.update(new_cols)
+                df = pd.DataFrame(cols)
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
                     df.loc[:, 'g2'] = g2
                 if (w1 is not None) and (w2 is not None):
                     df.loc[:, 'w1'] = w1
                     df.loc[:, 'w2'] = w2
-                return bpd.BipartiteEventStudy(df, **kwargs)
+                return bpd.BipartiteEventStudy(*args, df, **new_kwargs)
             elif (t1 is not None) or (t2 is not None):
                 # Can't include only one of t1 and t2 for event study
                 raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't1', and 't2' columns is event study format. The constructor will not work if only one of 't1' and 't2' is included.")
@@ -149,26 +165,30 @@ class BipartiteDataFrame():
                     # Can't mix event study and collapsed event study for t
                     raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't11', 't12', 't21', and 't22' columns is collapsed event study format. The constructor will not work if 't1' or 't2' columns are included.")
                 ##### RETURN COLLAPSED EVENT STUDY #####
-                df = pd.DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22})
+                cols = {'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22}
+                cols.update(new_cols)
+                df = pd.DataFrame(cols)
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
                     df.loc[:, 'g2'] = g2
                 if (w1 is not None) and (w2 is not None):
                     df.loc[:, 'w1'] = w1
                     df.loc[:, 'w2'] = w2
-                return bpd.BipartiteEventStudyCollapsed(df, **kwargs)
+                return bpd.BipartiteEventStudyCollapsed(*args, df, **new_kwargs)
             elif (t11 is not None) or (t12 is not None) or (t21 is not None) or (t22 is not None):
                 # Can't include only one of t11, t12, t21, and t22 for collapsed event study
                 raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't11', 't12', 't21', and 't22' columns is collapsed event study format. The constructor will not work if only one of 't11', 't12', 't21', and 't22' is included.")
             ##### RETURN UNSPECIFIED EVENT STUDY #####
-            df = pd.DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2})
+            cols = {'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2}
+            cols.update(new_cols)
+            df = pd.DataFrame(cols)
             if (g1 is not None) and (g2 is not None):
                 df.loc[:, 'g1'] = g1
                 df.loc[:, 'g2'] = g2
             if (w1 is not None) and (w2 is not None):
                 df.loc[:, 'w1'] = w1
                 df.loc[:, 'w2'] = w2
-            return bpd.BipartiteEventStudy(df, **kwargs)
+            return bpd.BipartiteEventStudy(*args, df, **new_kwargs)
         else:
             # Neither long format nor event study format
             raise NotImplementedError("A BipartiteDataFrame requires either a 'j' column or 'j1' and 'j2' columns, indicating firm ids for each observation. Please input only 'j' for long format, or 'j1' and 'j2' for event study format.")

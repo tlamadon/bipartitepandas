@@ -16,6 +16,8 @@ col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't11', 't12
 # Source: https://stackoverflow.com/a/54009756/17333120
 fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
 
+col_type = (np.ndarray, pd.Series)
+
 def _is_subtype(obj, types):
     '''
     Check if obj is a subtype of types.

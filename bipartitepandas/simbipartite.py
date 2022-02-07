@@ -211,7 +211,7 @@ class SimBipartite:
         # Make firm ids contiguous
         dspell.loc[:, 'j'] = dspell.groupby(['k', 'j'])['freq'].ngroup()
 
-        # Merge spells into panel
+        # Merge firm ids into panel
         data = data.merge(dspell.loc[:, ['spell', 'j']], on='spell')
         # spell_to_firm = dspell.groupby('spell')['j'].first().to_dict()
         # data.loc[:, 'j'] = data.loc[:, 'spell'].map(spell_to_firm)
@@ -221,4 +221,4 @@ class SimBipartite:
         # Compute wages through the AKM formula
         data.loc[:, 'y'] = data.loc[:, 'alpha'] + data.loc[:, 'psi'] + w_sig * rng.normal(size=n_workers * n_time)
 
-        return data.reindex(['i', 'j', 'y', 't', 'l', 'k', 'alpha', 'psi', 'spell'], axis=1, copy=False)
+        return data.reindex(['i', 'j', 'y', 't', 'l', 'k', 'alpha', 'psi'], axis=1, copy=False)
