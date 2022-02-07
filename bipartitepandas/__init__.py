@@ -9,4 +9,5 @@ from .bipartitelongcollapsed import BipartiteLongCollapsed
 from .bipartiteeventstudybase import BipartiteEventStudyBase
 from .bipartiteeventstudy import BipartiteEventStudy
 from .bipartiteeventstudycollapsed import BipartiteEventStudyCollapsed
+from .bipartitedataframe import BipartiteDataFrame
 from .simbipartite import sim_params, SimBipartite

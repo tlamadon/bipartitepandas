@@ -11,7 +11,7 @@ from statsmodels.stats.weightstats import DescrStatsW
 import types
 import warnings
 
-col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't1', 't2', 't11', 't12', 't21', 't22', 'g', 'g1', 'g2', 'w', 'w1', 'w2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
+col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't11', 't12', 't21', 't22', 'g', 'g1', 'g2', 'w', 'w1', 'w2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
 
 # Source: https://stackoverflow.com/a/54009756/17333120
 fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
