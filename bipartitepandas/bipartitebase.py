@@ -881,7 +881,7 @@ class BipartiteBase(DataFrame):
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         for contig_col, is_contig in frame.columns_contig.items():
-            if (force or (not is_contig)) and (is_contig is not None):
+            if frame._col_included(contig_col) and (force or (not is_contig)):
                 frame.log('making {} ids contiguous'.format(contig_col), level='info')
                 if verbose:
                     print('making {} ids contiguous'.format(contig_col))
@@ -897,7 +897,7 @@ class BipartiteBase(DataFrame):
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
-                if (is_contig is not None) and (not is_contig):
+                if frame._col_included(contig_col) and (not is_contig):
                     frame.log('making {} ids contiguous'.format(contig_col), level='info')
                     if verbose:
                         print('making {} ids contiguous'.format(contig_col))
@@ -939,8 +939,8 @@ class BipartiteBase(DataFrame):
                         raise ValueError(error_msg)
                 else:
                     # If column included, check type
-                    if not bpd.util._is_subdtype(self.loc[:, subcol], self.col_dtype_dict[subcol]):
-                        error_msg = f'{subcol} has the wrong dtype, it is currently {self.loc[:, subcol].dtype} but should be one of the following: {self.col_dtype_dict[subcol]}'
+                    if not bpd.util._is_subdtype(self.loc[:, subcol], self.col_dtype_dict[col]):
+                        error_msg = f'{subcol} has the wrong dtype, it is currently {self.loc[:, subcol].dtype} but should be one of the following: {self.col_dtype_dict[col]}'
                         self.log(error_msg, level='info')
                         raise ValueError(error_msg)
                 # If column included and has correct type, add to list
