@@ -216,10 +216,12 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # Correct datatypes
             data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
             for col in all_cols:
-                for subcol in frame.col_reference_dict[col]:
-                    if frame.col_dtype_dict[col] == 'int':
-                        # If should be int
-                        data_long.loc[:, subcol] = data_long.loc[:, subcol].astype(int, copy=False)
+                if frame.col_collapse_dict[col] is not None:
+                    # Drop column if None
+                    for subcol in frame.col_reference_dict[col]:
+                        if frame.col_dtype_dict[col] == 'int':
+                            # If should be int
+                            data_long.loc[:, subcol] = data_long.loc[:, subcol].astype(int, copy=False)
 
             # Sort columns
             sorted_cols = sorted(data_long.columns, key=bpd.col_order)
