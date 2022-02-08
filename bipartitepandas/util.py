@@ -11,7 +11,40 @@ from statsmodels.stats.weightstats import DescrStatsW
 import types
 import warnings
 
-col_order = ['i', 'j', 'j1', 'j2', 'y', 'y1', 'y2', 't', 't1', 't2', 't11', 't12', 't21', 't22', 'g', 'g1', 'g2', 'w', 'w1', 'w2', 'm', 'cs', 'alpha_hat', 'psi_hat'].index
+def _text_num_split(col_name):
+    '''
+    Split column name into string and number components. Source: https://stackoverflow.com/a/55843049/17333120.
+
+    Arguments:
+        col_name (str): column name
+
+    Returns:
+        (list): first entry is column name string component; second entry is number component
+    '''
+    for index, char in enumerate(col_name):
+        if char.isdigit():
+            return (col_name[: index], col_name[index:])
+    return (col_name, '')
+
+def col_order(col_name):
+    '''
+    Order rank for sorting columns. Prioritize default columns, then sort alphabetically (based on the first letter and the integer number of the column name).
+
+    Arguments:
+        col_name (str): column for sorting
+
+    Returns:
+        (int): column order rank
+    '''
+    default_cols = ['i', 'j', 'y', 't', 'g', 'w', 'm', 'cs', 'alpha_hat', 'psi_hat']
+    col_str, col_num = _text_num_split(col_name)
+    if len(col_num) > 0:
+        col_num = int(col_num)
+    else:
+        col_num = 0
+    if col_str in default_cols:
+        return 100 * default_cols.index(col_str[0]) + col_num - int(1e5)
+    return 100 * ord(col_str[0]) + col_num
 
 # Source: https://stackoverflow.com/a/54009756/17333120
 fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
@@ -33,6 +66,38 @@ def _is_subtype(obj, types):
     for type_i in to_list(types):
         if np.issubdtype(obj_type, type_i):
             return True
+    return False
+
+def _is_subdtype(col, types):
+    '''
+    Check if column dtype is a subtype of types. Source: https://stackoverflow.com/a/40312924/17333120.
+
+    Arguments:
+        col (NumPy Array or Pandas Series): column to compare
+        types (str or list of str): types to check (options are 'float', 'int', and 'any')
+
+    Returns:
+        (bool): if subtype, returns True
+    '''
+    # Get dtype kind of current column
+    col_dtype_kind = col.dtype.kind
+    # Get typecodes for dtype kinds (typecodes are 'Character', 'Integer', 'UnsignedInteger', 'Float', 'Complex', 'AllInteger', 'AllFloat', 'Datetime', and 'All)
+    typecodes = np.typecodes
+    # Add Int64 to typecodes
+    typecodes['Integer'] += 'Int64'
+    typecodes['AllInteger'] += 'Int64'
+    typecodes['All'] += 'Int64'
+    # Dictionary linking input types to typecodes
+    type_str_to_typecodes_dict = {
+        'float': ['AllFloat', 'AllInteger'],
+        'int': 'AllInteger',
+        'any': 'All'
+    }
+    for type_i in to_list(types):
+        # Check whether column is valid type
+        for sub_type_str_to_typecode in to_list(type_str_to_typecodes_dict[type_i]):
+            if col_dtype_kind in typecodes[sub_type_str_to_typecode]:
+                return True
     return False
 
 class ParamsDict(MutableMapping):
@@ -297,43 +362,6 @@ def logger_init(obj):
         obj.logger.addHandler(fh)
         obj.logger.addHandler(ch)
         loggers[obj_name] = obj.logger
-
-def col_dict_optional_cols(default_col_dict, user_col_dict, data_cols, optional_cols=()):
-    '''
-    Update col_dict to account for whether certain optional columns are included.
-
-    Arguments:
-        default_col_dict (dict): default col_dict values
-        user_col_dict (dict): user col_dict
-        data_cols (list): columns from user data
-        optional_cols (list of lists): optional columns to check if included in user data. If sub-list has multiple columns, all columns must be included in the data for them to be added to new_col_dict
-
-    Returns:
-        new_col_dict (dict): updated col_dict
-    '''
-    if user_col_dict is None:
-        # If columns already correct
-        new_col_dict = default_col_dict
-    else:
-        new_col_dict = update_dict(default_col_dict, user_col_dict)
-    # Add columns in 
-    for col_list in to_list(optional_cols):
-        include = True
-        for col in to_list(col_list):
-            exists_assigned = new_col_dict[col] is not None
-            # Last condition checks whether data has a different column with same name
-            exists_not_assigned = (col in data_cols) and (new_col_dict[col] is None) and (col not in new_col_dict.values())
-            if not exists_assigned and not exists_not_assigned:
-                include = False
-        if include:
-            for col in to_list(col_list):
-                if new_col_dict[col] is None:
-                    new_col_dict[col] = col
-        else:
-            # Reset column names to None if not all essential columns included
-            for col in to_list(col_list):
-                new_col_dict[col] = None
-    return new_col_dict
 
 def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col_name=None, merge=True):
     '''

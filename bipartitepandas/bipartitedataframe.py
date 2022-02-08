@@ -84,7 +84,7 @@ class BipartiteDataFrame():
                     raise NotImplementedError("A BipartiteDataFrame with 'j', 'y', and 't' columns is long format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
                 ##### RETURN LONG #####
                 cols = {'i': i, 'j': j, 'y': y, 't': t}
-                cols.update(new_cols)
+                # cols.update(new_cols)
                 df = pd.DataFrame(cols)
                 if g is not None:
                     df.loc[:, 'g'] = g
@@ -98,7 +98,7 @@ class BipartiteDataFrame():
                     raise NotImplementedError("A BipartiteDataFrame with 'j', 'y', 't1', and 't2' columns is collapsed long format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
                 ##### RETURN COLLAPSED LONG #####
                 cols = {'i': i, 'j': j, 'y': y, 't1': t1, 't2': t2}
-                cols.update(new_cols)
+                # cols.update(new_cols)
                 df = pd.DataFrame(cols)
                 if g is not None:
                     df.loc[:, 'g'] = g
@@ -113,7 +113,7 @@ class BipartiteDataFrame():
                 raise NotImplementedError("A BipartiteDataFrame with 'j' and 'y' columns is long or collapsed long format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
             ##### RETURN UNSPECIFIED LONG #####
             cols = {'i': i, 'j': j, 'y': y}
-            cols.update(new_cols)
+            # cols.update(new_cols)
             df = pd.DataFrame(cols)
             if g is not None:
                 df.loc[:, 'g'] = g
@@ -147,7 +147,7 @@ class BipartiteDataFrame():
                     raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't1', and 't2' columns is event study format. The constructor will not work if 't11', 't12', 't21', or 't22' columns are included.")
                 ##### RETURN EVENT STUDY #####
                 cols = {'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2}
-                cols.update(new_cols)
+                # cols.update(new_cols)
                 df = pd.DataFrame(cols)
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
@@ -166,7 +166,7 @@ class BipartiteDataFrame():
                     raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't11', 't12', 't21', and 't22' columns is collapsed event study format. The constructor will not work if 't1' or 't2' columns are included.")
                 ##### RETURN COLLAPSED EVENT STUDY #####
                 cols = {'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22}
-                cols.update(new_cols)
+                # cols.update(new_cols)
                 df = pd.DataFrame(cols)
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
@@ -180,7 +180,7 @@ class BipartiteDataFrame():
                 raise NotImplementedError("A BipartiteDataFrame with 'j1', 'j2', 't11', 't12', 't21', and 't22' columns is collapsed event study format. The constructor will not work if only one of 't11', 't12', 't21', and 't22' is included.")
             ##### RETURN UNSPECIFIED EVENT STUDY #####
             cols = {'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2}
-            cols.update(new_cols)
+            # cols.update(new_cols)
             df = pd.DataFrame(cols)
             if (g1 is not None) and (g2 is not None):
                 df.loc[:, 'g1'] = g1

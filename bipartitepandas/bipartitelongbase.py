@@ -1,32 +1,25 @@
 '''
 Base class for bipartite networks in long or collapsed long form
 '''
-from xml.dom.minidom import Attr
+# from xml.dom.minidom import Attr
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
-from igraph import Graph
-from collections import Counter
 
 class BipartiteLongBase(bpd.BipartiteBase):
     '''
     Base class for BipartiteLong and BipartiteLongCollapsed, where BipartiteLong and BipartiteLongCollapsed give a bipartite network of firms and workers in long and collapsed long form, respectively. Contains generalized methods. Inherits from BipartiteBase.
 
     Arguments:
-        *args: arguments for Pandas DataFrame
-        columns_req (list): required columns (only put general column names for joint columns, e.g. put 'fid' instead of 'f1i', 'f2i'; then put the joint columns in reference_dict)
-        columns_opt (list): optional columns (only put general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'; then put the joint columns in reference_dict)
-        reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
-        col_dtype_dict (dict): link column to datatype
-        col_dict (dict or None): make data columns readable. Keep None if column names already correct
-        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
-        **kwargs: keyword arguments for Pandas DataFrame
+        *args: arguments for BipartiteBase
+        col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
+        **kwargs: keyword arguments for BipartiteBase
     '''
 
-    def __init__(self, *args, columns_req=[], columns_opt=[], reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
-        reference_dict = bpd.update_dict({'j': 'j', 'y': 'y', 'g': 'g', 'w': 'w'}, reference_dict)
+    def __init__(self, *args, col_reference_dict={}, **kwargs):
+        col_reference_dict = bpd.update_dict({'j': 'j', 'y': 'y', 'g': 'g', 'w': 'w'}, col_reference_dict)
         # Initialize DataFrame
-        super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
+        super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
 
         # self.log('BipartiteLongBase object initialized', level='info')
 
@@ -64,8 +57,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
             with bpd.ChainedAssignment():
                 frame.loc[:, 'm'] = ((i_col == i_prev) & (j_col != j_prev)).astype(int, copy=False) + ((i_col == i_next) & (j_col != j_next)).astype(int, copy=False)
 
-            # frame._col_dict['m'] = 'm'
-
             # Sort columns
             frame = frame.sort_cols(copy=False)
 
@@ -98,53 +89,67 @@ class BipartiteLongBase(bpd.BipartiteBase):
         movers = pd.DataFrame(frame.loc[worker_m, :])
         frame.log('workers split by movers and stayers', level='info')
 
-        # Add lagged values
+        ## Add lagged values
         all_cols = frame._included_cols()
+        default_cols = frame.columns_req + frame.columns_opt
 
         # Columns to keep
         keep_cols = ['i']
+        # Keep track of user-added columns
+        user_added_cols = {}
         for col in all_cols:
-            for subcol in bpd.to_list(frame.reference_dict[col]):
-                # Get column number, e.g. j1 will give 1
-                subcol_number = subcol.strip(col)
-                ## Movers
-                # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
-                plus_1 = col + '1' + subcol_number
-                plus_2 = col + '2' + subcol_number
-                # Lagged value
-                movers.loc[:, plus_1] = np.roll(movers.loc[:, subcol].to_numpy(), 1)
-                movers.rename({subcol: plus_2}, axis=1, inplace=True)
+            if frame.col_long_es_dict[col] is None:
+                # If None, drop this column
+                pass
+            elif frame.col_long_es_dict[col]:
+                # If column should split
+                for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                    # Get column number, e.g. j1 will give 1
+                    subcol_number = subcol.strip(col)
+                    ## Movers
+                    # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
+                    col_1 = col + '1' + subcol_number
+                    col_2 = col + '2' + subcol_number
+                    # Lagged value
+                    with bpd.ChainedAssignment():
+                        movers.loc[:, col_1] = bpd.fast_shift(movers.loc[:, subcol].to_numpy(), 1, fill_value=-2)
+                    movers.rename({subcol: col_2}, axis=1, inplace=True)
 
-                if subcol not in ['i', 'm']:
-                    ## Stayers (no lags)
-                    stayers.loc[:, plus_1] = stayers.loc[:, subcol]
-                    stayers.rename({subcol: plus_2}, axis=1, inplace=True)
+                    if subcol != 'i':
+                        ## Stayers (no lags)
+                        stayers.loc[:, col_1] = stayers.loc[:, subcol]
+                        stayers.rename({subcol: col_2}, axis=1, inplace=True)
 
-                    # Columns to keep
-                    keep_cols += [plus_1, plus_2]
-                elif subcol == 'm':
-                    # Columns to keep
-                    keep_cols += ['m']
+                        # Columns to keep
+                        keep_cols += [col_1, col_2]
+                        if col not in default_cols:
+                            # User-added columns
+                            if col in user_added_cols.keys():
+                                user_added_cols[col] += [col_1, col_2]
+                            else:
+                                user_added_cols[col] = [col_1, col_2]
+            else:
+                # If column shouldn't split
+                keep_cols += bpd.to_list(frame.col_reference_dict[col])
+                if col not in default_cols:
+                    # User-added columns
+                    user_added_cols[col] = frame.col_reference_dict[col]
 
-        # Ensure lagged values are for the same worker, and that neither observation is a stay (this ensures that if there is a mover who stays at a firm for multiple periods, e.g. A -> B -> B -> B -> C, then the event study will be A -> B, B -> C, with the middle B listed as a stayer)
-        # Correct i because first row rolls over
-        same_i = (movers.loc[:, 'i1'].to_numpy() == movers.loc[:, 'i2'].to_numpy())
-        same_i[0] = False
-        movers = movers.loc[same_i, :] # & (movers.loc[:, 'j1'].to_numpy() != movers.loc[:, 'j2'].to_numpy()), :]
-        del same_i
+        # Ensure lagged values are for the same worker
+        movers = movers.loc[movers.loc[:, 'i1'].to_numpy() == movers.loc[:, 'i2'].to_numpy(), :]
 
         # Set 'm' for movers
-        movers.drop(['m1', 'm2'], axis=1, inplace=True)
         movers.loc[:, 'm'] = 1
         movers.loc[movers.loc[:, 'j1'].to_numpy() == movers.loc[:, 'j2'].to_numpy(), 'm'] = 0
 
         # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
         for col in all_cols:
-            if (frame.col_dtype_dict[col] == 'int') and (col != 'm'):
-                for subcol in bpd.to_list(frame.reference_dict[col]):
+            if ((frame.col_dtype_dict[col] == 'int') or (col in frame.columns_contig.keys())) and frame.col_long_es_dict[col]:
+                for subcol in bpd.to_list(frame.col_reference_dict[col]):
                     # Get column number, e.g. j1 will give 1
                     subcol_number = subcol.strip(col)
-                    movers.loc[:, col + '1' + subcol_number] = movers.loc[:, col + '1' + subcol_number].astype(int, copy=False)
+                    shifted_col = col + '1' + subcol_number
+                    movers.loc[:, shifted_col] = movers.loc[:, shifted_col].astype(int, copy=False)
 
         # Correct i
         movers.drop('i2', axis=1, inplace=True)
@@ -155,7 +160,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         movers = movers.reindex(keep_cols, axis=1, copy=False)
         frame.log('columns updated', level='info')
 
-        # Merge stayers and movers
+        # Merge stayers and movers (NOTE: this converts the data into a Pandas DataFrame)
         data_es = pd.concat([stayers, movers], ignore_index=True) # .reset_index(drop=True)
 
         # Sort columns
@@ -164,7 +169,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         frame.log('data reformatted as event study', level='info')
 
-        es_frame = frame._constructor_es(data_es, log=frame._log_on_indicator)
+        es_frame = frame._constructor_es(data_es, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
         es_frame._set_attributes(frame, no_dict=True)
 
         # Sort data by i and t
@@ -425,96 +430,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Return largest leave-one-observation-out component
         return frame_largest_cc
 
-    # def _leave_one_observation_out(self, cc_list, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None):
-    #     ''' # FIXME this is orders of magnitude slower than the new implementation, on sample data it looks at 275x more observations to check whether the set is leave-one-out connected (it also results in a smaller connected set)
-    #     Extract largest leave-one-observation-out connected component.
-
-    #     Arguments:
-    #         cc_list (list of lists): each entry is a connected component
-    #         component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
-
-    #     Returns:
-    #         frame_largest_cc (BipartiteLongBase): dataframe of largest leave-one-observation-out connected component
-    #     '''
-    #     for cc in sorted(cc_list, reverse=True, key=len):
-    #         if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
-    #             # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
-    #             try:
-    #                 skip = (frame_largest_cc.comp_size >= len(cc))
-    #             except AttributeError:
-    #                 frame_largest_cc.comp_size = frame_largest_cc.n_firms()
-    #                 skip = (frame_largest_cc.comp_size >= len(cc))
-
-    #             if skip:
-    #                 continue
-
-    #         # Keep observations in connected components (NOTE: this does not require a copy)
-    #         frame_cc = self.keep_ids('j', cc, drop_returns_to_stays, is_sorted=True, copy=False)
-
-    #         if frame_largest_cc is not None:
-    #             # If frame_cc is already smaller than frame_largest_cc
-    #             skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
-
-    #             if skip:
-    #                 continue
-
-    #         # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
-    #         frame_cc = frame_cc.min_moves_frame(2, drop_returns_to_stays, is_sorted=True, copy=False)
-
-    #         if frame_largest_cc is not None:
-    #             # If frame_cc is already smaller than frame_largest_cc
-    #             skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
-
-    #             if skip:
-    #                 continue
-
-    #         # Construct graph
-    #         G2 = frame_cc._construct_graph('leave_one_observation_out')
-
-    #         # Extract articulation firms
-    #         articulation_firms = G2.articulation_points()
-
-    #         if len(articulation_firms) > 0:
-    #             # If there are articulation firms
-    #             # Extract articulation rows
-    #             print('n rows:', len(frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy()))
-    #             articulation_rows = frame_cc._get_articulation_obs(G2, frame_cc.loc[(frame_cc.loc[:, 'j'].isin(articulation_firms)) & (frame_cc.loc[:, 'm'].to_numpy() > 0), :].index.to_numpy())
-
-    #             if len(articulation_rows) > 0:
-    #                 print('n articulation rows:', len(articulation_rows))
-    #                 # If new frame is not leave-one-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-    #                 G2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_one_observation_out')
-    #                 cc_list_2 = G2.components()
-    #                 # Recursion step
-    #                 frame_cc = frame_cc._leave_one_observation_out(cc_list=cc_list_2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc)
-
-    #         if frame_largest_cc is None:
-    #             # If in the first round
-    #             replace = True
-    #         elif frame_cc is None:
-    #             # If the biconnected components have recursively been eliminated
-    #             replace = False
-    #         else:
-    #             replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
-    #         if replace:
-    #             frame_largest_cc = frame_cc
-    #             try:
-    #                 # Reset comp_size attribute
-    #                 del frame_largest_cc.comp_size
-    #             except AttributeError:
-    #                 pass
-
-    #     try:
-    #         # Remove comp_size attribute
-    #         del frame_largest_cc.comp_size
-    #     except AttributeError:
-    #         pass
-
-    #     # Return largest leave-one-observation-out component
-    #     return frame_largest_cc
-
     def _leave_one_worker_out(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False):
         '''
         Extract largest leave-one-worker-out connected component.
@@ -760,128 +675,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
         linkages = np.stack([i_col + max_j + 1, j_col], axis=1)
 
         return linkages, max_j
-
-    # def _biconnected_linkages_indices(self):
-    #     '''
-    #     Construct numpy array of original indices for biconnected linkages. The first column tells you, for each link in the graph, what index the first observation in the link is coming from; and the second column tells you, for each link in the graph, what index the second observation in the link is coming from.
-
-    #     Returns:
-    #         (NumPy Array): original indices
-    #     '''
-    #     move_rows = (self.loc[:, 'm'].to_numpy() > 0)
-    #     i_col = self.loc[move_rows, 'i'].to_numpy()
-    #     indices = self.loc[move_rows, :].index.to_numpy()
-    #     i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
-    #     indices_next = np.roll(indices, -1)
-    #     valid_next = (i_col == i_next)
-    #     base_indices = np.stack([indices[valid_next], indices_next[valid_next]], axis=1)
-    #     i_next_2 = bpd.fast_shift(i_col, -2, fill_value=-2)
-    #     indices_next_2 = np.roll(indices, -2)
-    #     valid_next_2 = (i_col == i_next_2)
-    #     secondary_indices = np.stack([indices[valid_next_2], indices_next_2[valid_next_2]], axis=1)
-    #     original_indices = np.concatenate([base_indices, secondary_indices], axis=0)
-    #     return original_indices
-
-    # def _get_articulation_obs(self, G, obs_list):
-    #     ''' # FIXME this is for the old leave-one-out method
-    #     Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
-
-    #     Arguments:
-    #         G (igraph Graph): graph linking firms by movers
-    #         obs_list (list): list of observations to drop
-
-    #     Returns:
-    #         (list): articulation observations for self
-    #     '''
-    #     # Get original indices for biconnected linkages
-    #     original_indices = self._biconnected_linkages_indices()
-    #     index_first = original_indices[:, 0]
-    #     index_second = original_indices[:, 1]
-
-    #     # Save articulation observations (observations that disconnect the graph when they are removed)
-    #     articulation_obs = []
-
-    #     # Check if each observation is an articulation observation
-    #     for obs in obs_list:
-    #         G_obs = G.copy()
-    #         # Observation gives an index in the frame, but we need an index for the graph
-    #         try:
-    #             # If observation is first in pair
-    #             obs_indices = list(np.where(index_first == obs)[0])
-    #         except IndexError:
-    #             # If observation isn't first in pair
-    #             obs_indices = []
-    #         try:
-    #             # If observation is second in pair
-    #             obs_indices += list(np.where(index_second == obs)[0])
-    #         except IndexError:
-    #             # If observation isn't second in pair
-    #             pass
-
-    #         # Delete row(s)
-    #         # print(G_row.es())
-    #         G_obs.delete_edges(obs_indices)
-
-    #         # Check whether removing row(s) disconnects graph
-    #         if not G_obs.is_connected():
-    #             articulation_obs += [obs]
-
-    #     return articulation_obs
-
-    # def _get_articulation_obs(self, G, obs_list):
-    #     ''' # FIXME this is around twice as slow as other implementation
-    #     Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
-
-    #     Arguments:
-    #         G (igraph Graph): graph linking firms by movers
-    #         obs_list (list): list of observations to drop
-
-    #     Returns:
-    #         (list): articulation observations for self
-    #     '''
-    #     # Get original indices for biconnected linkages
-    #     original_indices = self._biconnected_linkages_indices()
-    #     index_first = original_indices[:, 0]
-    #     index_second = original_indices[:, 1]
-
-    #     # Save articulation observations (observations that disconnect the graph when they are removed)
-    #     articulation_obs = []
-
-    #     # Check if each observation is an articulation observation
-    #     for obs in obs_list:
-    #         # Observation gives an index in the frame, but we need an index for the graph
-    #         try:
-    #             # If observation is first in pair
-    #             obs_indices = list(np.where(index_first == obs)[0])
-    #         except IndexError:
-    #             # If observation isn't first in pair
-    #             obs_indices = []
-    #         try:
-    #             # If observation is second in pair
-    #             obs_indices += list(np.where(index_second == obs)[0])
-    #         except IndexError:
-    #             # If observation isn't second in pair
-    #             pass
-
-    #         # Shift indices to account for dropping and re-adding rows to graph
-    #         original_indices = np.concatenate([original_indices[np.delete(np.arange(len(original_indices)), obs_indices), :], original_indices[obs_indices, :]])
-    #         index_first = original_indices[:, 0]
-    #         index_second = original_indices[:, 1]
-
-    #         # Save graph tuples of observations to be removed, so we can add them back later
-    #         obs_tuples = [G.es()[obs_index].tuple for obs_index in obs_indices]
-
-    #         # Delete row(s)
-    #         G.delete_edges(obs_indices)
-
-    #         # Check whether removing row(s) disconnects graph
-    #         if not G.is_connected():
-    #             articulation_obs += [obs]
-
-    #         # Add rows back
-    #         G.add_edges(obs_tuples)
-
-    #     return articulation_obs
 
     def keep_ids(self, id_col, keep_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
         '''
@@ -1188,7 +981,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             else:
                 # Cumulative time over all workers
                 t = np.arange(len(frame))
-            for t_col in self.reference_dict['t']:
+            for t_col in self.col_reference_dict['t']:
                 frame.loc[:, t_col] = t
 
         # Sort columns

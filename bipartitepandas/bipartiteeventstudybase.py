@@ -4,28 +4,21 @@ Base class for bipartite networks in event study or collapsed event study form
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
-import igraph as ig
 
 class BipartiteEventStudyBase(bpd.BipartiteBase):
     '''
     Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed, where BipartiteEventStudy and BipartiteEventStudyCollapsed give a bipartite network of firms and workers in event study and collapsed event study form, respectively. Contains generalized methods. Inherits from BipartiteBase.
 
     Arguments:
-        *args: arguments for Pandas DataFrame
-        columns_req (list): required columns (only put general column names for joint columns, e.g. put 'fid' instead of 'f1i', 'f2i'; then put the joint columns in reference_dict)
-        columns_opt (list): optional columns (only put general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'; then put the joint columns in reference_dict)
-        columns_contig (dictionary): columns requiring contiguous ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {'i': False, 'j': False, 'g': None} (only put general column names for joint columns)
-        reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}
-        col_dtype_dict (dict): link column to datatype
-        col_dict (dict or None): make data columns readable. Keep None if column names already correct
-        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
-        **kwargs: keyword arguments for Pandas DataFrame
+        *args: arguments for BipartiteBase
+        col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
+        **kwargs: keyword arguments for BipartiteBase
     '''
 
-    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig={}, reference_dict={}, col_dtype_dict={}, col_dict=None, include_id_reference_dict=False, **kwargs):
-        reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w2']}, reference_dict)
+    def __init__(self, *args, col_reference_dict={}, **kwargs):
+        col_reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w2']}, col_reference_dict)
         # Initialize DataFrame
-        super().__init__(*args, columns_req=columns_req, columns_opt=columns_opt, columns_contig=columns_contig, reference_dict=reference_dict, col_dtype_dict=col_dtype_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
+        super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
 
         # self.log('BipartiteEventStudyBase object initialized', level='info')
 
@@ -55,8 +48,6 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         if not frame._col_included('m') or force:
             frame.loc[:, 'm'] = (frame.loc[:, 'j1'].to_numpy() != frame.loc[:, 'j2'].to_numpy()).astype(int, copy=False)
             # frame.loc[:, 'm'] = frame.groupby('i')['m'].transform('max')
-
-            # frame._col_dict['m'] = 'm'
 
             # Sort columns
             frame = frame.sort_cols(copy=False)
@@ -88,7 +79,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         if worker_m is None:
             worker_m = frame.get_worker_m(is_sorted=True) # m_col = (self.loc[:, 'm'].to_numpy() > 0)
         # # Get t for this and next period
-        # t_cols = bpd.to_list(self.reference_dict['t'])
+        # t_cols = bpd.to_list(self.col_reference_dict['t'])
         # halfway = len(t_cols) // 2
         # t1 = t_cols[0]
         # t2 = t_cols[halfway]
@@ -175,7 +166,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Dictionary to swap names for cs=0 (these rows contain period-2 data for movers, so must swap columns for all relevant information to be contained in the same column (e.g. must move y2 into y1, otherwise bottom rows are just duplicates))
         rename_dict = {}
         for col in self._included_cols():
-            subcols = bpd.to_list(self.reference_dict[col])
+            subcols = bpd.to_list(self.col_reference_dict[col])
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
             if n_subcols % 2 == 0:
@@ -217,6 +208,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
+        # Keep track of user-added columns
+        user_added_cols = {}
+        default_cols = frame.columns_req + frame.columns_opt
+
         # Dictionary to swap names (necessary for last row of data, where period-2 observations are not located in subsequent period-1 column (as it doesn't exist), so must append the last row with swapped column names)
         rename_dict_1 = {}
         # Dictionary to reformat names into (collapsed) long form
@@ -226,11 +221,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Columns to drop
         drops = []
         for col in frame._included_cols():
-            subcols = bpd.to_list(frame.reference_dict[col])
-            n_subcols = len(subcols)
-            # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
-            if n_subcols % 2 == 0:
-                halfway = n_subcols // 2
+            if frame.col_long_es_dict[col] is None:
+                # If None, drop this column
+                drops += bpd.to_list(frame.col_reference_dict[col])
+            elif frame.col_long_es_dict[col]:
+                # If column has been split
+                subcols = bpd.to_list(frame.col_reference_dict[col])
+                halfway = len(subcols) // 2
                 for i in range(halfway):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
                     rename_dict_1[subcols[halfway + i]] = subcols[i]
@@ -241,12 +238,24 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                     if frame.col_dtype_dict[col] == 'int':
                         astype_dict[rename_dict_2[subcols[i]]] = int
 
+                    if col not in default_cols:
+                        # User-added columns
+                        if col in user_added_cols.keys():
+                            user_added_cols[col].append(col + subcol_number[1:])
+                        else:
+                            user_added_cols[col] = [col + subcol_number[1:]]
+
                     drops.append(subcols[halfway + i])
 
             else:
-                # Check correct type for other columns
+                # If column has not been split
                 if frame.col_dtype_dict[col] == 'int':
-                    astype_dict[col] = int
+                    # Check correct type for other columns
+                    for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                        astype_dict[subcol] = int
+                if col not in default_cols:
+                    # User-added columns
+                    user_added_cols[col] = frame.col_reference_dict[col]
 
         if is_clean:
             # Find rows to unstack
@@ -270,20 +279,22 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             data_long.rename(rename_dict_2, axis=1, inplace=True)
             data_long = data_long.astype(astype_dict, copy=False)
 
-        ## Sort columns and rows
+        ## Final steps
         # Sort columns
         sorted_cols = sorted(data_long.columns, key=bpd.col_order)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
-        # Sort rows by i (and t, if included)
-        sort_order = ['i']
-        if frame._col_included('t'):
-            # Remove last number, e.g. t11 to t1
-            sort_order.append(bpd.to_list(frame.reference_dict['t'])[0][: -1])
-        data_long.sort_values(sort_order, inplace=True)
+
+        # Reset index
         data_long.reset_index(drop=True, inplace=True)
 
-        long_frame = frame._constructor_long(data_long, log=frame._log_on_indicator)
+        # Construct BipartiteLongBase dataframe
+        long_frame = frame._constructor_long(data_long, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
         long_frame._set_attributes(frame, no_dict=True)
+
+        # Sort rows by i (and t, if included)
+        long_frame = long_frame.sort_rows(is_sorted=False, copy=False)
+
+        # Generate 'm' column
         long_frame = long_frame.gen_m(force=True, copy=False)
 
         return long_frame
@@ -660,7 +671,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 t1 = np.arange(len(frame))
             t2 = t1 + 1
             # t column names
-            t_subcols = bpd.to_list(self.reference_dict['t'])
+            t_subcols = bpd.to_list(frame.col_reference_dict['t'])
             halfway = len(t_subcols) // 2
             for i in range(halfway):
                 # Iterate over t columns and fill in values

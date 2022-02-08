@@ -49,16 +49,17 @@ class BipartiteLong(bpd.BipartiteLongBase):
     Class for bipartite networks of firms and workers in long form. Inherits from BipartiteLongBase.
 
     Arguments:
-        *args: arguments for Pandas DataFrame
-        col_dict (dict or None): make data columns readable (requires: i (worker id), j (firm id), y (compensation), t (period); optionally include: g (firm cluster), m (0 if stayer, 1 if mover)). Keep None if column names already correct
-        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
-        **kwargs: keyword arguments for Pandas DataFrame
+        *args: arguments for BipartiteLongBase
+        col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
+        col_collapse_dict (dict): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}
+        **kwargs: keyword arguments for BipartiteLongBase
     '''
 
-    def __init__(self, *args, col_dict=None, include_id_reference_dict=False, **kwargs):
+    def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
         # Initialize DataFrame
-        reference_dict = {'t': 't'}
-        super().__init__(*args, reference_dict=reference_dict, col_dict=col_dict, include_id_reference_dict=include_id_reference_dict, **kwargs)
+        col_reference_dict = bpd.update_dict({'t': 't'}, col_reference_dict)
+        col_collapse_dict = bpd.update_dict({'m': None}, col_collapse_dict)
+        super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
         # self.log('BipartiteLong object initialized', level='info')
 
@@ -100,7 +101,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            collapsed_frame (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
+            (BipartiteLongCollapsed): BipartiteLongCollapsed object generated from long data collapsed by job spells
         '''
         self.log('beginning collapse', level='info')
 
@@ -113,47 +114,61 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         # Quickly check whether a collapse is necessary
         if (len(frame) < 2) or (spell_ids[-1] == len(frame)):
-            return frame
+            # Keep track of user-added columns
+            user_added_cols = {}
+            default_cols = frame.columns_req + frame.columns_opt
+            for col in frame._included_cols():
+                if (col != 't') and (col not in default_cols):
+                    # User-added columns
+                    user_added_cols[col] = frame.col_reference_dict[col]
+
+            # Update time column
+            if frame._col_included('t'):
+                frame.loc[:, 't1'] = frame.loc[:, 't']
+                frame.loc[:, 't2'] = frame.loc[:, 't']
+                frame.drop('t', axis=1, inplace=True)
+
+            self.log('data aggregated at the spell level', level='info')
+
+            collapsed_frame = bpd.BipartiteLongCollapsed(frame, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
+            collapsed_frame._set_attributes(self, no_dict=True)
+
+            # If no time column, then returns will be collapsed
+            if not collapsed_frame._col_included('t'):
+                collapsed_frame.no_returns = True
+
+            return collapsed_frame
 
         ## Aggregate at the spell level
         spells = frame.groupby(spell_ids, sort=False)
 
-        # First, prepare required columns for aggregation
-        agg_funcs = {
-            'i': pd.NamedAgg(column='i', aggfunc='first'),
-            'j': pd.NamedAgg(column='j', aggfunc='first'),
-            'y': pd.NamedAgg(column='y', aggfunc='mean')
-        }
+        # Dictionary linking columns to how they should be aggregated
+        agg_funcs = {}
+
+        # Keep track of user-added columns
+        user_added_cols = {}
+
+        # First, prepare non-time columns for aggregation
+        default_cols = frame.columns_req + frame.columns_opt
+        for col in frame._included_cols():
+            if col != 't':
+                # Skip time column
+                for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                    if frame.col_collapse_dict[col] is not None:
+                        # If column should be collapsed
+                        agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=frame.col_collapse_dict[col])
+                if col not in default_cols:
+                    # User-added columns
+                    user_added_cols[col] = frame.col_reference_dict[col]
 
         # Next, prepare the time column for aggregation
-        t = self._col_included('t')
-        if t:
+        if self._col_included('t'):
             agg_funcs['t1'] = pd.NamedAgg(column='t', aggfunc='min')
             agg_funcs['t2'] = pd.NamedAgg(column='t', aggfunc='max')
 
         # Next, prepare the weight column for aggregation
-        w = self._col_included('w')
-        if w:
-            agg_funcs['w'] = pd.NamedAgg(column='w', aggfunc='sum')
-        else:
+        if 'w' not in agg_funcs.keys():
             agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
-
-        # Next, prepare optional columns for aggregation
-        all_cols = self._included_cols()
-        if w:
-            # Skip w
-            all_cols.remove('w')
-        if t:
-            # Skip t
-            all_cols.remove('t')
-        for col in all_cols:
-            if col in self.columns_opt:
-                if self.col_dtype_dict[col] == 'int':
-                    for subcol in bpd.to_list(self.reference_dict[col]):
-                        agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='first')
-                if self.col_dtype_dict[col] == 'float':
-                    for subcol in bpd.to_list(self.reference_dict[col]):
-                        agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc='mean')
 
         # Finally, aggregate
         data_spell = spells.agg(**agg_funcs)
@@ -165,8 +180,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         self.log('data aggregated at the spell level', level='info')
 
-        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell, log=frame._log_on_indicator)
-        collapsed_frame._set_attributes(self, no_dict=True)
+        collapsed_frame = bpd.BipartiteLongCollapsed(data_spell, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
+        collapsed_frame._set_attributes(frame, no_dict=True)
 
         # m can change from long to collapsed long
         collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
@@ -259,7 +274,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             fill_frame (Pandas DataFrame): Pandas DataFrame with missing periods filled in as unemployed
         '''
-        m = self._col_included('m') # Check whether m column included
+        # Check whether m column included
+        m = self._col_included('m')
         fill_frame = pd.DataFrame(self, copy=copy)
         if not is_sorted:
             # Sort data by i, t
@@ -280,7 +296,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 # Only iterate over missing years
                 for t in range(int(t_prev[index]) + 1, int(row.loc['t'])):
                     new_row = {'i': int(row.loc['i']), 'j': fill_j, 'y': fill_y, 't': t}
-                    if m: # If m column included
+                    if m:
+                        # If m column included
                         new_row['m'] = fill_m # int(row['m'])
                     fill_data.append(new_row)
             fill_df = pd.concat([pd.DataFrame(fill_row, index=[i]) for i, fill_row in enumerate(fill_data)])
@@ -419,7 +436,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         # Correct datatypes
         for i, col in enumerate(include):
-            es_extended_frame.loc[:, column_order[i]] = es_extended_frame.loc[:, column_order[i]].astype(self.col_dtype_dict[col], copy=False)
+            if self.col_dtype_dict[col] == 'int':
+                es_extended_frame.loc[:, column_order[i]] = es_extended_frame.loc[:, column_order[i]].astype(int, copy=False)
 
         col_order = []
         for order in column_order:
@@ -458,7 +476,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
             added_g = True
             n_clusters = 1
             self.loc[:, 'g'] = 0
-            # self._col_dict['g'] = 'g'
 
         es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col,is_sorted=is_sorted, copy=copy)
 
@@ -504,7 +521,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
         if added_g:
             # Drop g column
             self.drop('g', axis=1, inplace=True)
-            # self.col_dict['g'] = None
 
         # Plot
         plt.setp(axs, xticks=np.arange(-periods_pre, periods_post + 1), yticks=np.round(np.linspace(y_min, y_max, 4), es_extended_plot_params['yticks_round']))
