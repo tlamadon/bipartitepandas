@@ -17,8 +17,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
     '''
 
     def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
-        col_reference_dict = bpd.update_dict({'t': ['t1', 't2']}, col_reference_dict)
-        col_collapse_dict = bpd.update_dict({'m': 'first'}, col_collapse_dict)
+        col_reference_dict = bpd.util.update_dict({'t': ['t1', 't2']}, col_reference_dict)
+        col_collapse_dict = bpd.util.update_dict({'m': 'first'}, col_collapse_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
@@ -105,7 +105,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             for col in frame._included_cols():
                 if col != 't':
                     # Skip time column
-                    for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         if frame.col_collapse_dict[col] is not None:
                             # If column should be collapsed
                             agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=frame.col_collapse_dict[col])
@@ -126,7 +126,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             data_spell = spell.agg(**agg_funcs)
 
         # Sort columns
-        sorted_cols = sorted(data_spell.columns, key=bpd.col_order)
+        sorted_cols = bpd.util._sort_cols(data_spell.columns)
         data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
         data_spell.reset_index(drop=True, inplace=True)
 
@@ -180,7 +180,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             for col in all_cols:
                 if frame.col_collapse_dict[col] is not None:
                     # Drop column if None
-                    for subcol in frame.col_reference_dict[col]:
+                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         long_dict[subcol] = []
                     if col not in default_cols:
                         # User-added columns
@@ -194,7 +194,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             col_to_idx['t1'] = col_idx('t1')
             col_to_idx['t2'] = col_idx('t2')
             for col in all_cols:
-                for subcol in frame.col_reference_dict[col]:
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                     col_to_idx[subcol] = col_idx(subcol)
             for i, row in enumerate(frame.itertuples(index=False)):
                 # Source: https://stackoverflow.com/a/41022840/17333120
@@ -203,7 +203,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                 for col in all_cols:
                     if frame.col_collapse_dict[col] is not None:
                         # Drop column if None
-                        for subcol in frame.col_reference_dict[col]:
+                        for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                             if frame.col_collapse_dict[col] == 'sum':
                                 # Evenly split sum across periods
                                 long_dict[subcol].extend([row[col_to_idx[subcol]] / nt_i] * nt_i)
@@ -218,13 +218,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             for col in all_cols:
                 if frame.col_collapse_dict[col] is not None:
                     # Drop column if None
-                    for subcol in frame.col_reference_dict[col]:
+                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         if frame.col_dtype_dict[col] == 'int':
                             # If should be int
                             data_long.loc[:, subcol] = data_long.loc[:, subcol].astype(int, copy=False)
 
             # Sort columns
-            sorted_cols = sorted(data_long.columns, key=bpd.col_order)
+            sorted_cols = bpd.util._sort_cols(data_long.columns)
             data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
 
         self.log('data uncollapsed to long format', level='info')

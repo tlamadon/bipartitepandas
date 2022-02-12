@@ -2,11 +2,17 @@
 Functions for computing cluster groups
 '''
 import numpy as np
+try:
+    # Optimize sklearn (source: https://intel.github.io/scikit-learn-intelex/)
+    from sklearnex import patch_sklearn
+    patch_sklearn('KMeans')
+except ImportError:
+    pass
 from sklearn.cluster import KMeans
 
-class kmeans:
+class KMeans:
     '''
-    Compute kmeans groups for data. Used for clustering.
+    Compute KMeans groups for data. Used for clustering.
 
     Arguments:
         **kwargs: parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
@@ -17,19 +23,19 @@ class kmeans:
 
     def compute_groups(self, data, weights):
         '''
-        Compute kmeans groups for data.
+        Compute KMeans groups for data.
 
         Arguments:
             data (NumPy Array): data to group
             weights (NumPy Array or None): firm weights for clustering
 
         Returns:
-            groups (NumPy Array): kmeans groups for data
+            groups (NumPy Array): KMeans groups for data
         '''
         groups = KMeans(**self.kwargs).fit(data, sample_weight=weights).labels_
         return groups
 
-class quantiles:
+class Quantiles:
     '''
     Compute quantile groups for data. Used for clustering.
 
@@ -46,7 +52,7 @@ class quantiles:
 
         Arguments:
             data (NumPy Array): data to group
-            weights (NumPy Array): required for consistent argument inputs with kmeans, not used in this function
+            weights (NumPy Array): required for consistent argument inputs with KMeans, not used in this function
 
         Returns:
             groups (NumPy Array): quantile groups for data

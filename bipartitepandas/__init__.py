@@ -1,8 +1,8 @@
 
-from .util import col_order, fn_type, col_type, ParamsDict, update_dict, to_list, str_format, fast_shift, ChainedAssignment, logger_init, aggregate_transform, compare_frames
+# import .util
 from .measures import measures
 from .grouping import grouping
-from .bipartitebase import clean_params, cluster_params, BipartiteBase, recollapse_loop
+from .bipartitebase import clean_params, cluster_params, BipartiteBase
 from .bipartitelongbase import BipartiteLongBase
 from .bipartitelong import es_extended_plot_params, BipartiteLong
 from .bipartitelongcollapsed import BipartiteLongCollapsed

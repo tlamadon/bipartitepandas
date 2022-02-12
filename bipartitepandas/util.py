@@ -19,32 +19,52 @@ def _text_num_split(col_name):
         col_name (str): column name
 
     Returns:
-        (list): first entry is column name string component; second entry is number component
+        (list): first entry is column name string component; second entry is column number component
     '''
     for index, char in enumerate(col_name):
         if char.isdigit():
             return (col_name[: index], col_name[index:])
     return (col_name, '')
 
-def col_order(col_name):
+def _sort_cols(cols):
     '''
-    Order rank for sorting columns. Prioritize default columns, then sort alphabetically (based on the first letter and the integer number of the column name).
+    Sort columns. Prioritize default columns, then sort alphabetically.
 
     Arguments:
-        col_name (str): column for sorting
+        cols (list of str): list of column names to be sorted
 
     Returns:
-        (int): column order rank
+        (list): sorted columns
     '''
-    default_cols = ['i', 'j', 'y', 't', 'g', 'w', 'm', 'cs', 'alpha_hat', 'psi_hat']
-    col_str, col_num = _text_num_split(col_name)
-    if len(col_num) > 0:
-        col_num = int(col_num)
-    else:
-        col_num = 0
-    if col_str in default_cols:
-        return 100 * default_cols.index(col_str[0]) + col_num - int(1e5)
-    return 100 * ord(col_str[0]) + col_num
+    default_cols = ['i', 'j', 'y', 't', 'g', 'w', 'm'] #, 'cs', 'l', 'k', 'alpha', 'psi', 'alpha_hat', 'psi_hat']
+
+    default_cols_dict = {}
+    custom_cols_dict = {}
+
+    for col in cols:
+        col_str, col_num = _text_num_split(col)
+        if col_str in default_cols:
+            # If column is a default column
+            if col_str in default_cols_dict.keys():
+                # If column already seen
+                default_cols_dict[col_str].append(col)
+            else:
+                # If column not already seen
+                default_cols_dict[col_str] = [col]
+        else:
+            # If column is a custom column
+            if col_str in custom_cols_dict.keys():
+                # If column already seen
+                custom_cols_dict[col_str].append(col)
+            else:
+                # If column not already seen
+                custom_cols_dict[col_str] = [col]
+
+    # Sort default and custom columns
+    sorted_default_cols = [sorted_default_col for default_col in sorted(default_cols_dict.keys(), key=default_cols.index) for sorted_default_col in sorted(default_cols_dict[default_col])]
+    sorted_custom_cols = [sorted_custom_col for custom_col in sorted(custom_cols_dict.keys()) for sorted_custom_col in sorted(custom_cols_dict[custom_col])]
+
+    return sorted_default_cols + sorted_custom_cols
 
 # Source: https://stackoverflow.com/a/54009756/17333120
 fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
@@ -119,39 +139,39 @@ class ParamsDict(MutableMapping):
 
     def __setitem__(self, k, v):
         if k not in self.__data:
-            raise KeyError(str_format('Cannot add key {}, as ParamsDict keys are fixed.', k))
+            raise KeyError(f'Cannot add key {k!r}, as ParamsDict keys are fixed.')
 
         options_type, options, _, constraints = self.__options[k]
         if options_type == 'type':
             if _is_subtype(v, options):
                 self.__data[k] = v
             else:
-                raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}.', k, options, v, type(v)))
+                raise ValueError(f'Value associated with key {k!r} must be of type {options!r}, but input is {v!r} which is of type {type(v)!r}.')
         elif options_type == 'list_of_type':
             for sub_v in to_list(v):
                 if not _is_subtype(sub_v, options):
-                    raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}.', k, options, sub_v, type(sub_v)))
+                    raise ValueError(f'Value associated with key {k!r} must be of type {options!r}, but input is {sub_v!r} which is of type {type(sub_v)!r}.')
             self.__data[k] = v
         elif options_type == 'type_none':
             if (v is None) or _is_subtype(v, options):
                 self.__data[k] = v
             else:
-                raise ValueError(str_format('Value associated with key {} must be of type {} or None, but input is {} which is of type {}.', k, options, v, type(v)))
+                raise ValueError(f'Value associated with key {k!r} must be of type {options!r} or None, but input is {v!r} which is of type {type(v)!r}.',)
         elif options_type == 'type_constrained':
             if _is_subtype(v, options[0]):
                 if options[1](v):
                     self.__data[k] = v
                 else:
-                    raise ValueError(str_format('Value associated with key {} must fulfill the constraint(s) {}, but input is {} which does not.', k, constraints, v))
+                    raise ValueError(f'Value associated with key {k!r} must fulfill the constraint(s) {constraints!r}, but input is {v!r} which does not.')
             elif options[1](v):
-                raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}.', k, options[0], v, type(v)))
+                raise ValueError(f'Value associated with key {k!r} must be of type {options[0]!r}, but input is {v!r} which is of type {type(v)!r}.')
             else:
-                raise ValueError(str_format('Value associated with key {} must be of type {}, but input is {} which is of type {}. In addition, the input does not fulfill the constraint(s) {}.', k, options[0], v, type(v), constraints))
+                raise ValueError(f'Value associated with key {k!r} must be of type {options[0]!r}, but input is {v!r} which is of type {type(v)!r}. In addition, the input does not fulfill the constraint(s) {constraints!r}.')
         elif options_type == 'set':
             if v in to_list(options):
                 self.__data[k] = v
             else:
-                raise ValueError(str_format('Value associated with key {} must be a subset of {}, but input is {}.', k, options, v))
+                raise ValueError(f'Value associated with key {k!r} must be a subset of {options!r}, but input is {v!r}.')
         elif options_type == 'any':
             self.__data[k] = v
         else:
@@ -203,22 +223,22 @@ class ParamsDict(MutableMapping):
             k (immutable): key
         '''
         options_type, options, description, constraints = self.__options[k]
-        print(str_format('KEY: {}', k))
-        print(str_format('CURRENT VALUE: {}', self[k]))
+        print(f'KEY: {k!r}')
+        print(f'CURRENT VALUE: {self[k]!r}')
         if options_type == 'type':
-            print('VALID VALUES: one of type {}'.format(options))
+            print(f'VALID VALUES: one of type {options!r}')
         elif options_type == 'list_of_type':
-            print('VALID VALUES: one of or list of type {}'.format(options))
+            print(f'VALID VALUES: one of or list of type {options!r}')
         elif options_type == 'type_none':
-            print('VALID VALUES: {} or one of type {}'.format(None, options))
+            print(f'VALID VALUES: None or one of type {options!r}')
         elif options_type == 'type_constrained':
-            print('VALID VALUES: one of type {}'.format(options[0]))
-            print(str_format('CONSTRAINTS: {}', constraints))
+            print(f'VALID VALUES: one of type {options[0]!r}')
+            print(f'CONSTRAINTS: {constraints!r}')
         elif options_type == 'set':
-            print('VALID VALUES: one of {}'.format(options))
+            print(f'VALID VALUES: one of {options!r}')
         elif options_type == 'any':
             print('VALID VALUES: anything')
-        print('DESCRIPTION: {}'.format(description))
+        print(f'DESCRIPTION: {description!r}')
 
     def describe_all(self):
         '''
@@ -257,30 +277,6 @@ def to_list(data):
     if not isinstance(data, (list, tuple, set, frozenset)):
         return [data]
     return list(data)
-
-def str_format(text, *args):
-    '''
-    Custom string formatting that ensures string variables are printed with dashes surrounding them.
-
-    Arguments:
-        text (str): text to format
-        *args (args): variables to fill in
-
-    Returns:
-        (str): formatted text
-    '''
-    ret_str = ''
-    split_text = text.split('{}')
-    for i, arg in enumerate(args):
-        if isinstance(arg, str):
-            ret_str += split_text[i] + "'{}'".format(arg)
-        else:
-            ret_str += split_text[i] + '{}'.format(arg)
-
-    # Add end of text
-    ret_str += split_text[i + 1]
-
-    return ret_str
 
 def fast_shift(arr, num, fill_value=np.nan):
     '''
@@ -347,9 +343,9 @@ def logger_init(obj):
         obj.logger = logging.getLogger(obj_name)
         obj.logger.setLevel(logging.DEBUG)
         # Create logs folder
-        Path('logs/{}_logs'.format(obj_name)).mkdir(parents=True, exist_ok=True)
+        Path(f'logs/{obj_name}_logs').mkdir(parents=True, exist_ok=True)
         # Create file handler which logs even debug messages
-        fh = logging.FileHandler('logs/{}_logs/{}_spam.log'.format(obj_name, obj_name))
+        fh = logging.FileHandler(f'logs/{obj_name}_logs/{obj_name}_spam.log')
         fh.setLevel(logging.DEBUG)
         # Create console handler with a higher log level
         ch = logging.StreamHandler()

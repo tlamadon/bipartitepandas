@@ -2,15 +2,16 @@
 Class for a bipartite network
 '''
 # from pandas.core.indexes.base import InvalidIndexError
+from multiprocessing.sharedctypes import Value
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
 import warnings
 import bipartitepandas as bpd
-from bipartitepandas import col_order, update_dict, to_list, logger_init, ParamsDict
+from bipartitepandas.util import to_list
 import igraph as ig
 
-def recollapse_loop(force=False):
+def _recollapse_loop(force=False):
     '''
     Decorator function that accounts for issues with selecting ids under particular restrictions for collapsed data. In particular, looking at a restricted set of observations can require recollapsing data, which can they change which observations meet the given restrictions. This function loops until stability is achieved.
 
@@ -38,7 +39,7 @@ def recollapse_loop(force=False):
     return recollapse_loop_inner
 
 # Define default parameter dictionaries
-_clean_params_default = ParamsDict({
+_clean_params_default = bpd.util.ParamsDict({
     'connectedness': (None, 'set', ['connected', 'leave_one_observation_out', 'leave_one_worker_out', 'leave_one_firm_out', None],
         '''
             (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_worker_out', keep observations in the largest leave-one-worker-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
@@ -47,7 +48,7 @@ _clean_params_default = ParamsDict({
         '''
         (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
         ''', None),
-    'i_t_how': ('max', 'type', (*bpd.fn_type, str),
+    'i_t_how': ('max', 'type', (*bpd.util.fn_type, str),
         '''
             (default='max') When dropping i-t duplicates: if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any input valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
         ''', None),
@@ -91,14 +92,14 @@ def clean_params(update_dict={}):
     new_dict.update(update_dict)
     return new_dict
 
-_cluster_params_default = ParamsDict({
-    'measures': (bpd.measures.cdfs(), 'list_of_type', (bpd.measures.cdfs, bpd.measures.moments),
+_cluster_params_default = bpd.util.ParamsDict({
+    'measures': (bpd.measures.CDFs(), 'list_of_type', (bpd.measures.CDFs, bpd.measures.Moments),
         '''
-            (default=bpd.measures.cdfs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
+            (default=bpd.measures.CDFs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
         ''', None),
-    'grouping': (bpd.grouping.kmeans(), 'type', (bpd.grouping.kmeans, bpd.grouping.quantiles),
+    'grouping': (bpd.grouping.KMeans(), 'type', (bpd.grouping.KMeans, bpd.grouping.Quantiles),
         '''
-            (default=bpd.grouping.kmeans()) How to group firms based on measures. Options can be seen in bipartitepandas.grouping.
+            (default=bpd.grouping.KMeans()) How to group firms based on measures. Options can be seen in bipartitepandas.grouping.
         ''', None),
     'stayers_movers': (None, 'set', [None, 'stayers', 'movers'],
         '''
@@ -116,7 +117,7 @@ _cluster_params_default = ParamsDict({
         '''
             (default=False) If True, drop observations where firms aren't clustered; if False, keep all observations.
         ''', None),
-    'clean_params': (None, 'type_none', bpd.ParamsDict,
+    'clean_params': (None, 'type_none', bpd.util.ParamsDict,
         '''
             (default=None) Dictionary of parameters for cleaning. This is used when observations get dropped because they were not clustered. Default is None, which sets connectedness to be the connectedness measure previously used. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
         ''', None),
@@ -169,7 +170,7 @@ class BipartiteBase(DataFrame):
         super().__init__(*args, **kwargs)
 
         # Start logger
-        logger_init(self)
+        bpd.util.logger_init(self)
         # Option to turn on/off logger
         self._log_on_indicator = log
         # self.log('initializing BipartiteBase object', level='info')
@@ -180,13 +181,13 @@ class BipartiteBase(DataFrame):
         else:
             self.columns_req = ['i', 'j', 'y'] + columns_req
             self.columns_opt = ['t', 'g', 'w', 'm'] + columns_opt
-            self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
-            self.col_reference_dict = update_dict({'i': 'i', 'm': 'm'}, col_reference_dict)
-            self.col_dtype_dict = update_dict({'i': 'any', 'j': 'any', 'y': 'float', 't': 'int', 'g': 'any', 'w': 'float', 'm': 'int'}, col_dtype_dict)
+            self.columns_contig = bpd.util.update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
+            self.col_reference_dict = bpd.util.update_dict({'i': 'i', 'm': 'm'}, col_reference_dict)
+            self.col_dtype_dict = bpd.util.update_dict({'i': 'any', 'j': 'any', 'y': 'float', 't': 'int', 'g': 'any', 'w': 'float', 'm': 'int'}, col_dtype_dict)
             # Skip t and m for collapsing
-            self.col_collapse_dict = update_dict({'i': 'first', 'j': 'first', 'y': 'mean', 'g': 'first', 'w': 'sum'}, col_collapse_dict)
+            self.col_collapse_dict = bpd.util.update_dict({'i': 'first', 'j': 'first', 'y': 'mean', 'g': 'first', 'w': 'sum'}, col_collapse_dict)
             # Split i to make sure consecutive observations are for the same worker
-            self.col_long_es_dict = update_dict({'i': True, 'j': True, 'y': True, 't': True, 'g': True, 'w': True, 'm': False}, col_long_es_dict)
+            self.col_long_es_dict = bpd.util.update_dict({'i': True, 'j': True, 'y': True, 't': True, 'g': True, 'w': True, 'm': False}, col_long_es_dict)
 
             # Link original id values to contiguous id values
             self._reset_id_reference_dict(include_id_reference_dict)
@@ -212,15 +213,18 @@ class BipartiteBase(DataFrame):
         '''
         return BipartiteBase
 
-    def copy(self):
+    def copy(self, deep=True):
         '''
         Return copy of self.
 
+        Arguments:
+            deep (bool): make a deep copy, including a copy of the data and the indices. If False, neither the indices nor the data are copied.
+
         Returns:
-            bdf_copy (BipartiteBase): copy of instance
+            (BipartiteBase): copy of dataframe
         '''
         self.log('beginning copy', level='info')
-        df_copy = DataFrame(self, copy=True)
+        df_copy = DataFrame(self).copy(deep=deep)
         # Set logging on/off depending on current selection
         bdf_copy = self._constructor(df_copy, log=self._log_on_indicator)
         # This copies attribute dictionaries, default copy does not
@@ -260,22 +264,22 @@ class BipartiteBase(DataFrame):
         max_wage = np.max(y)
         min_wage = np.min(y)
         var_wage = np.var(y)
-        ret_str += 'format: {}\n'.format(type(self).__name__)
-        ret_str += 'number of workers: {}\n'.format(self.n_workers())
-        ret_str += 'number of firms: {}\n'.format(self.n_firms())
-        ret_str += 'number of observations: {}\n'.format(len(self))
-        ret_str += 'mean wage: {}\n'.format(mean_wage)
-        ret_str += 'median wage: {}\n'.format(median_wage)
-        ret_str += 'min wage: {}\n'.format(min_wage)
-        ret_str += 'max wage: {}\n'.format(max_wage)
-        ret_str += 'var(wage): {}\n'.format(var_wage)
-        ret_str += 'no NaN values: {}\n'.format(self.no_na)
-        ret_str += 'no duplicates: {}\n'.format(self.no_duplicates)
-        ret_str += 'i-t (worker-year) observations unique (None if t column(s) not included): {}\n'.format(self.i_t_unique)
-        ret_str += 'no returns (None if not yet computed): {}\n'.format(self.no_returns)
+        ret_str += f'format: {type(self).__name__!r}\n'
+        ret_str += f'number of workers: {self.n_workers()}\n'
+        ret_str += f'number of firms: {self.n_firms()}\n'
+        ret_str += f'number of observations: {len(self)}\n'
+        ret_str += f'mean wage: {mean_wage}\n'
+        ret_str += f'median wage: {median_wage}\n'
+        ret_str += f'min wage: {min_wage}\n'
+        ret_str += f'max wage: {max_wage}\n'
+        ret_str += f'var(wage): {var_wage}\n'
+        ret_str += f'no NaN values: {self.no_na}\n'
+        ret_str += f'no duplicates: {self.no_duplicates}\n'
+        ret_str += f'i-t (worker-year) observations unique (None if t column(s) not included): {self.i_t_unique}\n'
+        ret_str += f'no returns (None if not yet computed): {self.no_returns}\n'
         for contig_col, is_contig in self.columns_contig.items():
-            ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, is_contig)
-        ret_str += 'connectedness (None if ignoring connectedness): {}'.format(self.connectedness)
+            ret_str += f'contiguous {contig_col!r} ids (None if not included): {is_contig}\n'
+        ret_str += f'connectedness (None if ignoring connectedness): {self.connectedness!r}'
 
         print(ret_str)
 
@@ -291,37 +295,37 @@ class BipartiteBase(DataFrame):
             sort_order.append(to_list(self.col_reference_dict['t'])[0])
         is_sorted = (self.loc[:, sort_order] == self.loc[:, sort_order].sort_values(sort_order)).to_numpy().all()
 
-        ret_str += 'sorted by i (and t, if included): {}\n'.format(is_sorted)
+        ret_str += f'sorted by i (and t, if included): {is_sorted}\n'
 
         ##### No NaN values #####
         # Source: https://stackoverflow.com/a/29530601/17333120
         no_na = (not self.isnull().to_numpy().any())
 
-        ret_str += 'no NaN values: {}\n'.format(no_na)
+        ret_str += f'no NaN values: {no_na}\n'
 
         ##### No duplicates #####
         # https://stackoverflow.com/a/50243108/17333120
         no_duplicates = (not self.duplicated().any())
 
-        ret_str += 'no duplicates: {}\n'.format(no_duplicates)
+        ret_str += f'no duplicates: {no_duplicates}\n'
 
         ##### i-t unique #####
         no_i_t_duplicates = (not self.duplicated(subset=sort_order).any())
 
-        ret_str += 'i-t (worker-year) observations unique (if t column(s) not included, then i observations unique): {}\n'.format(no_i_t_duplicates)
+        ret_str += f'i-t (worker-year) observations unique (if t column(s) not included, then i observations unique): {no_i_t_duplicates}\n'
 
         ##### No returns #####
         no_returns = (len(self) == len(self._drop_returns(how='returns', reset_index=False)))
-        ret_str += 'no returns: {}\n'.format(no_returns)
+        ret_str += f'no returns: {no_returns}\n'
 
         ##### Contiguous ids #####
         for contig_col in self.columns_contig.keys():
             if self._col_included(contig_col):
                 contig_ids = self.unique_ids(contig_col)
                 is_contig = (len(contig_ids) == (max(contig_ids) + 1))
-                ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, is_contig)
+                ret_str += f'contiguous {contig_col!r} ids (None if not included): {is_contig}\n'
             else:
-                ret_str += 'contiguous {} ids (None if not included): {}\n'.format(contig_col, None)
+                ret_str += f'contiguous {contig_col!r} ids (None if not included): None\n'
 
         ##### Connectedness #####
         is_connected_dict = {
@@ -333,32 +337,32 @@ class BipartiteBase(DataFrame):
         is_connected = is_connected_dict[self.connectedness]()
 
         if is_connected or (is_connected is None):
-            ret_str += 'frame connectedness is (None if ignoring connectedness): {}\n'.format(self.connectedness)
+            ret_str += f'frame connectedness is (None if ignoring connectedness): {self.connectedness!r}\n'
         else:
-            ret_str += 'frame failed connectedness: {}\n'.format(self.connectedness)
+            ret_str += f'frame failed connectedness: {self.connectedness!r}\n'
 
         if self._col_included('m'):
             ##### m column #####
             m_correct = (self.loc[:, 'm'] == self.gen_m(force=True).loc[:, 'm']).to_numpy().all()
 
-            ret_str += "'m' column correct (None if not included): {}\n".format(m_correct)
+            ret_str += f"'m' column correct (None if not included): {m_correct}\n"
         else:
-            ret_str += "'m' column correct (None if not included): {}".format(None)
+            ret_str += "'m' column correct (None if not included): None"
 
         print(ret_str)
 
-    def add_column(self, col_data, col_name, col_reference=None, is_contig=False, dtype='any', how_collapse='first', long_es_conversion=True, copy=True):
+    def add_column(self, col_data, col_name, col_reference=None, is_contig=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
         '''
-        Safe method for adding custom columns. These will be compatible with conversions between long, collapsed long, event study, and collapsed event study formats.
+        Safe method for adding custom columns. Columns added with this method will be compatible with conversions between long, collapsed long, event study, and collapsed event study formats.
 
         Arguments:
             col_data (NumPy Array or Pandas Series or list of (NumPy Array or Pandas Series)): data for column, or list of data for columns
             col_name (str): general column name
-            col_reference (dict or None): if column has multiple subcolumns (e.g. {'j': ['j1', 'j2']}) this must be specified; otherwise, None will automatically default to {'j': 'j'}
+            col_reference (str or list of str): if column has multiple subcolumns (e.g. firm ids are associated with the columns ['j1', 'j2']) this must be specified; otherwise, None will automatically default to the column name (plus a column number, if more than one column is listed) (e.g. firm ids are associated with the column 'j' if one column is included, or ['j1', 'j2'] if two columns are included)
             is_contig (bool): if True, column is contiguous
             dtype (str): column datatype, must be one of 'int', 'float', or 'any'
-            how_collapse (str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column is dropped during collapse/uncollapse
-            long_es_conversion (bool or None) if True, column should split into two when converting from long to event study; if None, column is dropped when converting between (collapsed) long and (collapsed) event study formats
+            how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
+            long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
             copy (bool): if False, avoid copy
 
         Returns:
@@ -369,20 +373,44 @@ class BipartiteBase(DataFrame):
         else:
             frame = self
 
+        # Before modifying anything, run a few checks
+        if col_name in self.columns_req + self.columns_opt:
+            # Check if column is a default column
+            raise ValueError(f'Trying to add general column {col_name}, but this is reserved as a default column name. Default columns should be added using standard column assignment.')
+
         if frame._col_included(col_name):
-            raise ValueError(f'Trying to add column {col_name}, but this column already exists.')
-        if col_reference is None:
-            frame.col_reference_dict[col_name] = col_name
+            # Check if column already included
+            raise ValueError(f'Trying to add general column {col_name}, but this column already exists.')
+
+        col_data_lst = to_list(col_data)
+        if col_reference is not None:
+            # First, check that the length is correct
+            if len(to_list(col_reference)) != len(col_data_lst):
+                raise ValueError(f'Trying to add general column {col_name} with subcolumns {col_reference}, but while this reference includes {len(to_list(col_reference))} subcolumns, {len(col_data_lst)} columns of data were included as input.')
+
+            # Next, check that no subcolumns are already included
+            for subcol in to_list(col_reference):
+                if subcol in self._included_cols(subcols=True):
+                    raise ValueError(f'Trying to add subcolumn {subcol}, but this column already exists.')
+
+            # If all checks pass, assign col_reference
+            frame.col_reference_dict[col_name] = col_reference
         else:
-            frame.col_reference_dict[col_name] = col_reference[col_name]
+            if len(col_data_lst) == 1:
+                frame.col_reference_dict[col_name] = col_name
+            else:
+                frame.col_reference_dict[col_name] = [col_name + str(i + 1) for i in range(len(col_data_lst))]
+
+        # Assign remaining class attributes
         if is_contig:
             frame.columns_contig[col_name] = None
+            if frame.id_reference_dict:
+                frame.id_reference_dict[col_name] = DataFrame()
         frame.col_dtype_dict[col_name] = dtype
         frame.col_collapse_dict[col_name] = how_collapse
-        frame.col_long_es_dict[col_name] = long_es_conversion
+        frame.col_long_es_dict[col_name] = long_es_split
 
         # Set data
-        col_data_lst = to_list(col_data)
         for i, subcol in enumerate(to_list(frame.col_reference_dict[col_name])):
             frame.loc[:, subcol] = col_data_lst[i]
 
@@ -390,7 +418,6 @@ class BipartiteBase(DataFrame):
         frame = frame.sort_cols(copy=False)
 
         return frame
-
 
     def unique_ids(self, id_col):
         '''
@@ -402,7 +429,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (NumPy Array or None): unique ids if column included; None otherwise
         '''
-        self.log('finding unique ids in column {}'.format(id_col), level='info')
+        self.log(f'finding unique ids in column {id_col!r}', level='info')
         if not self._col_included(id_col):
             # If column not in dataframe
             return None
@@ -421,7 +448,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (int or None): number of unique ids if column included; None otherwise
         '''
-        self.log('finding number of unique ids in column {}'.format(id_col), level='info')
+        self.log(f'finding number of unique ids in column {id_col!r}', level='info')
         unique_ids = self.unique_ids(id_col)
         if unique_ids is None:
             return None
@@ -468,18 +495,18 @@ class BipartiteBase(DataFrame):
             (BipartiteBase or None): copy of self merged with original column ids, or None if id_reference_dict is empty
         '''
         self.log('returning self merged with original column ids', level='info')
-        frame = pd.DataFrame(self, copy=copy)
+        frame = DataFrame(self, copy=copy)
         if self.id_reference_dict:
             for id_col, reference_df in self.id_reference_dict.items():
                 if len(reference_df) > 0:
                     # Make sure non-empty
                     for id_subcol in to_list(self.col_reference_dict[id_col]):
                         try:
-                            frame = frame.merge(reference_df.loc[:, ['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                            frame = frame.merge(reference_df.loc[:, ['original_ids', f'adjusted_ids_{len(reference_df.columns) - 1}']].rename({'original_ids': f'original_{id_subcol}', f'adjusted_ids_{len(reference_df.columns) - 1}': id_subcol}, axis=1), how='left', on=id_subcol)
                         except TypeError:
                             # Int64 error with NaNs
                             frame.loc[:, id_col] = frame.loc[:, id_col].astype('Int64', copy=False)
-                            frame = frame.merge(reference_df.loc[:, ['original_ids', 'adjusted_ids_' + str(len(reference_df.columns) - 1)]].rename({'original_ids': 'original_' + id_subcol, 'adjusted_ids_' + str(len(reference_df.columns) - 1): id_subcol}, axis=1), how='left', on=id_subcol)
+                            frame = frame.merge(reference_df.loc[:, ['original_ids', f'adjusted_ids_{len(reference_df.columns) - 1}']].rename({'original_ids': f'original_{id_subcol}', f'adjusted_ids_{len(reference_df.columns) - 1}': id_subcol}, axis=1), how='left', on=id_subcol)
                 # else:
                 #     # If no changes, just make original_id be the same as the current id
                 #     for id_subcol in to_list(self.col_reference_dict[id_col]):
@@ -587,7 +614,7 @@ class BipartiteBase(DataFrame):
             self (BipartiteBase): self with reset id_reference_dict
         '''
         if include:
-            self.id_reference_dict = {id_col: pd.DataFrame() for id_col in self.col_reference_dict.keys()}
+            self.id_reference_dict = {id_col: DataFrame() for id_col in self.col_reference_dict.keys()}
         else:
             self.id_reference_dict = {}
 
@@ -610,122 +637,241 @@ class BipartiteBase(DataFrame):
                 return False
         return True
 
-    def _included_cols(self, flat=False):
+    def _included_cols(self, subcols=False):
         '''
         Get all columns included from the pre-established required/optional lists.
         
         Arguments:
-            flat (bool): if False, uses general column names for joint columns, e.g. returns 'j' instead of 'j1', 'j2'
+            subcols (bool): if False, uses general column names for joint columns, e.g. returns 'j' instead of 'j1', 'j2'
 
         Returns:
             all_cols (list): included columns
         '''
         all_cols = []
-        for col, subcols in self.col_reference_dict.items():
+        for col, col_subcols in self.col_reference_dict.items():
             # Iterate through all columns
             if self._col_included(col):
-                if flat:
-                    all_cols += to_list(subcols)
+                if subcols:
+                    all_cols += to_list(col_subcols)
                 else:
                     all_cols.append(col)
         return all_cols
 
-    def drop(self, indices, axis=0, inplace=False, allow_optional=False, allow_required=False):
+    def drop(self, labels, axis=0, inplace=False, allow_optional=False, allow_required=False, **kwargs):
         '''
-        Drop indices along axis.
+        Drop labels along axis.
 
         Arguments:
-            indices (int or str, optionally as a list): row(s) or column(s) to drop. For columns, use general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'. Only optional columns may be dropped
-            axis (int): 0 to drop rows, 1 to drop columns
+            labels (int or str, optionally as a list): row(s) or column(s) to drop. For columns, use general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'. Only user-added columns may be dropped, unless allow_optional or allow_required is set to True.
+            axis (int or str): whether to drop labels from the 'index' (0) or 'columns' (1)
             inplace (bool): if True, modify in-place
             allow_optional (bool): if True, allow to drop optional columns
             allow_required (bool): if True, allow to drop required columns
+            **kwargs: keyword arguments for Pandas drop
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with dropped indices
+            frame (BipartiteBase): BipartiteBase with dropped labels
         '''
         frame = self
 
-        if axis == 1:
-            for col in to_list(indices):
-                if col in frame.columns or col in frame.columns_req or col in frame.columns_opt:
-                    if col in frame.columns_opt:
-                        # If column optional
-                        if allow_optional:
-                            for subcol in to_list(frame.col_reference_dict[col]):
-                                if inplace:
-                                    DataFrame.drop(frame, subcol, axis=1, inplace=True)
-                                else:
-                                    frame = DataFrame.drop(frame, subcol, axis=1, inplace=False)
-                            if col in frame.columns_contig.keys():
-                                # If column contiguous
-                                frame.columns_contig[col] = None
-                                if frame.id_reference_dict:
-                                    # If id_reference_dict has been initialized
-                                    frame.id_reference_dict[col] = pd.DataFrame()
-                        else:
-                            pass
-                            # warnings.warn('{} is an optional column and cannot be dropped without specifying allow_optional=True'.format(col))
-                    elif col not in frame._included_cols() and col not in frame._included_cols(flat=True):
-                        # If column is not pre-established
-                        if inplace:
-                            DataFrame.drop(frame, col, axis=1, inplace=True)
-                        else:
-                            frame = DataFrame.drop(frame, col, axis=1, inplace=False)
-                    else:
-                        if not allow_required:
-                            warnings.warn("{} is either (a) a required column and cannot be dropped without specifying allow_required=True, or (b) a subcolumn that can be dropped, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col))
-                        else:
-                            if inplace:
-                                DataFrame.drop(frame, col, axis=1, inplace=True)
-                            else:
-                                frame = DataFrame.drop(frame, col, axis=1, inplace=False)
-                else:
-                    warnings.warn('{} is not in data columns'.format(col))
-        elif axis == 0:
+        if axis in [0, 'index']:
             if inplace:
-                DataFrame.drop(frame, indices, axis=0, inplace=True)
+                DataFrame.drop(frame, labels, axis=0, inplace=True, **kwargs)
             else:
-                frame = DataFrame.drop(frame, indices, axis=0, inplace=False)
-            frame._reset_attributes()
-            # frame.clean_data({'connectedness': frame.connectedness})
+                frame = DataFrame.drop(frame, labels, axis=0, inplace=False, **kwargs)
+            # Since rows dropped, many properties might change
+            frame._reset_attributes(no_na=False, no_duplicates=False, i_t_unique=False, no_returns=False)
+        elif axis in [1, 'columns']:
+            for col in to_list(labels):
+                ## Start by checking if column is in col_reference_dict ##
+                general_subcols_to_drop = []
+                if col in frame.columns_req:
+                    # If column required
+                    if allow_required:
+                        # If required columns are allowed to be dropped
+                        general_subcols_to_drop = to_list(frame.col_reference_dict[col])
+                    else:
+                        # If required columns are not allowed to be dropped
+                        warnings.warn(f'{col!r} is a required column and cannot be dropped without specifying allow_required=True. The returned frame has not dropped this column.')
+                elif col in frame.columns_opt:
+                    # If column optional
+                    if allow_optional:
+                        # If optional columns are allowed to be dropped
+                        general_subcols_to_drop = to_list(frame.col_reference_dict[col])
+                    else:
+                        pass
+                        warnings.warn(f'{col!r} is a pre-defined optional column and cannot be dropped without specifying allow_optional=True. The returned frame has not dropped this column.')
+                elif col in frame._included_cols():
+                    # If column is user-added
+                    general_subcols_to_drop = to_list(frame.col_reference_dict[col])
+                    # Remove column from attribute dictionaries
+                    if col in frame.columns_contig.keys():
+                        del frame.columns_contig[col]
+                        if frame.id_reference_dict:
+                            del frame.id_reference_dict[col]
+                    del frame.col_reference_dict[col], frame.col_dtype_dict[col], frame.col_collapse_dict[col], frame.col_long_es_dict[col]
+                elif col in frame._included_cols(subcols=True):
+                    # If column is a subcolumn
+                    warnings.warn(f'{col!r} is a subcolumn. For columns listed in df.col_reference_dict, BipartitePandas only allows for general column names to be dropped. The returned frame has not dropped this column.')
+                ## Now, check if column included, but is not in col_reference_dict ##
+                else:
+                    # If column is not pre-established
+                    if col in frame.columns:
+                        if inplace:
+                            DataFrame.drop(frame, col, axis=1, inplace=True, **kwargs)
+                        else:
+                            frame = DataFrame.drop(frame, col, axis=1, inplace=False, **kwargs)
+                    else:
+                        raise ValueError(f'{col!r} is not in dataframe columns.')
+                ## Finally, drop column if column is in col_reference_dict ##
+                if len(general_subcols_to_drop) > 0:
+                    # If dropping a column from col_reference_dict
+                    for subcol in general_subcols_to_drop:
+                        # Drop subcols
+                        if inplace:
+                            DataFrame.drop(frame, subcol, axis=1, inplace=True, **kwargs)
+                        else:
+                            frame = DataFrame.drop(frame, subcol, axis=1, inplace=False, **kwargs)
+                    if col in frame.columns_contig.keys():
+                        # If column contiguous
+                        frame.columns_contig[col] = None
+                        if frame.id_reference_dict:
+                            # If id_reference_dict has been initialized, reset it for the dropped column
+                            frame.id_reference_dict[col] = DataFrame()
+        else:
+            raise ValueError(f"Axis must be one of 0, 'index', 1, or 'columns'; input {axis} is invalid.")
 
         return frame
 
-    def rename(self, rename_dict, inplace=True):
+    def rename(self, rename_dict, axis=0, inplace=False, allow_optional=False, allow_required=False, **kwargs):
         '''
         Rename a column.
 
         Arguments:
-            rename_dict (dict): key is current column name, value is new column name. Use general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'. Only optional columns may be renamed
+            rename_dict (dict): key is current label, value is new label. When renaming columns, use general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'.
+            axis (int or str): whether to drop labels from the 'index' (0) or 'columns' (1)
             inplace (bool): if True, modify in-place
+            allow_optional (bool): if True, allow to rename optional columns
+            allow_required (bool): if True, allow to rename required columns
+            **kwargs: keyword arguments for Pandas rename
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with renamed columns
+            frame (BipartiteBase): BipartiteBase with renamed labels
         '''
-        if inplace:
-            frame = self
-        else:
-            frame = self.copy()
+        frame = self
 
-        for col_cur, col_new in rename_dict.items():
-            if col_cur in frame.columns or col_cur in frame.columns_req or col_cur in frame.columns_opt:
-                if col_cur in self.columns_opt: # If column optional
-                    if len(to_list(self.col_reference_dict[col_cur])) > 1:
-                        for i, subcol in enumerate(to_list(self.col_reference_dict[col_cur])):
-                            DataFrame.rename(frame, {subcol: col_new + str(i + 1)}, axis=1, inplace=True)
-                    else:
-                        DataFrame.rename(frame, {col_cur: col_new}, axis=1, inplace=True)
-                    if col_cur in frame.columns_contig.keys(): # If column contiguous
-                            frame.columns_contig[col_cur] = None
-                            if frame.id_reference_dict: # If id_reference_dict has been initialized
-                                frame.id_reference_dict[col_cur] = pd.DataFrame()
-                elif col_cur not in frame._included_cols() and col_cur not in frame._included_cols(flat=True): # If column is not pre-established
-                        DataFrame.rename(frame, {col_cur: col_new}, axis=1, inplace=True)
-                else:
-                    warnings.warn("{} is either (a) a required column and cannot be renamed or (b) a subcolumn that can be renamed, but only by specifying the general column name (e.g. use 'g' instead of 'g1' or 'g2')".format(col_cur))
+        if axis in [0, 'index']:
+            if inplace:
+                DataFrame.rename(frame, rename_dict, axis=0, inplace=True, **kwargs)
             else:
-                warnings.warn('{} is not in data columns'.format(col_cur))
+                frame = DataFrame.rename(frame, rename_dict, axis=0, inplace=False, **kwargs)
+        elif axis in [1, 'columns']:
+            if len(rename_dict.keys()) != len(set(rename_dict.keys())):
+                # Make sure rename_dict keys are unique
+                raise ValueError(f'.rename() requires that rename_dict keys are unique. However, the input {rename_dict} gives non-unique keys.')
+
+            if len(rename_dict.values()) != len(set(rename_dict.values())):
+                # Make sure rename_dict values are unique
+                raise ValueError(f'.rename() requires that rename_dict values are unique. However, the input {rename_dict} gives non-unique values.')
+
+            for col_cur, col_new in rename_dict.items():
+                # Make sure col_cur != col_new
+                if col_cur == col_new:
+                    raise ValueError(f'.rename() requires that keys in rename_dict are distinct from their associated values. However, the input gives the key-value pair where both the key and the value are equal to {col_cur!r}.')
+                # Make sure you don't rename a column to have the same name as another column without also renaming the second column
+                if (col_new in frame.col_reference_dict.keys()) and (col_new not in rename_dict.keys()):
+                    raise ValueError(f'.rename() requires that if a column is renamed to have the same name as another column, the second column must also be renamed. However, {col_cur!r} is set to be renamed to {col_new!r}, but {col_new!r} is already a column and is not being renamed.')
+
+            # Copy attribute dictionaries to update them
+            columns_contig = frame.columns_contig.copy()
+            col_reference_dict = frame.col_reference_dict.copy()
+            col_dtype_dict = frame.col_dtype_dict.copy()
+            col_collapse_dict = frame.col_collapse_dict.copy()
+            col_long_es_dict = frame.col_long_es_dict.copy()
+            id_reference_dict = frame.id_reference_dict.copy()
+
+            # This is the dictionary that will actually be used to rename the columns
+            rename_dict_subcols = {}
+
+            for col_cur, col_new in rename_dict.items():
+                ## Start by checking if column is in col_reference_dict ##
+                general_rename = False
+                if col_cur in frame.columns_req:
+                    # If column required
+                    general_rename = True
+                    if (col_cur in columns_contig.keys()) and id_reference_dict:
+                        id_reference_dict[col_cur] = DataFrame()
+                    if not allow_required:
+                        # If required columns are not allowed to be renamed
+                        raise ValueError(f'{col_cur!r} is a required column and cannot be renamed without specifying allow_required=True.')
+                elif col_cur in frame.columns_opt:
+                    # If column optional
+                    general_rename = True
+                    if (col_cur in columns_contig.keys()) and id_reference_dict:
+                        id_reference_dict[col_cur] = DataFrame()
+                    if not allow_optional:
+                        # If optional columns are not allowed to be renamed
+                        raise ValueError(f'{col_cur!r} is a pre-defined optional column and cannot be renamed without specifying allow_optional=True.')
+                elif col_cur in frame._included_cols():
+                    # If column is user-added
+                    general_rename = True
+                    # Delete current column from attribute dictionaries
+                    if col_cur in columns_contig.keys():
+                        del columns_contig[col_cur]
+                        if id_reference_dict:
+                            del id_reference_dict[col_cur]
+                    del col_reference_dict[col_cur], col_dtype_dict[col_cur], col_collapse_dict[col_cur], col_long_es_dict[col_cur]
+                elif col_cur in frame._included_cols(subcols=True):
+                    # If column is a subcolumn
+                    raise ValueError(f'{col_cur!r} is a subcolumn. For columns listed in df.col_reference_dict, BipartitePandas only allows for general column names to be renamed.')
+                ## Now, check if column included, but is not in col_reference_dict ##
+                else:
+                    # If column is not pre-established
+                    if col_cur in frame.columns:
+                        rename_dict_subcols[col_cur] = col_new
+                    else:
+                        raise ValueError(f'{col_cur!r} is not in dataframe columns.')
+                ## Finally, update rename_dict_subcols if column is in col_reference_dict ##
+                if general_rename:
+                    # If renaming a column from col_reference_dict
+                    id_reference = []
+                    for subcol_cur in to_list(frame.col_reference_dict[col_cur]):
+                        # Construct new column name and set value for rename dictionary
+                        subcol_str, subcol_num = bpd.util._text_num_split(subcol_cur)
+                        subcol_new = col_new + subcol_num
+                        rename_dict_subcols[subcol_cur] = subcol_new
+                        id_reference.append(subcol_new)
+                    if len(id_reference) == 1:
+                        # If list is length 1, extract first entry from list
+                        id_reference = id_reference[0]
+
+                    # Update attribute dictionaries
+                    if col_cur in columns_contig.keys():
+                        columns_contig[col_new] = frame.columns_contig[col_cur]
+                        if id_reference_dict:
+                            id_reference_dict[col_new] = frame.id_reference_dict[col_cur]
+                    col_reference_dict[col_new] = id_reference
+                    col_dtype_dict[col_new] = frame.col_dtype_dict[col_cur]
+                    col_collapse_dict[col_new] = frame.col_collapse_dict[col_cur]
+                    col_long_es_dict[col_new] = frame.col_long_es_dict[col_cur]
+
+            if inplace:
+                DataFrame.rename(frame, rename_dict_subcols, axis=1, inplace=True, **kwargs)
+            else:
+                frame = DataFrame.rename(frame, rename_dict_subcols, axis=1, inplace=False, **kwargs)
+
+            # Sort columns
+            frame = frame.sort_cols(copy=False)
+
+            # Set new attribute dictionaries (note that this needs to be done at the end, otherwise renaming might fail after attribute dictionaries have been changed - but the new attribute dictionaries are still maintained, despite being incorrect for the dataframe as it hasn't been renamed)
+            frame.columns_contig = columns_contig
+            frame.col_reference_dict = col_reference_dict
+            frame.col_dtype_dict = col_dtype_dict
+            frame.col_collapse_dict = col_collapse_dict
+            frame.col_long_es_dict = col_long_es_dict
+            frame.id_reference_dict = id_reference_dict
+        else:
+            raise (f"Axis must be one of 0, 'index', 1, or 'columns'; input {axis} is invalid.")
 
         return frame
 
@@ -759,7 +905,7 @@ class BipartiteBase(DataFrame):
         Returns:
             frame (BipartiteBase): BipartiteBase with contiguous ids
         '''
-        self.log('making {} ids contiguous'.format(id_col), level='info')
+        self.log(f'making {id_col!r} ids contiguous', level='info')
         if copy:
             frame = self.copy()
         else:
@@ -791,7 +937,7 @@ class BipartiteBase(DataFrame):
                 frame.id_reference_dict[id_col].loc[:, 'adjusted_ids_1'] = np.arange(len(factorized[1]))
             else: # Merge in new adjustment step
                 n_cols_id = len(frame.id_reference_dict[id_col].columns)
-                id_reference_df = pd.DataFrame({'adjusted_ids_' + str(n_cols_id - 1): factorized[1], 'adjusted_ids_' + str(n_cols_id): np.arange(len(factorized[1]))}, index=np.arange(len(factorized[1]))).astype('Int64', copy=False)
+                id_reference_df = DataFrame({'adjusted_ids_' + str(n_cols_id - 1): factorized[1], 'adjusted_ids_' + str(n_cols_id): np.arange(len(factorized[1]))}, index=np.arange(len(factorized[1]))).astype('Int64', copy=False)
                 frame.id_reference_dict[id_col] = frame.id_reference_dict[id_col].merge(id_reference_df, how='left', on='adjusted_ids_' + str(n_cols_id - 1))
 
         # Sort columns
@@ -855,9 +1001,9 @@ class BipartiteBase(DataFrame):
 
         # Next, make sure i-t (worker-year) observations are unique
         if (force or (not frame.i_t_unique)) and (frame.i_t_unique is not None):
-            frame.log('keeping highest paying job for i-t (worker-year) duplicates (how={})'.format(clean_params['i_t_how']), level='info')
+            frame.log(f"keeping highest paying job for i-t (worker-year) duplicates (how={clean_params['i_t_how']!r})", level='info')
             if verbose:
-                print('keeping highest paying job for i-t (worker-year) duplicates (how={})'.format(clean_params['i_t_how']))
+                print(f"keeping highest paying job for i-t (worker-year) duplicates (how={clean_params['i_t_how']!r})")
             frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], is_sorted=True, copy=False)
 
             # Update no_duplicates
@@ -874,33 +1020,33 @@ class BipartiteBase(DataFrame):
 
         # Next, drop returns
         if force or (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']):
-            frame.log('dropping workers who leave a firm then return to it (how={})'.format(clean_params['drop_returns']), level='info')
+            frame.log(f"dropping workers who leave a firm then return to it (how={clean_params['drop_returns']!r})", level='info')
             if verbose:
-                print('dropping workers who leave a firm then return to it (how={})'.format(clean_params['drop_returns']))
+                print(f"dropping workers who leave a firm then return to it (how={clean_params['drop_returns']!r})")
             frame = frame._drop_returns(how=clean_params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         for contig_col, is_contig in frame.columns_contig.items():
             if frame._col_included(contig_col) and (force or (not is_contig)):
-                frame.log('making {} ids contiguous'.format(contig_col), level='info')
+                frame.log(f'making {contig_col!r} ids contiguous', level='info')
                 if verbose:
-                    print('making {} ids contiguous'.format(contig_col))
+                    print(f'making {contig_col!r} ids contiguous')
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
         if force or (frame.connectedness in [False, None]):
             # Generate largest connected set
-            frame.log('computing largest connected set (how={})'.format(clean_params['connectedness']), level='info')
+            frame.log(f"computing largest connected set (how={clean_params['connectedness']!r})", level='info')
             if verbose:
-                print('computing largest connected set (how={})'.format(clean_params['connectedness']))
+                print(f"computing largest connected set (how={clean_params['connectedness']!r})")
             frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
                 if frame._col_included(contig_col) and (not is_contig):
-                    frame.log('making {} ids contiguous'.format(contig_col), level='info')
+                    frame.log(f'making {contig_col!r} ids contiguous', level='info')
                     if verbose:
-                        print('making {} ids contiguous'.format(contig_col))
+                        print(f'making {contig_col!r} ids contiguous')
                     frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Sort columns
@@ -915,9 +1061,9 @@ class BipartiteBase(DataFrame):
             print('resetting index')
         frame.reset_index(drop=True, inplace=True)
 
-        frame.log('BipartiteBase data cleaning complete', level='info')
+        frame.log('data cleaning complete', level='info')
         if verbose:
-            print('BipartiteBase data cleaning complete')
+            print('data cleaning complete')
 
         return frame
 
@@ -973,12 +1119,13 @@ class BipartiteBase(DataFrame):
         else:
             frame = self
 
-        frame.log('computing {} connected components (None if ignoring connectedness)'.format(connectedness), level='info')
+        frame.log(f'computing {connectedness!r} connected components (None if ignoring connectedness)', level='info')
 
         if connectedness is None:
             # Skipping connected set
             frame.connectedness = None
             # frame._check_contiguous_ids() # This is necessary
+            frame.log(f'{connectedness!r} connected components (None if ignoring connectedness) computed', level='info')
             return frame
 
         # Keep track of whether contiguous ids change
@@ -998,7 +1145,7 @@ class BipartiteBase(DataFrame):
                 # If component_size_varible is firms, no need to iterate
                 for cc in cc_list[1:]:
                     frame_cc = frame.keep_ids('j', cc, is_sorted=True, copy=False)
-                    replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+                    replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
                     if replace:
                         frame_largest_cc = frame_cc
             frame = frame_largest_cc
@@ -1029,7 +1176,7 @@ class BipartiteBase(DataFrame):
             # Keep largest leave-one-firm-out set of firms
             frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
         else:
-            raise NotImplementedError(bpd.str_format("Connectedness measure {} is invalid: it must be one of None, 'connected', 'leave_one_observation_out', 'leave_one_worker_out', or 'leave_one_firm_out'.", connectedness))
+            raise NotImplementedError(f"Connectedness measure {connectedness!r} is invalid: it must be one of None, 'connected', 'leave_one_observation_out', 'leave_one_worker_out', or 'leave_one_firm_out'.")
 
         # Data is now connected
         frame.connectedness = connectedness
@@ -1039,7 +1186,7 @@ class BipartiteBase(DataFrame):
             if (n_ids_prev[id_col] is not None) and (n_ids_prev[id_col] != frame.n_unique_ids(id_col)):
                 frame.columns_contig[id_col] = False
 
-        frame.log('{} connected components (None if ignoring connectedness) computed'.format(connectedness), level='info')
+        frame.log(f'{connectedness!r} connected components (None if ignoring connectedness) computed', level='info')
 
         return frame
 
@@ -1055,7 +1202,7 @@ class BipartiteBase(DataFrame):
         Returns:
             (tuple of igraph Graph, int): (graph, maximum firm id)
         '''
-        self.log('constructing {} graph'.format(connectedness), level='info')
+        self.log(f'constructing {connectedness!r} graph', level='info')
         linkages_fn_dict = {
             'connected': self._construct_firm_linkages,
             'leave_one_observation_out': self._construct_firm_worker_linkages,
@@ -1083,7 +1230,7 @@ class BipartiteBase(DataFrame):
             frame = self
 
         # Sort columns
-        sorted_cols = sorted(frame.columns, key=col_order)
+        sorted_cols = bpd.util._sort_cols(frame.columns)
         frame = frame.reindex(sorted_cols, axis=1, copy=False)
 
         return frame
@@ -1114,7 +1261,7 @@ class BipartiteBase(DataFrame):
             elif j_if_no_t:
                 # If no t column, and choose to sort on j instead
                 sort_order.append(to_list(frame.col_reference_dict['j'])[0])
-            with bpd.ChainedAssignment():
+            with bpd.util.ChainedAssignment():
                 frame.sort_values(sort_order, inplace=True)
 
         return frame
@@ -1166,7 +1313,7 @@ class BipartiteBase(DataFrame):
 
         return frame.min_workers_firms(threshold, is_sorted=is_sorted, copy=copy)
 
-    @recollapse_loop(True)
+    @_recollapse_loop(True)
     def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many movers.
@@ -1222,7 +1369,7 @@ class BipartiteBase(DataFrame):
         frame.log('firm moments computed', level='info')
 
         # Can't group using quantiles if more than 1 column
-        if isinstance(cluster_params['grouping'], bpd.grouping.quantiles) and (computed_measures.shape[1] > 1):
+        if isinstance(cluster_params['grouping'], bpd.grouping.Quantiles) and (computed_measures.shape[1] > 1):
             raise NotImplementedError('Cannot cluster using quantiles if multiple measures computed.')
 
         # Compute firm groups

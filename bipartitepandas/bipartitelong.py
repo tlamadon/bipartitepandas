@@ -7,7 +7,7 @@ import bipartitepandas as bpd
 import warnings
 
 # Define default parameter dictionary
-_es_extended_plot_params_default = bpd.ParamsDict({
+_es_extended_plot_params_default = bpd.util.ParamsDict({
     'title_height': (1, 'type', (int, float),
         '''
             (default=1) Location of titles for subfigures.
@@ -57,8 +57,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
         # Initialize DataFrame
-        col_reference_dict = bpd.update_dict({'t': 't'}, col_reference_dict)
-        col_collapse_dict = bpd.update_dict({'m': None}, col_collapse_dict)
+        col_reference_dict = bpd.util.update_dict({'t': 't'}, col_reference_dict)
+        col_collapse_dict = bpd.util.update_dict({'m': None}, col_collapse_dict)
         super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
         # self.log('BipartiteLong object initialized', level='info')
@@ -153,7 +153,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         for col in frame._included_cols():
             if col != 't':
                 # Skip time column
-                for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                     if frame.col_collapse_dict[col] is not None:
                         # If column should be collapsed
                         agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=frame.col_collapse_dict[col])
@@ -174,7 +174,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         data_spell = spells.agg(**agg_funcs)
 
         # Sort columns
-        sorted_cols = sorted(data_spell.columns, key=bpd.col_order)
+        sorted_cols = bpd.util._sort_cols(data_spell.columns)
         data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
         data_spell.reset_index(drop=True, inplace=True)
 
@@ -284,7 +284,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Find missing periods
         i_col = fill_frame.loc[:, 'i'].to_numpy()
         t_col = fill_frame.loc[:, 't'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
+        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
         t_prev = np.roll(t_col, 1)
         missing_periods = (i_col == i_prev) & (t_col != t_prev + 1)
         del i_prev
@@ -326,9 +326,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
             es_extended_frame or None (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
         '''
         # Convert into lists
-        include = bpd.to_list(include)
-        stable_pre = bpd.to_list(stable_pre)
-        stable_post = bpd.to_list(stable_post)
+        include = bpd.util.to_list(include)
+        stable_pre = bpd.util.to_list(stable_pre)
+        stable_post = bpd.util.to_list(stable_post)
 
         # Get list of all columns (note that stable_pre and stable_post can have columns that are not in include)
         all_cols = include[:]
@@ -363,7 +363,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Find periods where the worker transitioned, which can serve as fulcrums for the event study
         i_col = es_extended_frame.loc[:, 'i'].to_numpy()
         transition_col = es_extended_frame.loc[:, transition_col].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
+        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
         transition_prev = np.roll(transition_col, 1)
         moved_firms = (i_col == i_prev) & (transition_col != transition_prev)
         es_extended_frame.loc[:, 'moved_firms'] = moved_firms
@@ -388,35 +388,35 @@ class BipartiteLong(bpd.BipartiteLongBase):
             col_np = es_extended_frame.loc[:, col].to_numpy()
             # Compute lagged values
             for j in range(1, periods_pre + 1):
-                es_extended_frame.loc[:, '{}_l{}'.format(col, j)] = bpd.fast_shift(col_np, j, fill_value=-2)
+                es_extended_frame.loc[:, f'{col}_l{j}'] = bpd.util.fast_shift(col_np, j, fill_value=-2)
                 if col in include:
-                    column_order[i].insert(0, '{}_l{}'.format(col, j))
+                    column_order[i].insert(0, f'{col}_l{j}')
             # Compute lead values
             for j in range(periods_post): # No + 1 because base period has no shift (e.g. y becomes y_f1)
                 if j > 0:
                     # No shift necessary for base period because already exists
-                    es_extended_frame.loc[:, '{}_f{}'.format(col, j + 1)] = bpd.fast_shift(col_np, -j, fill_value=-2)
+                    es_extended_frame.loc[:, f'{col}_f{j + 1}'] = bpd.util.fast_shift(col_np, -j, fill_value=-2)
                 if col in include:
-                    column_order[i].append('{}_f{}'.format(col, j + 1))
+                    column_order[i].append(f'{col}_f{j + 1}')
 
         # Demarcate valid rows (all should start off True)
         valid_rows = ~pd.isna(es_extended_frame.loc[:, col])
         # Construct i and i_prev (these have changed from before)
         i_col = es_extended_frame.loc[:, 'i'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
+        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
         # Stable pre-trend
         for col in stable_pre:
             col_np = es_extended_frame.loc[:, col].to_numpy()
             for i in range(2, periods_pre + 1):
                 # Shift 1 is baseline
-                valid_rows = (valid_rows) & (np.roll(col_np, 1) == np.roll(col_np, i)) & (i_prev == bpd.fast_shift(i_col, i, fill_value=-3))
+                valid_rows = (valid_rows) & (np.roll(col_np, 1) == np.roll(col_np, i)) & (i_prev == bpd.util.fast_shift(i_col, i, fill_value=-3))
 
         # Stable post-trend
         for col in stable_post:
             col_np = es_extended_frame.loc[:, col].to_numpy()
             for i in range(1, periods_post):
                 # Shift 0 is baseline
-                valid_rows = (valid_rows) & (col_np == np.roll(col_np, -i)) & (i_col == bpd.fast_shift(i_col, -i, fill_value=-2))
+                valid_rows = (valid_rows) & (col_np == np.roll(col_np, -i)) & (i_col == bpd.util.fast_shift(i_col, -i, fill_value=-2))
 
         # Delete i_col, i_prev
         del i_col, i_prev
@@ -486,10 +486,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
         y_cols = []
         for i in range(1, periods_pre + 1):
             x_vals.insert(0, - i)
-            y_cols.insert(0, 'y_l{}'.format(i))
+            y_cols.insert(0, f'y_l{i}')
         for i in range(1, periods_post + 1):
             x_vals.append(i)
-            y_cols.append('y_f{}'.format(i))
+            y_cols.append(f'y_f{i}')
         # Get y boundaries
         y_min = 1000
         y_max = -1000
@@ -503,7 +503,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                     yerr = es_plot.loc[:, y_cols].std(axis=0) / (len(es_plot) ** 0.5)
                     ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
                     ax.axvline(0, color='orange', zorder=1)
-                    ax.set_title('{} to {} (n={})'.format(i + 1, j + 1, len(es_plot)), y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
+                    ax.set_title(f'{i + 1} to {j + 1} (n={len(es_plot)})', y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
                     ax.grid()
                     y_min = min(y_min, ax.get_ylim()[0])
                     y_max = max(y_max, ax.get_ylim()[1])
@@ -513,7 +513,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             yerr = es.loc[:, y_cols].std(axis=0) / (len(es) ** 0.5)
             axs.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
             axs.axvline(0, color='orange', zorder=1)
-            axs.set_title('All Transitions (n={})'.format(len(es)), y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
+            axs.set_title(f'All Transitions (n={len(es)})', y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
             axs.grid()
             y_min = min(y_min, axs.get_ylim()[0])
             y_max = max(y_max, axs.get_ylim()[1])

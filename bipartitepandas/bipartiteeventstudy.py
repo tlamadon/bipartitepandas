@@ -14,7 +14,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
     '''
 
     def __init__(self, *args, col_reference_dict={}, **kwargs):
-        col_reference_dict = bpd.update_dict({'t': ['t1', 't2']}, col_reference_dict)
+        col_reference_dict = bpd.util.update_dict({'t': ['t1', 't2']}, col_reference_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
 

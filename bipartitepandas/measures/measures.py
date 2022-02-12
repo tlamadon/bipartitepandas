@@ -2,10 +2,10 @@
 Functions for computing cluster measures. Note: use classes rather than nested functions because nested functions cannot be pickled (source: https://stackoverflow.com/a/12022055/17333120).
 '''
 import numpy as np
-from bipartitepandas import to_list, aggregate_transform
+from bipartitepandas.util import to_list, aggregate_transform
 from statsmodels.stats.weightstats import DescrStatsW
 
-class cdfs:
+class CDFs:
     '''
     Generate cdfs of compensation for firms. Used for clustering.
 
@@ -108,7 +108,7 @@ class cdfs:
 
         return cdfs
 
-class moments:
+class Moments:
     '''
     Generate compensation moments for firms. Used for clustering.
 

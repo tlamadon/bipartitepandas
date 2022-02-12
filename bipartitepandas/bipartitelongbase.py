@@ -17,7 +17,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
     '''
 
     def __init__(self, *args, col_reference_dict={}, **kwargs):
-        col_reference_dict = bpd.update_dict({'j': 'j', 'y': 'y', 'g': 'g', 'w': 'w'}, col_reference_dict)
+        col_reference_dict = bpd.util.update_dict({'j': 'j', 'y': 'y', 'g': 'g', 'w': 'w'}, col_reference_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
 
@@ -49,12 +49,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
         if not frame._col_included('m') or force:
             i_col = frame.loc[:, 'i'].to_numpy()
             j_col = frame.loc[:, 'j'].to_numpy()
-            i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
-            i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
+            i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
+            i_next = bpd.util.fast_shift(i_col, -1, fill_value=-2)
             j_prev = np.roll(j_col, 1)
             j_next = np.roll(j_col, -1)
 
-            with bpd.ChainedAssignment():
+            with bpd.util.ChainedAssignment():
                 frame.loc[:, 'm'] = ((i_col == i_prev) & (j_col != j_prev)).astype(int, copy=False) + ((i_col == i_next) & (j_col != j_next)).astype(int, copy=False)
 
             # Sort columns
@@ -103,7 +103,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 pass
             elif frame.col_long_es_dict[col]:
                 # If column should split
-                for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                     # Get column number, e.g. j1 will give 1
                     subcol_number = subcol.strip(col)
                     ## Movers
@@ -111,8 +111,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     col_1 = col + '1' + subcol_number
                     col_2 = col + '2' + subcol_number
                     # Lagged value
-                    with bpd.ChainedAssignment():
-                        movers.loc[:, col_1] = bpd.fast_shift(movers.loc[:, subcol].to_numpy(), 1, fill_value=-2)
+                    with bpd.util.ChainedAssignment():
+                        movers.loc[:, col_1] = bpd.util.fast_shift(movers.loc[:, subcol].to_numpy(), 1, fill_value=-2)
                     movers.rename({subcol: col_2}, axis=1, inplace=True)
 
                     if subcol != 'i':
@@ -130,7 +130,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                                 user_added_cols[col] = [col_1, col_2]
             else:
                 # If column shouldn't split
-                keep_cols += bpd.to_list(frame.col_reference_dict[col])
+                keep_cols += bpd.util.to_list(frame.col_reference_dict[col])
                 if col not in default_cols:
                     # User-added columns
                     user_added_cols[col] = frame.col_reference_dict[col]
@@ -145,7 +145,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
         for col in all_cols:
             if ((frame.col_dtype_dict[col] == 'int') or (col in frame.columns_contig.keys())) and frame.col_long_es_dict[col]:
-                for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                     # Get column number, e.g. j1 will give 1
                     subcol_number = subcol.strip(col)
                     shifted_col = col + '1' + subcol_number
@@ -164,7 +164,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         data_es = pd.concat([stayers, movers], ignore_index=True) # .reset_index(drop=True)
 
         # Sort columns
-        sorted_cols = sorted(data_es.columns, key=bpd.col_order)
+        sorted_cols = bpd.util._sort_cols(data_es.columns)
         data_es = data_es.reindex(sorted_cols, axis=1, copy=False)
 
         frame.log('data reformatted as event study', level='info')
@@ -203,7 +203,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Introduce lagged i and j
         i_col = frame.loc[:, 'i'].to_numpy()
         j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.fast_shift(i_col, 1, fill_value=-2)
+        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
         j_prev = np.roll(j_col, 1)
         self.log('lagged i and j introduced', level='info')
 
@@ -313,7 +313,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             elif stayers_movers == 'movers':
                 frame = frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :]
             else:
-                raise NotImplementedError("Invalid 'stayers_movers' option, {}. Valid options are 'stayers', 'movers', or None.".format(stayers_movers))
+                raise NotImplementedError(f"Invalid 'stayers_movers' option, {stayers_movers!r}. Valid options are 'stayers', 'movers', or None.")
 
         # If period-level, then only use data for that particular period
         if t is not None:
@@ -322,7 +322,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             else:
                 raise NotImplementedError("Cannot use data from a particular period with collapsed data. Data can be converted to long format using the '.uncollapse()' method.")
 
-        with bpd.ChainedAssignment():
+        with bpd.util.ChainedAssignment():
             # Create weights
             if weighted:
                 if frame._col_included('w'):
@@ -377,7 +377,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
@@ -387,7 +387,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
@@ -412,7 +412,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+                replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
             if replace:
                 frame_largest_cc = frame_cc
                 try:
@@ -467,7 +467,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
@@ -477,7 +477,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
@@ -504,7 +504,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+                replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
             if replace:
                 frame_largest_cc = frame_cc
                 try:
@@ -558,7 +558,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_bcc is not None:
                 # If frame_bcc is already smaller than frame_largest_bcc
-                skip = bpd.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='geq')
+                skip = bpd.util.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
@@ -569,7 +569,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_bcc is not None:
                 # If frame_bcc is already smaller than frame_largest_bcc
-                skip = bpd.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='geq')
+                skip = bpd.util.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='geq')
 
                 if skip:
                     continue
@@ -589,7 +589,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='lt')
+                replace = bpd.util.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='lt')
             if replace:
                 frame_largest_bcc = frame_bcc
                 try:
@@ -622,7 +622,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         i_col = self.loc[move_rows, 'i'].to_numpy()
         j_col = self.loc[move_rows, 'j'].to_numpy()
         j_next = np.roll(j_col, -1)
-        i_match = (i_col == bpd.fast_shift(i_col, -1, fill_value=-2))
+        i_match = (i_col == bpd.util.fast_shift(i_col, -1, fill_value=-2))
         j_col = j_col[i_match]
         j_next = j_next[i_match]
         linkages = np.stack([j_col, j_next], axis=1)
@@ -644,11 +644,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
         j_col = self.loc[move_rows, 'j'].to_numpy()
-        i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
+        i_next = bpd.util.fast_shift(i_col, -1, fill_value=-2)
         j_next = np.roll(j_col, -1)
         valid_next = (i_col == i_next)
         base_linkages = np.stack([j_col[valid_next], j_next[valid_next]], axis=1)
-        i_next_2 = bpd.fast_shift(i_col, -2, fill_value=-2)
+        i_next_2 = bpd.util.fast_shift(i_col, -2, fill_value=-2)
         j_next_2 = np.roll(j_col, -2)
         valid_next_2 = (i_col == i_next_2)
         secondary_linkages = np.stack([j_col[valid_next_2], j_next_2[valid_next_2]], axis=1)
@@ -825,7 +825,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return valid_firms
 
-    @bpd.recollapse_loop(False)
+    @bpd.bipartitebase._recollapse_loop(False)
     def min_obs_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Keep firms with at least `threshold` many observations.
@@ -881,7 +881,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return valid_firms
 
-    @bpd.recollapse_loop(False)
+    @bpd.bipartitebase._recollapse_loop(False)
     def min_workers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many workers.
@@ -932,7 +932,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return self.loc[self.loc[:, 'm'].to_numpy() > 0].min_obs_firms(threshold=threshold)
 
-    @bpd.recollapse_loop(True)
+    @bpd.bipartitebase._recollapse_loop(True)
     def min_moves_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.

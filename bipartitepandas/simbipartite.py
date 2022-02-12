@@ -5,7 +5,7 @@ import numpy as np
 ax = np.newaxis
 import pandas as pd
 from scipy.stats import norm
-from bipartitepandas import ParamsDict
+from bipartitepandas.util import ParamsDict
 
 # NOTE: multiprocessing isn't compatible with lambda functions
 def _gteq1(a):
@@ -144,7 +144,7 @@ class SimBipartite:
         max_firm_id = max(1, round(freq.sum() / (self.sim_params['firm_size'] * self.sim_params['n_time'])))
         return rng.choice(max_firm_id, size=freq.count())
 
-    def sim_network(self, rng=np.random.default_rng(None)):
+    def simulate(self, rng=np.random.default_rng(None)):
         '''
         Simulate panel data corresponding to the calibrated model. Columns are as follows: i=worker id; j=firm id; y=wage; t=time period; l=worker type; k=firm type; alpha=worker effect; psi=firm effect; spell=spell id.
 

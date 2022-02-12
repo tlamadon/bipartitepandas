@@ -2350,7 +2350,7 @@ def test_long_get_es_extended_3_3():
 # def test_long_plot_es_extended_4():
 #     # Test plot_es_extended() by making sure it doesn't crash
 #     sim_data = bpd.SimBipartite().sim_network()
-#     bdf = bpd.BipartiteLong(sim_data).clean_data().cluster(grouping=bpd.grouping.kmeans(n_clusters=2))
+#     bdf = bpd.BipartiteLong(sim_data).clean_data().cluster(grouping=bpd.grouping.KMeans(n_clusters=2))
 #     bdf.plot_es_extended()
 
 #     assert True # Just making sure it doesn't crash
@@ -3217,8 +3217,8 @@ def test_cluster_1():
 
     for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            measures = bpd.measures.cdfs(measure=measure)
-            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            measures = bpd.measures.CDFs(measure=measure)
+            grouping = bpd.grouping.KMeans(n_clusters=nk)
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
 
             clusters_true = sim_data[~bdf['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
@@ -3281,8 +3281,8 @@ def test_cluster_2():
 
     for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            measures = bpd.measures.cdfs(measure=measure)
-            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            measures = bpd.measures.CDFs(measure=measure)
+            grouping = bpd.grouping.KMeans(n_clusters=nk)
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
 
             to_long = bdf.get_long()
@@ -3352,8 +3352,8 @@ def test_cluster_3():
 
     for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            measures = bpd.measures.cdfs(measure=measure)
-            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            measures = bpd.measures.CDFs(measure=measure)
+            grouping = bpd.grouping.KMeans(n_clusters=nk)
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
             remaining_jids = bdf.dropna()['j'].unique()
 
@@ -3423,8 +3423,8 @@ def test_cluster_4():
 
     for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
         for stayers_movers in [None, 'stayers', 'movers']:
-            measures = bpd.measures.cdfs(measure=measure)
-            grouping = bpd.grouping.kmeans(n_clusters=nk)
+            measures = bpd.measures.CDFs(measure=measure)
+            grouping = bpd.grouping.KMeans(n_clusters=nk)
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}))
 
             to_collapsed_long = bdf.get_long()
@@ -3502,8 +3502,8 @@ def test_cluster_5():
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
 
-    measures = bpd.measures.moments(measures='mean')
-    grouping = bpd.grouping.quantiles(n_quantiles=3)
+    measures = bpd.measures.Moments(measures='mean')
+    grouping = bpd.grouping.Quantiles(n_quantiles=3)
     bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping}))
 
     # Clusters:

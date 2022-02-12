@@ -142,5 +142,5 @@ Modules and Methods
 
 .. autosummary::
 
-   ~bipartitepandas.grouping.kmeans
+   ~bipartitepandas.grouping.KMeans
    ~bipartitepandas.grouping.quantiles

@@ -16,7 +16,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
     '''
 
     def __init__(self, *args, col_reference_dict={}, **kwargs):
-        col_reference_dict = bpd.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w2']}, col_reference_dict)
+        col_reference_dict = bpd.util.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w2']}, col_reference_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
 
@@ -74,12 +74,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Get i for this and next period
         i_col = frame.loc[:, 'i'].to_numpy()
-        i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
+        i_next = bpd.util.fast_shift(i_col, -1, fill_value=-2)
         # Get m
         if worker_m is None:
             worker_m = frame.get_worker_m(is_sorted=True) # m_col = (self.loc[:, 'm'].to_numpy() > 0)
         # # Get t for this and next period
-        # t_cols = bpd.to_list(self.col_reference_dict['t'])
+        # t_cols = bpd.util.to_list(self.col_reference_dict['t'])
         # halfway = len(t_cols) // 2
         # t1 = t_cols[0]
         # t2 = t_cols[halfway]
@@ -108,13 +108,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             firms_stayers = (stayers.loc[:, 'j1'].to_numpy() != stayers.loc[:, 'j2'].to_numpy()).sum()
             firms_movers = (movers.loc[:, 'j1'].to_numpy() == movers.loc[:, 'j2'].to_numpy()).sum()
 
-            ret_str += 'm==0 with different firms (should be 0): {}\n'.format(firms_stayers)
-            ret_str += 'm>0 with same firm (should be 0): {}\n'.format(firms_movers)
+            ret_str += f'm==0 with different firms (should be 0): {firms_stayers}\n'
+            ret_str += f'm>0 with same firm (should be 0): {firms_movers}\n'
 
             ##### Income #####
             income_stayers = (stayers.loc[:, 'y1'].to_numpy() != stayers.loc[:, 'y2'].to_numpy()).sum()
 
-            ret_str += 'm==0 with different income (should be 0): {}'.format(income_stayers)
+            ret_str += f'm==0 with different income (should be 0): {income_stayers}'
 
             print(ret_str)
 
@@ -161,12 +161,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         jdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :], copy=copy)
 
         # Columns used for constructing cross section
-        cs_cols = self._included_cols(flat=True)
+        cs_cols = self._included_cols(subcols=True)
 
         # Dictionary to swap names for cs=0 (these rows contain period-2 data for movers, so must swap columns for all relevant information to be contained in the same column (e.g. must move y2 into y1, otherwise bottom rows are just duplicates))
         rename_dict = {}
         for col in self._included_cols():
-            subcols = bpd.to_list(self.col_reference_dict[col])
+            subcols = bpd.util.to_list(self.col_reference_dict[col])
             n_subcols = len(subcols)
             # If even number of subcols, then is formatted as 'x1', 'x2', etc., so must swap to be 'x2', 'x1', etc.
             if n_subcols % 2 == 0:
@@ -183,7 +183,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         ], ignore_index=True)
 
         # Sort columns
-        sorted_cols = sorted(data_cs.columns, key=bpd.col_order)
+        sorted_cols = bpd.util._sort_cols(data_cs.columns)
         data_cs = data_cs.reindex(sorted_cols, axis=1, copy=False)
 
         self.log('mover and stayer event study datasets combined into cross section', level='info')
@@ -223,10 +223,10 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         for col in frame._included_cols():
             if frame.col_long_es_dict[col] is None:
                 # If None, drop this column
-                drops += bpd.to_list(frame.col_reference_dict[col])
+                drops += bpd.util.to_list(frame.col_reference_dict[col])
             elif frame.col_long_es_dict[col]:
                 # If column has been split
-                subcols = bpd.to_list(frame.col_reference_dict[col])
+                subcols = bpd.util.to_list(frame.col_reference_dict[col])
                 halfway = len(subcols) // 2
                 for i in range(halfway):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
@@ -251,7 +251,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 # If column has not been split
                 if frame.col_dtype_dict[col] == 'int':
                     # Check correct type for other columns
-                    for subcol in bpd.to_list(frame.col_reference_dict[col]):
+                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         astype_dict[subcol] = int
                 if col not in default_cols:
                     # User-added columns
@@ -281,11 +281,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         ## Final steps
         # Sort columns
-        sorted_cols = sorted(data_long.columns, key=bpd.col_order)
+        sorted_cols = bpd.util._sort_cols(data_long.columns)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
-
-        # Reset index
-        data_long.reset_index(drop=True, inplace=True)
 
         # Construct BipartiteLongBase dataframe
         long_frame = frame._constructor_long(data_long, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
@@ -293,6 +290,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Sort rows by i (and t, if included)
         long_frame = long_frame.sort_rows(is_sorted=False, copy=False)
+
+        # Reset index
+        long_frame.reset_index(drop=True, inplace=True)
 
         # Generate 'm' column
         long_frame = long_frame.gen_m(force=True, copy=False)
@@ -386,7 +386,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         base_linkages = self.loc[move_rows, ['j1', 'j2']].to_numpy()
         i_col = self.loc[move_rows, 'i'].to_numpy()
-        i_next = bpd.fast_shift(i_col, -1, fill_value=-2)
+        i_next = bpd.util.fast_shift(i_col, -1, fill_value=-2)
         j2_next = np.roll(base_linkages[:, 1], -1)
         valid_i = (i_col == i_next)
         secondary_linkages = np.stack([base_linkages[valid_i, 1], j2_next[valid_i]], axis=1)
@@ -671,7 +671,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 t1 = np.arange(len(frame))
             t2 = t1 + 1
             # t column names
-            t_subcols = bpd.to_list(frame.col_reference_dict['t'])
+            t_subcols = bpd.util.to_list(frame.col_reference_dict['t'])
             halfway = len(t_subcols) // 2
             for i in range(halfway):
                 # Iterate over t columns and fill in values
