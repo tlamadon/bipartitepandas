@@ -3523,3 +3523,58 @@ def test_cluster_5():
     assert bdf.iloc[6]['g'] == 1
     assert bdf.iloc[7]['g'] == 1
     assert bdf.iloc[8]['g'] == 2
+
+########################################
+##### Tests for BipartiteDataFrame #####
+########################################
+
+def test_dataframe_1():
+    # Test BipartiteDataFrame constructor for different formats
+
+    ## Long format ##
+    a = bpd.SimBipartite().simulate()
+    b = bpd.BipartiteDataFrame(**a).clean_data()
+
+    assert isinstance(b, bpd.BipartiteLong)
+    for col in ['l', 'k', 'alpha', 'psi']:
+        assert col in b.col_reference_dict.keys()
+    for col in ['l', 'k']:
+        assert b.col_dtype_dict[col] == 'int'
+    for col in ['alpha', 'psi']:
+        assert b.col_dtype_dict[col] == 'float'
+
+    ## Long collapsed format ##
+    a2 = pd.DataFrame(b.get_collapsed_long())
+    b2 = bpd.BipartiteDataFrame(**a2).clean_data()
+
+    assert isinstance(b2, bpd.BipartiteLongCollapsed)
+    assert b2.col_reference_dict['t'] == ['t1', 't2']
+
+    ## Event study format ##
+    a3 = pd.DataFrame(b.get_es())
+    b3 = bpd.BipartiteDataFrame(**a3).clean_data()
+
+    assert isinstance(b3, bpd.BipartiteEventStudy)
+    for col in ['j', 'y', 't', 'l', 'k', 'alpha', 'psi']:
+        assert b3.col_reference_dict[col] == [col + '1', col + '2']
+
+    ## Event study collapsed format ##
+    a4 = pd.DataFrame(b2.get_es())
+    b4 = bpd.BipartiteDataFrame(**a4).clean_data()
+
+    assert isinstance(b4, bpd.BipartiteEventStudyCollapsed)
+    assert b4.col_reference_dict['t'] == ['t11', 't12', 't21', 't22']
+    for col in ['j', 'y', 'l', 'k', 'alpha', 'psi']:
+        assert b4.col_reference_dict[col] == [col + '1', col + '2']
+
+def test_dataframe_2():
+    # Test BipartiteDataFrame constructor with custom attributes dictionaries
+
+    ## Long format ##
+    a = bpd.SimBipartite().simulate()
+    b = bpd.BipartiteDataFrame(**a, custom_contig_dict={'l': True}, custom_dtype_dict={'l': 'any'}, custom_how_collapse_dict={'alpha': None}, custom_long_es_split_dict={'psi': False}).clean_data()
+
+    assert 'l' in b.columns_contig.keys()
+    assert b.col_dtype_dict['l'] == 'any'
+    assert b.col_collapse_dict['alpha'] is None
+    assert b.col_long_es_dict['psi'] is False
