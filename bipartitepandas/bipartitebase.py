@@ -8,7 +8,7 @@ import pandas as pd
 from pandas import DataFrame
 import warnings
 import bipartitepandas as bpd
-from bipartitepandas.util import to_list
+from bipartitepandas.util import update_dict, to_list
 import igraph as ig
 
 def _recollapse_loop(force=False):
@@ -177,17 +177,25 @@ class BipartiteBase(DataFrame):
 
         if len(args) > 0 and isinstance(args[0], BipartiteBase):
             # Note that isinstance works for subclasses
-            self._set_attributes(args[0], include_id_reference_dict)
+            self._set_attributes(args[0], no_dict=False, include_id_reference_dict=include_id_reference_dict)
+            # Update class attributes from the previous dataframe with parameter inputs
+            self.columns_req = ['i', 'j', 'y'] + [column_req for column_req in self.columns_req if column_req not in ['i', 'j', 'y']]
+            self.columns_opt = ['t', 'g', 'w', 'm'] + [column_opt for column_opt in self.columns_opt if column_opt not in ['t', 'g', 'w', 'm']]
+            self.columns_contig = update_dict(self.columns_contig, columns_contig)
+            self.col_reference_dict = update_dict(self.col_reference_dict, col_reference_dict)
+            self.col_dtype_dict = update_dict(self.col_dtype_dict, col_dtype_dict)
+            self.col_collapse_dict = update_dict(self.col_collapse_dict, col_collapse_dict)
+            self.col_long_es_dict = update_dict(self.col_long_es_dict, col_long_es_dict)
         else:
             self.columns_req = ['i', 'j', 'y'] + columns_req
             self.columns_opt = ['t', 'g', 'w', 'm'] + columns_opt
-            self.columns_contig = bpd.util.update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
-            self.col_reference_dict = bpd.util.update_dict({'i': 'i', 'm': 'm'}, col_reference_dict)
-            self.col_dtype_dict = bpd.util.update_dict({'i': 'any', 'j': 'any', 'y': 'float', 't': 'int', 'g': 'any', 'w': 'float', 'm': 'int'}, col_dtype_dict)
+            self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
+            self.col_reference_dict = update_dict({'i': 'i', 'm': 'm'}, col_reference_dict)
+            self.col_dtype_dict = update_dict({'i': 'any', 'j': 'any', 'y': 'float', 't': 'int', 'g': 'any', 'w': 'float', 'm': 'int'}, col_dtype_dict)
             # Skip t and m for collapsing
-            self.col_collapse_dict = bpd.util.update_dict({'i': 'first', 'j': 'first', 'y': 'mean', 'g': 'first', 'w': 'sum'}, col_collapse_dict)
+            self.col_collapse_dict = update_dict({'i': 'first', 'j': 'first', 'y': 'mean', 'g': 'first', 'w': 'sum'}, col_collapse_dict)
             # Split i to make sure consecutive observations are for the same worker
-            self.col_long_es_dict = bpd.util.update_dict({'i': True, 'j': True, 'y': True, 't': True, 'g': True, 'w': True, 'm': False}, col_long_es_dict)
+            self.col_long_es_dict = update_dict({'i': True, 'j': True, 'y': True, 't': True, 'g': True, 'w': True, 'm': False}, col_long_es_dict)
 
             # Link original id values to contiguous id values
             self._reset_id_reference_dict(include_id_reference_dict)
@@ -700,7 +708,7 @@ class BipartiteBase(DataFrame):
                         general_subcols_to_drop = to_list(frame.col_reference_dict[col])
                     else:
                         pass
-                        warnings.warn(f'{col!r} is a pre-defined optional column and cannot be dropped without specifying allow_optional=True. The returned frame has not dropped this column.')
+                        # warnings.warn(f'{col!r} is a pre-defined optional column and cannot be dropped without specifying allow_optional=True. The returned frame has not dropped this column.')
                 elif col in frame._included_cols():
                     # If column is user-added
                     general_subcols_to_drop = to_list(frame.col_reference_dict[col])

@@ -576,8 +576,8 @@ def test_refactor_11():
 
 def test_refactor_12():
     # Check going to event study and back to long
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     assert len(bdf) == len(bdf.get_es().get_long())
 
@@ -770,47 +770,47 @@ def test_contiguous_cids_14():
     assert stayers.iloc[0]['g1'] == 0
     assert stayers.iloc[0]['g2'] == 0
 
-def test_col_dict_15():
-    # Check that col_dict works properly.
-    worker_data = []
-    # Firm 0 -> 1
-    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
-    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2})
-    # Firm 1 -> 2
-    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
-    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
-    # Worker 3
-    # Firm 2 -> 2
-    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1})
-    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 2})
+# def test_col_dict_15():
+#     # Check that col_dict works properly.
+#     worker_data = []
+#     # Firm 0 -> 1
+#     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
+#     worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2})
+#     # Firm 1 -> 2
+#     worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
+#     worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
+#     # Worker 3
+#     # Firm 2 -> 2
+#     worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1})
+#     worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 2})
 
-    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)]).rename({'j': 'firm', 'i': 'worker'}, axis=1)
+#     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)]).rename({'j': 'firm', 'i': 'worker'}, axis=1)
 
-    bdf = bpd.BipartiteLong(data=df, col_dict={'j': 'firm', 'i': 'worker'})
-    bdf = bdf.clean_data()
-    bdf = bdf.get_collapsed_long()
-    bdf = bdf.get_es()
+#     bdf = bpd.BipartiteLong(data=df, col_dict={'j': 'firm', 'i': 'worker'})
+#     bdf = bdf.clean_data()
+#     bdf = bdf.get_collapsed_long()
+#     bdf = bdf.get_es()
 
-    stayers = bdf[bdf['m'] == 0]
-    movers = bdf[bdf['m'] > 0]
+#     stayers = bdf[bdf['m'] == 0]
+#     movers = bdf[bdf['m'] > 0]
 
-    assert stayers.iloc[0]['i'] == 2
-    assert stayers.iloc[0]['j1'] == 2
-    assert stayers.iloc[0]['j2'] == 2
-    assert stayers.iloc[0]['y1'] == 1
-    assert stayers.iloc[0]['y2'] == 1
+#     assert stayers.iloc[0]['i'] == 2
+#     assert stayers.iloc[0]['j1'] == 2
+#     assert stayers.iloc[0]['j2'] == 2
+#     assert stayers.iloc[0]['y1'] == 1
+#     assert stayers.iloc[0]['y2'] == 1
 
-    assert movers.iloc[0]['i'] == 0
-    assert movers.iloc[0]['j1'] == 0
-    assert movers.iloc[0]['j2'] == 1
-    assert movers.iloc[0]['y1'] == 2
-    assert movers.iloc[0]['y2'] == 1
+#     assert movers.iloc[0]['i'] == 0
+#     assert movers.iloc[0]['j1'] == 0
+#     assert movers.iloc[0]['j2'] == 1
+#     assert movers.iloc[0]['y1'] == 2
+#     assert movers.iloc[0]['y2'] == 1
 
-    assert movers.iloc[1]['i'] == 1
-    assert movers.iloc[1]['j1'] == 1
-    assert movers.iloc[1]['j2'] == 2
-    assert movers.iloc[1]['y1'] == 1
-    assert movers.iloc[1]['y2'] == 1
+#     assert movers.iloc[1]['i'] == 1
+#     assert movers.iloc[1]['j1'] == 1
+#     assert movers.iloc[1]['j2'] == 2
+#     assert movers.iloc[1]['y1'] == 1
+#     assert movers.iloc[1]['y2'] == 1
 
 def test_worker_year_unique_16_1():
     # Workers with multiple jobs in the same year, keep the highest paying, with long format. Testing 'max', 'sum', and 'mean' options, where options should not have an effect.
@@ -1165,15 +1165,19 @@ def test_general_methods_18():
     bdf.drop('g', axis=1, inplace=True, allow_optional=True)
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
 
-    bdf.rename({'i': 'w'})
-    assert 'i' in bdf.columns
+    try:
+        bdf.rename({'i': 'w'}, axis=1, inplace=True)
+        success = False
+    except ValueError:
+        success = True
+    assert success
 
     bdf['g1'] = 1
     bdf['g2'] = 1
     # bdf.col_dict['g1'] = 'g1'
     # bdf.col_dict['g2'] = 'g2'
     assert 'g1' in bdf.columns and 'g2' in bdf.columns
-    bdf.rename({'g': 'r'})
+    bdf.rename({'g': 'r'}, axis=1, inplace=True, allow_optional=True)
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
 
 def test_copy_19():
@@ -1247,8 +1251,8 @@ def test_id_reference_dict_20():
 
     id_reference_dict = bdf.id_reference_dict
 
-    merge_df = bdf.merge(id_reference_dict['i'], how='left', left_on='i', right_on='adjusted_ids_1').rename({'original_ids': 'original_i'})
-    merge_df = merge_df.merge(id_reference_dict['j'], how='left', left_on='j', right_on='adjusted_ids_1').rename({'original_ids': 'original_j'})
+    merge_df = bdf.merge(id_reference_dict['i'], how='left', left_on='i', right_on='adjusted_ids_1').rename({'original_ids': 'original_i'}, axis=1)
+    merge_df = merge_df.merge(id_reference_dict['j'], how='left', left_on='j', right_on='adjusted_ids_1').rename({'original_ids': 'original_j'}, axis=1)
 
     stayers = merge_df[merge_df['m'] == 0]
     movers = merge_df[merge_df['m'] == 1]
@@ -1661,8 +1665,8 @@ def test_uncollapse_25():
 
 def test_keep_ids_26():
     # Keep only given ids.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
     all_fids = bdf['j'].unique()
     ids_to_keep = all_fids[: len(all_fids) // 2]
     bdf_keep = bdf.get_es().keep_ids('j', ids_to_keep).get_long()
@@ -1674,8 +1678,8 @@ def test_keep_ids_26():
 
 def test_drop_ids_27():
     # Drop given ids.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
     all_fids = bdf['j'].unique()
     ids_to_drop = all_fids[: len(all_fids) // 2]
     bdf_keep = bdf.get_es().drop_ids('j', ids_to_drop).get_long()
@@ -1901,8 +1905,8 @@ def test_drop_returns_28_4():
 def test_min_obs_firms_28_1():
     # List only firms that meet a minimum threshold of observations.
     # Using long/event study.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 250
 
@@ -1924,8 +1928,8 @@ def test_min_obs_firms_28_1():
 def test_min_obs_firms_28_2():
     # List only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data().get_collapsed_long()
 
     threshold = 60
 
@@ -1947,8 +1951,8 @@ def test_min_obs_firms_28_2():
 def test_min_obs_frame_29_1():
     # Keep only firms that meet a minimum threshold of observations.
     # Using long/event study.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 250
 
@@ -1978,8 +1982,8 @@ def test_min_obs_frame_29_1():
 def test_min_obs_frame_29_2():
     # Keep only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data().get_collapsed_long()
 
     threshold = 60
 
@@ -2008,8 +2012,8 @@ def test_min_obs_frame_29_2():
 def test_min_workers_firms_30():
     # List only firms that meet a minimum threshold of workers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 40
 
@@ -2034,8 +2038,8 @@ def test_min_workers_firms_30():
 def test_min_workers_frame_31():
     # Keep only firms that meet a minimum threshold of workers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 60
 
@@ -2067,8 +2071,8 @@ def test_min_workers_frame_31():
 def test_min_moves_firms_32_1():
     # List only firms that meet a minimum threshold of moves.
     # Using long/event study.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 20
 
@@ -2091,8 +2095,8 @@ def test_min_moves_firms_32_1():
 def test_min_moves_firms_32_2():
     # List only firms that meet a minimum threshold of moves.
     # Using long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data().get_collapsed_long()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data().get_collapsed_long()
 
     threshold = 20
 
@@ -2115,8 +2119,8 @@ def test_min_moves_firms_32_2():
 def test_min_moves_frame_33():
     # Keep only firms that meet a minimum threshold of moves.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 12
 
@@ -2163,8 +2167,8 @@ def test_min_moves_frame_33():
 def test_min_movers_firms_34():
     # List only firms that meet a minimum threshold of movers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 20
 
@@ -2190,8 +2194,8 @@ def test_min_movers_firms_34():
 def test_min_movers_frame_35():
     # Keep only firms that meet a minimum threshold of movers.
     # Using long/event study/long collapsed/event study collapsed.
-    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).sim_network(np.random.default_rng(1234))
-    bdf = bpd.BipartiteLong(df).clean_data()
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean_data()
 
     threshold = 12
 
@@ -2239,7 +2243,7 @@ def test_min_movers_frame_35():
 def test_construct_artificial_time_36():
     # Test construct_artificial_time() methods
     # First, on non-collapsed data
-    a = bpd.BipartiteLong(bpd.SimBipartite().sim_network(np.random.default_rng(1234))).clean_data()
+    a = bpd.BipartiteLong(bpd.SimBipartite().simulate(np.random.default_rng(1234))[['i', 'j', 'y', 't']]).clean_data()
     b = a.drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(copy=True).get_es().drop('t', axis=1, inplace=False, allow_optional=True).construct_artificial_time(time_per_worker=True, is_sorted=True, copy=False).get_long()
 
     assert np.all(a.to_numpy() == b.to_numpy())
@@ -2302,8 +2306,8 @@ def test_long_get_es_extended_1():
 
 def test_long_get_es_extended_2():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study
-    sim_data = bpd.SimBipartite().sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite().simulate()
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
 
     es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, include=['j', 'y'])
@@ -2312,8 +2316,8 @@ def test_long_get_es_extended_2():
 
 def test_long_get_es_extended_3_1():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_pre works
-    sim_data = bpd.SimBipartite().sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite().simulate()
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
 
     es_extended = bdf.get_es_extended(periods_pre=2, periods_post=3, stable_pre='j', include=['j', 'y'])
@@ -2323,8 +2327,8 @@ def test_long_get_es_extended_3_1():
 
 def test_long_get_es_extended_3_2():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post works
-    sim_data = bpd.SimBipartite().sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite().simulate()
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
 
     es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_post='j', include=['j', 'y'])
@@ -2334,8 +2338,8 @@ def test_long_get_es_extended_3_2():
 
 def test_long_get_es_extended_3_3():
     # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post and stable_pre work together
-    sim_data = bpd.SimBipartite().sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite().simulate()
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
 
     es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', include=['j', 'y'])
@@ -2349,7 +2353,7 @@ def test_long_get_es_extended_3_3():
 # Only uncomment for manual testing - this produces a graph which pauses the testing
 # def test_long_plot_es_extended_4():
 #     # Test plot_es_extended() by making sure it doesn't crash
-#     sim_data = bpd.SimBipartite().sim_network()
+#     sim_data = bpd.SimBipartite().simulate()
 #     bdf = bpd.BipartiteLong(sim_data).clean_data().cluster(grouping=bpd.grouping.KMeans(n_clusters=2))
 #     bdf.plot_es_extended()
 
@@ -2376,8 +2380,8 @@ def test_long_collapsed_1():
 
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
-    df = pd.DataFrame(bdf.get_collapsed_long()).rename({'y': 'y'}, axis=1)
-    bdf = bpd.BipartiteLongCollapsed(df, col_dict={'y': 'y'})
+    df = pd.DataFrame(bdf.get_collapsed_long())
+    bdf = bpd.BipartiteLongCollapsed(df)
     bdf = bdf.clean_data()
 
     stayers = bdf[bdf['m'] == 0]
@@ -2424,8 +2428,8 @@ def test_event_study_1():
 
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
-    df = pd.DataFrame(bdf.get_es()).rename({'t1': 't'}, axis=1)
-    bdf = bpd.BipartiteEventStudy(df, col_dict={'t1': 't'})
+    df = pd.DataFrame(bdf.get_es())
+    bdf = bpd.BipartiteEventStudy(df)
     bdf = bdf.clean_data()
 
     stayers = bdf[bdf['m'] == 0]
@@ -2560,8 +2564,8 @@ def test_event_study_collapsed_1():
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long()
-    df = pd.DataFrame(bdf.get_es()).rename({'y1': 'comp1'}, axis=1)
-    bdf = bpd.BipartiteEventStudyCollapsed(df, col_dict={'y1': 'comp1'})
+    df = pd.DataFrame(bdf.get_es())
+    bdf = bpd.BipartiteEventStudyCollapsed(df)
     bdf = bdf.clean_data()
 
     stayers = bdf[bdf['m'] == 0]
@@ -2616,8 +2620,8 @@ def test_get_cs_2():
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long()
-    df = pd.DataFrame(bdf.get_es()).rename({'y1': 'comp1'}, axis=1)
-    bdf = bpd.BipartiteEventStudyCollapsed(df, col_dict={'y1': 'comp1'})
+    df = pd.DataFrame(bdf.get_es())
+    bdf = bpd.BipartiteEventStudyCollapsed(df)
     bdf = bdf.clean_data()
     bdf = bdf.get_cs(copy=False)
 
@@ -3211,8 +3215,8 @@ def test_connectedness_8():
 def test_cluster_1():
     # Test cluster function is working correctly for long format.
     nk = 10
-    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).simulate(np.random.default_rng(2345))
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
 
     for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
@@ -3274,8 +3278,8 @@ def test_cluster_1():
 def test_cluster_2():
     # Test cluster function is working correctly for event study format.
     nk = 10
-    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).simulate(np.random.default_rng(3456))
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
     bdf = bdf.get_es()
 
@@ -3339,8 +3343,8 @@ def test_cluster_2():
 def test_cluster_3():
     # Test cluster function is working correctly for collapsed long format.
     nk = 10
-    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).simulate(np.random.default_rng(4567))
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long()
     # Compute spells
@@ -3410,8 +3414,8 @@ def test_cluster_3():
 def test_cluster_4():
     # Test cluster function is working correctly for collapsed event study format.
     nk = 10
-    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).sim_network()
-    bdf = bpd.BipartiteLong(sim_data)
+    sim_data = bpd.SimBipartite(bpd.sim_params({'nk': nk})).simulate(np.random.default_rng(5678))
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean_data()
     bdf = bdf.get_collapsed_long().get_es()
     # Compute spells

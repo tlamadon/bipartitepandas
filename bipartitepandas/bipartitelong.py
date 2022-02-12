@@ -56,9 +56,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
     '''
 
     def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
-        # Initialize DataFrame
         col_reference_dict = bpd.util.update_dict({'t': 't'}, col_reference_dict)
-        col_collapse_dict = bpd.util.update_dict({'m': None}, col_collapse_dict)
+        col_collapse_dict = bpd.util.update_dict({'m': 'sum'}, col_collapse_dict)
+        # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
         # self.log('BipartiteLong object initialized', level='info')
@@ -126,7 +126,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             if frame._col_included('t'):
                 frame.loc[:, 't1'] = frame.loc[:, 't']
                 frame.loc[:, 't2'] = frame.loc[:, 't']
-                frame.drop('t', axis=1, inplace=True)
+                frame.drop('t', axis=1, inplace=True, allow_optional=True)
 
             self.log('data aggregated at the spell level', level='info')
 

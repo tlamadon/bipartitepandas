@@ -285,8 +285,11 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
 
         # Construct BipartiteLongBase dataframe
+        print('frame.col_collapse_dict 1:', frame.col_collapse_dict)
         long_frame = frame._constructor_long(data_long, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
+        print('long_frame.col_collapse_dict 1:', long_frame.col_collapse_dict)
         long_frame._set_attributes(frame, no_dict=True)
+        print('long_frame.col_collapse_dict 2:', long_frame.col_collapse_dict)
 
         # Sort rows by i (and t, if included)
         long_frame = long_frame.sort_rows(is_sorted=False, copy=False)

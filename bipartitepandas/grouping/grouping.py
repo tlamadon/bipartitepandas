@@ -8,7 +8,7 @@ try:
     patch_sklearn('KMeans')
 except ImportError:
     pass
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans as sklKMeans
 
 class KMeans:
     '''
@@ -32,7 +32,7 @@ class KMeans:
         Returns:
             groups (NumPy Array): KMeans groups for data
         '''
-        groups = KMeans(**self.kwargs).fit(data, sample_weight=weights).labels_
+        groups = sklKMeans(**self.kwargs).fit(data, sample_weight=weights).labels_
         return groups
 
 class Quantiles:

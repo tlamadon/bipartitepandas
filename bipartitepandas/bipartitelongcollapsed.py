@@ -18,7 +18,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
     def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
         col_reference_dict = bpd.util.update_dict({'t': ['t1', 't2']}, col_reference_dict)
-        col_collapse_dict = bpd.util.update_dict({'m': 'first'}, col_collapse_dict)
+        col_collapse_dict = bpd.util.update_dict({'m': None}, col_collapse_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
@@ -154,6 +154,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+        print('frame.col_collapse_dict:', frame.col_collapse_dict)
 
         # All included columns
         all_cols = frame._included_cols()

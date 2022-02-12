@@ -10,13 +10,15 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
     Arguments:
         *args: arguments for BipartiteEventStudyBase
         col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
+        col_collapse_dict (dict): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}
         **kwargs: keyword arguments for BipartiteEventStudyBase
     '''
 
-    def __init__(self, *args, col_reference_dict={}, **kwargs):
+    def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
         col_reference_dict = bpd.util.update_dict({'t': ['t1', 't2']}, col_reference_dict)
+        col_collapse_dict = bpd.util.update_dict({'m': 'sum'}, col_collapse_dict)
         # Initialize DataFrame
-        super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
+        super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
         # self.log('BipartiteEventStudy object initialized', level='info')
 
