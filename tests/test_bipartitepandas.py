@@ -1179,6 +1179,7 @@ def test_general_methods_18():
     assert 'g1' in bdf.columns and 'g2' in bdf.columns
     bdf.rename({'g': 'r'}, axis=1, inplace=True, allow_optional=True)
     assert 'g1' not in bdf.columns and 'g2' not in bdf.columns
+    assert 'r1' in bdf.columns and 'r2' in bdf.columns
 
 def test_copy_19():
     # Make sure changing attributes in a copied version does not overwrite values in the original.
@@ -3650,37 +3651,58 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
-# def test_custom_columns_2():
-#     # Make sure custom columns work for long-collapsed long conversions
-#     worker_data = []
-#     # Firm 0 -> 1 -> 0
-#     # Time 1 -> 2 -> 4
-#     # Custom 0 -> 2 -> 3
-#     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'c': 0})
-#     worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'c': 2})
-#     worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'c': 3})
-#     # Firm 1 -> 2
-#     # Custom 3 -> 2
-#     worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'c': 3})
-#     worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'c': 2})
-#     # Firm 2 -> 1
-#     # Custom 2 -> 0
-#     worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1, 'c': 2})
-#     worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2, 'c': 0})
+def test_custom_columns_2():
+    # Make sure custom columns work for long-collapsed long conversions
+    worker_data = []
+    # Firm 0 -> 0 -> 1 -> 0
+    # Custom 0 -> 2 -> 2 -> 3
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'c': 0})
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 2, 'c': 1.5})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 3, 'c': 2})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'c': 3})
+    # Firm 1 -> 2
+    # Custom 3 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'c': 3})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'c': 2})
+    # Firm 2 -> 1
+    # Custom 2 -> 0
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1, 'c': 2})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2, 'c': 0})
 
-#     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-#     ## First, try constructing without adding column ##
-#     try:
-#         bdf = bpd.BipartiteLong(data=df).clean_data()
-#         success = False
-#     except ValueError:
-#         success = True
+    ## First, collapse by first ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='first').clean_data().get_collapsed_long()
 
-#     assert success
+    assert bdf.iloc[0]['c'] == 0
 
-#     ## Second, construct while adding column, but don't make it contiguous ##
-#     bdf = bpd.BipartiteLong(data=df).add_column('c').clean_data()
+    ## Second, collapse by last ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='last').clean_data().get_collapsed_long()
+
+    assert bdf.iloc[0]['c'] == 1.5
+
+    ## Third, collapse by mean ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean_data().get_collapsed_long()
+
+    assert bdf.iloc[0]['c'] == 0.75
+
+    ## Fourth, collapse then uncollapse by first ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='first').clean_data().get_collapsed_long().uncollapse()
+
+    assert bdf.iloc[0]['c'] == 0
+    assert bdf.iloc[1]['c'] == 0
+
+    ## Fifth, collapse then uncollapse by last ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='last').clean_data().get_collapsed_long().uncollapse()
+
+    assert bdf.iloc[0]['c'] == 1.5
+    assert bdf.iloc[1]['c'] == 1.5
+
+    ## Sixth, collapse then uncollapse by mean ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean_data().get_collapsed_long().uncollapse()
+
+    assert bdf.iloc[0]['c'] == 0.75
+    assert bdf.iloc[1]['c'] == 0.75
 
 ########################################
 ##### Tests for BipartiteDataFrame #####
