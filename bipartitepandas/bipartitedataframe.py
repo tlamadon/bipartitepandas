@@ -92,8 +92,8 @@ class BipartiteDataFrame():
                             'how_collapse': 'mean'
                         },
                         2: { # If int and float
-                            'dtype': 'int',
-                            'how_collapse': 'first'
+                            'dtype': 'float',
+                            'how_collapse': 'mean'
                         }
                     }
                     if col_name not in custom_dtype_dict.keys():
