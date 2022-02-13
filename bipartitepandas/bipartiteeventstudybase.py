@@ -228,6 +228,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 # If column has been split
                 subcols = bpd.util.to_list(frame.col_reference_dict[col])
                 halfway = len(subcols) // 2
+                if (col != 'i') and (len(subcols) % 2 == 1):
+                    raise ValueError(f'{col!r} is listed as being split, but has an odd number of subcolumns. If this is a custom column, please make sure when adding it to the dataframe to specify long_es_split=False, to ensure it is not marked as being split, or long_es_split=None, to indicate the column should be dropped when converting between long and event study formats.')
                 for i in range(halfway):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
                     rename_dict_1[subcols[halfway + i]] = subcols[i]
@@ -285,11 +287,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
 
         # Construct BipartiteLongBase dataframe
-        print('frame.col_collapse_dict 1:', frame.col_collapse_dict)
         long_frame = frame._constructor_long(data_long, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
-        print('long_frame.col_collapse_dict 1:', long_frame.col_collapse_dict)
         long_frame._set_attributes(frame, no_dict=True)
-        print('long_frame.col_collapse_dict 2:', long_frame.col_collapse_dict)
 
         # Sort rows by i (and t, if included)
         long_frame = long_frame.sort_rows(is_sorted=False, copy=False)

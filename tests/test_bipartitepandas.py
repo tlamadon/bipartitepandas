@@ -3524,6 +3524,164 @@ def test_cluster_5():
     assert bdf.iloc[7]['g'] == 1
     assert bdf.iloc[8]['g'] == 2
 
+####################################
+##### Tests for Custom Columns #####
+####################################
+
+def test_custom_columns_1():
+    # Make sure custom columns are being constructed properly, and work for long-event study converseions
+    worker_data = []
+    # Firm 0 -> 1 -> 0
+    # Time 1 -> 2 -> 4
+    # Custom 0 -> 2 -> 3
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'c': 0})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'c': 2})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'c': 3})
+    # Firm 1 -> 2
+    # Custom 3 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'c': 3})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'c': 2})
+    # Firm 2 -> 1
+    # Custom 2 -> 0
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1, 'c': 2})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2, 'c': 0})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    ## First, try constructing without adding column ##
+    try:
+        bdf = bpd.BipartiteLong(data=df).clean_data()
+        success = False
+    except ValueError:
+        success = True
+
+    assert success
+
+    ## Second, construct while adding column, but don't make it contiguous ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c').clean_data()
+
+    assert 'c' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+    assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
+
+    ## Third, construct while adding column, and make it contiguous ##
+    bdf = bpd.BipartiteLong(data=df).add_column('c', is_contiguous=True).clean_data()
+
+    assert 'c' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+    assert bdf.n_unique_ids('c') == bdf['c'].max() + 1
+
+    ## Fourth, try adding column with no associated data ##
+    try:
+        bdf = bpd.BipartiteLong(data=df).add_column('r').clean_data()
+        success = False
+    except ValueError:
+        success = True
+
+    assert success
+
+    ## Fifth, try adding column where listed subcolumns are already assigned ##
+    try:
+        bdf = bpd.BipartiteLong(data=df).add_column('c', col_reference='i').clean_data()
+        success = False
+    except ValueError:
+        success = True
+
+    assert success
+
+    ## Sixth, try with event study format, but don't make custom columns contiguous ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean_data().get_es())).add_column('c').clean_data()
+
+    assert 'c1' in bdf.columns and 'c2' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+    assert bdf.n_unique_ids('c') != max(bdf['c1'].max(), bdf['c2'].max()) + 1
+
+    ## Seventh, try with event study format, and make custom columns contiguous ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean_data().get_es())).add_column('c', is_contiguous=True).clean_data()
+
+    assert 'c1' in bdf.columns and 'c2' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+    assert bdf.n_unique_ids('c') == max(bdf['c1'].max(), bdf['c2'].max()) + 1
+
+    ## Eighth, try with event study format, but don't mark custom column as not being split ##
+    try:
+        bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', long_es_split=False).clean_data().get_es())).add_column('c').clean_data()
+        success = False
+    except ValueError:
+        success = True
+
+    assert success
+
+    ## Ninth, try with event study format, but don't split custom column ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', long_es_split=False).clean_data().get_es())).add_column('c', long_es_split=False).clean_data()
+
+    assert 'c' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+    assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
+
+    ## Tenth, go from event study and back to long ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean_data().get_es())).add_column('c').clean_data().get_long()
+
+    assert 'c' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+    assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
+
+# def test_custom_columns_2():
+#     # Make sure custom columns work for long-collapsed long conversions
+#     worker_data = []
+#     # Firm 0 -> 1 -> 0
+#     # Time 1 -> 2 -> 4
+#     # Custom 0 -> 2 -> 3
+#     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'c': 0})
+#     worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'c': 2})
+#     worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'c': 3})
+#     # Firm 1 -> 2
+#     # Custom 3 -> 2
+#     worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'c': 3})
+#     worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'c': 2})
+#     # Firm 2 -> 1
+#     # Custom 2 -> 0
+#     worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1, 'c': 2})
+#     worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2, 'c': 0})
+
+#     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+#     ## First, try constructing without adding column ##
+#     try:
+#         bdf = bpd.BipartiteLong(data=df).clean_data()
+#         success = False
+#     except ValueError:
+#         success = True
+
+#     assert success
+
+#     ## Second, construct while adding column, but don't make it contiguous ##
+#     bdf = bpd.BipartiteLong(data=df).add_column('c').clean_data()
+
 ########################################
 ##### Tests for BipartiteDataFrame #####
 ########################################

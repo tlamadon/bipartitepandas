@@ -359,15 +359,15 @@ class BipartiteBase(DataFrame):
 
         print(ret_str)
 
-    def add_column(self, col_data, col_name, col_reference=None, is_contig=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
+    def add_column(self, col_name, col_data=None, col_reference=None, is_contiguous=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
         '''
         Safe method for adding custom columns. Columns added with this method will be compatible with conversions between long, collapsed long, event study, and collapsed event study formats.
 
         Arguments:
-            col_data (NumPy Array or Pandas Series or list of (NumPy Array or Pandas Series)): data for column, or list of data for columns
             col_name (str): general column name
+            col_data (NumPy Array or Pandas Series or list of (NumPy Array or Pandas Series) or None): data for column, or list of data for columns; set to None if columns already added to dataframe via column assignment
             col_reference (str or list of str): if column has multiple subcolumns (e.g. firm ids are associated with the columns ['j1', 'j2']) this must be specified; otherwise, None will automatically default to the column name (plus a column number, if more than one column is listed) (e.g. firm ids are associated with the column 'j' if one column is included, or ['j1', 'j2'] if two columns are included)
-            is_contig (bool): if True, column is contiguous
+            is_contiguous (bool): if True, column is contiguous
             dtype (str): column datatype, must be one of 'int', 'float', or 'any'
             how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
             long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
@@ -384,33 +384,58 @@ class BipartiteBase(DataFrame):
         # Before modifying anything, run a few checks
         if col_name in self.columns_req + self.columns_opt:
             # Check if column is a default column
-            raise ValueError(f'Trying to add general column {col_name}, but this is reserved as a default column name. Default columns should be added using standard column assignment.')
+            raise ValueError(f'Trying to add general column {col_name!r}, but this is reserved as a default column name. Default columns should be added using standard column assignment.')
 
         if frame._col_included(col_name):
             # Check if column already included
-            raise ValueError(f'Trying to add general column {col_name}, but this column already exists.')
+            raise ValueError(f'Trying to add general column {col_name!r}, but this column is already assigned.')
 
-        col_data_lst = to_list(col_data)
+        if col_data is not None:
+            col_data_lst = to_list(col_data)
         if col_reference is not None:
-            # First, check that the length is correct
-            if len(to_list(col_reference)) != len(col_data_lst):
-                raise ValueError(f'Trying to add general column {col_name} with subcolumns {col_reference}, but while this reference includes {len(to_list(col_reference))} subcolumns, {len(col_data_lst)} columns of data were included as input.')
-
-            # Next, check that no subcolumns are already included
+            # Check that no subcolumns are already included
             for subcol in to_list(col_reference):
                 if subcol in self._included_cols(subcols=True):
-                    raise ValueError(f'Trying to add subcolumn {subcol}, but this column already exists.')
+                    raise ValueError(f'Trying to add subcolumn {subcol!r}, but this column is already assigned.')
+
+            if col_data is None:
+                # If col_data is None, then set col_data_lst to be the pre-assigned columns with names listed in col_reference
+                col_data_lst = []
+                for col in col_reference:
+                    if col not in frame.columns:
+                        raise ValueError(f'Trying to assign subcolumn {col!r} with col_data=None, but this column has not yet been assigned data. To specify data, please set parameter col_data to include the data you would like assigned.')
+                    # Since the columns are already assigned, we just need the right length for col_data_lst
+                    col_data_lst.append(col)
+
+            # Check that the length is correct
+            if len(to_list(col_reference)) != len(col_data_lst):
+                raise ValueError(f'Trying to add general column {col_name!r} with subcolumns {col_reference!r}, but while this reference includes {len(to_list(col_reference))} subcolumns, {len(col_data_lst)} columns of data were included as input.')
 
             # If all checks pass, assign col_reference
             frame.col_reference_dict[col_name] = col_reference
         else:
+            if col_data is None:
+                # If both col_data and col_reference are None, find all valid currently added columns
+                col_data_lst = []
+                assigned_cols = frame._included_cols(subcols=True)
+                for col in frame.columns:
+                    col_str, col_num = bpd.util._text_num_split(col)
+                    if col_str == col_name:
+                        if col in assigned_cols:
+                            # If column already assigned
+                            raise ValueError(f'Trying to associate subcolumn {col!r} with column name {col_name!r}, but this column has already been assigned.')
+                        # Since the columns are already assigned, we just need the right length for col_data_lst
+                        col_data_lst.append(col)
+                if not col_data_lst:
+                    # If no columns associated with column name
+                    raise ValueError(f'No column names have string component that matches name input {col_name!r}. Please specify parameter col_data to include the data for the column(s) you would like to be associated with general column {col_name!r}.')
             if len(col_data_lst) == 1:
                 frame.col_reference_dict[col_name] = col_name
             else:
                 frame.col_reference_dict[col_name] = [col_name + str(i + 1) for i in range(len(col_data_lst))]
 
         # Assign remaining class attributes
-        if is_contig:
+        if is_contiguous:
             frame.columns_contig[col_name] = None
             if frame.id_reference_dict:
                 frame.id_reference_dict[col_name] = DataFrame()
@@ -419,8 +444,9 @@ class BipartiteBase(DataFrame):
         frame.col_long_es_dict[col_name] = long_es_split
 
         # Set data
-        for i, subcol in enumerate(to_list(frame.col_reference_dict[col_name])):
-            frame.loc[:, subcol] = col_data_lst[i]
+        if col_data is not None:
+            for i, subcol in enumerate(to_list(frame.col_reference_dict[col_name])):
+                frame.loc[:, subcol] = col_data_lst[i]
 
         # Sort columns
         frame = frame.sort_cols(copy=False)

@@ -154,7 +154,6 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         # Sort data by i (and t, if included)
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-        print('frame.col_collapse_dict:', frame.col_collapse_dict)
 
         # All included columns
         all_cols = frame._included_cols()

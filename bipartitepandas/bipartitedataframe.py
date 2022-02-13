@@ -240,6 +240,6 @@ class BipartiteDataFrame():
                 if len(col_reference) == 1:
                     # Constructed col_references are forced to be lists, if it's length one then just extract the single value from the list
                     col_reference = col_reference[0]
-                df = df.add_column(new_col_data, new_col_name, col_reference=col_reference, is_contig=custom_contig_dict[new_col_name], dtype=custom_dtype_dict[new_col_name], how_collapse=custom_how_collapse_dict[new_col_name], long_es_split=custom_long_es_split_dict[new_col_name], copy=False)
+                df = df.add_column(new_col_name, new_col_data, col_reference=col_reference, is_contiguous=custom_contig_dict[new_col_name], dtype=custom_dtype_dict[new_col_name], how_collapse=custom_how_collapse_dict[new_col_name], long_es_split=custom_long_es_split_dict[new_col_name], copy=False)
 
         return df
