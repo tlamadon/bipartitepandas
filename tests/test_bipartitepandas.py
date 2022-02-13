@@ -3719,7 +3719,7 @@ def test_dataframe_1():
     for col in ['l', 'k', 'alpha', 'psi']:
         assert col in b.col_reference_dict.keys()
     for col in ['l', 'k']:
-        assert b.col_dtype_dict[col] == 'int'
+        assert b.col_dtype_dict[col] == 'float' # 'int'
     for col in ['alpha', 'psi']:
         assert b.col_dtype_dict[col] == 'float'
 
