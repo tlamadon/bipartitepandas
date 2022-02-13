@@ -11,7 +11,7 @@ class BipartiteDataFrame():
 
     Arguments:
         ##### ANY FORMAT COLUMNS #####
-        i (NumPy Array or Pandas Series of any type): worker id (required)
+        i (NumPy Array or Pandas Series of any type or Pandas DataFrame): if NumPy Array or Pandas Series: worker id (required); if Pandas DataFrame: full dataframe including all required columns
         ##### BASE LONG FORMAT COLUMNS #####
         j (NumPy Array or Pandas Series of any type): firm id (required)
         y (NumPy Array or Pandas Series of floats or ints): income (required)
