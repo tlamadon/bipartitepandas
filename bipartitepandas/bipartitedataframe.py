@@ -10,7 +10,6 @@ class BipartiteDataFrame():
     Constructor class for interacting with BipartitePandas dataframe classes more easily.
 
     Arguments:
-        *args: arguments for Pandas DataFrame
         ##### ANY FORMAT COLUMNS #####
         i (NumPy Array or Pandas Series of any type): worker id (required)
         ##### BASE LONG FORMAT COLUMNS #####
@@ -55,7 +54,10 @@ class BipartiteDataFrame():
         '''
         pass
 
-    def __new__(self, *args, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, m=None, custom_contig_dict={}, custom_dtype_dict={}, custom_how_collapse_dict={}, custom_long_es_split_dict={}, **kwargs):
+    def __new__(self, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, m=None, custom_contig_dict={}, custom_dtype_dict={}, custom_how_collapse_dict={}, custom_long_es_split_dict={}, **kwargs):
+        if isinstance(i, pd.DataFrame):
+            # If user didn't split arguments, do it for them
+            return BipartiteDataFrame(**i, custom_contig_dict=custom_contig_dict, custom_dtype_dict=custom_dtype_dict, custom_how_collapse_dict=custom_how_collapse_dict, custom_long_es_split_dict=custom_long_es_split_dict, **kwargs)
         # Dataframe to fill in
         df = None
         # Figure out which kwargs are new columns
@@ -137,7 +139,7 @@ class BipartiteDataFrame():
                     df.loc[:, 'w'] = w
                 if m is not None:
                     df.loc[:, 'm'] = m
-                df = bpd.BipartiteLong(*args, df, **new_kwargs)
+                df = bpd.BipartiteLong(df, **new_kwargs)
             elif (t1 is not None) and (t2 is not None):
                 ## Collapsed long format ##
                 ##### RETURN COLLAPSED LONG #####
@@ -148,7 +150,7 @@ class BipartiteDataFrame():
                     df.loc[:, 'w'] = w
                 if m is not None:
                     df.loc[:, 'm'] = m
-                df = bpd.BipartiteLongCollapsed(*args, df, **new_kwargs)
+                df = bpd.BipartiteLongCollapsed(df, **new_kwargs)
             elif (t1 is not None) or (t2 is not None):
                 # Can't include only one of t1 and t2 for collapsed long
                 raise ValueError("Your input includes 'j' and 'y' columns, indicating the construction of a long or collapsed long dataframe. A long dataframe can optionally include a 't' column, indicating the time period for each observation, while a collapsed long dataframe can optionally include 't1' and 't2' columns, indicating the first and last time period, respectively, for the worker-firm spell represented by each observation. However, your input includes only one of 't1' and 't2'. Please rename your column to 't' for long format, add the missing time column for collapsed long format, or remove the included time column, as time columns are optional.")
@@ -161,7 +163,7 @@ class BipartiteDataFrame():
                     df.loc[:, 'w'] = w
                 if m is not None:
                     df.loc[:, 'm'] = m
-                df = bpd.BipartiteLong(*args, df, **new_kwargs)
+                df = bpd.BipartiteLong(df, **new_kwargs)
         elif (j1 is not None) and (j2 is not None):
             ### Base event study format ###
             if (y1 is None) or (y2 is None):
@@ -197,7 +199,7 @@ class BipartiteDataFrame():
                     df.loc[:, 'w2'] = w2
                 if m is not None:
                     df.loc[:, 'm'] = m
-                df = bpd.BipartiteEventStudy(*args, df, **new_kwargs)
+                df = bpd.BipartiteEventStudy(df, **new_kwargs)
             elif (t1 is not None) or (t2 is not None):
                 # Can't include only one of t1 and t2 for event study
                 raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes only one of 't1' and 't2'. Please add the missing time column for event study format or remove the included time column, as time columns are optional.")
@@ -213,7 +215,7 @@ class BipartiteDataFrame():
                     df.loc[:, 'w2'] = w2
                 if m is not None:
                     df.loc[:, 'm'] = m
-                df = bpd.BipartiteEventStudyCollapsed(*args, df, **new_kwargs)
+                df = bpd.BipartiteEventStudyCollapsed(df, **new_kwargs)
             elif (t11 is not None) or (t12 is not None) or (t21 is not None) or (t22 is not None):
                 # Can't include only one of t11, t12, t21, and t22 for collapsed event study
                 raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes a strict (and nonempty) subset of 't11', 't12', 't21', and 't22'. Please add the missing time column(s) for collapsed event study format or remove the included time column(s), as time columns are optional.")
@@ -228,7 +230,7 @@ class BipartiteDataFrame():
                     df.loc[:, 'w2'] = w2
                 if m is not None:
                     df.loc[:, 'm'] = m
-                df = bpd.BipartiteEventStudy(*args, df, **new_kwargs)
+                df = bpd.BipartiteEventStudy(df, **new_kwargs)
         else:
             # Neither long format nor event study format
             raise ValueError("A long format dataframe requires a 'j' column, indicating a firm id for each observation, while an event study format dataframe requires 'j1' and 'j2' columns, indicating firm ids for the the pre- and post- periods for each observation in the event study. However, your input does not include 'j' and includes at most one of 'j1' and 'j2'. Please make sure to include the set of firm id columns relevant for the format you would like to use.")

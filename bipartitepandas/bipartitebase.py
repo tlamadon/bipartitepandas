@@ -1096,8 +1096,6 @@ class BipartiteBase(DataFrame):
         frame.reset_index(drop=True, inplace=True)
 
         frame.log('data cleaning complete', level='info')
-        if verbose:
-            print('data cleaning complete')
 
         return frame
 
