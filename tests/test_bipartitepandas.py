@@ -2824,7 +2824,7 @@ def test_connectedness_1():
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_firm'}))
     assert bdf.n_firms() == 6
 
 def test_connectedness_2():
@@ -2893,7 +2893,7 @@ def test_connectedness_2():
     assert bdf.n_firms() == 12
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_firm'}))
     assert bdf.n_firms() == 6
 
 def test_connectedness_3():
@@ -2953,7 +2953,7 @@ def test_connectedness_3():
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_firm'}))
     assert bdf.n_firms() == 10
 
 def test_connectedness_4():
@@ -3013,7 +3013,7 @@ def test_connectedness_4():
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_firm_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_firm'}))
     assert bdf.n_firms() == 7
 
 def test_connectedness_5():
@@ -3074,7 +3074,7 @@ def test_connectedness_5():
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_observation_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_observation'}))
     assert bdf.n_firms() == 10
 
 def test_connectedness_6():
@@ -3133,7 +3133,7 @@ def test_connectedness_6():
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_observation_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_observation'}))
     assert bdf.n_firms() == 6
     assert bdf.n_workers() == 6
 
@@ -3193,7 +3193,7 @@ def test_connectedness_7():
     assert bdf.n_firms() == 10
 
     # Biconnected
-    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_one_observation_out'}))
+    bdf = bpd.BipartiteLong(df).clean().to_collapsed_long().clean(bpd.clean_params({'connectedness': 'leave_out_observation'}))
     assert bdf.n_firms() == 6
     # Make sure articulation observations aren't dropped
     assert bdf.n_workers() == 7
@@ -3204,7 +3204,7 @@ def test_connectedness_8():
     '''
     with open('tests/test_data/wid_drops.pkl', 'rb') as f:
         wid_drops = pickle.load(f)
-    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, no_na=False, no_duplicates=False, i_t_unique=False).clean(bpd.clean_params({'connectedness': 'leave_one_observation_out', 'force': True}))
+    bad_df = bpd.BipartiteLongCollapsed(pd.read_feather('tests/test_data/bad_df.ftr')).drop_ids('i', wid_drops, copy=True)._reset_attributes(columns_contig=True, connected=True, no_na=False, no_duplicates=False, i_t_unique=False).clean(bpd.clean_params({'connectedness': 'leave_out_observation', 'force': True}))
     bad_df2 = bad_df.min_moves_frame(2)
 
     assert len(bad_df) == len(bad_df2) > 0
