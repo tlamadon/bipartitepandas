@@ -1,8 +1,6 @@
 '''
 Class for a bipartite network
 '''
-# from pandas.core.indexes.base import InvalidIndexError
-from multiprocessing.sharedctypes import Value
 import numpy as np
 import pandas as pd
 from pandas import DataFrame

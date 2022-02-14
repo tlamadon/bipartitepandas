@@ -1,7 +1,6 @@
 '''
 Base class for bipartite networks in long or collapsed long form
 '''
-# from xml.dom.minidom import Attr
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
