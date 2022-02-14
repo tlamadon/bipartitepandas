@@ -1,7 +1,6 @@
 '''
 Bipartite DataFrame general constructor.
 '''
-from multiprocessing.sharedctypes import Value
 import pandas as pd
 import bipartitepandas as bpd
 
