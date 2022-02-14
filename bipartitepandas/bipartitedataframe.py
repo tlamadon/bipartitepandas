@@ -1,7 +1,7 @@
 '''
 Bipartite DataFrame general constructor.
 '''
-import pandas as pd
+from pandas import DataFrame
 import bipartitepandas as bpd
 
 class BipartiteDataFrame():
@@ -54,7 +54,7 @@ class BipartiteDataFrame():
         pass
 
     def __new__(self, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, m=None, custom_contig_dict={}, custom_dtype_dict={}, custom_how_collapse_dict={}, custom_long_es_split_dict={}, **kwargs):
-        if isinstance(i, pd.DataFrame):
+        if isinstance(i, DataFrame):
             # If user didn't split arguments, do it for them
             return BipartiteDataFrame(**i, custom_contig_dict=custom_contig_dict, custom_dtype_dict=custom_dtype_dict, custom_how_collapse_dict=custom_how_collapse_dict, custom_long_es_split_dict=custom_long_es_split_dict, **kwargs)
         # Dataframe to fill in
@@ -131,7 +131,7 @@ class BipartiteDataFrame():
                     # Can't mix long and collapsed long for t
                     raise ValueError("Your input includes 'j' and 'y' columns, indicating the construction of a long or collapsed long dataframe. A long dataframe can optionally include a 't' column, indicating the time period for each observation, while a collapsed long dataframe can optionally include 't1' and 't2' columns, indicating the first and last time period, respectively, for the worker-firm spell represented by each observation. However, your input includes 't' in addition to at least one of 't1' and 't2'. Please include only the set of time columns relevant for the format you would like to use.")
                 ##### RETURN LONG #####
-                df = pd.DataFrame({'i': i, 'j': j, 'y': y, 't': t})
+                df = DataFrame({'i': i, 'j': j, 'y': y, 't': t})
                 if g is not None:
                     df.loc[:, 'g'] = g
                 if w is not None:
@@ -142,7 +142,7 @@ class BipartiteDataFrame():
             elif (t1 is not None) and (t2 is not None):
                 ## Collapsed long format ##
                 ##### RETURN COLLAPSED LONG #####
-                df = pd.DataFrame({'i': i, 'j': j, 'y': y, 't1': t1, 't2': t2})
+                df = DataFrame({'i': i, 'j': j, 'y': y, 't1': t1, 't2': t2})
                 if g is not None:
                     df.loc[:, 'g'] = g
                 if w is not None:
@@ -155,7 +155,7 @@ class BipartiteDataFrame():
                 raise ValueError("Your input includes 'j' and 'y' columns, indicating the construction of a long or collapsed long dataframe. A long dataframe can optionally include a 't' column, indicating the time period for each observation, while a collapsed long dataframe can optionally include 't1' and 't2' columns, indicating the first and last time period, respectively, for the worker-firm spell represented by each observation. However, your input includes only one of 't1' and 't2'. Please rename your column to 't' for long format, add the missing time column for collapsed long format, or remove the included time column, as time columns are optional.")
             if df is None:
                 ##### RETURN UNSPECIFIED LONG #####
-                df = pd.DataFrame({'i': i, 'j': j, 'y': y})
+                df = DataFrame({'i': i, 'j': j, 'y': y})
                 if g is not None:
                     df.loc[:, 'g'] = g
                 if w is not None:
@@ -189,7 +189,7 @@ class BipartiteDataFrame():
                     # Can't mix event study and collapsed event study for t
                     raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes 't1' and 't2' in addition to at least one of 't11', 't12', 't21', and 't22'. Please include only the set of time columns relevant for the format you would like to use.")
                 ##### RETURN EVENT STUDY #####
-                df = pd.DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2})
+                df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2})
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
                     df.loc[:, 'g2'] = g2
@@ -205,7 +205,7 @@ class BipartiteDataFrame():
             elif (t11 is not None) and (t12 is not None) and (t21 is not None) and (t22 is not None):
                 ## Collapsed event study format ##
                 ##### RETURN COLLAPSED EVENT STUDY #####
-                df = pd.DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22})
+                df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22})
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
                     df.loc[:, 'g2'] = g2
@@ -220,7 +220,7 @@ class BipartiteDataFrame():
                 raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes a strict (and nonempty) subset of 't11', 't12', 't21', and 't22'. Please add the missing time column(s) for collapsed event study format or remove the included time column(s), as time columns are optional.")
             if df is None:
                 ##### RETURN UNSPECIFIED EVENT STUDY #####
-                df = pd.DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2})
+                df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2})
                 if (g1 is not None) and (g2 is not None):
                     df.loc[:, 'g1'] = g1
                     df.loc[:, 'g2'] = g2
