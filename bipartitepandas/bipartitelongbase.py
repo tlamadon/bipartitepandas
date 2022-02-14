@@ -172,6 +172,20 @@ class BipartiteLongBase(bpd.BipartiteBase):
         es_frame = frame._constructor_es(data_es, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
         es_frame._set_attributes(frame, no_dict=True)
 
+        for col, long_es_split in frame.col_long_es_dict.items():
+            # Remove dropped columns from attribute dictionaries
+            if long_es_split is None:
+                # If column should be dropped during conversion to event study format
+                del es_frame.col_dtype_dict[col]
+                del es_frame.col_collapse_dict[col]
+                del es_frame.col_long_es_dict[col]
+                if col in es_frame.columns_contig.keys():
+                    # If column is contiguous
+                    del es_frame.columns_contig[col]
+                    if es_frame.id_reference_dict:
+                        # If linking contiguous ids to original ids
+                        del es_frame.id_reference_dict[col]
+
         # Sort data by i and t
         es_frame = es_frame.sort_rows(is_sorted=False, copy=False)
 

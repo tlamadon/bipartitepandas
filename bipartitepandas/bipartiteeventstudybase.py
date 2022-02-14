@@ -128,7 +128,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteEventStudyBase): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
+            (BipartiteEventStudyBase): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
         '''
         if copy:
             frame = self.copy()
@@ -136,14 +136,25 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             frame = self
 
         if frame._col_included('t'):
-            # Convert to long
+            ## Convert to long
+            # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+            no_split_cols = [col for col, long_es_split in frame.col_long_es_dict.items() if long_es_split is None]
+
             # Note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - setting is_clean=True would arbitrarily decide which rows are already correct
-            frame = frame.get_long(is_clean=False, is_sorted=is_sorted, copy=False)
+            frame = frame.get_long(is_clean=False, drop_no_split_columns=False, is_sorted=is_sorted, copy=False)
+
             frame.drop_duplicates(inplace=True)
+
             frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
 
-        # Data now has unique i-t observations
-        frame.i_t_unique = True
+            # Update col_long_es_dict for columns that aren't supposed to convert to long
+            for col in no_split_cols:
+                frame.col_long_es_dict[col] = None
+
+            # Data now has unique i-t observations
+            frame.i_t_unique = True
+        else:
+            frame.i_t_unique = None
 
         return frame
 
@@ -190,12 +201,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return data_cs
 
-    def get_long(self, is_clean=True, is_sorted=False, copy=True):
+    def get_long(self, is_clean=True, drop_no_split_columns=True, is_sorted=False, copy=True):
         '''
         Return (collapsed) event study data reformatted into (collapsed) long form.
 
         Arguments:
             is_clean (bool): if True, data is already clean (this ensures that observations that are in two consecutive event studies appear only once, e.g. the event study A -> B, B -> C turns into A -> B -> C; otherwise, it will become A -> B -> B -> C). Set to False if duplicates will be handled manually.
+            drop_no_split_columns (bool): if True, columns marked by self.col_long_es_dict as None (i.e. they should be dropped) will not be dropped
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -221,8 +233,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Columns to drop
         drops = []
         for col in frame._included_cols():
-            if frame.col_long_es_dict[col] is None:
-                # If None, drop this column
+            if (frame.col_long_es_dict[col] is None) and drop_no_split_columns:
+                # If None and data is clean, drop this column
                 drops += bpd.util.to_list(frame.col_reference_dict[col])
             elif frame.col_long_es_dict[col]:
                 # If column has been split
@@ -290,6 +302,27 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         long_frame = frame._constructor_long(data_long, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
         long_frame._set_attributes(frame, no_dict=True)
 
+        if not drop_no_split_columns:
+            # If shouldn't drop None columns, set None columns to have split of False (this is because we don't want the column to drop during data cleaning)
+            for col, long_es_split in frame.col_long_es_dict.items():
+                if long_es_split is None:
+                    long_frame.col_long_es_dict[col] = False
+        else:
+            # If should drop None columns
+            for col, long_es_split in frame.col_long_es_dict.items():
+                # Remove dropped columns from attribute dictionaries
+                if long_es_split is None:
+                    # If column should be dropped during conversion to event study format
+                    del long_frame.col_dtype_dict[col]
+                    del long_frame.col_collapse_dict[col]
+                    del long_frame.col_long_es_dict[col]
+                    if col in frame.columns_contig.keys():
+                        # If column is contiguous
+                        del long_frame.columns_contig[col]
+                        if long_frame.id_reference_dict:
+                            # If linking contiguous ids to original ids
+                            del long_frame.id_reference_dict[col]
+
         # Sort rows by i (and t, if included)
         long_frame = long_frame.sort_rows(is_sorted=False, copy=False)
 
@@ -312,9 +345,19 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteEventStudyBase): dataframe that drops observations where workers leave a firm then return to it
+            (BipartiteEventStudyBase): dataframe that drops observations where workers leave a firm then return to it
         '''
-        return self.get_long(is_sorted=is_sorted, copy=copy)._drop_returns(how=how, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Drop returns
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._drop_returns(how=how, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def _prep_cluster(self, stayers_movers=None, t=None, weighted=True, is_sorted=False, copy=False):
         '''
@@ -343,9 +386,19 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
-            frame_largest_cc (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
+            (BipartiteEventStudyBase): dataframe of largest leave-one-observation-out connected component
         '''
-        return self.get_long(is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute leave-one-observation-out connected components
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=True, copy=False)._leave_one_observation_out(cc_list=cc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def _leave_one_firm_out(self, bcc_list, component_size_variable='length', drop_returns_to_stays=False):
         '''
@@ -357,9 +410,19 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
 
         Returns:
-            frame_largest_bcc (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
+            (BipartiteEventStudyBase): dataframe of largest leave-one-out connected component
         '''
-        return self.get_long(is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute leave-one-firm-out connected components
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=True, copy=False)._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def _construct_firm_linkages(self, is_sorted=False, copy=True):
         '''
@@ -432,7 +495,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteEventStudyBase): dataframe with ids in the given set
+            (BipartiteEventStudyBase): dataframe with ids in the given set
         '''
         keep_ids_list = set(keep_ids_list)
         if len(keep_ids_list) == self.n_unique_ids(id_col):
@@ -441,7 +504,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Keep ids
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def drop_ids(self, id_col, drop_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -456,7 +529,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteEventStudyBase): dataframe with ids outside the given set
+            (BipartiteEventStudyBase): dataframe with ids outside the given set
         '''
         drop_ids_list = set(drop_ids_list)
         if len(drop_ids_list) == 0:
@@ -465,7 +538,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Drop ids
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def keep_rows(self, rows, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
@@ -479,7 +562,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteEventStudyBase): dataframe with given rows
+            (BipartiteEventStudyBase): dataframe with given rows
         '''
         rows = set(rows)
         if len(rows) == len(self):
@@ -488,7 +571,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Keep rows
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def min_obs_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
@@ -546,7 +639,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_obs_frame
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def min_workers_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
@@ -604,7 +707,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_workers_frame
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def min_moves_firms(self, threshold=2, is_sorted=False, copy=True):
         '''
@@ -616,7 +729,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            valid_firms (NumPy Array): firms with sufficiently many moves
+            (NumPy Array): firms with sufficiently many moves
         '''
         if threshold == 0:
             # If no threshold
@@ -644,7 +757,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        return self.get_long(is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_moves_frame
+        frame = self.get_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).get_es(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
 
     def construct_artificial_time(self, time_per_worker=False, is_sorted=False, copy=True):
         '''

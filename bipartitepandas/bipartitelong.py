@@ -112,14 +112,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Generate spell ids
         spell_ids = frame._get_spell_ids(is_sorted=True, copy=False)
 
-        # Quickly check whether a collapse is necessary
         if (len(frame) < 2) or (spell_ids[-1] == len(frame)):
+            ## Quickly check whether a collapse is necessary
             # Keep track of user-added columns
             user_added_cols = {}
             default_cols = frame.columns_req + frame.columns_opt
             for col in frame._included_cols():
-                if (col != 't') and (col not in default_cols):
-                    # User-added columns
+                if (col != 't') and (col not in default_cols) and (frame.col_collapse_dict[col] is not None):
+                    # User-added columns that should remain
                     user_added_cols[col] = frame.col_reference_dict[col]
 
             # Update time column
@@ -128,63 +128,74 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 frame.loc[:, 't2'] = frame.loc[:, 't']
                 frame.drop('t', axis=1, inplace=True, allow_optional=True)
 
-            self.log('data aggregated at the spell level', level='info')
+            # Assign data_spell
+            data_spell = frame
+        else:
+            ### If recollapse necessary
+            ## Aggregate at the spell level
+            spells = frame.groupby(spell_ids, sort=False)
 
-            collapsed_frame = bpd.BipartiteLongCollapsed(frame, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
-            collapsed_frame._set_attributes(self, no_dict=True)
+            # Dictionary linking columns to how they should be aggregated
+            agg_funcs = {}
 
-            # If no time column, then returns will be collapsed
-            if not collapsed_frame._col_included('t'):
-                collapsed_frame.no_returns = True
+            # Keep track of user-added columns
+            user_added_cols = {}
 
-            return collapsed_frame
+            # First, prepare non-time columns for aggregation
+            default_cols = frame.columns_req + frame.columns_opt
+            for col in frame._included_cols():
+                if (col == 't') or (frame.col_collapse_dict[col] is None):
+                    # If time, skip this column; if None, drop this column
+                    pass
+                else:
+                    # If not time column
+                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                        if frame.col_collapse_dict[col] is not None:
+                            # If column should be collapsed
+                            agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=frame.col_collapse_dict[col])
+                    if col not in default_cols:
+                        # User-added columns
+                        user_added_cols[col] = frame.col_reference_dict[col]
 
-        ## Aggregate at the spell level
-        spells = frame.groupby(spell_ids, sort=False)
+            # Next, prepare the time column for aggregation
+            if self._col_included('t'):
+                agg_funcs['t1'] = pd.NamedAgg(column='t', aggfunc='min')
+                agg_funcs['t2'] = pd.NamedAgg(column='t', aggfunc='max')
 
-        # Dictionary linking columns to how they should be aggregated
-        agg_funcs = {}
+            # Next, prepare the weight column for aggregation
+            if 'w' not in agg_funcs.keys():
+                agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
 
-        # Keep track of user-added columns
-        user_added_cols = {}
+            # Finally, aggregate
+            data_spell = spells.agg(**agg_funcs)
 
-        # First, prepare non-time columns for aggregation
-        default_cols = frame.columns_req + frame.columns_opt
-        for col in frame._included_cols():
-            if col != 't':
-                # Skip time column
-                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                    if frame.col_collapse_dict[col] is not None:
-                        # If column should be collapsed
-                        agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=frame.col_collapse_dict[col])
-                if col not in default_cols:
-                    # User-added columns
-                    user_added_cols[col] = frame.col_reference_dict[col]
-
-        # Next, prepare the time column for aggregation
-        if self._col_included('t'):
-            agg_funcs['t1'] = pd.NamedAgg(column='t', aggfunc='min')
-            agg_funcs['t2'] = pd.NamedAgg(column='t', aggfunc='max')
-
-        # Next, prepare the weight column for aggregation
-        if 'w' not in agg_funcs.keys():
-            agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
-
-        # Finally, aggregate
-        data_spell = spells.agg(**agg_funcs)
-
-        # Sort columns
-        sorted_cols = bpd.util._sort_cols(data_spell.columns)
-        data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
-        data_spell.reset_index(drop=True, inplace=True)
+            # Sort columns
+            sorted_cols = bpd.util._sort_cols(data_spell.columns)
+            data_spell = data_spell.reindex(sorted_cols, axis=1, copy=False)
+            data_spell.reset_index(drop=True, inplace=True)
 
         self.log('data aggregated at the spell level', level='info')
 
         collapsed_frame = bpd.BipartiteLongCollapsed(data_spell, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
         collapsed_frame._set_attributes(frame, no_dict=True)
 
-        # m can change from long to collapsed long
-        collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
+        for col, col_collapse in frame.col_collapse_dict.items():
+            # Remove dropped columns from attribute dictionaries
+            if col_collapse is None:
+                # If column should be dropped during collapse
+                del collapsed_frame.col_dtype_dict[col]
+                del collapsed_frame.col_collapse_dict[col]
+                del collapsed_frame.col_long_es_dict[col]
+                if col in collapsed_frame.columns_contig.keys():
+                    # If column is contiguous
+                    del collapsed_frame.columns_contig[col]
+                    if collapsed_frame.id_reference_dict:
+                        # If linking contiguous ids to original ids
+                        del collapsed_frame.id_reference_dict[col]
+
+        if not ((len(frame) < 2) or (spell_ids[-1] == len(frame))):
+            # If data actually collapsed, m can change from long to collapsed long
+            collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
 
         # If no time column, then returns will be collapsed
         if not collapsed_frame._col_included('t'):
@@ -209,10 +220,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
         else:
             frame = self
 
-        # Check whether any observations are dropped
-        prev_len = len(frame)
-
         if frame._col_included('t'):
+            # Check whether any observations are dropped
+            prev_len = len(frame)
+
             frame = frame.sort_rows(is_sorted=is_sorted, copy=False)
             # Temporarily disable warnings
             warnings.filterwarnings('ignore')
@@ -225,12 +236,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
             # Restore warnings
             warnings.filterwarnings('default')
 
-        # Data now has unique i-t observations
-        frame.i_t_unique = True
+            # Data now has unique i-t observations
+            frame.i_t_unique = True
 
-        # If observations dropped, recompute 'm'
-        if prev_len != len(frame):
-            frame = frame.gen_m(force=True, copy=False)
+            # If observations dropped, recompute 'm'
+            if prev_len != len(frame):
+                frame = frame.gen_m(force=True, copy=False)
+        else:
+            frame.i_t_unique = None
 
         return frame
 

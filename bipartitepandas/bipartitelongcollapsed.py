@@ -141,11 +141,12 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def uncollapse(self, is_sorted=False, copy=True):
+    def uncollapse(self, drop_no_collapse_columns=True, is_sorted=False, copy=True):
         '''
         Return collapsed long data reformatted into long data, by assuming variables constant over spells.
 
         Arguments:
+            drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will not be dropped
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
 
@@ -168,7 +169,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             data_long = frame
 
             for col in all_cols:
-                if col not in default_cols:
+                if (col not in default_cols) and ((frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns)):
                     # User-added columns
                     user_added_cols[col] = frame.col_reference_dict[col]
 
@@ -178,8 +179,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # Dictionary of lists of each column's data
             long_dict = {'t': []}
             for col in all_cols:
-                if frame.col_collapse_dict[col] is not None:
-                    # Drop column if None
+                if (frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns):
+                    # Drop column if None and drop_no_collapse_columns is True
                     for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         long_dict[subcol] = []
                     if col not in default_cols:
@@ -189,26 +190,20 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # Iterate over rows with multiple periods
             nt = frame.loc[:, 't2'].to_numpy() - frame.loc[:, 't1'].to_numpy() + 1
             # Link columns to index, for use with frame.itertuples()
-            col_to_idx = {}
-            col_idx = list(frame.columns).index
-            col_to_idx['t1'] = col_idx('t1')
-            col_to_idx['t2'] = col_idx('t2')
-            for col in all_cols:
-                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                    col_to_idx[subcol] = col_idx(subcol)
+            col_to_idx = list(frame.columns).index
             for i, row in enumerate(frame.itertuples(index=False)):
                 # Source: https://stackoverflow.com/a/41022840/17333120
                 nt_i = nt[i]
-                long_dict['t'].extend(np.arange(row[col_to_idx['t1']], row[col_to_idx['t2']] + 1))
+                long_dict['t'].extend(np.arange(row[col_to_idx('t1')], row[col_to_idx('t2')] + 1))
                 for col in all_cols:
-                    if frame.col_collapse_dict[col] is not None:
-                        # Drop column if None
+                    if (frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns):
+                        # Drop column if None and drop_no_collapse_columns is True
                         for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                             if frame.col_collapse_dict[col] == 'sum':
                                 # Evenly split sum across periods
-                                long_dict[subcol].extend([row[col_to_idx[subcol]] / nt_i] * nt_i)
+                                long_dict[subcol].extend([row[col_to_idx(subcol)] / nt_i] * nt_i)
                             else:
-                                long_dict[subcol].extend([row[col_to_idx[subcol]]] * nt_i)
+                                long_dict[subcol].extend([row[col_to_idx(subcol)]] * nt_i)
             del nt
 
             # Convert to Pandas dataframe
@@ -216,8 +211,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # Correct datatypes
             data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
             for col in all_cols:
-                if frame.col_collapse_dict[col] is not None:
-                    # Drop column if None
+                if (frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns):
+                    # Drop column if None and drop_no_collapse_columns is True
                     for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         if frame.col_dtype_dict[col] == 'int':
                             # If should be int
@@ -231,6 +226,28 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         long_frame = bpd.BipartiteLong(data_long, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
         long_frame._set_attributes(frame, no_dict=True)
+
+        if not drop_no_collapse_columns:
+            # If shouldn't drop None columns, set None columns to have collapse of 'first' (this is because we don't want the column to drop during data cleaning)
+            for col, col_collapse in frame.col_collapse_dict.items():
+                if col_collapse is None:
+                    long_frame.col_collapse_dict[col] = 'first'
+        else:
+            # If should drop None columns
+            for col, col_collapse in frame.col_collapse_dict.items():
+                # Remove dropped columns from attribute dictionaries
+                if col_collapse is None:
+                    # If column should be dropped during uncollapse
+                    del long_frame.col_dtype_dict[col]
+                    del long_frame.col_collapse_dict[col]
+                    del long_frame.col_long_es_dict[col]
+                    if col in long_frame.columns_contig.keys():
+                        # If column is contiguous
+                        del long_frame.columns_contig[col]
+                        if long_frame.id_reference_dict:
+                            # If linking contiguous ids to original ids
+                            del long_frame.id_reference_dict[col]
+
         if t:
             # Only recompute 'm' if data actually uncollapsed
             long_frame = long_frame.gen_m(force=True, copy=False)
@@ -255,16 +272,25 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             frame = self
 
         if frame._col_included('t'):
-            # Convert to long
-            frame = frame.uncollapse(is_sorted=is_sorted, copy=False)
+            ## Convert to long
+            # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+            no_collapse_cols = [col for col, col_collapse in frame.col_collapse_dict.items() if col_collapse is None]
+
+            frame = frame.uncollapse(drop_no_collapse_columns=False, is_sorted=is_sorted, copy=False)
 
             frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False)
 
             # Return to collapsed long
             frame = frame.get_collapsed_long(is_sorted=True, copy=False)
 
-        # Data now has unique i-t observations
-        frame.i_t_unique = True
+            # Update col_collapse_dict for columns that aren't supposed to convert to long
+            for col in no_collapse_cols:
+                frame.col_collapse_dict[col] = None
+
+            # Data now has unique i-t observations
+            frame.i_t_unique = True
+        else:
+            frame.i_t_unique = None
 
         return frame
 

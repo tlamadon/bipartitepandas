@@ -3570,9 +3570,11 @@ def test_custom_columns_1():
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
     ## Third, construct while adding column, and make it contiguous ##
-    bdf = bpd.BipartiteLong(data=df).add_column('c', is_contiguous=True).clean_data()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True).clean_data()
 
     assert 'c' in bdf.columns
+    assert 'c' in bdf.id_reference_dict.keys()
+    assert 'c' in bdf.original_ids().columns
     assert 'c' in bdf.col_reference_dict.keys()
     assert 'c' in bdf.columns_contig.keys()
     assert 'c' in bdf.col_dtype_dict.keys()
@@ -3610,9 +3612,11 @@ def test_custom_columns_1():
     assert bdf.n_unique_ids('c') != max(bdf['c1'].max(), bdf['c2'].max()) + 1
 
     ## Seventh, try with event study format, and make custom columns contiguous ##
-    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean_data().get_es())).add_column('c', is_contiguous=True).clean_data()
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean_data().get_es()), include_id_reference_dict=True).add_column('c', is_contiguous=True).clean_data()
 
     assert 'c1' in bdf.columns and 'c2' in bdf.columns
+    assert 'c' in bdf.id_reference_dict.keys()
+    assert ('c1' in bdf.original_ids().columns) and ('c2' in bdf.original_ids().columns)
     assert 'c' in bdf.col_reference_dict.keys()
     assert 'c' in bdf.columns_contig.keys()
     assert 'c' in bdf.col_dtype_dict.keys()
@@ -3629,8 +3633,8 @@ def test_custom_columns_1():
 
     assert success
 
-    ## Ninth, try with event study format, but don't split custom column ##
-    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', long_es_split=False).clean_data().get_es())).add_column('c', long_es_split=False).clean_data()
+    ## Ninth, try with event study format, but don't split custom column (set to None for event study to make sure data cleaning handles this case properly) ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', long_es_split=False).clean_data().get_es())).add_column('c', long_es_split=None).clean_data()
 
     assert 'c' in bdf.columns
     assert 'c' in bdf.col_reference_dict.keys()
@@ -3650,6 +3654,28 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_collapse_dict.keys()
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
+
+    ## Eleventh, go from long to event study with contiguous column that should drop ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, long_es_split=None).clean_data().get_es()
+
+    assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
+    assert 'c' not in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.id_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' not in bdf.col_dtype_dict.keys()
+    assert 'c' not in bdf.col_collapse_dict.keys()
+    assert 'c' not in bdf.col_long_es_dict.keys()
+
+    ## Twelfth, go from event study to long with contiguous column that should drop ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean_data().get_es()), include_id_reference_dict=True).add_column('c', is_contiguous=True, long_es_split=None).clean_data().get_long()
+
+    assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
+    assert 'c' not in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.id_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' not in bdf.col_dtype_dict.keys()
+    assert 'c' not in bdf.col_collapse_dict.keys()
+    assert 'c' not in bdf.col_long_es_dict.keys()
 
 def test_custom_columns_2():
     # Make sure custom columns work for long-collapsed long conversions
@@ -3686,23 +3712,56 @@ def test_custom_columns_2():
 
     assert bdf.iloc[0]['c'] == 0.75
 
-    ## Fourth, collapse then uncollapse by first ##
+    ## Fourth, collapse by None ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse=None).clean_data().get_collapsed_long()
+
+    assert 'c' not in bdf.columns
+    assert 'c' not in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.id_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' not in bdf.col_dtype_dict.keys()
+    assert 'c' not in bdf.col_collapse_dict.keys()
+    assert 'c' not in bdf.col_long_es_dict.keys()
+
+    ## Fifth, collapse then uncollapse by first ##
     bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='first').clean_data().get_collapsed_long().uncollapse()
 
     assert bdf.iloc[0]['c'] == 0
     assert bdf.iloc[1]['c'] == 0
 
-    ## Fifth, collapse then uncollapse by last ##
+    ## Sixth, collapse then uncollapse by last ##
     bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='last').clean_data().get_collapsed_long().uncollapse()
 
     assert bdf.iloc[0]['c'] == 1.5
     assert bdf.iloc[1]['c'] == 1.5
 
-    ## Sixth, collapse then uncollapse by mean ##
+    ## Seventh, collapse then uncollapse by mean ##
     bdf = bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean_data().get_collapsed_long().uncollapse()
 
     assert bdf.iloc[0]['c'] == 0.75
     assert bdf.iloc[1]['c'] == 0.75
+
+    ## Eighth, clean collapsed with None ##
+    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean_data().get_collapsed_long()), include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse=None).clean_data()
+
+    assert 'c' in bdf.columns
+    assert 'c' in bdf.col_reference_dict.keys()
+    assert 'c' in bdf.id_reference_dict.keys()
+    assert 'c' in bdf.columns_contig.keys()
+    assert 'c' in bdf.col_dtype_dict.keys()
+    assert 'c' in bdf.col_collapse_dict.keys()
+    assert 'c' in bdf.col_long_es_dict.keys()
+
+    ## Ninth, uncollapse by None ##
+    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean_data().get_collapsed_long()), include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse=None).clean_data().uncollapse()
+
+    assert 'c' not in bdf.columns
+    assert 'c' not in bdf.col_reference_dict.keys()
+    assert 'c' not in bdf.id_reference_dict.keys()
+    assert 'c' not in bdf.columns_contig.keys()
+    assert 'c' not in bdf.col_dtype_dict.keys()
+    assert 'c' not in bdf.col_collapse_dict.keys()
+    assert 'c' not in bdf.col_long_es_dict.keys()
 
 ########################################
 ##### Tests for BipartiteDataFrame #####
