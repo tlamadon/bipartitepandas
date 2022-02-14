@@ -449,10 +449,10 @@ def compare_frames(frame1, frame2, size_variable='len', operator='geq', is_sorte
         'workers': lambda a: a.n_workers(),
         'n_stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
         'n_movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i'),
-        'length_stayers': len(lambda a: a.loc[~(a.get_worker_m(is_sorted)), :]),
-        'len_stayers': len(lambda a: a.loc[~(a.get_worker_m(is_sorted)), :]),
-        'length_movers': len(lambda a: a.loc[a.get_worker_m(is_sorted), :]),
-        'len_movers': len(lambda a: a.loc[a.get_worker_m(is_sorted), :]),
+        'length_stayers': lambda a: len(a.loc[~(a.get_worker_m(is_sorted)), :]),
+        'len_stayers': lambda a: len(a.loc[~(a.get_worker_m(is_sorted)), :]),
+        'length_movers': lambda a: len(a.loc[a.get_worker_m(is_sorted), :]),
+        'len_movers': lambda a: len(a.loc[a.get_worker_m(is_sorted), :]),
         'n_stays': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() == 0, :]),
         'n_moves': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() > 0, :])
     }
