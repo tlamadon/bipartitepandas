@@ -44,7 +44,7 @@ _clean_params_default = bpd.util.ParamsDict({
         '''
             (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
         ''', None),
-    'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers'],
+    'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'n_stayers', 'n_movers', 'length_stayers', 'len_stayers', 'length_movers', 'len_movers', 'n_stays', 'n_moves'],
         '''
         (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
         ''', None),
