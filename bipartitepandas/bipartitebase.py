@@ -1095,26 +1095,20 @@ class BipartiteBase(DataFrame):
             except AttributeError:
                 pass
         elif connectedness == 'leave_out_observation':
-            if isinstance(frame, bpd.BipartiteEventStudyBase):
-                warnings.warn('You should avoid computing leave-one-observation-out connected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all connected components of firms (each entry is a connected component)
             cc_list = G.components()
             # Keep largest leave-one-observation-out set of firms
-            frame = frame._leave_one_observation_out(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
+            frame = frame._leave_out_observation(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
         elif connectedness == 'leave_out_worker':
-            if isinstance(frame, bpd.BipartiteEventStudyBase):
-                warnings.warn('You should avoid computing leave-one-worker-out connected components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all connected components of firms (each entry is a connected component)
             cc_list = G.components()
             # Keep largest leave-one-worker-out set of firms
-            frame = frame._leave_one_worker_out(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
+            frame = frame._leave_out_worker(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
         elif connectedness == 'leave_out_firm':
-            if isinstance(frame, bpd.BipartiteEventStudyBase):
-                warnings.warn('You should avoid computing leave-one-firm-out components on event study data. It requires converting data into long format and back into event study format, which is computationally expensive.')
             # Compute all biconnected components of firms (each entry is a biconnected component)
             bcc_list = G.biconnected_components()
             # Keep largest leave-one-firm-out set of firms
-            frame = frame._leave_one_firm_out(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted)
+            frame = frame._leave_out_firm(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
         else:
             raise NotImplementedError(f"Connectedness measure {connectedness!r} is invalid: it must be one of None, 'connected', 'leave_out_observation', 'leave_out_worker', or 'leave_out_firm'.")
 
