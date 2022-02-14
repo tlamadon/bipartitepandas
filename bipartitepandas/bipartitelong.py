@@ -92,7 +92,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         return self.groupby('i', sort=(not is_sorted))['m'].transform('max').to_numpy() > 0
 
-    def get_collapsed_long(self, is_sorted=False, copy=True):
+    def to_collapsed_long(self, is_sorted=False, copy=True):
         '''
         Collapse long data by job spells (so each spell for a particular worker at a particular firm is one observation).
 

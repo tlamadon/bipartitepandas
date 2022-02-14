@@ -24,7 +24,7 @@ To run in Python:
    # Create bipartitepandas object
    bdf = bpd.BipartiteLong(df)
    # Clean your data
-   bdf = bdf.clean_data()
+   bdf = bdf.clean()
    # Cluster
    bdf = bdf.cluster()
 

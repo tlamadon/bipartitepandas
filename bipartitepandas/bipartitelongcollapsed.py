@@ -141,7 +141,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def uncollapse(self, drop_no_collapse_columns=True, is_sorted=False, copy=True):
+    def to_uncollapsed_long(self, drop_no_collapse_columns=True, is_sorted=False, copy=True):
         '''
         Return collapsed long data reformatted into long data, by assuming variables constant over spells.
 
@@ -276,12 +276,12 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
             no_collapse_cols = [col for col, col_collapse in frame.col_collapse_dict.items() if col_collapse is None]
 
-            frame = frame.uncollapse(drop_no_collapse_columns=False, is_sorted=is_sorted, copy=False)
+            frame = frame.to_uncollapsed_long(drop_no_collapse_columns=False, is_sorted=is_sorted, copy=False)
 
             frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False)
 
             # Return to collapsed long
-            frame = frame.get_collapsed_long(is_sorted=True, copy=False)
+            frame = frame.to_collapsed_long(is_sorted=True, copy=False)
 
             # Update col_collapse_dict for columns that aren't supposed to convert to long
             for col in no_collapse_cols:

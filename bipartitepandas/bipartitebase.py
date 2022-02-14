@@ -982,123 +982,6 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def clean_data(self, clean_params=clean_params()):
-        '''
-        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
-
-        Arguments:
-            clean_params (ParamsDict): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
-
-        Returns:
-            frame (BipartiteBase): BipartiteBase with cleaned data
-        '''
-        self.log('beginning BipartiteBase data cleaning', level='info')
-
-        force = clean_params['force']
-        verbose = clean_params['verbose']
-
-        if clean_params['copy']:
-            frame = self.copy()
-        else:
-            frame = self
-
-        # First, check that required columns are included and datatypes are correct
-        frame.log('checking required columns and datatypes', level='info')
-        if verbose:
-            print('checking required columns and datatypes')
-        frame._check_cols()
-
-        # Next, sort rows
-        frame.log('sorting rows', level='info')
-        if verbose:
-            print('sorting rows')
-        frame = frame.sort_rows(is_sorted=clean_params['is_sorted'], copy=False)
-
-        # Next, drop NaN observations
-        if force or (not frame.no_na):
-            frame.log('dropping NaN observations', level='info')
-            if verbose:
-                print('dropping NaN observations')
-            if frame.isna().to_numpy().any():
-                # Checking first is considerably faster if there are no NaN observations
-                frame.dropna(inplace=True)
-
-            # Update no_na
-            frame.no_na = True
-
-        # Generate 'm' column - this is necessary for the next steps
-        # 'm' will get updated in the following steps as it changes
-        frame.log("generating 'm' column", level='info')
-        if verbose:
-            print("generating 'm' column")
-        frame = frame.gen_m(force=True, copy=False)
-
-        # Next, make sure i-t (worker-year) observations are unique
-        if (force or (not frame.i_t_unique)) and (frame.i_t_unique is not None):
-            frame.log(f"keeping highest paying job for i-t (worker-year) duplicates (how={clean_params['i_t_how']!r})", level='info')
-            if verbose:
-                print(f"keeping highest paying job for i-t (worker-year) duplicates (how={clean_params['i_t_how']!r})")
-            frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], is_sorted=True, copy=False)
-
-            # Update no_duplicates
-            frame.no_duplicates = True
-        elif force or (not frame.no_duplicates):
-            # Drop duplicate observations
-            frame.log('dropping duplicate observations', level='info')
-            if verbose:
-                print('dropping duplicate observations')
-            frame.drop_duplicates(inplace=True)
-
-            # Update no_duplicates
-            frame.no_duplicates = True
-
-        # Next, drop returns
-        if force or (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']):
-            frame.log(f"dropping workers who leave a firm then return to it (how={clean_params['drop_returns']!r})", level='info')
-            if verbose:
-                print(f"dropping workers who leave a firm then return to it (how={clean_params['drop_returns']!r})")
-            frame = frame._drop_returns(how=clean_params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
-
-        # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
-        for contig_col, is_contig in frame.columns_contig.items():
-            if frame._col_included(contig_col) and (force or (not is_contig)):
-                frame.log(f'making {contig_col!r} ids contiguous', level='info')
-                if verbose:
-                    print(f'making {contig_col!r} ids contiguous')
-                frame = frame._contiguous_ids(id_col=contig_col, copy=False)
-
-        # Next, find largest set of firms connected by movers
-        if force or (frame.connectedness in [False, None]):
-            # Generate largest connected set
-            frame.log(f"computing largest connected set (how={clean_params['connectedness']!r})", level='info')
-            if verbose:
-                print(f"computing largest connected set (how={clean_params['connectedness']!r})")
-            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
-
-            # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
-            for contig_col, is_contig in frame.columns_contig.items():
-                if frame._col_included(contig_col) and (not is_contig):
-                    frame.log(f'making {contig_col!r} ids contiguous', level='info')
-                    if verbose:
-                        print(f'making {contig_col!r} ids contiguous')
-                    frame = frame._contiguous_ids(id_col=contig_col, copy=False)
-
-        # Sort columns
-        frame.log('sorting columns', level='info')
-        if verbose:
-            print('sorting columns')
-        frame = frame.sort_cols(copy=False)
-
-        # Reset index
-        frame.log('resetting index', level='info')
-        if verbose:
-            print('resetting index')
-        frame.reset_index(drop=True, inplace=True)
-
-        frame.log('data cleaning complete', level='info')
-
-        return frame
-
     def _check_cols(self):
         '''
         Check that required columns are included, that all columns have the correct datatype, and that all columns in the dataframe are listed in .col_reference_dict. Raises a ValueError if any of these checks fails.
@@ -1445,9 +1328,9 @@ class BipartiteBase(DataFrame):
             frame.loc[:, frame.col_reference_dict['g']] = frame.loc[:, frame.col_reference_dict['g']].astype(int, copy=False)
             # Clean data
             if cluster_params['clean_params'] is None:
-                frame = frame.clean_data(bpd.clean_params({'connectedness': frame.connectedness}))
+                frame = frame.clean(bpd.clean_params({'connectedness': frame.connectedness}))
             else:
-                frame = frame.clean_data(cluster_params['clean_params'])
+                frame = frame.clean(cluster_params['clean_params'])
 
         frame.columns_contig['g'] = True
 
