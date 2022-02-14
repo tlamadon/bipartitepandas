@@ -454,7 +454,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 else:
                     frame = frame.loc[frame.loc[:, 't'].isin(t), :]
             else:
-                raise NotImplementedError("Cannot use data from a particular period with collapsed data. Data can be converted to long format using the '.to_uncollapsed_long()' method.")
+                raise NotImplementedError("Cannot use data from a particular period with collapsed data. Data can be converted to long format using the .to_uncollapsed_long() method.")
 
         with bpd.util.ChainedAssignment():
             # Create weights
