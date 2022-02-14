@@ -394,7 +394,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             how (str): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm; if 'keep_first_returns', keep first spell where a worker leaves a firm then returns to it; if 'keep_last_returns', keep last spell where a worker leaves a firm then returns to it; if False, keep all observations
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            reset_index (bool): not used for event study format, does nothing for event study
+            reset_index (bool): not used for event study format
             copy (bool): if False, avoid copy
 
         Returns:
@@ -543,8 +543,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Construct numpy array linking firms by movers, for use with connected components.
 
         Arguments:
-            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
-            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
+            is_sorted (bool): not used for ._construct_firm_linkages()
+            copy (bool): not used for ._construct_firm_linkages()
 
         Returns:
             (NumPy Array): firm linkages
@@ -557,8 +557,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
 
         Arguments:
-            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
-            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
+            is_sorted (bool): not used for ._construct_firm_double_linkages()
+            copy (bool): not used for ._construct_firm_double_linkages()
 
         Returns:
             (NumPy Array): firm linkages
@@ -608,7 +608,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             keep_ids_list (list): ids to keep
             drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            reset_index (bool): not used for event study format, does nothing for event study
+            reset_index (bool): not used for event study format
             copy (bool): if False, avoid copy
 
         Returns:
@@ -642,7 +642,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             drop_ids_list (list): ids to drop
             drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            reset_index (bool): not used for event study format, does nothing for event study
+            reset_index (bool): not used for event study format
             copy (bool): if False, avoid copy
 
         Returns:
@@ -675,7 +675,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             rows (list): rows to keep
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            reset_index (bool): not used for event study format, does nothing for event study
+            reset_index (bool): not used for event study format
             copy (bool): if False, avoid copy
 
         Returns:
@@ -688,15 +688,27 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                 return self.copy()
             return self
 
-        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+        rows_list = sorted(list(rows_list))
 
-        # Keep rows
-        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).keep_rows(rows=rows, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_eventstudy(is_sorted=True, copy=False)
+        frame = self.iloc[rows_list]
 
-        # Update col_long_es_dict for columns that aren't supposed to convert to long
-        for col in no_split_cols:
-            frame.col_long_es_dict[col] = None
+        if isinstance(frame, bpd.BipartiteEventStudyCollapsed) and (not frame.no_returns):
+            ## If BipartiteEventStudyCollapsed and there are returns, we have to recollapse
+            # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+            no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+            # Recollapse
+            frame = frame.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).recollapse(drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_eventstudy(is_sorted=True, copy=False)
+
+            # We don't need to copy again
+            copy = False
+
+            # Update col_long_es_dict for columns that aren't supposed to convert to long
+            for col in no_split_cols:
+                frame.col_long_es_dict[col] = None
+
+        if copy:
+            return frame.copy()
 
         return frame
 
@@ -862,7 +874,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             threshold (int): minimum number of moves required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            reset_index (bool): not used for event study format, does nothing for event study
+            reset_index (bool): not used for event study format
             copy (bool): if False, avoid copy
 
         Returns:

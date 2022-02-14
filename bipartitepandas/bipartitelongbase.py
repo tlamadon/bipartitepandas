@@ -816,8 +816,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Construct numpy array linking firms by movers, for use with connected components.
 
         Arguments:
-            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
-            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
+            is_sorted (bool): not used for ._construct_firm_linkages()
+            copy (bool): not used for ._construct_firm_linkages()
 
         Returns:
             (NumPy Array): firm linkages
@@ -840,8 +840,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
 
         Arguments:
-            is_sorted (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
-            copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
+            is_sorted (bool): not used for ._construct_firm_double_linkages()
+            copy (bool): not used for ._construct_firm_double_linkages()
 
         Returns:
             (NumPy Array): firm linkages
@@ -869,7 +869,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         Arguments:
             is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
-            copy (bool): not used for long format, does nothing for long
+            copy (bool): not used for long format
 
         Returns:
             (NumPy Array): firm-worker linkages
