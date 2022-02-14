@@ -38,7 +38,7 @@ def es_extended_plot_params(update_dict={}):
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict) dictionary of es_extended_plot_params
+        (ParamsDict): dictionary of es_extended_plot_params
     '''
     new_dict = _es_extended_plot_params_default.copy()
     new_dict.update(update_dict)
@@ -67,16 +67,19 @@ class BipartiteLong(bpd.BipartiteLongBase):
     def _constructor(self):
         '''
         For inheritance from Pandas.
+
+        Returns:
+            (class): BipartiteLong class
         '''
         return BipartiteLong
 
     @property
     def _constructor_es(self):
         '''
-        For get_es(), tells BipartiteLongBase which event study format to use.
+        For .to_eventstudy(), tells BipartiteLongBase which event study format to use.
 
         Returns:
-            (BipartiteEventStudy): class
+            (class): BipartiteEventStudy class
         '''
         return bpd.BipartiteEventStudy
 
@@ -85,7 +88,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set is_sorted to True if dataframe is already sorted.
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover
@@ -97,7 +100,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Collapse long data at the worker-firm spell level (so each spell for a particular worker at a particular firm becomes one observation).
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included; and by j, if t not included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -105,7 +108,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         self.log('beginning collapse', level='info')
 
-        # Sort data by i (and t, if included; and by j, if t not included)
+        # Sort and copy
         frame = self.sort_rows(j_if_no_t=True, is_sorted=is_sorted, copy=copy)
         self.log('data sorted by i (and t, if included; and by j, if t not included)', level='info')
 
@@ -209,11 +212,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         Arguments:
             how (str or function): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any input valid for a Pandas transform.
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
+            (BipartiteLong): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
         '''
         if copy:
             frame = self.copy()
@@ -254,7 +257,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Arguments:
             G (igraph Graph): graph linking firms by movers
             max_j (int): maximum j
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i and j in a groupby (but self will not be not sorted). Set is_sorted to True if dataframe is already sorted by i.
 
         Returns:
             (NumPy Array): indices of articulation observations
@@ -281,11 +284,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
             fill_j (value): value to fill in for missing j
             fill_y (value): value to fill in for missing y
             fill_m (value): value to fill in for missing m
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            fill_frame (Pandas DataFrame): Pandas DataFrame with missing periods filled in as unemployed
+            (Pandas DataFrame): dataframe with missing periods filled in as unemployed
         '''
         # Check whether m column included
         m = self._col_included('m')
@@ -332,11 +335,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
             stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            es_extended_frame or None (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
+            (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
         '''
         # Convert into lists
         include = bpd.util.to_list(include)
@@ -474,7 +477,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             include (column name or list of column names): columns to include data for all periods
             transition_col (str): column to use to define a transition
             es_extended_plot_params (ParamsDict): dictionary of parameters for plotting. Run bpd.es_extended_plot_params().describe_all() for descriptions of all valid parameters.
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
         '''
         # FIXME this method raises the following warnings:

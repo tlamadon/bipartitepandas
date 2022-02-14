@@ -28,17 +28,17 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         For inheritance from Pandas.
 
         Returns:
-            (BipartiteEventStudyCollapsed): class
+            (class): BipartiteEventStudyCollapsed class
         '''
         return BipartiteEventStudyCollapsed
 
     @property
     def _constructor_long(self):
         '''
-        For get_long(), tells BipartiteEventStudyBase which long format to use.
+        For .to_long(), tells BipartiteEventStudyBase which long format to use.
 
         Returns:
-            (BipartiteLongCollapsed): class
+            (class): BipartiteLongCollapsed class
         '''
         return bpd.BipartiteLongCollapsed
 
@@ -48,7 +48,7 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
 
         Arguments:
             drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will not be dropped
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -61,7 +61,7 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): used for event study format, does nothing for collapsed event study
+            is_sorted (bool): not used for collapsed event study format
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover

@@ -24,7 +24,7 @@ class CDFs:
             frame (Pandas DataFrame): data to use
             jids (list): sorted list of firm ids in frame (since frame could be a subset of self, this is not necessarily all firms in self)
         Returns:
-            cdfs (NumPy Array): NumPy array of firm cdfs
+            (NumPy Array): NumPy array of firm cdfs
         '''
         cdf_resolution = self.cdf_resolution
         measure = self.measure
@@ -126,7 +126,7 @@ class Moments:
             jids (list): sorted list of firm ids in frame (since frame could be a subset of full dataset, this is not necessarily all firms in self)
 
         Returns:
-            moments (NumPy Array): NumPy array of firm moments
+            (NumPy Array): NumPy array of firm moments
         '''
         measures = self.measures
 

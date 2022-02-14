@@ -26,6 +26,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
     def _constructor(self):
         '''
         For inheritance from Pandas.
+
+        Returns:
+            (class): BipartiteEventStudyBase class
         '''
         return BipartiteEventStudyBase
 
@@ -38,7 +41,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with m column
+            (BipartiteEventStudyBase): dataframe with m column
         '''
         if copy:
             frame = self.copy()
@@ -65,7 +68,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             clean_params (ParamsDict): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
 
         Returns:
-            frame (BipartiteEventStudyBase): BipartiteEventStudyBase with cleaned data
+            (BipartiteEventStudyBase): dataframe with cleaned data
         '''
         self.log('beginning BipartiteEventStudyBase data cleaning', level='info')
 
@@ -113,13 +116,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             worker_m (NumPy Array or None): if a NumPy Array, this gives the worker_m column; if None, generate this column
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
             (NumPy Array): mask of rows to unstack
         '''
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Get i for this and next period
@@ -174,7 +177,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             how (str or function): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any input valid for a Pandas transform.
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -216,7 +219,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            data_cs (Pandas DataFrame): cross section data
+            (Pandas DataFrame): cross section data
         '''
         sdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() == 0, :], copy=copy)
         jdata = pd.DataFrame(self.loc[self.loc[:, 'm'].to_numpy() > 0, :], copy=copy)
@@ -258,16 +261,16 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             is_clean (bool): if True, data is already clean (this ensures that observations that are in two consecutive event studies appear only once, e.g. the event study A -> B, B -> C turns into A -> B -> C; otherwise, it will become A -> B -> B -> C). Set to False if duplicates will be handled manually.
             drop_no_split_columns (bool): if True, columns marked by self.col_long_es_dict as None (i.e. they should be dropped) will not be dropped
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            long_frame (BipartiteLong(Collapsed) or Pandas DataFrame): BipartiteLong(Collapsed) or Pandas dataframe generated from (collapsed) event study data
+            (BipartiteLongBase): long format dataframe generated from event study data
         '''
         if not self._col_included('t'):
             raise NotImplementedError("Cannot convert from event study to long format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
 
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Keep track of user-added columns
@@ -390,8 +393,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             how (str): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm; if 'keep_first_returns', keep first spell where a worker leaves a firm then returns to it; if 'keep_last_returns', keep last spell where a worker leaves a firm then returns to it; if False, keep all observations
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            reset_index (bool): used for long format, does nothing for event study
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
@@ -417,7 +420,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
             t (int or list of int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data); if list of int, gives periods in data to consider (only valid for non-collapsed data)
             weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
         Returns:
             data (Pandas DataFrame): data prepared for clustering
@@ -436,7 +439,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             first_loop (bool): if True, this is the first loop of the method
 
         Returns:
@@ -464,7 +467,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             component_size_variable (str): how to determine largest leave-one-match-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-match-out connected component
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             first_loop (bool): if True, this is the first loop of the method
 
         Returns:
@@ -492,7 +495,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             first_loop (bool): if True, this is the first loop of the method
 
         Returns:
@@ -518,7 +521,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             bcc_list (list of lists): each entry is a biconnected component
             component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
 
         Returns:
             (BipartiteEventStudyBase): dataframe of largest leave-one-firm-out connected component
@@ -544,7 +547,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
 
         Returns:
-            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
+            (NumPy Array): firm linkages
+            (int): maximum firm id
         '''
         return self.loc[(self.loc[:, 'm'].to_numpy() > 0), ['j1', 'j2']].to_numpy()
 
@@ -557,7 +561,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
 
         Returns:
-            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
+            (NumPy Array): firm linkages
+            (int): maximum firm id
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         base_linkages = self.loc[move_rows, ['j1', 'j2']].to_numpy()
@@ -576,13 +581,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
+            (NumPy Array): firm-worker linkages
+            (int): maximum firm id
         '''
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         worker_m = frame.get_worker_m(is_sorted=True)
@@ -601,8 +607,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             keep_ids_list (list): ids to keep
             drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            reset_index (bool): used for long format, does nothing for event study
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
@@ -635,8 +641,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             drop_ids_list (list): ids to drop
             drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            reset_index (bool): used for long format, does nothing for event study
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
@@ -668,8 +674,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             rows (list): rows to keep
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            reset_index (bool): used for long format, does nothing for event study
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
@@ -700,17 +706,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            valid_firms (NumPy Array): firms with sufficiently many observations
+            (NumPy Array): firms with sufficiently many observations
         '''
         if threshold == 0:
             # If no threshold
             return self.unique_ids('j')
 
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # We consider j1 for all rows, but j2 only for unstack rows
@@ -738,7 +744,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -768,17 +774,17 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            valid_firms (NumPy Array): firms with sufficiently many workers
+            (NumPy Array): firms with sufficiently many workers
         '''
         if threshold == 0:
             # If no threshold
             return self.unique_ids('j')
 
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # We consider j1 for all rows, but j2 only for unstack rows
@@ -806,7 +812,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -836,7 +842,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -855,12 +861,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            reset_index (bool): used for long format, does nothing for event study
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format, does nothing for event study
             copy (bool): if False, avoid copy
 
         Returns:
-            (BipartiteBase): dataframe of firms with sufficiently many moves
+            (BipartiteEventStudyBase): dataframe of firms with sufficiently many moves
         '''
         if threshold == 0:
             # If no threshold
@@ -873,6 +879,40 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         # Compute min_moves_frame
         frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_eventstudy(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many movers.
+
+        Arguments:
+            threshold (int): minimum number of movers required to keep a firm
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format
+            copy (bool): if False, avoid copy.
+
+        Returns:
+            (BipartiteEventStudyBase): dataframe of firms with sufficiently many movers
+        '''
+        self.log('generating frame of firms with a minimum number of movers', level='info')
+
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_movers_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_movers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_eventstudy(is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
         for col in no_split_cols:

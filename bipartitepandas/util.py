@@ -256,7 +256,7 @@ def update_dict(default_params, user_params):
         user_params (dict): user selected parameter values
 
     Returns:
-        params (dict): default_params updated with parameter values in user_params
+        (dict): default_params updated with parameter values in user_params
     '''
     params = default_params.copy()
 
@@ -439,7 +439,7 @@ def compare_frames(frame1, frame2, size_variable='len', operator='geq', is_sorte
         frame2 (BipartiteBase): second frame
         size_variable (str): what size variable to use to compare frames. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
         operator (str): how to compare properties. Options are 'eq' (equality), 'gt' (greater than), 'lt' (less than), 'geq' (greater than or equal to), and 'leq' (less than or equal to).
-        is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
+        is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if dataframe is already sorted.
     '''
     # First, get the values for the frames corresponding to the given property
     property_dict = {

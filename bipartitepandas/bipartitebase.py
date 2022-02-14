@@ -60,7 +60,7 @@ _clean_params_default = bpd.util.ParamsDict({
         ''', None),
     'is_sorted': (False, 'type', bool,
         '''
-            (default=False) If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            (default=False) If False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
         ''', None),
     'force': (True, 'type', bool,
         '''
@@ -84,7 +84,7 @@ def clean_params(update_dict={}):
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict) dictionary of clean_params
+        (ParamsDict): dictionary of clean_params
     '''
     new_dict = _clean_params_default.copy()
     new_dict.update(update_dict)
@@ -121,7 +121,7 @@ _cluster_params_default = bpd.util.ParamsDict({
         ''', None),
     'is_sorted': (False, 'type', bool,
         '''
-            (default=False) For event study format. If False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            (default=False) For event study format. If False, dataframe will be sorted by i (and t, if included). Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
         ''', None),
     'copy': (True, 'type', bool,
         '''
@@ -137,7 +137,7 @@ def cluster_params(update_dict={}):
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict) dictionary of cluster_params
+        (ParamsDict): dictionary of cluster_params
     '''
     new_dict = _cluster_params_default.copy()
     new_dict.update(update_dict)
@@ -216,6 +216,9 @@ class BipartiteBase(DataFrame):
     def _constructor(self):
         '''
         For inheritance from Pandas.
+
+        Returns:
+            (class): BipartiteBase class
         '''
         return BipartiteBase
 
@@ -535,7 +538,7 @@ class BipartiteBase(DataFrame):
         Get the number of unique clusters.
 
         Returns:
-            (int or None): (int or None): number of unique clusters if cluster column included; None otherwise
+            (int or None): number of unique clusters if cluster column included; None otherwise
         '''
         self.log('finding unique clusters', level='info')
         return self.n_unique_ids('g')
@@ -548,7 +551,7 @@ class BipartiteBase(DataFrame):
             copy (bool): if False, avoid copy
 
         Returns:
-            (BipartiteBase or None): copy of self merged with original column ids, or None if id_reference_dict is empty
+            (BipartiteBase or None): copy of dataframe merged with original column ids, or None if id_reference_dict is empty
         '''
         self.log('returning self merged with original column ids', level='info')
         frame = DataFrame(self, copy=copy)
@@ -627,7 +630,7 @@ class BipartiteBase(DataFrame):
             no_returns (bool): if True, reset self.no_returns
 
         Returns:
-            self (BipartiteBase): self with reset class attributes
+            (BipartiteBase): dataframe with reset class attributes
         '''
         if columns_contig:
             for contig_col in self.columns_contig.keys():
@@ -667,7 +670,7 @@ class BipartiteBase(DataFrame):
             include (bool): if True, id_reference_dict will track changes in ids
 
         Returns:
-            self (BipartiteBase): self with reset id_reference_dict
+            (BipartiteBase): dataframe with reset id_reference_dict
         '''
         if include:
             self.id_reference_dict = {id_col: DataFrame() for id_col in self.col_reference_dict.keys()}
@@ -701,7 +704,7 @@ class BipartiteBase(DataFrame):
             subcols (bool): if False, uses general column names for joint columns, e.g. returns 'j' instead of 'j1', 'j2'
 
         Returns:
-            all_cols (list): included columns
+            (list): included columns
         '''
         all_cols = []
         for col, col_subcols in self.col_reference_dict.items():
@@ -726,7 +729,7 @@ class BipartiteBase(DataFrame):
             **kwargs: keyword arguments for Pandas drop
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with dropped labels
+            (BipartiteBase): dataframe without dropped labels
         '''
         frame = self
 
@@ -812,7 +815,7 @@ class BipartiteBase(DataFrame):
             **kwargs: keyword arguments for Pandas rename
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with renamed labels
+            (BipartiteBase): dataframe with renamed labels
         '''
         frame = self
 
@@ -940,7 +943,7 @@ class BipartiteBase(DataFrame):
             **kwargs: keyword arguments for Pandas merge
 
         Returns:
-            frame (BipartiteBase): merged dataframe
+            (BipartiteBase): merged dataframe
         '''
         frame = DataFrame.merge(self, *args, **kwargs)
         # Use correct constructor
@@ -959,7 +962,7 @@ class BipartiteBase(DataFrame):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with contiguous ids
+            (BipartiteBase): dataframe with contiguous ids
         '''
         self.log(f'making {id_col!r} ids contiguous', level='info')
         if copy:
@@ -1045,11 +1048,11 @@ class BipartiteBase(DataFrame):
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with connected component of movers
+            (BipartiteBase): dataframe with connected component of movers
         '''
         if copy:
             frame = self.copy()
@@ -1133,11 +1136,12 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            (tuple of igraph Graph, int): (graph, maximum firm id)
+            (igraph Graph): graph
+            (int): maximum firm id
         '''
         self.log(f'constructing {connectedness!r} graph', level='info')
         linkages_fn_dict = {
@@ -1158,7 +1162,7 @@ class BipartiteBase(DataFrame):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with columns sorted
+            (BipartiteBase): dataframe with sorted columns
         '''
         self.log('sorting columns', level='info')
         if copy:
@@ -1177,12 +1181,12 @@ class BipartiteBase(DataFrame):
         Sort rows by i and t.
 
         Arguments:
-            j_if_no_t (bool): if no time column, sort on j column instead
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            j_if_no_t (bool): if no time column, sort on i and j columns instead
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): dataframe with rows sorted
+            (BipartiteBase): dataframe with rows sorted
         '''
         self.log('sorting rows', level='info')
         if copy:
@@ -1210,12 +1214,12 @@ class BipartiteBase(DataFrame):
         Arguments:
             rows (list): rows to keep
             drop_returns_to_stays (bool): If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted for long and collapsed long formats, but is guaranteed to be sorted for event study and collapsed event study formats. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): dataframe with given rows dropped
+            (BipartiteBase): dataframe with given rows dropped
         '''
         self.log('dropping rows', level='info')
         rows = set(rows)
@@ -1235,11 +1239,11 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            copy (bool): if False, avoid copy
+            is_sorted (bool): used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): used for event study format. If False, avoid copy.
 
         Returns:
-            valid_firms (NumPy Array): firms with sufficiently many movers
+            (NumPy Array): firms with sufficiently many movers
         '''
         self.log('computing firms with a minimum number of movers', level='info')
         if threshold == 0:
@@ -1250,33 +1254,6 @@ class BipartiteBase(DataFrame):
 
         return frame.min_workers_firms(threshold, is_sorted=is_sorted, copy=copy)
 
-    @_recollapse_loop(True)
-    def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
-        '''
-        Return dataframe of firms with at least `threshold` many movers.
-
-        Arguments:
-            threshold (int): minimum number of movers required to keep a firm
-            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
-            reset_index (bool): if True, reset index at end
-            copy (bool): if False, avoid copy
-
-        Returns:
-            (BipartiteBase): dataframe of firms with sufficiently many movers
-        '''
-        self.log('generating frame of firms with a minimum number of movers', level='info')
-        if threshold == 0:
-            # If no threshold
-            if copy:
-                return self.copy()
-            return self
-
-        # FIXME this copy should not always be False, check out how to fix it
-        valid_firms = self.min_movers_firms(threshold, is_sorted=is_sorted, copy=False)
-
-        return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
-
     def cluster(self, cluster_params=cluster_params()):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
@@ -1285,7 +1262,7 @@ class BipartiteBase(DataFrame):
             cluster_params (ParamsDict): dictionary of parameters for clustering. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters.
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with clusters
+            (BipartiteBase): dataframe with clusters
         '''
         self.log('beginning clustering', level='info')
         if cluster_params['copy']:
@@ -1329,10 +1306,11 @@ class BipartiteBase(DataFrame):
         if frame._col_included('g'):
             frame.drop('g', axis=1, inplace=True)
 
-        for i, j_col in enumerate(to_list(frame.col_reference_dict['j'])):
-            if len(to_list(frame.col_reference_dict['j'])) == 1:
+        j_cols = to_list(frame.col_reference_dict['j'])
+        for i, j_col in enumerate(j_cols):
+            if len(j_cols) == 1:
                 g_col = 'g'
-            elif len(to_list(frame.col_reference_dict['j'])) == 2:
+            else:
                 g_col = 'g' + str(i + 1)
 
             # Merge into event study data

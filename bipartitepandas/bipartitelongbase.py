@@ -26,6 +26,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
     def _constructor(self):
         '''
         For inheritance from Pandas.
+
+        Returns:
+            (class): BipartiteLongBase class
         '''
         return BipartiteLongBase
 
@@ -38,7 +41,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with m column
+            (BipartiteLongBase): dataframe with m column
         '''
         if copy:
             frame = self.copy()
@@ -72,7 +75,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             clean_params (ParamsDict): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
 
         Returns:
-            frame (BipartiteLongBase): BipartiteLongBase with cleaned data
+            (BipartiteLongBase): dataframe with cleaned data
         '''
         self.log('beginning BipartiteLongBase data cleaning', level='info')
 
@@ -186,16 +189,16 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         Arguments:
             move_to_worker (bool): if True, each move is treated as a new worker
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            es_frame (BipartiteEventStudy(Collapsed)): BipartiteEventStudy(Collapsed) object generated from (collapsed) long data
+            (BipartiteEventStudyBase): event study dataframe
         '''
         if not self._col_included('t'):
             raise NotImplementedError("Cannot convert from long to event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
 
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Split workers by movers and stayers
@@ -314,18 +317,18 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     def _get_spell_ids(self, is_sorted=False, copy=True):
         '''
-        Generate array of spell ids, where a spell is defined as an uninterrupted period of time where a worker works at the same firm.
+        Generate array of spell ids, where a spell is defined as an uninterrupted period of time where a worker works at the same firm. Spell ids are generated for sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            spell_ids (NumPy Array): spell ids
+            (NumPy Array): spell ids
         '''
         self.log('preparing to compute spell ids', level='info')
 
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
         self.log('data sorted by i (and t, if included)', level='info')
 
@@ -352,16 +355,16 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         Arguments:
             how (str or False): if 'returns', drop observations where workers leave a firm then return to it; if 'returners', drop workers who ever leave then return to a firm; if 'keep_first_returns', keep first spell where a worker leaves a firm then returns to it; if 'keep_last_returns', keep last spell where a worker leaves a firm then returns to it; if False, keep all observations
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe that drops observations where workers leave a firm then return to it
+            (BipartiteLongBase): dataframe that drops observations where workers leave a firm then return to it
         '''
         self.log('preparing to drop returns', level='info')
 
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
         self.log('data sorted by i (and t, if included)', level='info')
 
@@ -424,7 +427,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
             t (int or list of int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data); if list of int, gives periods in data to consider (only valid for non-collapsed data)
             weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-            is_sorted (bool): used for event study format, does nothing for long
+            is_sorted (bool): not used for long format
             copy (bool): if False, avoid copy
         Returns:
             data (Pandas DataFrame): data prepared for clustering
@@ -483,13 +486,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
             component_size_variable (str): how to determine largest leave-one-observation-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-observation-out connected component
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             first_loop (bool): if True, this is the first loop of the method
 
         Returns:
             (BipartiteLongBase): dataframe of largest leave-one-observation-out connected component
         '''
-        # Sort data by i (and t, if included)
+        # Sort and copy
         self.sort_rows(is_sorted=is_sorted, copy=False)
 
         for cc in sorted(cc_list, reverse=True, key=len):
@@ -570,13 +573,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
     #         component_size_variable (str): how to determine largest leave-one-match-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
     #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
     #         frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-match-out connected component
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
     #         first_loop (bool): if True, this is the first loop of the method
 
     #     Returns:
     #         (BipartiteLongBase): dataframe of largest leave-one-match-out connected component
     #     '''
-    #     # Sort data by i (and t, if included)
+    #     # Sort and copy
     #     self.sort_rows(is_sorted=is_sorted, copy=False)
 
     #     for cc in sorted(cc_list, reverse=True, key=len):
@@ -657,13 +660,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
             component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             first_loop (bool): if True, this is the first loop of the method
 
         Returns:
             (BipartiteLongBase): dataframe of largest leave-one-worker-out connected component
         '''
-        # Sort data by i (and t, if included)
+        # Sort and copy
         self.sort_rows(is_sorted=is_sorted, copy=False)
 
         for cc in sorted(cc_list, reverse=True, key=len):
@@ -744,12 +747,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
             bcc_list (list of lists): each entry is a biconnected component
             component_size_variable (str): how to determine largest leave-one-firm-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
 
         Returns:
             (BipartiteLongBase): dataframe of largest leave-one-firm-out connected component
         '''
-        # Sort data by i (and t, if included)
+        # Sort and copy
         self.sort_rows(is_sorted=is_sorted, copy=False)
 
         # This will become the largest leave-one-firm-out component
@@ -817,7 +820,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
             copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_linkages
 
         Returns:
-            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
+            (NumPy Array): firm linkages
+            (int): maximum firm id
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
@@ -840,7 +844,8 @@ class BipartiteLongBase(bpd.BipartiteBase):
             copy (bool): used for _construct_firm_worker_linkages, does nothing for _construct_firm_double_linkages
 
         Returns:
-            (tuple of NumPy Array, int): (firm linkages, maximum firm id)
+            (NumPy Array): firm linkages
+            (int): maximum firm id
         '''
         move_rows = (self.loc[:, 'm'].to_numpy() > 0)
         i_col = self.loc[move_rows, 'i'].to_numpy()
@@ -864,10 +869,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         Arguments:
             is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
-            copy (bool): used for event study format, does nothing for long
+            copy (bool): not used for long format, does nothing for long
 
         Returns:
-            (tuple of NumPy Array, int): (firm-worker linkages, maximum firm id)
+            (NumPy Array): firm-worker linkages
+            (int): maximum firm id
         '''
         worker_m = self.get_worker_m(is_sorted)
         i_col = self.loc[worker_m, 'i'].to_numpy()
@@ -885,12 +891,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             keep_ids_list (list): ids to keep
             drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteLongCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included) if data is recollapsed. Set to True if already sorted.
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe with ids in the given set
+            (BipartiteLongBase): dataframe with ids in the given set
         '''
         keep_ids_list = set(keep_ids_list)
         if len(keep_ids_list) == self.n_unique_ids(id_col):
@@ -930,12 +936,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
             id_col (str): column of ids to consider ('i', 'j', or 'g')
             drop_ids_list (list): ids to drop
             drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteLongCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe with ids outside the given set
+            (BipartiteLongBase): dataframe with ids outside the given set
         '''
         drop_ids_list = set(drop_ids_list)
         if len(drop_ids_list) == 0:
@@ -974,12 +980,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Arguments:
             rows_list (list): rows to keep
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe with given rows
+            (BipartiteLongBase): dataframe with given rows
         '''
         rows_list = set(rows_list)
         if len(rows_list) == len(self):
@@ -1011,11 +1017,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
-            is_sorted (bool): used for event study format, does nothing for long
-            copy (bool): used for event study format, does nothing for long
+            is_sorted (bool): not used for long format
+            copy (bool): not used for long format
 
         Returns:
-            valid_firms (NumPy Array): firms with sufficiently many observations
+            (NumPy Array): firms with sufficiently many observations
         '''
         if threshold == 0:
             # If no threshold
@@ -1034,11 +1040,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Arguments:
             threshold (int): minimum number of observations required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe of firms with sufficiently many observations
+            (BipartiteLongBase): dataframe of firms with sufficiently many observations
         '''
         if threshold == 0:
             # If no threshold
@@ -1067,11 +1073,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
-            is_sorted (bool): used for event study format, does nothing for long
-            copy (bool): used for event study format, does nothing for long
+            is_sorted (bool): not used for long format
+            copy (bool): not used for long format
 
         Returns:
-            valid_firms (NumPy Array): list of firms with sufficiently many workers
+            (NumPy Array): list of firms with sufficiently many workers
         '''
         if threshold == 0:
             # If no threshold
@@ -1090,11 +1096,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Arguments:
             threshold (int): minimum number of workers required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongBase): dataframe of firms with sufficiently many workers
+            (BipartiteLongBase): dataframe of firms with sufficiently many workers
         '''
         if threshold == 0:
             # If no threshold
@@ -1125,7 +1131,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             threshold (int): minimum number of moves required to keep a firm
 
         Returns:
-            valid_firms (NumPy Array): firms with sufficiently many moves
+            (NumPy Array): firms with sufficiently many moves
         '''
         if threshold == 0:
             # If no threshold
@@ -1141,12 +1147,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             reset_index (bool): if True, reset index at end
             copy (bool): if False, avoid copy
 
         Returns:
-            (BipartiteBase): dataframe of firms with sufficiently many moves
+            (BipartiteLongBase): dataframe of firms with sufficiently many moves
         '''
         if threshold == 0:
             # If no threshold
@@ -1155,6 +1161,33 @@ class BipartiteLongBase(bpd.BipartiteBase):
             return self
 
         valid_firms = self.min_moves_firms(threshold)
+
+        return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
+
+    @bpd.bipartitebase._recollapse_loop(True)
+    def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many movers.
+
+        Arguments:
+            threshold (int): minimum number of movers required to keep a firm
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): if True, reset index at end
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteLongBase): dataframe of firms with sufficiently many movers
+        '''
+        self.log('generating frame of firms with a minimum number of movers', level='info')
+
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        valid_firms = self.min_movers_firms(threshold, is_sorted=False, copy=True)
 
         return self.keep_ids('j', keep_ids_list=valid_firms, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, reset_index=reset_index, copy=copy)
 

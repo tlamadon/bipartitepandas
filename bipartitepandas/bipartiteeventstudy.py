@@ -28,17 +28,17 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         For inheritance from Pandas.
 
         Returns:
-            (BipartiteEventStudy): class
+            (class): BipartiteEventStudy class
         '''
         return BipartiteEventStudy
 
     @property
     def _constructor_long(self):
         '''
-        For get_long(), tells BipartiteEventStudyBase which long format to use.
+        For .to_long(), tells BipartiteEventStudyBase which long format to use.
 
         Returns:
-            (BipartiteLong): class
+            (class): BipartiteLong class
         '''
         return bpd.BipartiteLong
 
@@ -47,7 +47,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         Collapse event study data at the worker-firm spell level (so each spell for a particular worker at a particular firm becomes one observation).
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included; and by j, if t not included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -60,7 +60,7 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if dataframe is already sorted.
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover

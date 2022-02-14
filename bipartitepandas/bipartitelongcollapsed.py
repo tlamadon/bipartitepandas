@@ -27,16 +27,19 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
     def _constructor(self):
         '''
         For inheritance from Pandas.
+
+        Returns:
+            (class): BipartiteLongCollapsed class
         '''
         return BipartiteLongCollapsed
 
     @property
     def _constructor_es(self):
         '''
-        For get_es(), tells BipartiteLongBase which event study format to use.
+        For .to_eventstudy(), tells BipartiteLongBase which event study format to use.
 
         Returns:
-            (BipartiteEventStudyCollapsed): class
+            (class): BipartiteEventStudyCollapsed class
         '''
         return bpd.BipartiteEventStudyCollapsed
 
@@ -45,7 +48,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): used for long format, does nothing for collapsed long
+            is_sorted (bool): not used for collapsed long format
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover
@@ -58,15 +61,15 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         Arguments:
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included; and by j, if t not included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteBase): BipartiteBase with ids in the given set
+            (BipartiteLongCollapsed): recollapsed dataframe
         '''
         self.log('beginning recollapse', level='info')
 
-        # Sort data by i (and t, if included; and by j, if t not included)
+        # Sort and copy
         frame = self.sort_rows(j_if_no_t=True, is_sorted=is_sorted, copy=copy)
         self.log('data sorted by i (and t, if included; and by j, if t not included)', level='info')
 
@@ -146,13 +149,13 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         Arguments:
             drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will not be dropped
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
             (BipartiteLong): collapsed long data reformatted as long data
         '''
-        # Sort data by i (and t, if included)
+        # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # All included columns
@@ -259,11 +262,11 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         Arguments:
             how (str or function): if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any input valid for a Pandas transform.
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            frame (BipartiteLongCollapsed): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
+            (BipartiteLongCollapsed): dataframe that keeps only the highest paying job for i-t (worker-year) duplicates. If no t column(s), returns frame with no changes
         '''
         if copy:
             frame = self.copy()
@@ -300,7 +303,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Arguments:
             G (igraph Graph): graph linking firms by movers
             max_j (int): maximum j
-            is_sorted (bool): used for long format, does nothing for collapsed long
+            is_sorted (bool): not used for collapsed long format
 
         Returns:
             (NumPy Array): indices of articulation observations

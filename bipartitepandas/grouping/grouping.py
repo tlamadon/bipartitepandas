@@ -30,7 +30,7 @@ class KMeans:
             weights (NumPy Array or None): firm weights for clustering
 
         Returns:
-            groups (NumPy Array): KMeans groups for data
+            (NumPy Array): KMeans groups for data
         '''
         groups = sklKMeans(**self.kwargs).fit(data, sample_weight=weights).labels_
         return groups
@@ -55,7 +55,7 @@ class Quantiles:
             weights (NumPy Array): required for consistent argument inputs with KMeans, not used in this function
 
         Returns:
-            groups (NumPy Array): quantile groups for data
+            (NumPy Array): quantile groups for data
         '''
         n_quantiles = self.n_quantiles
         groups = np.zeros(shape=len(data))

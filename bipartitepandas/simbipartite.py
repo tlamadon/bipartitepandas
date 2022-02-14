@@ -77,7 +77,7 @@ def sim_params(update_dict={}):
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict) dictionary of sim_params
+        (ParamsDict): dictionary of sim_params
     '''
     new_dict = _sim_params_default.copy()
     new_dict.update(update_dict)
