@@ -46,7 +46,7 @@ _clean_params_default = bpd.util.ParamsDict({
         ''', None),
     'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers'],
         '''
-        (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
+        (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
         ''', None),
     'i_t_how': ('max', 'type', (*bpd.util.fn_type, str),
         '''
@@ -105,9 +105,9 @@ _cluster_params_default = bpd.util.ParamsDict({
         '''
             (default=None) If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers.
         ''', None),
-    't': (None, 'type_none', int,
+    't': (None, 'type_none', (int, list),
         '''
-            (default=None) If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data).
+            (default=None) If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data); if list of int, gives periods in data to consider (only valid for non-collapsed data).
         ''', None),
     'weighted': (True, 'type', bool,
         '''
@@ -390,6 +390,10 @@ class BipartiteBase(DataFrame):
             # Check if column already included
             raise ValueError(f'Trying to add general column {col_name!r}, but this column is already assigned.')
 
+        if is_contiguous and how_collapse not in ['first', 'last', None]:
+            # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
+            raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
+
         if col_data is not None:
             col_data_lst = to_list(col_data)
         if col_reference is not None:
@@ -452,6 +456,26 @@ class BipartiteBase(DataFrame):
         frame = frame.sort_cols(copy=False)
 
         return frame
+
+    def column_properties(self, col_name):
+        '''
+        Print properties associated with a particular column.
+
+        Arguments:
+            col_name (str): general column name whose properties will be printed
+        '''
+        if col_name in self._included_cols():
+            is_contig = col_name in self.columns_contig.keys()
+            ret_str = f'General column: {col_name!r}\n'
+            ret_str += f'Subcolumn(s): {self.col_reference_dict[col_name]!r}\n'
+            ret_str += f'Datatype: {self.col_dtype_dict[col_name]!r}\n'
+            ret_str += f'Column is contiguous: {is_contig}\n'
+            ret_str += f'How to collapse at the worker-firm spell level (None if dropped during collapse): {self.col_collapse_dict[col_name]!r}\n'
+            ret_str += f'Whether data should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict[col_name]}'
+
+            print(ret_str)
+        else:
+            raise AttributeError(f'General column {col_name!r} is not included in the dataframe. Valid options are: {self._included_cols()!r}.')
 
     def unique_ids(self, id_col):
         '''
@@ -1021,7 +1045,7 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_one_observation_out', keep observations in the largest leave-one-observation-out connected set; if 'leave_one_worker_out', keep observations in the largest leave-one-worker-out connected set; if 'leave_one_firm_out', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
-            component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
+            component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
             copy (bool): if False, avoid copy
@@ -1059,8 +1083,8 @@ class BipartiteBase(DataFrame):
             if component_size_variable != 'firms':
                 # If component_size_varible is firms, no need to iterate
                 for cc in cc_list[1:]:
-                    frame_cc = frame.keep_ids('j', cc, is_sorted=True, copy=False)
-                    replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt')
+                    frame_cc = frame.keep_ids('j', cc, is_sorted=is_sorted, copy=False)
+                    replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', is_sorted=is_sorted)
                     if replace:
                         frame_largest_cc = frame_cc
             frame = frame_largest_cc

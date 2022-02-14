@@ -430,15 +430,16 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col
         return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name].to_numpy()
     return agg_array
 
-def compare_frames(frame1, frame2, size_variable='len', operator='geq'):
+def compare_frames(frame1, frame2, size_variable='len', operator='geq', is_sorted=False):
     '''
     Compare two frames using a particular size property and operator.
 
     Arguments:
         frame1 (BipartiteBase): first frame
         frame2 (BipartiteBase): second frame
-        size_variable (str): what size variable to use to compare frames. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers).
+        size_variable (str): what size variable to use to compare frames. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
         operator (str): how to compare properties. Options are 'eq' (equality), 'gt' (greater than), 'lt' (less than), 'geq' (greater than or equal to), and 'leq' (less than or equal to).
+        is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if already sorted.
     '''
     # First, get the values for the frames corresponding to the given property
     property_dict = {
@@ -446,8 +447,14 @@ def compare_frames(frame1, frame2, size_variable='len', operator='geq'):
         'length': lambda a: len(a),
         'firms': lambda a: a.n_firms(),
         'workers': lambda a: a.n_workers(),
-        'stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
-        'movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i')
+        'n_stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
+        'n_movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i'),
+        'length_stayers': len(lambda a: a.loc[~(a.get_worker_m(is_sorted)), :]),
+        'len_stayers': len(lambda a: a.loc[~(a.get_worker_m(is_sorted)), :]),
+        'length_movers': len(lambda a: a.loc[a.get_worker_m(is_sorted), :]),
+        'len_movers': len(lambda a: a.loc[a.get_worker_m(is_sorted), :]),
+        'n_stays': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() == 0, :]),
+        'n_moves': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() > 0, :])
     }
     try:
         val1 = frame1.comp_size

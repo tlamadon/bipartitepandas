@@ -3582,7 +3582,16 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') == bdf['c'].max() + 1
 
-    ## Fourth, try adding column with no associated data ##
+    ## Fourth, construct while adding column, and make it contiguous but with an invalid collapse option ##
+    try:
+        bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse='mean').clean()
+        success = False
+    except NotImplementedError:
+        success = True
+
+    assert success
+
+    ## Fifth, try adding column with no associated data ##
     try:
         bdf = bpd.BipartiteLong(data=df).add_column('r').clean()
         success = False
@@ -3591,7 +3600,7 @@ def test_custom_columns_1():
 
     assert success
 
-    ## Fifth, try adding column where listed subcolumns are already assigned ##
+    ## Sixth, try adding column where listed subcolumns are already assigned ##
     try:
         bdf = bpd.BipartiteLong(data=df).add_column('c', col_reference='i').clean()
         success = False
@@ -3600,7 +3609,7 @@ def test_custom_columns_1():
 
     assert success
 
-    ## Sixth, try with event study format, but don't make custom columns contiguous ##
+    ## Seventh, try with event study format, but don't make custom columns contiguous ##
     bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy())).add_column('c').clean()
 
     assert 'c1' in bdf.columns and 'c2' in bdf.columns
@@ -3611,7 +3620,7 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != max(bdf['c1'].max(), bdf['c2'].max()) + 1
 
-    ## Seventh, try with event study format, and make custom columns contiguous ##
+    ## Eighth, try with event study format, and make custom columns contiguous ##
     bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
 
     assert 'c1' in bdf.columns and 'c2' in bdf.columns
@@ -3624,7 +3633,7 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') == max(bdf['c1'].max(), bdf['c2'].max()) + 1
 
-    ## Eighth, try with event study format, but don't mark custom column as not being split ##
+    ## Ninth, try with event study format, but don't mark custom column as not being split ##
     try:
         bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', long_es_split=False).clean().to_eventstudy())).add_column('c').clean()
         success = False
@@ -3633,7 +3642,7 @@ def test_custom_columns_1():
 
     assert success
 
-    ## Ninth, try with event study format, but don't split custom column (set to None for event study to make sure data cleaning handles this case properly) ##
+    ## Tenth, try with event study format, but don't split custom column (set to None for event study to make sure data cleaning handles this case properly) ##
     bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', long_es_split=False).clean().to_eventstudy())).add_column('c', long_es_split=None).clean()
 
     assert 'c' in bdf.columns
@@ -3644,7 +3653,7 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
-    ## Tenth, go from event study and back to long ##
+    ## Eleventh, go from event study and back to long ##
     bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy())).add_column('c').clean().to_long()
 
     assert 'c' in bdf.columns
@@ -3655,7 +3664,7 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
-    ## Eleventh, go from long to event study with contiguous column that should drop ##
+    ## Twelfth, go from long to event study with contiguous column that should drop ##
     bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, long_es_split=None).clean().to_eventstudy()
 
     assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
@@ -3666,7 +3675,7 @@ def test_custom_columns_1():
     assert 'c' not in bdf.col_collapse_dict.keys()
     assert 'c' not in bdf.col_long_es_dict.keys()
 
-    ## Twelfth, go from event study to long with contiguous column that should drop ##
+    ## Thirteenth, go from event study to long with contiguous column that should drop ##
     bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True, long_es_split=None).clean().to_long()
 
     assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
@@ -3811,7 +3820,7 @@ def test_dataframe_2():
 
     ## Long format ##
     a = bpd.SimBipartite().simulate()
-    b = bpd.BipartiteDataFrame(**a, custom_contig_dict={'l': True}, custom_dtype_dict={'l': 'any'}, custom_how_collapse_dict={'alpha': None}, custom_long_es_split_dict={'psi': False}).clean()
+    b = bpd.BipartiteDataFrame(**a, custom_contig_dict={'l': True}, custom_dtype_dict={'l': 'any'}, custom_how_collapse_dict={'alpha': None, 'l': None}, custom_long_es_split_dict={'psi': False}).clean()
 
     assert 'l' in b.columns_contig.keys()
     assert b.col_dtype_dict['l'] == 'any'
