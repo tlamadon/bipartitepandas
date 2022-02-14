@@ -4,10 +4,10 @@ Class for a bipartite network
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+from igraph import Graph
 import warnings
 import bipartitepandas as bpd
 from bipartitepandas.util import update_dict, to_list
-from igraph import Graph
 
 def _recollapse_loop(force=False):
     '''
