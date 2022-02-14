@@ -42,6 +42,20 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         '''
         return bpd.BipartiteLongCollapsed
 
+    def uncollapse(self, drop_no_collapse_columns=True, is_sorted=False, copy=True):
+        '''
+        Return collapsed long data reformatted into long data, by assuming variables constant over spells.
+
+        Arguments:
+            drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will not be dropped
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Set to True if already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteEventStudy): collapsed event study data reformatted as event study data
+        '''
+        raise NotImplementedError('.uncollapse() is not implemented for collapsed event study format. Please convert to collapsed long format with the method .to_long().')
+
     def get_worker_m(self, is_sorted=False):
         '''
         Get NumPy array indicating whether the worker associated with each observation is a mover.
