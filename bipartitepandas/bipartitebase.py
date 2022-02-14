@@ -7,7 +7,7 @@ from pandas import DataFrame
 import warnings
 import bipartitepandas as bpd
 from bipartitepandas.util import update_dict, to_list
-import igraph as ig
+from igraph import Graph
 
 def _recollapse_loop(force=False):
     '''
@@ -1148,7 +1148,7 @@ class BipartiteBase(DataFrame):
         }
         linkages, max_j = linkages_fn_dict[connectedness](is_sorted=is_sorted, copy=copy)
         # n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
-        return ig.Graph(edges=linkages), max_j # n=n_firms
+        return Graph(edges=linkages), max_j # n=n_firms
 
     def sort_cols(self, copy=True):
         '''

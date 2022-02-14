@@ -3,7 +3,7 @@ Class for a simulated two-way fixed effect network
 '''
 import numpy as np
 ax = np.newaxis
-import pandas as pd
+from pandas import DataFrame
 from scipy.stats import norm
 from bipartitepandas.util import ParamsDict
 
@@ -199,7 +199,7 @@ class SimBipartite:
         spell_data = spellcount.flatten()
 
         # Merge all columns into a dataframe
-        data = pd.DataFrame(data={'i': ids, 't': ts, 'l': l_data, 'k': k_data,
+        data = DataFrame(data={'i': ids, 't': ts, 'l': l_data, 'k': k_data,
                                 'alpha': alpha_data, 'psi': psi_data,
                                 'spell': spell_data})
 

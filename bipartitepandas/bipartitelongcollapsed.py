@@ -1,7 +1,6 @@
 '''
 Class for a bipartite network in collapsed long form
 '''
-import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -194,7 +193,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             for i, row in enumerate(frame.itertuples(index=False)):
                 # Source: https://stackoverflow.com/a/41022840/17333120
                 nt_i = nt[i]
-                long_dict['t'].extend(np.arange(row[col_to_idx('t1')], row[col_to_idx('t2')] + 1))
+                long_dict['t'].extend(range(row[col_to_idx('t1')], row[col_to_idx('t2')] + 1))
                 for col in all_cols:
                     if (frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns):
                         # Drop column if None and drop_no_collapse_columns is True
