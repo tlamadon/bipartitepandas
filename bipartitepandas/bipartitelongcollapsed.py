@@ -271,7 +271,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         self.log('preparing to compute spell ids', level='info')
 
-        if fast:
+        if fast or self.no_returns:
             spell_ids = arange(len(self)) + 1
         else:
             # Sort and copy
