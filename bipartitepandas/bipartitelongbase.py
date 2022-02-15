@@ -157,9 +157,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
             self.log(f"computing largest connected set (how={clean_params['connectedness']!r})", level='info')
             if verbose:
                 print(f"computing largest connected set (how={clean_params['connectedness']!r})")
-            frame = frame._conset(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
+            frame = frame._connected_components(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
-            # Next, check contiguous ids after igraph, in case the connected components dropped ids (_conset() automatically updates contiguous attributes)
+            # Next, check contiguous ids after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
                 if frame._col_included(contig_col) and (not is_contig):
                     self.log(f'making {contig_col!r} ids contiguous', level='info')

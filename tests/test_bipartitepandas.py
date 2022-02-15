@@ -631,10 +631,10 @@ def test_contiguous_wids_12():
     # Firm 1 -> 2
     worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1})
     worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2})
-    # Worker 3
+    # Worker 3.5
     # Firm 2 -> 2
-    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1})
-    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 2})
+    worker_data.append({'i': 3.5, 'j': 2, 'y': 1., 't': 1})
+    worker_data.append({'i': 3.5, 'j': 2, 'y': 1., 't': 2})
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
@@ -3771,6 +3771,92 @@ def test_custom_columns_2():
     assert 'c' not in bdf.col_dtype_dict.keys()
     assert 'c' not in bdf.col_collapse_dict.keys()
     assert 'c' not in bdf.col_long_es_dict.keys()
+
+def test_custom_columns_3():
+    # Make sure setting column properties works properly
+    worker_data = []
+    # Firm 0 -> 0 -> 1 -> 0
+    # Custom 0 -> 2 -> 2 -> 3
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'c': 0})
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 2, 'c': 1.5})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 3, 'c': 2})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'c': 3})
+    # Firm 1 -> 2
+    # Custom 3 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'c': 3})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'c': 2})
+    # Firm 2 -> 1
+    # Custom 2 -> 0
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1, 'c': 2})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2, 'c': 0})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    ## First, contiguous to not contiguous ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
+    init_properties = bdf.get_column_properties('c')
+
+    assert (init_properties['dtype'] == 'any') and init_properties['is_contiguous'] and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
+    assert ('c' in bdf.columns_contig.keys()) and ('c' in bdf.id_reference_dict.keys())
+
+    bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=False, how_collapse='mean', long_es_split=None)
+    new_properties = bdf.get_column_properties('c')
+
+    assert (new_properties['dtype'] == 'int') and (not new_properties['is_contiguous']) and (new_properties['how_collapse'] == 'mean') and (new_properties['long_es_split'] is None)
+    assert ('c' not in bdf.columns_contig.keys()) and ('c' not in bdf.id_reference_dict.keys())
+
+    ## Second, not contiguous to contiguous ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=False).clean()
+    init_properties = bdf.get_column_properties('c')
+
+    assert (init_properties['dtype'] == 'any') and (not init_properties['is_contiguous']) and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
+    assert ('c' not in bdf.columns_contig.keys()) and ('c' not in bdf.id_reference_dict.keys())
+
+    bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=True, how_collapse='last', long_es_split=None)
+    new_properties = bdf.get_column_properties('c')
+
+    assert (new_properties['dtype'] == 'int') and new_properties['is_contiguous'] and (new_properties['how_collapse'] == 'last') and (new_properties['long_es_split'] is None)
+    assert ('c' in bdf.columns_contig.keys()) and ('c' in bdf.id_reference_dict.keys())
+
+    ## Third, not contiguous to contiguous, but invalid how_collapse ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=False).clean()
+    init_properties = bdf.get_column_properties('c')
+
+    try:
+        bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=True, how_collapse='mean', long_es_split=None)
+        success = False
+    except NotImplementedError:
+        success = True
+    assert success
+
+def test_custom_columns_4():
+    # Make sure rename works properly with custom columns
+    worker_data = []
+    # Firm 0 -> 0 -> 1 -> 0
+    # Custom 0 -> 2 -> 2 -> 3
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'c': 0})
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 2, 'c': 1.5})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 3, 'c': 2})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'c': 3})
+    # Firm 1 -> 2
+    # Custom 3 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'c': 3})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'c': 2})
+    # Firm 2 -> 1
+    # Custom 2 -> 0
+    worker_data.append({'i': 2, 'j': 2, 'y': 1., 't': 1, 'c': 2})
+    worker_data.append({'i': 2, 'j': 1, 'y': 2., 't': 2, 'c': 0})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    ## Contiguous column should alter id_reference_dict properly ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
+
+    assert 'c' in bdf.id_reference_dict.keys()
+
+    bdf = bdf.rename({'c': 'cw'}, axis=1)
+
+    assert 'cw' in bdf.id_reference_dict.keys()
 
 ########################################
 ##### Tests for BipartiteDataFrame #####

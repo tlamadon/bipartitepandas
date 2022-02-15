@@ -339,9 +339,9 @@ class BipartiteBase(DataFrame):
         ##### Connectedness #####
         is_connected_dict = {
             None: lambda : None,
-            'connected': lambda : self._construct_graph(self.connectedness, is_sorted=False, copy=False)[0].is_connected(),
-            'leave_out_observation': lambda: (len(self) == len(self._conset(connectedness=self.connectedness, is_sorted=False))),
-            'leave_out_firm': lambda: (len(self) == len(self._conset(connectedness=self.connectedness, is_sorted=False)))
+            'connected': lambda : self._construct_graph(self.connectedness)[0].is_connected(),
+            'leave_out_observation': lambda: (len(self) == len(self._connected_components(connectedness=self.connectedness))),
+            'leave_out_firm': lambda: (len(self) == len(self._connected_components(connectedness=self.connectedness)))
         }
         is_connected = is_connected_dict[self.connectedness]()
 
@@ -377,23 +377,24 @@ class BipartiteBase(DataFrame):
         Returns:
             (BipartiteBase): dataframe with new column(s)
         '''
-        if copy:
-            frame = self.copy()
-        else:
-            frame = self
-
         # Before modifying anything, run a few checks
         if col_name in self.columns_req + self.columns_opt:
             # Check if column is a default column
             raise ValueError(f'Trying to add general column {col_name!r}, but this is reserved as a default column name. Default columns should be added using standard column assignment.')
 
-        if frame._col_included(col_name):
+        if self._col_included(col_name):
             # Check if column already included
             raise ValueError(f'Trying to add general column {col_name!r}, but this column is already assigned.')
 
         if is_contiguous and how_collapse not in ['first', 'last', None]:
             # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
             raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
+
+        # Wait to copy until after initial checks are complete
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
 
         if col_data is not None:
             col_data_lst = to_list(col_data)
@@ -458,7 +459,81 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def column_properties(self, col_name):
+    def set_column_properties(self, col_name, is_contiguous=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
+        '''
+        Safe method for setting the properties of pre-existing custom columns.
+
+        Arguments:
+            col_name (str): general column name
+            is_contiguous (bool): if True, column is contiguous
+            dtype (str): column datatype, must be one of 'int', 'float', or 'any'
+            how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
+            long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteBase): dataframe with new column(s)
+        '''
+        if self._col_included(col_name):
+            # Before modifying anything, run a few checks
+            if col_name in self.columns_req + self.columns_opt:
+                # Check if column is a default column
+                raise ValueError(f'Trying to update properties for general column {col_name!r}, which is a default column. Default column properties cannot be changed.')
+
+            if is_contiguous and how_collapse not in ['first', 'last', None]:
+                # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
+                raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is contiguous and will be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
+
+            # Wait to copy until after initial checks are complete
+            if copy:
+                frame = self.copy()
+            else:
+                frame = self
+
+            # Assign class attributes
+            if is_contiguous:
+                if col_name not in frame.columns_contig.keys():
+                    # Contiguous but wasn't before
+                    frame.columns_contig[col_name] = None
+                    if frame.id_reference_dict:
+                        frame.id_reference_dict[col_name] = DataFrame()
+            else:
+                if col_name in frame.columns_contig.keys():
+                    # Not contiguous but was before
+                    del frame.columns_contig[col_name]
+                    if frame.id_reference_dict:
+                        del frame.id_reference_dict[col_name]
+            frame.col_dtype_dict[col_name] = dtype
+            frame.col_collapse_dict[col_name] = how_collapse
+            frame.col_long_es_dict[col_name] = long_es_split
+
+            return frame
+        else:
+            raise AttributeError(f'General column {col_name!r} is not included in the dataframe. Valid options are: {self._included_cols()!r}.')
+
+    def get_column_properties(self, col_name):
+        '''
+        Return dictionary linking properties to their value for a particular column.
+
+        Arguments:
+            col_name (str): general column name whose properties will be printed
+
+        Returns:
+            (dict): dictionary linking properties to their value for a particular column ('general_column': general column name; 'subcolumns': subcolumns linked to general column; 'dtype': column datatype; 'is_contiguous': column is contiguous; 'how_collapse': how to collapse at the worker-firm spell level (None if dropped during collapse); 'long_es_split': whether data should split into two columns when converting between long and event study formats (None if dropped during conversion))
+        '''
+        if col_name in self._included_cols():
+            return {
+                'general_column': col_name,
+                'subcolumns': self.col_reference_dict[col_name],
+                'dtype': self.col_dtype_dict[col_name],
+                'is_contiguous': col_name in self.columns_contig.keys(),
+                'how_collapse': self.col_collapse_dict[col_name],
+                'long_es_split': self.col_long_es_dict[col_name]
+                }
+        else:
+            raise AttributeError(f'General column {col_name!r} is not included in the dataframe. Valid options are: {self._included_cols()!r}.')
+
+    def print_column_properties(self, col_name):
         '''
         Print properties associated with a particular column.
 
@@ -466,11 +541,10 @@ class BipartiteBase(DataFrame):
             col_name (str): general column name whose properties will be printed
         '''
         if col_name in self._included_cols():
-            is_contig = col_name in self.columns_contig.keys()
             ret_str = f'General column: {col_name!r}\n'
             ret_str += f'Subcolumn(s): {self.col_reference_dict[col_name]!r}\n'
             ret_str += f'Datatype: {self.col_dtype_dict[col_name]!r}\n'
-            ret_str += f'Column is contiguous: {is_contig}\n'
+            ret_str += f'Column is contiguous: {col_name in self.columns_contig.keys()}\n'
             ret_str += f'How to collapse at the worker-firm spell level (None if dropped during collapse): {self.col_collapse_dict[col_name]!r}\n'
             ret_str += f'Whether data should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict[col_name]}'
 
@@ -856,21 +930,25 @@ class BipartiteBase(DataFrame):
                 ## Start by checking if column is in col_reference_dict ##
                 general_rename = False
                 if col_cur in frame.columns_req:
-                    # If column required
-                    general_rename = True
-                    if (col_cur in columns_contig.keys()) and id_reference_dict:
-                        id_reference_dict[col_cur] = DataFrame()
                     if not allow_required:
                         # If required columns are not allowed to be renamed
                         raise ValueError(f'{col_cur!r} is a required column and cannot be renamed without specifying allow_required=True.')
-                elif col_cur in frame.columns_opt:
-                    # If column optional
+                    # If column required
                     general_rename = True
-                    if (col_cur in columns_contig.keys()) and id_reference_dict:
-                        id_reference_dict[col_cur] = DataFrame()
+                    if col_cur in columns_contig.keys():
+                        columns_contig[col_cur] = None
+                        if id_reference_dict:
+                            id_reference_dict[col_cur] = DataFrame()
+                elif col_cur in frame.columns_opt:
                     if not allow_optional:
                         # If optional columns are not allowed to be renamed
                         raise ValueError(f'{col_cur!r} is a pre-defined optional column and cannot be renamed without specifying allow_optional=True.')
+                    # If column optional
+                    general_rename = True
+                    if col_cur in columns_contig.keys():
+                        columns_contig[col_cur] = None
+                        if id_reference_dict:
+                            id_reference_dict[col_cur] = DataFrame()
                 elif col_cur in frame._included_cols():
                     # If column is user-added
                     general_rename = True
@@ -893,23 +971,26 @@ class BipartiteBase(DataFrame):
                 ## Finally, update rename_dict_subcols if column is in col_reference_dict ##
                 if general_rename:
                     # If renaming a column from col_reference_dict
-                    id_reference = []
+                    col_reference = []
                     for subcol_cur in to_list(frame.col_reference_dict[col_cur]):
                         # Construct new column name and set value for rename dictionary
                         subcol_str, subcol_num = bpd.util._text_num_split(subcol_cur)
                         subcol_new = col_new + subcol_num
                         rename_dict_subcols[subcol_cur] = subcol_new
-                        id_reference.append(subcol_new)
-                    if len(id_reference) == 1:
+                        col_reference.append(subcol_new)
+                    if len(col_reference) == 1:
                         # If list is length 1, extract first entry from list
-                        id_reference = id_reference[0]
+                        col_reference = col_reference[0]
 
                     # Update attribute dictionaries
-                    if col_cur in columns_contig.keys():
+                    if col_cur in frame.columns_contig.keys():
                         columns_contig[col_new] = frame.columns_contig[col_cur]
                         if id_reference_dict:
-                            id_reference_dict[col_new] = frame.id_reference_dict[col_cur]
-                    col_reference_dict[col_new] = id_reference
+                            if inplace:
+                                id_reference_dict[col_new] = frame.id_reference_dict[col_cur]
+                            else:
+                                id_reference_dict[col_new] = frame.id_reference_dict[col_cur].copy()
+                    col_reference_dict[col_new] = col_reference
                     col_dtype_dict[col_new] = frame.col_dtype_dict[col_cur]
                     col_collapse_dict[col_new] = frame.col_collapse_dict[col_cur]
                     col_long_es_dict[col_new] = frame.col_long_es_dict[col_cur]
@@ -977,15 +1058,10 @@ class BipartiteBase(DataFrame):
         # Source: https://stackoverflow.com/questions/16453465/multi-column-factorize-in-pandas
         factorized = pd.factorize(all_ids)
 
-        # Quickly check whether ids need to be reset
-        try:
-            if max(factorized[1]) + 1 == len(factorized[1]):
-                # ids are already contiguous
-                frame.columns_contig[id_col] = True
-                return frame
-        except TypeError:
-            # If ids are not integers, this will return a TypeError and we can ignore it
-            pass
+        if bpd.util._is_subdtype(all_ids, 'int') and (min(factorized[1]) == 0) and (max(factorized[1]) + 1 == len(factorized[1])):
+            # Quickly check whether ids need to be reset (i.e. check if ids are already contiguous)
+            frame.columns_contig[id_col] = True
+            return frame
 
         frame.loc[:, cols] = factorized[0].reshape((n_rows, n_cols))
 
@@ -1040,9 +1116,9 @@ class BipartiteBase(DataFrame):
                 self.log(error_msg, level='info')
                 raise ValueError(error_msg)
 
-    def _conset(self, connectedness='connected', component_size_variable='firms', drop_returns_to_stays=False, is_sorted=False, copy=True):
+    def _connected_components(self, connectedness='connected', component_size_variable='firms', drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
-        Update data to include only the largest connected component of movers.
+        Update data to include only the largest component connected by movers.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
@@ -1052,7 +1128,7 @@ class BipartiteBase(DataFrame):
             copy (bool): if False, avoid copy
 
         Returns:
-            (BipartiteBase): dataframe with connected component of movers
+            (BipartiteBase): dataframe with largest component connected by movers
         '''
         if copy:
             frame = self.copy()
