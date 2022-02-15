@@ -1170,6 +1170,7 @@ def test_general_methods_18():
         success = False
     except ValueError:
         success = True
+
     assert success
 
     bdf['g1'] = 1
@@ -3558,6 +3559,16 @@ def test_custom_columns_1():
 
     assert success
 
+    ## 1.5, try constructing with column that has digit in name ##
+    bdf = bpd.BipartiteLong(data=df.rename({'c': 'c1'}, axis=1))
+    try:
+        bdf = bdf.add_column('c1')
+        success = False
+    except NotImplementedError:
+        success = True
+
+    assert success
+
     ## Second, construct while adding column, but don't make it contiguous ##
     bdf = bpd.BipartiteLong(data=df).add_column('c').clean()
 
@@ -3827,6 +3838,7 @@ def test_custom_columns_3():
         success = False
     except NotImplementedError:
         success = True
+
     assert success
 
 def test_custom_columns_4():
@@ -3857,6 +3869,14 @@ def test_custom_columns_4():
     bdf = bdf.rename({'c': 'cw'}, axis=1)
 
     assert 'cw' in bdf.id_reference_dict.keys()
+
+    try:
+        bdf = bdf.rename({'cw': 'cw1'}, axis=1)
+        success = False
+    except NotImplementedError:
+        success = True
+
+    assert success
 
 ########################################
 ##### Tests for BipartiteDataFrame #####

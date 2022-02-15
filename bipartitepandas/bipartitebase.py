@@ -390,6 +390,11 @@ class BipartiteBase(DataFrame):
             # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
             raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
 
+        for char in col_name:
+            # Make sure col_name does not contain digits
+            if char.isdigit():
+                raise NotImplementedError(f'Input specifies to name general column {col_name!r}, but general column names are not permitted to include numbers.')
+
         # Wait to copy until after initial checks are complete
         if copy:
             frame = self.copy()
@@ -908,12 +913,16 @@ class BipartiteBase(DataFrame):
                 raise ValueError(f'.rename() requires that rename_dict values are unique. However, the input {rename_dict} gives non-unique values.')
 
             for col_cur, col_new in rename_dict.items():
-                # Make sure col_cur != col_new
                 if col_cur == col_new:
+                    # Make sure col_cur != col_new
                     raise ValueError(f'.rename() requires that keys in rename_dict are distinct from their associated values. However, the input gives the key-value pair where both the key and the value are equal to {col_cur!r}.')
-                # Make sure you don't rename a column to have the same name as another column without also renaming the second column
                 if (col_new in frame.col_reference_dict.keys()) and (col_new not in rename_dict.keys()):
+                    # Make sure you don't rename a column to have the same name as another column without also renaming the second column
                     raise ValueError(f'.rename() requires that if a column is renamed to have the same name as another column, the second column must also be renamed. However, {col_cur!r} is set to be renamed to {col_new!r}, but {col_new!r} is already a column and is not being renamed.')
+                for char in col_new:
+                    # Make sure col_new does not contain digits
+                    if char.isdigit():
+                        raise NotImplementedError(f'Input specifies to rename column {col_cur!r} to {col_new!r}, but general column names are not permitted to include numbers.')
 
             # Copy attribute dictionaries to update them
             columns_contig = frame.columns_contig.copy()
