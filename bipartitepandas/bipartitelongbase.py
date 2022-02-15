@@ -315,40 +315,6 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return es_frame
 
-    def _get_spell_ids(self, is_sorted=False, copy=True):
-        '''
-        Generate array of spell ids, where a spell is defined as an uninterrupted period of time where a worker works at the same firm. Spell ids are generated for sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method.
-
-        Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            copy (bool): if False, avoid copy
-
-        Returns:
-            (NumPy Array): spell ids
-        '''
-        self.log('preparing to compute spell ids', level='info')
-
-        # Sort and copy
-        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-        self.log('data sorted by i (and t, if included)', level='info')
-
-        # Introduce lagged i and j
-        i_col = frame.loc[:, 'i'].to_numpy()
-        j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
-        j_prev = np.roll(j_col, 1)
-        self.log('lagged i and j introduced', level='info')
-
-        # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
-        # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
-        new_spell = (j_col != j_prev) | (i_col != i_prev)
-        del i_col, j_col, i_prev, j_prev
-
-        spell_ids = new_spell.cumsum()
-        self.log('spell ids generated', level='info')
-
-        return spell_ids
-
     def _drop_returns(self, how=False, is_sorted=False, reset_index=True, copy=True):
         '''
         Drop observations where workers leave a firm then return to it.
