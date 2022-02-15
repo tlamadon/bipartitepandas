@@ -319,9 +319,12 @@ class BipartiteBase(DataFrame):
         ret_str += f'no duplicates: {no_duplicates}\n'
 
         ##### i-t unique #####
-        no_i_t_duplicates = (not self.duplicated(subset=sort_order).any())
+        if self._col_included('t'):
+            no_i_t_duplicates = (not self.duplicated(subset=sort_order).any())
+        else:
+            no_i_t_duplicates = None
 
-        ret_str += f'i-t (worker-year) observations unique (if t column(s) not included, then i observations unique): {no_i_t_duplicates}\n'
+        ret_str += f'i-t (worker-year) observations unique (None if t column(s) not included): {no_i_t_duplicates}\n'
 
         ##### No returns #####
         no_returns = (len(self) == len(self._drop_returns(how='returns', reset_index=False)))
@@ -359,7 +362,19 @@ class BipartiteBase(DataFrame):
 
             ret_str += f"'m' column correct (None if not included): {m_correct}\n"
         else:
-            ret_str += "'m' column correct (None if not included): None"
+            ret_str += "'m' column correct (None if not included): None\n"
+
+        ##### Column attributes #####
+        ret_str += f'Column reference dictionary: {self.col_reference_dict}\n'
+        # ret_str += f'Contiguous columns: {self.columns_contig}\n'
+        ret_str += f'Column datatypes: {self.col_dtype_dict}\n'
+        ret_str += f'How to collapse at the worker-firm spell level (None if dropped during collapse): {self.col_collapse_dict}\n'
+        ret_str += f'Whether column should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict}\n'
+
+        ##### Untracked columns #####
+        untracked_cols = [col for col in self.columns if col not in self._included_cols(subcols=True)]
+
+        ret_str += f'Untracked columns: {untracked_cols}'
 
         print(ret_str)
 
@@ -527,7 +542,7 @@ class BipartiteBase(DataFrame):
             col_name (str): general column name whose properties will be printed
 
         Returns:
-            (dict): dictionary linking properties to their value for a particular column ('general_column': general column name; 'subcolumns': subcolumns linked to general column; 'dtype': column datatype; 'is_contiguous': column is contiguous; 'how_collapse': how to collapse at the worker-firm spell level (None if dropped during collapse); 'long_es_split': whether data should split into two columns when converting between long and event study formats (None if dropped during conversion))
+            (dict): dictionary linking properties to their value for a particular column ('general_column': general column name; 'subcolumns': subcolumns linked to general column; 'dtype': column datatype; 'is_contiguous': column is contiguous; 'how_collapse': how to collapse at the worker-firm spell level (None if dropped during collapse); 'long_es_split': whether column should split into two columns when converting between long and event study formats (None if dropped during conversion))
         '''
         if col_name in self._included_cols():
             return {
@@ -554,7 +569,7 @@ class BipartiteBase(DataFrame):
             ret_str += f'Datatype: {self.col_dtype_dict[col_name]!r}\n'
             ret_str += f'Column is contiguous: {col_name in self.columns_contig.keys()}\n'
             ret_str += f'How to collapse at the worker-firm spell level (None if dropped during collapse): {self.col_collapse_dict[col_name]!r}\n'
-            ret_str += f'Whether data should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict[col_name]}'
+            ret_str += f'Whether column should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict[col_name]}'
 
             print(ret_str)
         else:
