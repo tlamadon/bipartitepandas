@@ -1,7 +1,7 @@
 '''
 Class for a bipartite network in collapsed long form
 '''
-from numpy import arange, roll
+from numpy import arange
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -256,6 +256,27 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             long_frame = long_frame.gen_m(force=True, copy=False)
 
         return long_frame
+
+    def _get_spell_ids(self, is_sorted=False, copy=True):
+        '''
+        Generate array of spell ids, where a spell is defined as an uninterrupted period of time where a worker works at the same firm. Spell ids are generated on sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method, then run the method with is_sorted=True.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (NumPy Array): spell ids
+        '''
+        if self.no_returns:
+            # If no returns, then each observation is guaranteed to be a new spell
+            self.log('preparing to compute spell ids', level='info')
+
+            spell_ids = arange(len(self))
+            self.log('spell ids generated', level='info')
+
+            return spell_ids
+        return super()._get_spell_ids(is_sorted=is_sorted, copy=copy)
 
     def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
         '''
