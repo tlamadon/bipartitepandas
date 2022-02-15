@@ -250,7 +250,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return frame
 
-    def _get_articulation_obs(self, G, max_j, is_sorted=False):
+    def _get_articulation_observations(self, G, max_j, is_sorted=False):
         '''
         Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
 
@@ -268,17 +268,17 @@ class BipartiteLong(bpd.BipartiteLongBase):
         bridges_firms = set([bridge[1] for bridge in bridges])
 
         # Get possible articulation observations
-        possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
         # possible_articulation_obs = self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
+        possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
 
         # Find articulation observations - an observation is an articulation observation if the firm-worker pair has only a single observation
         articulation_rows = possible_articulation_obs.index.to_numpy()[possible_articulation_obs.groupby(['i', 'j'], sort=(not (is_sorted and self.no_returns)))['m'].transform('size').to_numpy() == 1]
 
         return articulation_rows
 
-    def _get_articulation_matches(self, G, max_j, is_sorted=False, copy=True):
+    def _get_articulation_spells(self, G, max_j, is_sorted=False, copy=True):
         '''
-        Compute articulation matches for self, by checking whether self is leave-one-match-out connected when dropping selected matches one at a time. (Note: spell ids are generated for this method and are generated on sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method, then run the method with is_sorted=True.)
+        Compute articulation spells for self, by checking whether self is leave-one-spell-out connected when dropping selected spells one at a time. (Note: spell ids are generated for this method and are generated on sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method, then run the method with is_sorted=True.)
 
         Arguments:
             G (igraph Graph): graph linking firms by movers
@@ -287,7 +287,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            (NumPy Array): indices of articulation matches
+            (NumPy Array): indices of articulation spells
         '''
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
@@ -297,21 +297,21 @@ class BipartiteLong(bpd.BipartiteLongBase):
         bridges_workers = set([bridge[0] - (max_j + 1) for bridge in bridges])
         bridges_firms = set([bridge[1] for bridge in bridges])
 
-        # Get possible articulation matches
+        # Get possible articulation spells
+        # possible_articulation_spells = frame.loc[pd.Series(map(tuple, frame.loc[:, ['i', 'j']].to_numpy())).reindex_like(frame, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
         possible_articulation_rows = (frame.loc[:, 'i'].isin(bridges_workers) & frame.loc[:, 'j'].isin(bridges_firms)).to_numpy()
-        possible_articulation_matches = frame.loc[possible_articulation_rows, ['i', 'j', 'm']]
-        # possible_articulation_matches = frame.loc[pd.Series(map(tuple, frame.loc[:, ['i', 'j']].to_numpy())).reindex_like(frame, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
+        possible_articulation_spells = frame.loc[possible_articulation_rows, ['i', 'j', 'm']]
 
-        # Find articulation matches - a match is an articulation match if the particular firm-worker pair has only a single spell
+        # Find articulation spells - a spell is an articulation spell if the particular firm-worker pair has only a single spell
         if frame.no_returns:
-            # If no returns, every match is guaranteed to be an articulation match
-            articulation_rows = possible_articulation_matches.index.to_numpy()
+            # If no returns, every spell is guaranteed to be an articulation spell
+            articulation_rows = possible_articulation_spells.index.to_numpy()
         else:
-            # If returns, then returns will have multiple worker-firm pairs, meaning they are not articulation matches
+            # If returns, then returns will have multiple worker-firm pairs, meaning they are not articulation spells
             spell_ids = frame._get_spell_ids(is_sorted=True, copy=False)
-            possible_articulation_matches['spell_id'] = spell_ids[possible_articulation_rows]
-            articulation_rows = possible_articulation_matches.index.to_numpy()[possible_articulation_matches.groupby(['i', 'j'], sort=True)['spell_id'].transform('nunique').to_numpy() == 1]
-            possible_articulation_matches.drop('spell_id', axis=1, inplace=True)
+            possible_articulation_spells['spell_id'] = spell_ids[possible_articulation_rows]
+            articulation_rows = possible_articulation_spells.index.to_numpy()[possible_articulation_spells.groupby(['i', 'j'], sort=True)['spell_id'].transform('nunique').to_numpy() == 1]
+            possible_articulation_spells.drop('spell_id', axis=1, inplace=True)
 
         return articulation_rows
 

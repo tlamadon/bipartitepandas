@@ -318,7 +318,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return frame
 
-    def _get_articulation_obs(self, G, max_j, is_sorted=False):
+    def _get_articulation_observations(self, G, max_j, is_sorted=False):
         '''
         Compute articulation observations for self, by checking whether self is leave-one-observation-out connected when dropping selected observations one at a time.
 
@@ -336,8 +336,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         bridges_firms = set([bridge[1] for bridge in bridges])
 
         # Get possible articulation observations
-        possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
         # possible_articulation_obs = self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
+        possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
 
         # Find articulation observations - an observation is an articulation observation if the firm-worker pair has only a single observation
         if self.no_returns:
@@ -349,9 +349,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return articulation_rows
 
-    def _get_articulation_matches(self, G, max_j, is_sorted=False, copy=True):
+    def _get_articulation_spells(self, G, max_j, is_sorted=False, copy=True):
         '''
-        Compute articulation matches for self, by checking whether self is leave-one-match-out connected when dropping selected matches one at a time.
+        Compute articulation spells for self, by checking whether self is leave-one-spell-out connected when dropping selected spells one at a time.
 
         Arguments:
             G (igraph Graph): graph linking firms by movers
@@ -360,7 +360,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             copy (bool): not used for collapsed long format
 
         Returns:
-            (NumPy Array): indices of articulation matches
+            (NumPy Array): indices of articulation spells
         '''
-        # Since spells are a single observation with collapsed data, articulation matches are articulation observations
-        return self._get_articulation_obs(G=G, max_j=max_j, is_sorted=is_sorted)
+        # Since spells are equivalent to observations with collapsed data, articulation spells are articulation observations
+        return self._get_articulation_observations(G=G, max_j=max_j, is_sorted=is_sorted)
