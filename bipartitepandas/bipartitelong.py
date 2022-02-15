@@ -206,40 +206,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return collapsed_frame
 
-    def _get_spell_ids(self, is_sorted=False, copy=True):
-        '''
-        Generate array of spell ids, where a spell is defined as an uninterrupted period of time where a worker works at the same firm. Spell ids are generated for sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method.
-
-        Arguments:
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-            copy (bool): if False, avoid copy
-
-        Returns:
-            (NumPy Array): spell ids
-        '''
-        self.log('preparing to compute spell ids', level='info')
-
-        # Sort and copy
-        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-        self.log('data sorted by i (and t, if included)', level='info')
-
-        # Introduce lagged i and j
-        i_col = frame.loc[:, 'i'].to_numpy()
-        j_col = frame.loc[:, 'j'].to_numpy()
-        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
-        j_prev = np.roll(j_col, 1)
-        self.log('lagged i and j introduced', level='info')
-
-        # Generate spell ids (allow for i != i_prev to ensure that consecutive workers at the same firm get counted as different spells)
-        # Source: https://stackoverflow.com/questions/59778744/pandas-grouping-and-aggregating-consecutive-rows-with-same-value-in-column
-        new_spell = (j_col != j_prev) | (i_col != i_prev)
-        del i_col, j_col, i_prev, j_prev
-
-        spell_ids = new_spell.cumsum()
-        self.log('spell ids generated', level='info')
-
-        return spell_ids
-
     def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
         '''
         Keep only the highest paying job for i-t (worker-year) duplicates.
@@ -291,7 +257,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Arguments:
             G (igraph Graph): graph linking firms by movers
             max_j (int): maximum j
-            is_sorted (bool): if False, dataframe will be sorted by i and j in a groupby (but self will not be not sorted). Set is_sorted to True if dataframe is already sorted by i.
+            is_sorted (bool): if False, dataframe will be sorted by i and j in a groupby (but self will not be sorted). Set is_sorted to True if dataframe is already sorted by i.
 
         Returns:
             (NumPy Array): indices of articulation observations
@@ -307,6 +273,45 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         # Find articulation observations - an observation is an articulation observation if the firm-worker pair has only a single observation
         articulation_rows = possible_articulation_obs.index.to_numpy()[possible_articulation_obs.groupby(['i', 'j'], sort=(not (is_sorted and self.no_returns)))['m'].transform('size').to_numpy() == 1]
+
+        return articulation_rows
+
+    def _get_articulation_matches(self, G, max_j, is_sorted=False, copy=True):
+        '''
+        Compute articulation matches for self, by checking whether self is leave-one-match-out connected when dropping selected matches one at a time. (Note: spell ids are generated for this method and are generated on sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method, then run the method with is_sorted=True.)
+
+        Arguments:
+            G (igraph Graph): graph linking firms by movers
+            max_j (int): maximum j
+            is_sorted (bool): if False, dataframe will be sorted by i and j in a groupby (but self will not be sorted). Set is_sorted to True if dataframe is already sorted by i.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (NumPy Array): indices of articulation matches
+        '''
+        # Sort and copy
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
+        # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
+        bridges = [tuple(sorted(a, reverse=True)) for a in G.biconnected_components() if len(a) == 2]
+        bridges_workers = set([bridge[0] - (max_j + 1) for bridge in bridges])
+        bridges_firms = set([bridge[1] for bridge in bridges])
+
+        # Get possible articulation matches
+        possible_articulation_rows = (frame.loc[:, 'i'].isin(bridges_workers) & frame.loc[:, 'j'].isin(bridges_firms)).to_numpy()
+        possible_articulation_matches = frame.loc[possible_articulation_rows, ['i', 'j', 'm']]
+        # possible_articulation_matches = frame.loc[pd.Series(map(tuple, frame.loc[:, ['i', 'j']].to_numpy())).reindex_like(frame, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
+
+        # Find articulation matches - a match is an articulation match if the particular firm-worker pair has only a single spell
+        if frame.no_returns:
+            # If no returns, every match is guaranteed to be an articulation match
+            articulation_rows = possible_articulation_matches.index.to_numpy()
+        else:
+            # If returns, then returns will have multiple worker-firm pairs, meaning they are not articulation matches
+            spell_ids = frame._get_spell_ids(is_sorted=True, copy=False)
+            possible_articulation_matches['spell_id'] = spell_ids[possible_articulation_rows]
+            articulation_rows = possible_articulation_matches.index.to_numpy()[possible_articulation_matches.groupby(['i', 'j'], sort=True)['spell_id'].transform('nunique').to_numpy() == 1]
+            possible_articulation_matches.drop('spell_id', axis=1, inplace=True)
 
         return articulation_rows
 
