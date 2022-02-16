@@ -1,5 +1,5 @@
 '''
-Base class for bipartite networks in long or collapsed long form
+Base class for bipartite networks in long or collapsed long form.
 '''
 import numpy as np
 import pandas as pd
@@ -424,10 +424,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Prepare data for clustering.
 
         Arguments:
-            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers; if 'stays', clusters on only stays; if 'moves', clusters on only moves
             t (int or list of int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data); if list of int, gives periods in data to consider (only valid for non-collapsed data)
             weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
-            is_sorted (bool): not used for long format
+            is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
         Returns:
             data (Pandas DataFrame): data prepared for clustering
@@ -441,11 +441,15 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         if stayers_movers is not None:
             if stayers_movers == 'stayers':
-                frame = frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :]
+                frame = frame.loc[~(frame.get_worker_m(is_sorted=is_sorted)), :]
             elif stayers_movers == 'movers':
+                frame = frame.loc[frame.get_worker_m(is_sorted=is_sorted), :]
+            elif stayers_movers == 'stays':
+                frame = frame.loc[frame.loc[:, 'm'].to_numpy() == 0, :]
+            elif stayers_movers == 'moves':
                 frame = frame.loc[frame.loc[:, 'm'].to_numpy() > 0, :]
             else:
-                raise NotImplementedError(f"Invalid 'stayers_movers' option, {stayers_movers!r}. Valid options are 'stayers', 'movers', or None.")
+                raise NotImplementedError(f"Invalid 'stayers_movers' option, {stayers_movers!r}. Valid options are 'stayers', 'movers', 'stays', 'moves', or None.")
 
         # If period-level, then only use data for that particular period
         if t is not None:

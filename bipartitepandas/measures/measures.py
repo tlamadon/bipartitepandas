@@ -1,5 +1,5 @@
 '''
-Functions for computing cluster measures. Note: use classes rather than nested functions because nested functions cannot be pickled (source: https://stackoverflow.com/a/12022055/17333120).
+Classes for computing cluster measures. Note: use classes rather than nested functions because nested functions cannot be pickled (source: https://stackoverflow.com/a/12022055/17333120).
 '''
 import numpy as np
 from bipartitepandas.util import to_list, aggregate_transform

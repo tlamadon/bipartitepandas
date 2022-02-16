@@ -1,5 +1,5 @@
 '''
-Base class for bipartite networks in event study or collapsed event study form
+Base class for bipartite networks in event study or collapsed event study form.
 '''
 import numpy as np
 import pandas as pd
@@ -417,7 +417,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Prepare data for clustering.
 
         Arguments:
-            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers
+            stayers_movers (str or None, default=None): if None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers; if 'stays', clusters on only stays; if 'moves', clusters on only moves
             t (int or list of int or None, default=None): if None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data); if list of int, gives periods in data to consider (only valid for non-collapsed data)
             weighted (bool, default=True): if True, weight firm clusters by firm size (if a weight column is included, firm weight is computed using this column; otherwise, each observation has weight 1)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
@@ -427,7 +427,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             weights (NumPy Array or None): if weighted=True, gives NumPy array of firm weights for clustering; otherwise, is None
             jids (NumPy Array): firm ids of firms in subset of data used to cluster
         '''
-        return self.to_long(is_sorted=is_sorted, copy=copy)._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, copy=False)
+        return self.to_long(is_sorted=is_sorted, copy=copy)._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, is_sorted=True, copy=False)
 
     def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
         '''

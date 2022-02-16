@@ -1,5 +1,5 @@
 '''
-Class for a bipartite network
+Class for a bipartite network.
 '''
 import numpy as np
 import pandas as pd
@@ -104,7 +104,7 @@ _cluster_params_default = bpd.util.ParamsDict({
         ''', None),
     'stayers_movers': (None, 'set', [None, 'stayers', 'movers'],
         '''
-            (default=None) If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers.
+            (default=None) If None, clusters on entire dataset; if 'stayers', clusters on only stayers; if 'movers', clusters on only movers; if 'stays', clusters on only stays; if 'moves', clusters on only moves.
         ''', None),
     't': (None, 'type_none', (int, list),
         '''

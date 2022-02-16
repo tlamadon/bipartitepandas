@@ -1,5 +1,5 @@
 '''
-Class for a bipartite network in collapsed long form
+Class for a bipartite network in collapsed long form.
 '''
 from numpy import arange
 import pandas as pd

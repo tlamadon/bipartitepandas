@@ -1,5 +1,5 @@
 '''
-Utility functions
+Utility functions.
 '''
 import logging
 from pathlib import Path
@@ -388,8 +388,8 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col
         else:
             (Pandas Series): aggregated, transformed data
     '''
-    col1 = frame[col_groupby].to_numpy()
-    col2 = frame[col_grouped].to_numpy()
+    col1 = frame.loc[:, col_groupby].to_numpy()
+    col2 = frame.loc[:, col_grouped].to_numpy()
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', category=np.VisibleDeprecationWarning)
         agg_array = np.split(col2, np.unique(col1, return_index=True)[1])[1:] # aggregate(col1, col2, 'array', fill_value=[])

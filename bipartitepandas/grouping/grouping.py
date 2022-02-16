@@ -1,5 +1,5 @@
 '''
-Functions for computing cluster groups
+Classes for computing cluster groups. Note: use classes rather than nested functions because nested functions cannot be pickled (source: https://stackoverflow.com/a/12022055/17333120).
 '''
 import numpy as np
 try:

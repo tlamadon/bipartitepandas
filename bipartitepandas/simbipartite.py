@@ -1,5 +1,5 @@
 '''
-Class for a simulated two-way fixed effect network
+Class for simulating two-way fixed effect networks.
 '''
 import numpy as np
 ax = np.newaxis
