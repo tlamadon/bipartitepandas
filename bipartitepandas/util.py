@@ -67,7 +67,7 @@ def _sort_cols(cols):
     return sorted_default_cols + sorted_custom_cols
 
 # Source: https://stackoverflow.com/a/54009756/17333120
-fn_type = (types.FunctionType, types.BuiltinFunctionType, types.MethodType)
+fn_type = (types.BuiltinFunctionType, types.FunctionType, types.MethodType)
 
 col_type = (np.ndarray, pd.Series)
 
