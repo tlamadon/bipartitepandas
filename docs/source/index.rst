@@ -13,7 +13,7 @@
 
   Simple Example <notebooks/simple_example>
   Formats <notebooks/formats>
-  Clustering Examples <notebooks/clustering_examples>
+  Clustering <notebooks/clusterings>
   CHK Event Study Examples <notebooks/chk_examples>
   Extra Features <notebooks/extra_features_examples>
 
