@@ -238,7 +238,7 @@ class ParamsDict(MutableMapping):
             print(f'VALID VALUES: one of {options!r}')
         elif options_type == 'any':
             print('VALID VALUES: anything')
-        print(f'DESCRIPTION: {description!r}')
+        print(f'DESCRIPTION: {description}')
 
     def describe_all(self):
         '''
