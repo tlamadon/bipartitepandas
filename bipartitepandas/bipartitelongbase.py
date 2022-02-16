@@ -504,7 +504,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             cc_list (list of lists): each entry is a connected component
             max_j (int): maximum j in graph
             leave_out_group (str): which type of leave-one-out connected component to compute (options are 'observation', 'spell', or 'match')
-            component_size_variable (str): how to determine largest leave-one-(observation/spell/match)-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
+            component_size_variable (str): how to determine largest leave-one-(observation/spell/match)-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-(observation/spell/match)-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-(observation/spell/match)-out connected component
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
@@ -520,14 +520,23 @@ class BipartiteLongBase(bpd.BipartiteBase):
         for cc in sorted(cc_list, reverse=True, key=len):
             cc = np.array(cc)
             cc_j = cc[cc <= max_j]
-            if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
-                # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
-                try:
-                    skip = (frame_largest_cc.comp_size >= len(cc_j))
-                except AttributeError:
-                    frame_largest_cc.comp_size = frame_largest_cc.n_firms()
-                    skip = (frame_largest_cc.comp_size >= len(cc_j))
-
+            if frame_largest_cc is not None:
+                # Can check if frame_cc is already smaller than frame_largest_cc before any computations
+                skip = False
+                if component_size_variable == 'firms':
+                    # If looking at number of firms
+                    try:
+                        skip = (frame_largest_cc.comp_size >= len(cc_j))
+                    except AttributeError:
+                        frame_largest_cc.comp_size = frame_largest_cc.n_firms()
+                        skip = (frame_largest_cc.comp_size >= len(cc_j))
+                elif component_size_variable == 'firms_plus_movers':
+                    # If looking at number of firms plus number of movers
+                    try:
+                        skip = (frame_largest_cc.comp_size >= len(cc))
+                    except AttributeError:
+                        frame_largest_cc.comp_size = frame_largest_cc.n_firms() + frame_largest_cc.loc[frame_largest_cc.loc[:, 'm'].to_numpy() > 0, :].n_workers()
+                        skip = (frame_largest_cc.comp_size >= len(cc))
                 if skip:
                     continue
 
@@ -536,7 +545,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', is_sorted=True)
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', save_to_frame1=True, is_sorted=True)
 
                 if skip:
                     continue
@@ -546,7 +555,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', is_sorted=True)
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', save_to_frame1=True, is_sorted=True)
 
                 if skip:
                     continue
@@ -582,7 +591,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', is_sorted=True)
+                replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', save_to_frame1=True, is_sorted=True)
             if replace:
                 frame_largest_cc = frame_cc
 
@@ -603,7 +612,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Arguments:
             cc_list (list of lists): each entry is a connected component
             max_j (int): maximum j in graph
-            component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
+            component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
@@ -619,14 +628,23 @@ class BipartiteLongBase(bpd.BipartiteBase):
         for cc in sorted(cc_list, reverse=True, key=len):
             cc = np.array(cc)
             cc_j = cc[cc <= max_j]
-            if (frame_largest_cc is not None) and (component_size_variable == 'firms'):
-                # If looking at number of firms, can check if frame_cc is already smaller than frame_largest_cc before any computations
-                try:
-                    skip = (frame_largest_cc.comp_size >= len(cc_j))
-                except AttributeError:
-                    frame_largest_cc.comp_size = frame_largest_cc.n_firms()
-                    skip = (frame_largest_cc.comp_size >= len(cc_j))
-
+            if frame_largest_cc is not None:
+                # Can check if frame_cc is already smaller than frame_largest_cc before any computations
+                skip = False
+                if component_size_variable == 'firms':
+                    # If looking at number of firms
+                    try:
+                        skip = (frame_largest_cc.comp_size >= len(cc_j))
+                    except AttributeError:
+                        frame_largest_cc.comp_size = frame_largest_cc.n_firms()
+                        skip = (frame_largest_cc.comp_size >= len(cc_j))
+                elif component_size_variable == 'firms_plus_movers':
+                    # If looking at number of firms plus number of movers
+                    try:
+                        skip = (frame_largest_cc.comp_size >= len(cc))
+                    except AttributeError:
+                        frame_largest_cc.comp_size = frame_largest_cc.n_firms() + frame_largest_cc.loc[frame_largest_cc.loc[:, 'm'].to_numpy() > 0, :].n_workers()
+                        skip = (frame_largest_cc.comp_size >= len(cc))
                 if skip:
                     continue
 
@@ -635,7 +653,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', is_sorted=True)
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', save_to_frame1=True, is_sorted=True)
 
                 if skip:
                     continue
@@ -645,7 +663,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
-                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', is_sorted=True)
+                skip = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='geq', save_to_frame1=True, is_sorted=True)
 
                 if skip:
                     continue
@@ -673,7 +691,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If the biconnected components have recursively been eliminated
                 replace = False
             else:
-                replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', is_sorted=True)
+                replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', save_to_frame1=True, is_sorted=True)
             if replace:
                 frame_largest_cc = frame_cc
 

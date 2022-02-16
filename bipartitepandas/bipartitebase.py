@@ -42,9 +42,9 @@ _clean_params_default = bpd.util.ParamsDict({
         '''
             (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
         ''', None),
-    'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'n_stayers', 'n_movers', 'length_stayers', 'len_stayers', 'length_movers', 'len_movers', 'n_stays', 'n_moves'],
+    'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers', 'firms_plus_workers', 'firms_plus_stayers', 'firms_plus_movers', 'len_stayers', 'length_stayers', 'len_movers', 'length_movers', 'stays', 'moves'],
         '''
-        (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
+        (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
         ''', None),
     'i_t_how': ('max', 'type', (*bpd.util.fn_type, str),
         '''
@@ -1149,7 +1149,7 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
-            component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
+            component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
@@ -1188,7 +1188,7 @@ class BipartiteBase(DataFrame):
                 # If component_size_variable is firms, no need to iterate
                 for cc in cc_list[1:]:
                     frame_cc = frame.keep_ids('j', cc, is_sorted=is_sorted, copy=False)
-                    replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', is_sorted=is_sorted)
+                    replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', save_to_frame1=True, is_sorted=is_sorted)
                     if replace:
                         frame_largest_cc = frame_cc
             frame = frame_largest_cc
@@ -1218,7 +1218,7 @@ class BipartiteBase(DataFrame):
                 # If component_size_variable is firms, no need to iterate
                 for bcc in bcc_list[1:]:
                     frame_bcc = frame.keep_ids('j', bcc, is_sorted=is_sorted, copy=False)
-                    replace = bpd.util.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='lt', is_sorted=is_sorted)
+                    replace = bpd.util.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='lt', save_to_frame1=True, is_sorted=is_sorted)
                     if replace:
                         frame_largest_bcc = frame_bcc
             frame = frame_largest_bcc

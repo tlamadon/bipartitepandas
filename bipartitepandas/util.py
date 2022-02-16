@@ -430,15 +430,16 @@ def aggregate_transform(frame, col_groupby, col_grouped, func, weights=None, col
         return frame[[col_groupby, col_grouped]].merge(agg_df, how='left', on=col_groupby)[col_name].to_numpy()
     return agg_array
 
-def compare_frames(frame1, frame2, size_variable='len', operator='geq', is_sorted=False):
+def compare_frames(frame1, frame2, size_variable='len', operator='geq', save_to_frame1=False, is_sorted=False):
     '''
     Compare two frames using a particular size property and operator.
 
     Arguments:
         frame1 (BipartiteBase): first frame
         frame2 (BipartiteBase): second frame
-        size_variable (str): what size variable to use to compare frames. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'n_stayers' (number of unique stayers), 'n_movers' (number of unique movers), 'length_stayers'/'len_stayers' (number of stayer observations), 'length_movers'/'len_movers' (number of mover observations), 'n_stays' (number of stay observations), and 'n_moves' (number of move observations).
+        size_variable (str): what size variable to use to compare frames. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
         operator (str): how to compare properties. Options are 'eq' (equality), 'gt' (greater than), 'lt' (less than), 'geq' (greater than or equal to), and 'leq' (less than or equal to).
+        save_to_frame1 (bool): if True, save size_variable for frame1 to attribute frame1.comp_size
         is_sorted (bool): if False, dataframe will be sorted by i in a groupby (but self will not be not sorted). Set to True if dataframe is already sorted.
     '''
     # First, get the values for the frames corresponding to the given property
@@ -447,20 +448,24 @@ def compare_frames(frame1, frame2, size_variable='len', operator='geq', is_sorte
         'length': lambda a: len(a),
         'firms': lambda a: a.n_firms(),
         'workers': lambda a: a.n_workers(),
-        'n_stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
-        'n_movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i'),
-        'length_stayers': lambda a: len(a.loc[~(a.get_worker_m(is_sorted)), :]),
+        'stayers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
+        'movers': lambda a: a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i'),
+        'firms_plus_workers': lambda a: a.n_firms() + a.n_workers(),
+        'firms_plus_stayers': lambda a: a.n_firms() + a.loc[a.loc[:, 'm'].to_numpy() == 0, :].n_unique_ids('i'),
+        'firms_plus_movers': lambda a: a.n_firms() + a.loc[a.loc[:, 'm'].to_numpy() > 0, :].n_unique_ids('i'),
         'len_stayers': lambda a: len(a.loc[~(a.get_worker_m(is_sorted)), :]),
-        'length_movers': lambda a: len(a.loc[a.get_worker_m(is_sorted), :]),
+        'length_stayers': lambda a: len(a.loc[~(a.get_worker_m(is_sorted)), :]),
         'len_movers': lambda a: len(a.loc[a.get_worker_m(is_sorted), :]),
-        'n_stays': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() == 0, :]),
-        'n_moves': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() > 0, :])
+        'length_movers': lambda a: len(a.loc[a.get_worker_m(is_sorted), :]),
+        'stays': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() == 0, :]),
+        'moves': lambda a: len(a.loc[a.loc[:, 'm'].to_numpy() > 0, :])
     }
     try:
         val1 = frame1.comp_size
     except AttributeError:
         val1 = property_dict[size_variable](frame1)
-        frame1.comp_size = val1
+        if save_to_frame1:
+            frame1.comp_size = val1
     val2 = property_dict[size_variable](frame2)
 
     # Second, compare the values using the given operator
