@@ -14,7 +14,7 @@
   Simple Example <notebooks/simple_example>
   Formats <notebooks/formats>
   Clustering <notebooks/clusterings>
-  CHK Event Study Examples <notebooks/chk_examples>
+  CHK Event Study <notebooks/chk>
   Extra Features <notebooks/extra_features_examples>
 
 .. toctree::
