@@ -3210,6 +3210,113 @@ def test_connectedness_8():
 
     assert len(bad_df) == len(bad_df2) > 0
 
+def test_connectedness_9():
+    # Construct data that has different connected, leave-one-observation-out, leave-one-spell-out, leave-one-match-out, and leave-one-work-out connected components, and make sure each method is working properly.
+    worker_data = []
+    ## Group 1 is firms 0 to 2 ##
+    # Worker 0
+    # Firm 0 -> 1 -> 3 -> 3 -> 2
+    worker_data.append({'i': 0, 'j': 0, 'y': 1, 't': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 2})
+    worker_data.append({'i': 0, 'j': 3, 'y': 2.5, 't': 3})
+    worker_data.append({'i': 0, 'j': 3, 'y': 1.5, 't': 4})
+    worker_data.append({'i': 0, 'j': 2, 'y': 1, 't': 5})
+    # Worker 1
+    # Firm 1 -> 0 -> 2
+    worker_data.append({'i': 1, 'j': 1, 'y': 1, 't': 1})
+    worker_data.append({'i': 1, 'j': 0, 'y': 1.5, 't': 2})
+    worker_data.append({'i': 1, 'j': 2, 'y': 2.5, 't': 3})
+    ## Group 2 is firms 3 to 5 ##
+    # Worker 2
+    # Firm 3 -> 4 -> 5
+    worker_data.append({'i': 2, 'j': 3, 'y': 2, 't': 1})
+    worker_data.append({'i': 2, 'j': 4, 'y': 1, 't': 2})
+    worker_data.append({'i': 2, 'j': 5, 'y': 2, 't': 3})
+    # Worker 3
+    # Firm 4 -> 7 -> 3 -> 7 -> 5
+    worker_data.append({'i': 3, 'j': 4, 'y': 2.5, 't': 1})
+    worker_data.append({'i': 3, 'j': 7, 'y': 1.75, 't': 2})
+    worker_data.append({'i': 3, 'j': 3, 'y': 1, 't': 3})
+    worker_data.append({'i': 3, 'j': 7, 'y': 1.75, 't': 4})
+    worker_data.append({'i': 3, 'j': 5, 'y': 2, 't': 5})
+    ## Group 3 is firms 6 to 8 ##
+    # Worker 4
+    # Firm 6 -> 7 -> 8
+    worker_data.append({'i': 4, 'j': 6, 'y': 1, 't': 1})
+    worker_data.append({'i': 4, 'j': 7, 'y': 1, 't': 2})
+    worker_data.append({'i': 4, 'j': 8, 'y': 1.5, 't': 3})
+    # Worker 5
+    # Firm 7 -> 6 -> 8 -> 10
+    worker_data.append({'i': 5, 'j': 7, 'y': 1.5, 't': 1})
+    worker_data.append({'i': 5, 'j': 6, 'y': 2.25, 't': 2})
+    worker_data.append({'i': 5, 'j': 8, 'y': 1.75, 't': 3})
+    worker_data.append({'i': 5, 'j': 10, 'y': 2, 't': 4})
+    ## Group 4 is firms 9 to 11 ##
+    # Worker 6
+    # Firm 9 -> 10 -> 11
+    worker_data.append({'i': 6, 'j': 9, 'y': 1.25, 't': 1})
+    worker_data.append({'i': 6, 'j': 10, 'y': 1, 't': 2})
+    worker_data.append({'i': 6, 'j': 11, 'y': 1.5, 't': 3})
+    # Worker 7
+    # Firm 10 -> 9 -> 11
+    worker_data.append({'i': 7, 'j': 10, 'y': 1.35, 't': 1})
+    worker_data.append({'i': 7, 'j': 9, 'y': 0.75, 't': 2})
+    worker_data.append({'i': 7, 'j': 11, 'y': 2.25, 't': 3})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    ## First, test on non-collapsed data ##
+    # Connected
+    bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'connected'}))
+    assert bdf.n_firms() == 12
+    assert bdf.n_workers() == 8
+
+    # Leave-out-observation
+    bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'leave_out_observation'}))
+    assert bdf.n_firms() == 9
+    assert bdf.n_workers() == 6
+
+    # Leave-out-spell
+    bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'leave_out_spell'}))
+    assert bdf.n_firms() == 6
+    assert bdf.n_workers() == 5
+
+    # Leave-out-match
+    bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'leave_out_match'}))
+    assert bdf.n_firms() == 3
+    assert bdf.n_workers() == 2
+
+    # Leave-out-worker (note: 3 workers because leave-out-workers sorts components by number of firms + number of workers)
+    bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'leave_out_worker'}))
+    assert bdf.n_firms() == 3
+    assert bdf.n_workers() == 3
+
+    ## Second, test on collapsed data ##
+    # Connected
+    bdf = bpd.BipartiteLong(df).clean().collapse().clean(bpd.clean_params({'connectedness': 'connected'}))
+    assert bdf.n_firms() == 12
+    assert bdf.n_workers() == 8
+
+    # Leave-out-observation
+    bdf = bpd.BipartiteLong(df).clean().collapse().clean(bpd.clean_params({'connectedness': 'leave_out_observation'}))
+    assert bdf.n_firms() == 6
+    assert bdf.n_workers() == 5
+
+    # Leave-out-spell
+    bdf = bpd.BipartiteLong(df).clean().collapse().clean(bpd.clean_params({'connectedness': 'leave_out_spell'}))
+    assert bdf.n_firms() == 6
+    assert bdf.n_workers() == 5
+
+    # Leave-out-match
+    bdf = bpd.BipartiteLong(df).clean().collapse().clean(bpd.clean_params({'connectedness': 'leave_out_match'}))
+    assert bdf.n_firms() == 3
+    assert bdf.n_workers() == 2
+
+    # Leave-out-worker (note: 3 workers because leave-out-workers sorts components by number of firms + number of workers)
+    bdf = bpd.BipartiteLong(df).clean().collapse().clean(bpd.clean_params({'connectedness': 'leave_out_worker'}))
+    assert bdf.n_firms() == 3
+    assert bdf.n_workers() == 3
+
 ################################
 ##### Tests for Clustering #####
 ################################

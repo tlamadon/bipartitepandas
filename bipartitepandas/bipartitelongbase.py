@@ -569,10 +569,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if len(articulation_rows) > 0:
                 # If new frame is not leave-one-(observation/spell/match)-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-                G2, max_j2 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph(f'leave_out_{leave_out_group}', is_sorted=True, copy=False)
+                G2, max_j3 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph(f'leave_out_{leave_out_group}', is_sorted=True, copy=False)
                 cc_list_2 = G2.components()
-                # Recursion step
-                frame_cc = frame_cc._leave_out_observation_spell_match(cc_list=cc_list_2, max_j=max_j2, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
+                if len(cc_list_2) > 1:
+                    # Recursion step (only necessary if dropping articulation workers disconnects the set of firms)
+                    frame_cc = frame_cc._leave_out_observation_spell_match(cc_list=cc_list_2, max_j=max_j3, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -659,10 +660,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if len(articulation_workers) > 0:
                 # If new frame is not leave-one-worker-out connected, recompute connected components after dropping articulation workers (but note that articulation workers should be kept in the final dataframe) (NOTE: this does not require a copy)
-                G2, max_j2 = frame_cc.drop_ids('i', articulation_workers, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_out_worker', is_sorted=True, copy=False)
+                G2, max_j3 = frame_cc.drop_ids('i', articulation_workers, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_out_worker', is_sorted=True, copy=False)
                 cc_list_2 = G2.components()
-                # Recursion step
-                frame_cc = frame_cc._leave_out_worker(cc_list=cc_list_2, max_j=max_j2, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
+                if len(cc_list_2) > 1:
+                    # Recursion step (only necessary if dropping articulation workers disconnects the set of firms)
+                    frame_cc = frame_cc._leave_out_worker(cc_list=cc_list_2, max_j=max_j3, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
 
             if frame_largest_cc is None:
                 # If in the first round
