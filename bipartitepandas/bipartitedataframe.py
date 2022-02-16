@@ -40,7 +40,7 @@ class BipartiteDataFrame():
         t21 (NumPy Array or Pandas Series of ints): first time in worker-firm spell in second period of event study (optional)
         t22 (NumPy Array or Pandas Series of ints): last time in worker-firm spell in second period of event study (optional)
         SECTION: CUSTOM COLUMNS
-        custom_contig_dict (dict of bool): for new columns, optionally link general column names to whether that set of columns is contiguous (e.g. 'j' is firm ids, links to columns 'j1' and 'j2' and should be contiguous; then set {'j': True})
+        custom_contiguous_dict (dict of bool): for new columns, optionally link general column names to whether that set of columns is contiguous (e.g. 'j' is firm ids, links to columns 'j1' and 'j2' and should be contiguous; then set {'j': True})
         custom_dtype_dict (dict of str): for new columns, optionally link general column names to the datatype for that set of columns (e.g. 'y' is income, links to columns 'y1' and 'y2' and should be float; then set {'y': 'float'}); must be one of 'int', 'float', or 'any'
         custom_how_collapse_dict (dict of (function or str or None)): for new columns, optionally link general column names to how members of that set of columns should be collapsed at the worker-firm spell level (e.g. 'y' is income, links to columns 'y1' and 'y2' and should become the mean at the worker-firm spell level; then set {'y': 'float'}); must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
         custom_long_es_split_dict (dict of (bool or None)): for new columns, optionally link general column names to whether members of that set of columns should split into two when converting from long to event study; if None, columns will be dropped when converting between (collapsed) long and (collapsed) event study formats
@@ -53,10 +53,10 @@ class BipartiteDataFrame():
         '''
         pass
 
-    def __new__(self, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, m=None, custom_contig_dict={}, custom_dtype_dict={}, custom_how_collapse_dict={}, custom_long_es_split_dict={}, **kwargs):
+    def __new__(self, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, m=None, custom_contiguous_dict={}, custom_dtype_dict={}, custom_how_collapse_dict={}, custom_long_es_split_dict={}, **kwargs):
         if isinstance(i, DataFrame):
             # If user didn't split arguments, do it for them
-            return BipartiteDataFrame(**i, custom_contig_dict=custom_contig_dict, custom_dtype_dict=custom_dtype_dict, custom_how_collapse_dict=custom_how_collapse_dict, custom_long_es_split_dict=custom_long_es_split_dict, **kwargs)
+            return BipartiteDataFrame(**i, custom_contiguous_dict=custom_contiguous_dict, custom_dtype_dict=custom_dtype_dict, custom_how_collapse_dict=custom_how_collapse_dict, custom_long_es_split_dict=custom_long_es_split_dict, **kwargs)
         # Dataframe to fill in
         df = None
         # Figure out which kwargs are new columns
@@ -76,8 +76,8 @@ class BipartiteDataFrame():
                     new_cols_reference_dict[col_name] = [k]
                     ## Figure out dictionary values
                     # If is_contig is not specified, default to False
-                    if col_name not in custom_contig_dict.keys():
-                        custom_contig_dict[col_name] = False
+                    if col_name not in custom_contiguous_dict.keys():
+                        custom_contiguous_dict[col_name] = False
                     # If long_es_split is not specified, default to True
                     if col_name not in custom_long_es_split_dict.keys():
                         custom_long_es_split_dict[col_name] = True
@@ -236,11 +236,27 @@ class BipartiteDataFrame():
 
         if len(new_cols) > 0:
             # If new columns
+            for col in custom_contiguous_dict.keys():
+                # Check that custom contiguous columns are included and are actually custom
+                if col not in new_cols.keys():
+                    raise ValueError(f'custom_contiguous_dict includes column {col!r} which is not included in the set of custom columns.')
+            for col in custom_dtype_dict.keys():
+                # Check that custom dtype columns are included and are actually custom
+                if col not in new_cols.keys():
+                    raise ValueError(f'custom_dtype_dict includes column {col!r} which is not included in the set of custom columns.')
+            for col in custom_how_collapse_dict.keys():
+                # Check that custom collapse columns are included and are actually custom
+                if col not in new_cols.keys():
+                    raise ValueError(f'custom_how_collapse_dict includes column {col!r} which is not included in the set of custom columns.')
+            for col in custom_long_es_split_dict.keys():
+                # Check that custom long-es-split columns are included and are actually custom
+                if col not in new_cols.keys():
+                    raise ValueError(f'custom_long_es_split_dict includes column {col!r} which is not included in the set of custom columns.')
             for new_col_name, new_col_data in new_cols.items():
                 col_reference = bpd.util.to_list(new_cols_reference_dict[new_col_name])
                 if len(col_reference) == 1:
                     # Constructed col_references are forced to be lists, if it's length one then just extract the single value from the list
                     col_reference = col_reference[0]
-                df = df.add_column(new_col_name, new_col_data, col_reference=col_reference, is_contiguous=custom_contig_dict[new_col_name], dtype=custom_dtype_dict[new_col_name], how_collapse=custom_how_collapse_dict[new_col_name], long_es_split=custom_long_es_split_dict[new_col_name], copy=False)
+                df = df.add_column(new_col_name, new_col_data, col_reference=col_reference, is_contiguous=custom_contiguous_dict[new_col_name], dtype=custom_dtype_dict[new_col_name], how_collapse=custom_how_collapse_dict[new_col_name], long_es_split=custom_long_es_split_dict[new_col_name], copy=False)
 
         return df
