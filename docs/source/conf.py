@@ -20,7 +20,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'BipartitePandas'
-copyright = '2021, Thibaut Lamadon.'
+copyright = '2021, Thibaut Lamadon'
 author = 'Thibaut Lamadon'
 
 # The full version, including alpha/beta/rc tags
