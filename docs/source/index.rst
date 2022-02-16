@@ -12,7 +12,7 @@
   :maxdepth: 2
 
   Simple Example <notebooks/simple_example>
-  Formatting Examples <notebooks/formatting_examples>
+  Format Examples <notebooks/format_examples>
   Clustering Examples <notebooks/clustering_examples>
   CHK Event Study Examples <notebooks/chk_examples>
   Extra Features <notebooks/extra_features_examples>
