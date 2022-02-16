@@ -51,7 +51,7 @@ _clean_params_default = bpd.util.ParamsDict({
         ''', None),
     'i_t_how': ('max', 'type', (*bpd.util.fn_type, str),
         '''
-            (default='max') When dropping i-t duplicates: if 'max', keep max paying job; otherwise, take `how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `how` can take any input valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
+            (default='max') When dropping i-t duplicates: if 'max', keep max paying job; otherwise, take `i_t_how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `i_t_how` can take any input valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
         ''', None),
     'drop_returns': (False, 'set', [False, 'returns', 'returners', 'keep_first_returns', 'keep_last_returns'],
         '''
