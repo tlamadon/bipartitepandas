@@ -1179,13 +1179,13 @@ class BipartiteBase(DataFrame):
         # First, create graph
         G, max_j = frame._construct_graph(connectedness, is_sorted=is_sorted, copy=False)
         if connectedness == 'connected':
-            # Compute all connected components of firms
+            # Compute all connected components of firms (each entry is a connected component)
             cc_list = sorted(G.components(), reverse=True, key=len)
             # Iterate over connected components to find the largest
             largest_cc = cc_list[0]
             frame_largest_cc = frame.keep_ids('j', largest_cc, is_sorted=is_sorted, copy=False)
             if component_size_variable != 'firms':
-                # If component_size_varible is firms, no need to iterate
+                # If component_size_variable is firms, no need to iterate
                 for cc in cc_list[1:]:
                     frame_cc = frame.keep_ids('j', cc, is_sorted=is_sorted, copy=False)
                     replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', is_sorted=is_sorted)
@@ -1194,7 +1194,7 @@ class BipartiteBase(DataFrame):
             frame = frame_largest_cc
             try:
                 # Remove comp_size attribute
-                del frame_largest_cc.comp_size
+                del frame.comp_size
             except AttributeError:
                 pass
         elif connectedness in ['leave_out_observation', 'leave_out_spell', 'leave_out_match']:
@@ -1210,9 +1210,23 @@ class BipartiteBase(DataFrame):
             frame = frame._leave_out_worker(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
         elif connectedness == 'leave_out_firm':
             # Compute all biconnected components of firms (each entry is a biconnected component)
-            bcc_list = G.biconnected_components()
-            # Keep largest leave-one-firm-out set of firms
-            frame = frame._leave_out_firm(bcc_list=bcc_list, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
+            bcc_list = sorted(G.biconnected_components(), reverse=True, key=len)
+            # Iterate over connected components to find the largest
+            largest_bcc = bcc_list[0]
+            frame_largest_bcc = frame.keep_ids('j', largest_bcc, is_sorted=is_sorted, copy=False)
+            if component_size_variable != 'firms':
+                # If component_size_variable is firms, no need to iterate
+                for bcc in bcc_list[1:]:
+                    frame_bcc = frame.keep_ids('j', bcc, is_sorted=is_sorted, copy=False)
+                    replace = bpd.util.compare_frames(frame_largest_bcc, frame_bcc, size_variable=component_size_variable, operator='lt', is_sorted=is_sorted)
+                    if replace:
+                        frame_largest_bcc = frame_bcc
+            frame = frame_largest_bcc
+            try:
+                # Remove comp_size attribute
+                del frame.comp_size
+            except AttributeError:
+                pass
         else:
             raise NotImplementedError(f"Connectedness measure {connectedness!r} is invalid: it must be one of None, 'connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', or 'leave_out_firm'.")
 
