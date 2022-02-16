@@ -2260,8 +2260,8 @@ def test_construct_artificial_time_36():
 ##### Tests for BipartiteLong #####
 ###################################
 
-def test_long_get_es_extended_1():
-    # Test get_es_extended() by making sure it is generating the event study correctly for periods_pre=2 and periods_post=1
+def test_long_get_extended_eventstudy_1():
+    # Test get_extended_eventstudy() by making sure it is generating the event study correctly for periods_pre=2 and periods_post=1
     worker_data = []
     # Worker 0
     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
@@ -2286,7 +2286,7 @@ def test_long_get_es_extended_1():
     bdf = bpd.BipartiteLong(df)
     bdf = bdf.clean()
 
-    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=1, include=['j', 'y'], transition_col='g')
+    es_extended = bdf.get_extended_eventstudy(periods_pre=2, periods_post=1, include=['j', 'y'], transition_col='g')
 
     assert es_extended.iloc[0]['i'] == 0
     assert es_extended.iloc[0]['j_l2'] == 1
@@ -2306,45 +2306,45 @@ def test_long_get_es_extended_1():
     assert es_extended.iloc[1]['y_f1'] == 1.5
     assert es_extended.iloc[1]['t'] == 3
 
-def test_long_get_es_extended_2():
-    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study
+def test_long_get_extended_eventstudy_2():
+    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study
     sim_data = bpd.SimBipartite().simulate()
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(periods_pre=3, periods_post=2, include=['j', 'y'])
 
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
 
-def test_long_get_es_extended_3_1():
-    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_pre works
+def test_long_get_extended_eventstudy_3_1():
+    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study and stable_pre works
     sim_data = bpd.SimBipartite().simulate()
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_es_extended(periods_pre=2, periods_post=3, stable_pre='j', include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(periods_pre=2, periods_post=3, stable_pre='j', include=['j', 'y'])
 
     assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
 
-def test_long_get_es_extended_3_2():
-    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post works
+def test_long_get_extended_eventstudy_3_2():
+    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study and stable_post works
     sim_data = bpd.SimBipartite().simulate()
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_post='j', include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(periods_pre=3, periods_post=2, stable_post='j', include=['j', 'y'])
 
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
     assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
 
-def test_long_get_es_extended_3_3():
-    # Test get_es_extended() by making sure workers move firms at the fulcrum of the event study and stable_post and stable_pre work together
+def test_long_get_extended_eventstudy_3_3():
+    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study and stable_post and stable_pre work together
     sim_data = bpd.SimBipartite().simulate()
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_es_extended(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', include=['j', 'y'])
 
     assert len(es_extended) > 0 # Make sure something is left
     assert np.sum(es_extended['j_l3'] != es_extended['j_l2']) == 0
@@ -2353,11 +2353,11 @@ def test_long_get_es_extended_3_3():
     assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
 
 # Only uncomment for manual testing - this produces a graph which pauses the testing
-# def test_long_plot_es_extended_4():
-#     # Test plot_es_extended() by making sure it doesn't crash
+# def test_long_plot_extended_eventstudy_4():
+#     # Test plot_extended_eventstudy() by making sure it doesn't crash
 #     sim_data = bpd.SimBipartite().simulate()
 #     bdf = bpd.BipartiteLong(sim_data).clean().cluster(grouping=bpd.grouping.KMeans(n_clusters=2))
-#     bdf.plot_es_extended()
+#     bdf.plot_extended_eventstudy()
 
 #     assert True # Just making sure it doesn't crash
 

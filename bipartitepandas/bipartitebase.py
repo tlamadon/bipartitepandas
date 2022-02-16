@@ -6,6 +6,7 @@ import pandas as pd
 from pandas import DataFrame
 from igraph import Graph
 import warnings
+from functools import wraps
 import bipartitepandas as bpd
 from bipartitepandas.util import update_dict, to_list
 
@@ -17,6 +18,8 @@ def _recollapse_loop(force=False):
         force (bool): if True, force loop for non-collapsed data
     '''
     def recollapse_loop_inner(func):
+        # Fix docstrings for Sphinx (source: https://github.com/sphinx-doc/sphinx/issues/3783)
+        @wraps(func)
         def recollapse_loop_inner_inner(*args, **kwargs):
             # Do function
             self = args[0]

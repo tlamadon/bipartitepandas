@@ -22,6 +22,7 @@
   :maxdepth: 2
 
   internal
+  BipartiteDataFrame <class-bipartitedataframe>
   BipartiteBase <class-bipartitebase>
   BipartiteLongBase <class-bipartitelongbase>
   BipartiteLong <class-bipartitelong>

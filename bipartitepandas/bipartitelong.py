@@ -363,7 +363,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return fill_frame
 
-    def get_es_extended(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', is_sorted=False, copy=True):
+    def get_extended_eventstudy(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
 
@@ -504,7 +504,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_es_extended(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_plot_params=es_extended_plot_params(), is_sorted=False, copy=True):
+    def plot_extended_eventstudy(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_plot_params=es_extended_plot_params(), is_sorted=False, copy=True):
         '''
         Generate event study plots. If data is not clustered, will plot all transitions in a single figure.
 
@@ -532,7 +532,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             n_clusters = 1
             self.loc[:, 'g'] = 0
 
-        es = self.get_es_extended(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col,is_sorted=is_sorted, copy=copy)
+        es = self.get_extended_eventstudy(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col,is_sorted=is_sorted, copy=copy)
 
         # Want n_clusters x n_clusters subplots
         fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=es_extended_plot_params['sharex'], sharey=es_extended_plot_params['sharey'])

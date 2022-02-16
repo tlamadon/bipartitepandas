@@ -146,7 +146,7 @@ class SimBipartite:
 
     def simulate(self, rng=np.random.default_rng(None)):
         '''
-        Simulate panel data corresponding to the calibrated model. Columns are as follows: i=worker id; j=firm id; y=wage; t=time period; l=worker type; k=firm type; alpha=worker effect; psi=firm effect; spell=spell id.
+        Simulate panel data corresponding to the calibrated model. Columns are as follows: i=worker id; j=firm id; y=wage; t=time period; l=worker type; k=firm type; alpha=worker effect; psi=firm effect.
 
         Arguments:
             rng (np.random.Generator): NumPy random number generator

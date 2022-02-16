@@ -6,23 +6,23 @@ import bipartitepandas as bpd
 
 class BipartiteDataFrame():
     '''
-    Constructor class for interacting with BipartitePandas dataframe classes more easily.
+    Constructor class for easily constructing BipartitePandas dataframes without explicitly specifying a format.
 
     Arguments:
-        ##### ANY FORMAT COLUMNS #####
+        SECTION: ANY FORMAT COLUMNS
         i (NumPy Array or Pandas Series of any type or Pandas DataFrame): if NumPy Array or Pandas Series: worker id (required); if Pandas DataFrame: full dataframe including all required columns
-        ##### BASE LONG FORMAT COLUMNS #####
+        SECTION: BASE LONG FORMAT COLUMNS
         j (NumPy Array or Pandas Series of any type): firm id (required)
         y (NumPy Array or Pandas Series of floats or ints): income (required)
         m (NumPy Array or Pandas Series of ints): mover value (optional)
-        ##### NON-COLLAPSED LONG FORMAT COLUMNS #####
+        SECTION: NON-COLLAPSED LONG FORMAT COLUMNS
         t (NumPy Array or Pandas Series of ints): time (optional)
         g (NumPy Array or Pandas Series of any type): firm cluster (optional)
         w (NumPy Array or Pandas Series of floats or ints): observation weight (optional)
-        ##### COLLAPSED LONG FORMAT COLUMNS #####
+        SECTION: COLLAPSED LONG FORMAT COLUMNS
         t1 (NumPy Array or Pandas Series of ints): first time in worker-firm spell (optional)
         t2 (NumPy Array or Pandas Series of ints): last time in worker-firm spell (optional)
-        ##### BASE EVENT STUDY FORMAT COLUMNS #####
+        SECTION: BASE EVENT STUDY FORMAT COLUMNS
         j1 (NumPy Array or Pandas Series of any type): firm id in first period of event study (required)
         j2 (NumPy Array or Pandas Series of any type): firm id in second period of event study (required)
         y1 (NumPy Array or Pandas Series of floats or ints): income in first period of event study (required)
@@ -31,15 +31,15 @@ class BipartiteDataFrame():
         g2 (NumPy Array or Pandas Series of any type): firm cluster in second period of event study (optional)
         w1 (NumPy Array or Pandas Series of floats or ints): observation weight in first period of event study (optional)
         w2 (NumPy Array or Pandas Series of floats or ints): observation weight in second period of event study (optional)
-        ##### NON-COLLAPSED EVENT STUDY FORMAT COLUMNS #####
+        SECTION: NON-COLLAPSED EVENT STUDY FORMAT COLUMNS
         t1 (NumPy Array or Pandas Series of ints): time in first period of event study (optional)
         t2 (NumPy Array or Pandas Series of ints): time in second period of event study (optional)
-        ##### COLLAPSED EVENT STUDY FORMAT COLUMNS #####
+        SECTION: COLLAPSED EVENT STUDY FORMAT COLUMNS
         t11 (NumPy Array or Pandas Series of ints): first time in worker-firm spell in first period of event study (optional)
         t12 (NumPy Array or Pandas Series of ints): last time in worker-firm spell in first period of event study (optional)
         t21 (NumPy Array or Pandas Series of ints): first time in worker-firm spell in second period of event study (optional)
         t22 (NumPy Array or Pandas Series of ints): last time in worker-firm spell in second period of event study (optional)
-        ##### CUSTOM COLUMNS #####
+        SECTION: CUSTOM COLUMNS
         custom_contig_dict (dict of bool): for new columns, optionally link general column names to whether that set of columns is contiguous (e.g. 'j' is firm ids, links to columns 'j1' and 'j2' and should be contiguous; then set {'j': True})
         custom_dtype_dict (dict of str): for new columns, optionally link general column names to the datatype for that set of columns (e.g. 'y' is income, links to columns 'y1' and 'y2' and should be float; then set {'y': 'float'}); must be one of 'int', 'float', or 'any'
         custom_how_collapse_dict (dict of (function or str or None)): for new columns, optionally link general column names to how members of that set of columns should be collapsed at the worker-firm spell level (e.g. 'y' is income, links to columns 'y1' and 'y2' and should become the mean at the worker-firm spell level; then set {'y': 'float'}); must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
