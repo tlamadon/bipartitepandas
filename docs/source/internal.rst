@@ -16,15 +16,15 @@ Main classes
 
 * ``bipartitepandas.BipartiteDataFrame``: Class to easily construct bipartite dataframes without explicitly specifying a format
 
-* ``bipartitepandas.BipartiteLong``: Class for formatting bipartite data in long format
+* ``bipartitepandas.BipartiteLong``: Class for bipartite networks in long format
 
-* ``bipartitepandas.BipartiteLongCollapsed``: Class for formatting bipartite data in collapsed long format (i.e. employment spells are collapsed into a single observation)
+* ``bipartitepandas.BipartiteLongCollapsed``: Class for bipartite networks in collapsed long format (i.e. employment spells are collapsed into a single observation)
 
-* ``bipartitepandas.BipartiteEventStudy``: Class for formatting bipartite data in event study format
+* ``bipartitepandas.BipartiteEventStudy``: Class for bipartite networks in event study format
 
-* ``bipartitepandas.BipartiteEventStudyCollapsed``: Class for formatting bipartite data in collapsed event study format (i.e. employment spells are collapsed into a single observation)
+* ``bipartitepandas.BipartiteEventStudyCollapsed``: Class for bipartite networks in collapsed event study format (i.e. employment spells are collapsed into a single observation)
 
-* ``bipartitepandas.SimBipartite``: Class for simulating bipartite data
+* ``bipartitepandas.SimBipartite``: Class for simulating bipartite networks
 
 Base classes
 ~~~~~~~~~~~~

@@ -1,5 +1,5 @@
 '''
-Class for simulating two-way fixed effect networks.
+Class for simulating bipartite networks.
 '''
 import numpy as np
 ax = np.newaxis
