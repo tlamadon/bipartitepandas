@@ -1,5 +1,5 @@
 '''
-Class for a bipartite network in collapsed event study form.
+Class for a bipartite network in collapsed event study format.
 '''
 import bipartitepandas as bpd
 

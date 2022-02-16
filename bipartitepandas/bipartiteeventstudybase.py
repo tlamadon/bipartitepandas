@@ -1,5 +1,5 @@
 '''
-Base class for bipartite networks in event study or collapsed event study form.
+Base class for bipartite networks in event study or collapsed event study format.
 '''
 import numpy as np
 import pandas as pd

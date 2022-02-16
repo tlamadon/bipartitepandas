@@ -1,5 +1,5 @@
 '''
-Class for a bipartite network in long form.
+Class for a bipartite network in long format.
 '''
 import numpy as np
 import pandas as pd

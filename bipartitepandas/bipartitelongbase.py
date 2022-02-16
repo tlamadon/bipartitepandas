@@ -1,5 +1,5 @@
 '''
-Base class for bipartite networks in long or collapsed long form.
+Base class for bipartite networks in long or collapsed long format.
 '''
 import numpy as np
 import pandas as pd
