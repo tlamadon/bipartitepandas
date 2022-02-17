@@ -22,7 +22,7 @@ To run in Python:
    # Load data into pandas dataframe
    df = pd.read_csv(filepath)
    # Create bipartitepandas dataframe
-   bdf = bpd.BipartiteDataFrame(i=df['i'], j=df['j'], y=df['j'], t=df['t'])
+   bdf = bpd.BipartiteDataFrame(i=df['i'], j=df['j'], y=df['y'], t=df['t'])
    # Clean your data
    bdf = bdf.clean()
    # Cluster
