@@ -179,6 +179,10 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         else:
             # Skip t1 and t2
             all_cols.remove('t')
+
+            # Link columns to index, for use with frame.itertuples() (source: https://stackoverflow.com/a/36460020/17333120)
+            col_to_idx = {k: v for v, k in enumerate(frame.columns)}
+
             # Dictionary of lists of each column's data
             long_dict = {'t': []}
             for col in all_cols:
@@ -192,34 +196,24 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
             # Iterate over rows with multiple periods
             nt = frame.loc[:, 't2'].to_numpy() - frame.loc[:, 't1'].to_numpy() + 1
-            # Link columns to index, for use with frame.itertuples()
-            col_to_idx = list(frame.columns).index
+
             for i, row in enumerate(frame.itertuples(index=False)):
                 # Source: https://stackoverflow.com/a/41022840/17333120
                 nt_i = nt[i]
-                long_dict['t'].extend(range(row[col_to_idx('t1')], row[col_to_idx('t2')] + 1))
+                long_dict['t'].extend(range(row[col_to_idx['t1']], row[col_to_idx['t2']] + 1))
                 for col in all_cols:
                     if (frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns):
                         # Drop column if None and drop_no_collapse_columns is True
                         for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                             if frame.col_collapse_dict[col] == 'sum':
                                 # Evenly split sum across periods
-                                long_dict[subcol].extend([row[col_to_idx(subcol)] / nt_i] * nt_i)
+                                long_dict[subcol].extend([row[col_to_idx[subcol]] / nt_i] * nt_i)
                             else:
-                                long_dict[subcol].extend([row[col_to_idx(subcol)]] * nt_i)
+                                long_dict[subcol].extend([row[col_to_idx[subcol]]] * nt_i)
             del nt
 
             # Convert to Pandas dataframe
             data_long = pd.DataFrame(long_dict)
-            # Correct datatypes
-            data_long.loc[:, 't'] = data_long.loc[:, 't'].astype(int, copy=False)
-            for col in all_cols:
-                if (frame.col_collapse_dict[col] is not None) or (not drop_no_collapse_columns):
-                    # Drop column if None and drop_no_collapse_columns is True
-                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                        if frame.col_dtype_dict[col] == 'int':
-                            # If should be int
-                            data_long.loc[:, subcol] = data_long.loc[:, subcol].astype(int, copy=False)
 
             # Sort columns
             sorted_cols = bpd.util._sort_cols(data_long.columns)

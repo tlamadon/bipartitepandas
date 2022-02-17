@@ -110,7 +110,7 @@ Classes and Methods
 
    ~bipartitepandas.BipartiteLong
    ~bipartitepandas.BipartiteLong.collapse
-   ~bipartitepandas.BipartiteLong.fill_periods
+   ~bipartitepandas.BipartiteLong.fill_missing_periods
    ~bipartitepandas.BipartiteLong.get_extended_eventstudy
    ~bipartitepandas.BipartiteLong.get_worker_m
    ~bipartitepandas.BipartiteLong.plot_extended_eventstudy

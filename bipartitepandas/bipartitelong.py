@@ -315,53 +315,98 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return articulation_rows
 
-    def fill_periods(self, fill_j=-1, fill_y=pd.NA, fill_m=pd.NA, is_sorted=False, copy=True):
+    def fill_missing_periods(self, fill_dict={}, is_sorted=False, copy=True):
         '''
-        Return Pandas dataframe of long form data with missing periods filled in as unemployed. By default j is filled in as - 1, and y and m are filled in as pd.NA, but these values can be specified.
+        Return Pandas dataframe of long format data with missing periods filled in as unemployed. By default j is filled in as - 1, and y and m are filled in as pd.NA, but these values can be specified.
 
         Arguments:
-            fill_j (value): value to fill in for missing j
-            fill_y (value): value to fill in for missing y
-            fill_m (value): value to fill in for missing m
-            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            fill_dict (dict): dictionary linking general column to value to fill in for missing rows. Set to 'prev' to set to previous value that appeared in the dataframe (cannot use 'next' because this method iterates forward over the dataframe). Can set value for any column except i. Any column not listed will default to pd.NA, except 'j' will always default to -1 unless overridden.
+            is_sorted (bool): if False, dataframe will be sorted by i and t. Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
             (Pandas DataFrame): dataframe with missing periods filled in as unemployed
         '''
-        # Check whether m column included
-        m = self._col_included('m')
-        fill_frame = pd.DataFrame(self, copy=copy)
-        if not is_sorted:
-            # Sort data by i, t
-            fill_frame.sort_values(['i', 't'], inplace=True)
-            fill_frame.reset_index(drop=True, inplace=True)
-        # Find missing periods
-        i_col = fill_frame.loc[:, 'i'].to_numpy()
-        t_col = fill_frame.loc[:, 't'].to_numpy()
-        i_prev = bpd.util.fast_shift(i_col, 1, fill_value=-2)
-        t_prev = np.roll(t_col, 1)
-        missing_periods = (i_col == i_prev) & (t_col != t_prev + 1)
-        del i_prev
-        if np.sum(missing_periods) > 0:
-            # If have data to fill in
-            fill_data = []
-            for index in fill_frame.loc[missing_periods, :].index:
-                row = fill_frame.iloc[index]
-                # Only iterate over missing years
-                for t in range(int(t_prev[index]) + 1, int(row.loc['t'])):
-                    new_row = {'i': int(row.loc['i']), 'j': fill_j, 'y': fill_y, 't': t}
-                    if m:
-                        # If m column included
-                        new_row['m'] = fill_m # int(row['m'])
-                    fill_data.append(new_row)
-            fill_df = pd.concat([pd.DataFrame(fill_row, index=[i]) for i, fill_row in enumerate(fill_data)])
-            fill_frame = pd.concat([fill_frame, fill_df])
-            # Sort data by i, t
-            fill_frame.sort_values(['i', 't'], inplace=True)
-            fill_frame.reset_index(drop=True, inplace=True)
+        if not self._col_included('t'):
+            # Check whether t column included
+            raise NotImplementedError('.fill_missing_periods() requires a time column, but dataframe does not include one.')
 
-        return fill_frame
+        if 'i' in fill_dict.keys():
+            raise NotImplementedError("Cannot set the value for 'i' in fill_dict.")
+
+        # Update fill_dict
+        fill_dict = bpd.util.update_dict({'j': -1}, fill_dict)
+
+        # Sort, copy, reset index, and convert to Pandas dataframe
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+        frame.reset_index(drop=True, inplace=True)
+        frame = pd.DataFrame(frame, copy=False)
+
+        # All included columns (minus i and t)
+        all_cols = self._included_cols()
+        all_cols.remove('i')
+        all_cols.remove('t')
+
+        # Fill in fill_dict for all columns
+        for col in all_cols:
+            if col not in fill_dict.keys():
+                fill_dict[col] = pd.NA
+
+        # Link columns to index, for use with frame.itertuples() (source: https://stackoverflow.com/a/36460020/17333120)
+        col_to_idx = {k: v for v, k in enumerate(frame.columns)}
+
+        # Dictionary of lists of each column's data
+        filled_dict = {subcol: [] for col in all_cols for subcol in bpd.util.to_list(self.col_reference_dict[col])}
+        filled_dict['i'] = []
+        filled_dict['t'] = []
+
+        # Find missing periods
+        i_col = frame.loc[:, 'i'].to_numpy()
+        t_col = frame.loc[:, 't'].to_numpy()
+        i_next = bpd.util.fast_shift(i_col, -1, fill_value=-2)
+        t_next = np.roll(t_col, -1)
+        missing_periods = (i_col == i_next) & (t_col + 1 != t_next)
+
+        if np.sum(missing_periods) > 0:
+            t_col = t_col[missing_periods]
+            t_next = t_next[missing_periods]
+            del i_col, i_next
+
+            # Compute how many periods are missing between each set of consecutive observations
+            nt = (t_next - t_col - 1)
+
+            # If have data to fill in
+            for i, row in enumerate(frame.loc[missing_periods, :].itertuples(index=False)):
+                # Source: https://stackoverflow.com/a/41022840/17333120
+                nt_i = nt[i]
+                # Start with i and t columns
+                filled_dict['i'].extend([row[col_to_idx['i']]] * nt_i)
+                filled_dict['t'].extend(np.arange(t_col[i] + 1, t_next[i]))
+                for col in all_cols:
+                    # Then do all other columns
+                    for subcol in bpd.util.to_list(self.col_reference_dict[col]):
+                        if isinstance(fill_dict[col], str) and (fill_dict[col] == 'prev'):
+                            # Need isinstance check, because pd.NA == 'prev' raises an error
+                            filled_dict[subcol].extend([row[col_to_idx[subcol]]] * nt_i)
+                        else:
+                            filled_dict[subcol].extend([fill_dict[col]] * nt_i)
+            del nt
+
+            # Convert to Pandas dataframe
+            data_filled = pd.DataFrame(filled_dict)
+
+            # Concatenate original data with filled data
+            frame = pd.concat([frame, data_filled])
+
+            # Sort data by i, t
+            frame.sort_values(['i', 't'], inplace=True)
+            frame.reset_index(drop=True, inplace=True)
+
+            # Sort columns
+            sorted_cols = bpd.util._sort_cols(frame.columns)
+            frame = frame.reindex(sorted_cols, axis=1, copy=False)
+
+        return frame
 
     def get_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], is_sorted=False, copy=True):
         '''

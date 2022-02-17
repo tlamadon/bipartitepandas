@@ -1471,7 +1471,7 @@ def test_fill_time_24_1():
 
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean()
-    new_df = bdf.fill_periods()
+    new_df = bdf.fill_missing_periods()
 
     stayers = new_df[new_df['m'] == 0]
     movers = new_df[new_df['m'] == 1]
@@ -1514,7 +1514,7 @@ def test_fill_time_24_2():
 
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean()
-    new_df = bdf.fill_periods()
+    new_df = bdf.fill_missing_periods()
 
     stayers = new_df[new_df.groupby('i')['m'].transform('max') == 0]
     movers = new_df[new_df.groupby('i')['m'].transform('max') == 1]
@@ -1537,8 +1537,8 @@ def test_fill_time_24_2():
 
     assert movers.iloc[3]['i'] == 1
     assert movers.iloc[3]['j'] == - 1
-    assert np.isnan(movers.iloc[3]['y'])
-    assert np.isnan(movers.iloc[3]['m'])
+    assert pd.isna(movers.iloc[3]['y'])
+    assert pd.isna(movers.iloc[3]['m'])
 
     assert movers.iloc[4]['i'] == 1
     assert movers.iloc[4]['j'] == 2
@@ -1562,7 +1562,7 @@ def test_fill_time_24_3():
 
     bdf = bpd.BipartiteLong(data=df)
     bdf = bdf.clean()
-    new_df = bdf.fill_periods()
+    new_df = bdf.fill_missing_periods()
 
     stayers = new_df[new_df.groupby('i')['m'].transform('max') == 0]
     movers = new_df[new_df.groupby('i')['m'].transform('max') == 1]
@@ -1585,17 +1585,82 @@ def test_fill_time_24_3():
 
     assert movers.iloc[3]['i'] == 1
     assert movers.iloc[3]['j'] == - 1
-    assert np.isnan(movers.iloc[3]['y'])
-    assert np.isnan(movers.iloc[3]['m'])
+    assert pd.isna(movers.iloc[3]['y'])
+    assert pd.isna(movers.iloc[3]['m'])
 
     assert movers.iloc[4]['i'] == 1
     assert movers.iloc[4]['j'] == - 1
-    assert np.isnan(movers.iloc[4]['y'])
-    assert np.isnan(movers.iloc[4]['m'])
+    assert pd.isna(movers.iloc[4]['y'])
+    assert pd.isna(movers.iloc[4]['m'])
 
     assert movers.iloc[5]['i'] == 1
     assert movers.iloc[5]['j'] == 2
     assert movers.iloc[5]['y'] == 1
+
+def test_fill_time_24_4():
+    # Test .fill_time() method for long format, with 2 rows of data to fill in, where fill_dict is customized and there is a custom column.
+    worker_data = []
+    # Worker 0
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'rs': 3})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'rs': 4})
+    # Worker 1
+    # Time 1 -> 4
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'rs': 1.5})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 4, 'rs': 2})
+    # Worker 3
+    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1, 'rs': 0.25})
+    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 2, 'rs': -5})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteDataFrame(df)
+    bdf = bdf.clean()
+    new_df = bdf.fill_missing_periods({'y': 'hello!', 'rs': 'how do you do?'})
+
+    stayers = new_df[new_df.groupby('i')['m'].transform('max') == 0]
+    movers = new_df[new_df.groupby('i')['m'].transform('max') == 1]
+
+    assert stayers.iloc[0]['i'] == 2
+    assert stayers.iloc[0]['j'] == 2
+    assert stayers.iloc[0]['y'] == 1
+    assert stayers.iloc[0]['rs'] == 0.25
+
+    assert stayers.iloc[1]['i'] == 2
+    assert stayers.iloc[1]['j'] == 2
+    assert stayers.iloc[1]['y'] == 1
+    assert stayers.iloc[1]['rs'] == -5
+
+    assert movers.iloc[0]['i'] == 0
+    assert movers.iloc[0]['j'] == 0
+    assert movers.iloc[0]['y'] == 2
+    assert movers.iloc[0]['rs'] == 3
+
+    assert movers.iloc[1]['i'] == 0
+    assert movers.iloc[1]['j'] == 1
+    assert movers.iloc[1]['y'] == 1
+    assert movers.iloc[1]['rs'] == 4
+
+    assert movers.iloc[2]['i'] == 1
+    assert movers.iloc[2]['j'] == 1
+    assert movers.iloc[2]['y'] == 1
+    assert movers.iloc[2]['rs'] == 1.5
+
+    assert movers.iloc[3]['i'] == 1
+    assert movers.iloc[3]['j'] == - 1
+    assert movers.iloc[3]['y'] == 'hello!'
+    assert pd.isna(movers.iloc[3]['m'])
+    assert movers.iloc[3]['rs'] == 'how do you do?'
+
+    assert movers.iloc[4]['i'] == 1
+    assert movers.iloc[4]['j'] == - 1
+    assert movers.iloc[4]['y'] == 'hello!'
+    assert pd.isna(movers.iloc[4]['m'])
+    assert movers.iloc[4]['rs'] == 'how do you do?'
+
+    assert movers.iloc[5]['i'] == 1
+    assert movers.iloc[5]['j'] == 2
+    assert movers.iloc[5]['y'] == 1
+    assert movers.iloc[5]['rs'] == 2
 
 def test_uncollapse_25():
     # Convert from collapsed long to long format.
