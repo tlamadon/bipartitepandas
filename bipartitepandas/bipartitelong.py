@@ -365,7 +365,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     def get_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], is_sorted=False, copy=True):
         '''
-        Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
+        Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods.
 
         Arguments:
             transition_col (str): column to use to define a transition
@@ -378,23 +378,31 @@ class BipartiteLong(bpd.BipartiteLongBase):
             copy (bool): if False, avoid copy
 
         Returns:
-            (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
+            (Pandas DataFrame): extended event study generated from long data
         '''
         # Convert into lists
         outcomes = bpd.util.to_list(outcomes)
         stable_pre = bpd.util.to_list(stable_pre)
         stable_post = bpd.util.to_list(stable_post)
 
-        # Get list of all columns (note that stable_pre and stable_post can have columns that are not in include)
+        included_cols = self._included_cols()
+        if transition_col not in included_cols:
+            raise ValueError(f'input for transition_col is {transition_col!r}, which is not included in the dataframe.')
+        for col in outcomes:
+            if col not in included_cols:
+                raise ValueError(f'input for outcomes includes general column {col!r}, which is not included in the dataframe.')
+        for col in stable_pre:
+            if col not in included_cols:
+                raise ValueError(f'input for stable_pre includes general column {col!r}, which is not included in the dataframe.')
+        for col in stable_post:
+            if col not in included_cols:
+                raise ValueError(f'input for stable_post includes general column {col!r}, which is not included in the dataframe.')
+
+        # Get list of all columns (note that stable_pre and stable_post can have columns that are not in outcomes)
         all_cols = outcomes[:]
         for col in set(stable_pre + stable_post):
             if col not in all_cols:
                 all_cols.append(col)
-
-        # Check that columns exist
-        for col in all_cols:
-            if not self._col_included(col):
-                return None
 
         # Create return frame
         es_extended_frame = pd.DataFrame(self, copy=copy)

@@ -581,6 +581,13 @@ def test_refactor_12():
 
     assert len(bdf) == len(bdf.to_eventstudy().to_long())
 
+def test_refactor_13():
+    # Check collapsing, uncollapsing, then recollapsing
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(3456))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean().collapse()
+
+    assert len(bdf) == len(bdf.uncollapse().collapse())
+
 def test_contiguous_fids_11():
     # Check contiguous_ids() with firm ids.
     worker_data = []

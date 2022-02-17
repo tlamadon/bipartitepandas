@@ -818,7 +818,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     def min_moves_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
         '''
-        Return dataframe of firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+        Return dataframe where all firms have at least `threshold` many moves. Note that a single worker can have multiple moves at the same firm. This method employs loops, as dropping firms that don't meet the threshold may lower the number of moves at other firms.
 
         Arguments:
             threshold (int): minimum number of moves required to keep a firm
@@ -850,7 +850,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
         '''
-        Return dataframe of firms with at least `threshold` many movers.
+        Return dataframe where all firms have at least `threshold` many movers. This method employs loops, as dropping firms that don't meet the threshold may lower the number of movers at other firms.
 
         Arguments:
             threshold (int): minimum number of movers required to keep a firm
