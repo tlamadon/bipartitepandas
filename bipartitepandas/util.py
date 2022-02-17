@@ -94,7 +94,7 @@ def _is_subdtype(col, types):
 
     Arguments:
         col (NumPy Array or Pandas Series): column to compare
-        types (str or list of str): types to check (options are 'float', 'int', and 'any')
+        types (str or list of str): types to check (options are 'float', 'int', 'any', and 'contig')
 
     Returns:
         (bool): if subtype, returns True
@@ -111,7 +111,8 @@ def _is_subdtype(col, types):
     type_str_to_typecodes_dict = {
         'float': ['AllFloat', 'AllInteger'],
         'int': 'AllInteger',
-        'any': 'All'
+        'any': 'All',
+        'contig': 'All'
     }
     for type_i in to_list(types):
         # Check whether column is valid type

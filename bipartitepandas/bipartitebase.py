@@ -192,7 +192,7 @@ class BipartiteBase(DataFrame):
             self.columns_opt = ['t', 'g', 'w', 'm'] + columns_opt
             self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
             self.col_reference_dict = update_dict({'i': 'i', 'm': 'm'}, col_reference_dict)
-            self.col_dtype_dict = update_dict({'i': 'any', 'j': 'any', 'y': 'float', 't': 'int', 'g': 'any', 'w': 'float', 'm': 'int'}, col_dtype_dict)
+            self.col_dtype_dict = update_dict({'i': 'contig', 'j': 'contig', 'y': 'float', 't': 'int', 'g': 'contig', 'w': 'float', 'm': 'int'}, col_dtype_dict)
             # Skip t and m for collapsing
             self.col_collapse_dict = update_dict({'i': 'first', 'j': 'first', 'y': 'mean', 'g': 'first', 'w': 'sum'}, col_collapse_dict)
             # Split i to make sure consecutive observations are for the same worker
@@ -390,7 +390,7 @@ class BipartiteBase(DataFrame):
             col_data (NumPy Array or Pandas Series or list of (NumPy Array or Pandas Series) or None): data for column, or list of data for columns; set to None if columns already added to dataframe via column assignment
             col_reference (str or list of str): if column has multiple subcolumns (e.g. firm ids are associated with the columns ['j1', 'j2']) this must be specified; otherwise, None will automatically default to the column name (plus a column number, if more than one column is listed) (e.g. firm ids are associated with the column 'j' if one column is included, or ['j1', 'j2'] if two columns are included)
             is_contiguous (bool): if True, column is contiguous
-            dtype (str): column datatype, must be one of 'int', 'float', or 'any'
+            dtype (str): column datatype, must be one of 'int', 'float', 'any', or 'contig'
             how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
             long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
             copy (bool): if False, avoid copy
@@ -407,9 +407,13 @@ class BipartiteBase(DataFrame):
             # Check if column already included
             raise ValueError(f'Trying to add general column {col_name!r}, but this column is already assigned.')
 
-        if is_contiguous and how_collapse not in ['first', 'last', None]:
-            # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
-            raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
+        if is_contiguous:
+            if how_collapse not in ['first', 'last', None]:
+                # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
+                raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
+            if dtype != 'contig':
+                # Check if column is contiguous but is not listed as contiguous datatype
+                raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and has datatype {dtype!r}, but contiguous columns require datatype 'contig'.")
 
         for char in col_name:
             # Make sure col_name does not contain digits
@@ -492,7 +496,7 @@ class BipartiteBase(DataFrame):
         Arguments:
             col_name (str): general column name
             is_contiguous (bool): if True, column is contiguous
-            dtype (str): column datatype, must be one of 'int', 'float', or 'any'
+            dtype (str): column datatype, must be one of 'int', 'float', 'any', or 'contig'
             how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
             long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
             copy (bool): if False, avoid copy
@@ -500,42 +504,48 @@ class BipartiteBase(DataFrame):
         Returns:
             (BipartiteBase): dataframe with new column(s)
         '''
-        if self._col_included(col_name):
-            # Before modifying anything, run a few checks
-            if col_name in self.columns_req + self.columns_opt:
-                # Check if column is a default column
-                raise ValueError(f'Trying to update properties for general column {col_name!r}, which is a default column. Default column properties cannot be changed.')
+        # Before modifying anything, run a few checks
+        if not self._col_included(col_name):
+            # Check if column isn't included
+            raise AttributeError(f'General column {col_name!r} is not included in the dataframe. Valid options are: {self._included_cols()!r}.')
 
-            if is_contiguous and how_collapse not in ['first', 'last', None]:
+        if col_name in self.columns_req + self.columns_opt:
+            # Check if column is a default column
+            raise ValueError(f'Trying to update properties for general column {col_name!r}, which is a default column. Default column properties cannot be changed.')
+
+        if is_contiguous:
+            if how_collapse not in ['first', 'last', None]:
                 # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
                 raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is contiguous and will be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
+            if dtype != 'contig':
+                # Check if column is contiguous but is not listed as contiguous datatype
+                raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is contiguous and will have datatype {dtype!r}, but contiguous columns require datatype 'contig'.")
 
-            # Wait to copy until after initial checks are complete
-            if copy:
-                frame = self.copy()
-            else:
-                frame = self
-
-            # Assign class attributes
-            if is_contiguous:
-                if col_name not in frame.columns_contig.keys():
-                    # Contiguous but wasn't before
-                    frame.columns_contig[col_name] = None
-                    if frame.id_reference_dict:
-                        frame.id_reference_dict[col_name] = DataFrame()
-            else:
-                if col_name in frame.columns_contig.keys():
-                    # Not contiguous but was before
-                    del frame.columns_contig[col_name]
-                    if frame.id_reference_dict:
-                        del frame.id_reference_dict[col_name]
-            frame.col_dtype_dict[col_name] = dtype
-            frame.col_collapse_dict[col_name] = how_collapse
-            frame.col_long_es_dict[col_name] = long_es_split
-
-            return frame
+        # Wait to copy until after initial checks are complete
+        if copy:
+            frame = self.copy()
         else:
-            raise AttributeError(f'General column {col_name!r} is not included in the dataframe. Valid options are: {self._included_cols()!r}.')
+            frame = self
+
+        # Assign class attributes
+        if is_contiguous:
+            if col_name not in frame.columns_contig.keys():
+                # Contiguous but wasn't before
+                frame.columns_contig[col_name] = None
+                if frame.id_reference_dict:
+                    frame.id_reference_dict[col_name] = DataFrame()
+        else:
+            if col_name in frame.columns_contig.keys():
+                # Not contiguous but was before
+                del frame.columns_contig[col_name]
+                if frame.id_reference_dict:
+                    del frame.id_reference_dict[col_name]
+        frame.col_dtype_dict[col_name] = dtype
+        frame.col_collapse_dict[col_name] = how_collapse
+        frame.col_long_es_dict[col_name] = long_es_split
+
+        return frame
+            
 
     def get_column_properties(self, col_name):
         '''

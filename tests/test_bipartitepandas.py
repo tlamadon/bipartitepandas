@@ -3688,7 +3688,7 @@ def test_custom_columns_1():
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
     ## Third, construct while adding column, and make it contiguous ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
 
     assert 'c' in bdf.columns
     assert 'c' in bdf.id_reference_dict.keys()
@@ -3702,7 +3702,7 @@ def test_custom_columns_1():
 
     ## Fourth, construct while adding column, and make it contiguous but with an invalid collapse option ##
     try:
-        bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse='mean').clean()
+        bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse='mean').clean()
         success = False
     except NotImplementedError:
         success = True
@@ -3739,7 +3739,7 @@ def test_custom_columns_1():
     assert bdf.n_unique_ids('c') != max(bdf['c1'].max(), bdf['c2'].max()) + 1
 
     ## Eighth, try with event study format, and make custom columns contiguous ##
-    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
 
     assert 'c1' in bdf.columns and 'c2' in bdf.columns
     assert 'c' in bdf.id_reference_dict.keys()
@@ -3783,7 +3783,7 @@ def test_custom_columns_1():
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
     ## Twelfth, go from long to event study with contiguous column that should drop ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, long_es_split=None).clean().to_eventstudy()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', long_es_split=None).clean().to_eventstudy()
 
     assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -3794,7 +3794,7 @@ def test_custom_columns_1():
     assert 'c' not in bdf.col_long_es_dict.keys()
 
     ## Thirteenth, go from event study to long with contiguous column that should drop ##
-    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True, long_es_split=None).clean().to_long()
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', long_es_split=None).clean().to_long()
 
     assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -3840,7 +3840,7 @@ def test_custom_columns_2():
     assert bdf.iloc[0]['c'] == 0.75
 
     ## Fourth, collapse by None ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse=None).clean().collapse()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse=None).clean().collapse()
 
     assert 'c' not in bdf.columns
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -3869,7 +3869,7 @@ def test_custom_columns_2():
     assert bdf.iloc[1]['c'] == 0.75
 
     ## Eighth, clean collapsed with None ##
-    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse=None).clean()
+    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse=None).clean()
 
     assert 'c' in bdf.columns
     assert 'c' in bdf.col_reference_dict.keys()
@@ -3880,7 +3880,7 @@ def test_custom_columns_2():
     assert 'c' in bdf.col_long_es_dict.keys()
 
     ## Ninth, uncollapse by None ##
-    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_contiguous=True, how_collapse=None).clean().uncollapse()
+    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse=None).clean().uncollapse()
 
     assert 'c' not in bdf.columns
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -3911,10 +3911,10 @@ def test_custom_columns_3():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     ## First, contiguous to not contiguous ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
     init_properties = bdf.get_column_properties('c')
 
-    assert (init_properties['dtype'] == 'any') and init_properties['is_contiguous'] and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
+    assert (init_properties['dtype'] == 'contig') and init_properties['is_contiguous'] and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
     assert ('c' in bdf.columns_contig.keys()) and ('c' in bdf.id_reference_dict.keys())
 
     bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=False, how_collapse='mean', long_es_split=None)
@@ -3930,10 +3930,10 @@ def test_custom_columns_3():
     assert (init_properties['dtype'] == 'any') and (not init_properties['is_contiguous']) and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
     assert ('c' not in bdf.columns_contig.keys()) and ('c' not in bdf.id_reference_dict.keys())
 
-    bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=True, how_collapse='last', long_es_split=None)
+    bdf = bdf.set_column_properties('c', is_contiguous=True, dtype='contig', how_collapse='last', long_es_split=None)
     new_properties = bdf.get_column_properties('c')
 
-    assert (new_properties['dtype'] == 'int') and new_properties['is_contiguous'] and (new_properties['how_collapse'] == 'last') and (new_properties['long_es_split'] is None)
+    assert (new_properties['dtype'] == 'contig') and new_properties['is_contiguous'] and (new_properties['how_collapse'] == 'last') and (new_properties['long_es_split'] is None)
     assert ('c' in bdf.columns_contig.keys()) and ('c' in bdf.id_reference_dict.keys())
 
     ## Third, not contiguous to contiguous, but invalid how_collapse ##
@@ -3941,7 +3941,7 @@ def test_custom_columns_3():
     init_properties = bdf.get_column_properties('c')
 
     try:
-        bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=True, how_collapse='mean', long_es_split=None)
+        bdf = bdf.set_column_properties('c', is_contiguous=True, dtype='contig', how_collapse='mean', long_es_split=None)
         success = False
     except NotImplementedError:
         success = True
@@ -3969,7 +3969,7 @@ def test_custom_columns_4():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     ## Contiguous column should alter id_reference_dict properly ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True).clean()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
 
     assert 'c' in bdf.id_reference_dict.keys()
 
@@ -4033,9 +4033,9 @@ def test_dataframe_2():
 
     ## Long format ##
     a = bpd.SimBipartite().simulate()
-    b = bpd.BipartiteDataFrame(**a, custom_contiguous_dict={'l': True}, custom_dtype_dict={'l': 'any'}, custom_how_collapse_dict={'alpha': None, 'l': None}, custom_long_es_split_dict={'psi': False}).clean()
+    b = bpd.BipartiteDataFrame(**a, custom_contiguous_dict={'l': True}, custom_dtype_dict={'l': 'contig'}, custom_how_collapse_dict={'alpha': None, 'l': None}, custom_long_es_split_dict={'psi': False}).clean()
 
     assert 'l' in b.columns_contig.keys()
-    assert b.col_dtype_dict['l'] == 'any'
+    assert b.col_dtype_dict['l'] == 'contig'
     assert b.col_collapse_dict['alpha'] is None
     assert b.col_long_es_dict['psi'] is False
