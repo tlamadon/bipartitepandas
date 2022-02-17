@@ -477,5 +477,5 @@ def compare_frames(frame1, frame2, size_variable='len', operator='geq', save_to_
         'geq': lambda a, b: a >= b,
         'leq': lambda a, b: a <= b
     }
-    
+
     return operator_dict[operator](val1, val2)

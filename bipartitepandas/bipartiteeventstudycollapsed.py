@@ -9,12 +9,17 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
 
     Arguments:
         *args: arguments for BipartiteEventStudyBase
-        col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
-        col_collapse_dict (dict): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}
+        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}; None is equivalent to {}
+        col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
         **kwargs: keyword arguments for BipartiteEventStudyBase
     '''
 
-    def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
+    def __init__(self, *args, col_reference_dict=None, col_collapse_dict=None, **kwargs):
+        # Update parameters to be lists/dictionaries instead of None (source: https://stackoverflow.com/a/54781084/17333120)
+        if col_reference_dict is None:
+            col_reference_dict = {}
+        if col_collapse_dict is None:
+            col_collapse_dict = {}
         col_reference_dict = bpd.util.update_dict({'t': ['t11', 't12', 't21', 't22']}, col_reference_dict)
         col_collapse_dict = bpd.util.update_dict({'m': None}, col_collapse_dict)
         # Initialize DataFrame

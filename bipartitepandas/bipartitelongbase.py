@@ -11,11 +11,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     Arguments:
         *args: arguments for BipartiteBase
-        col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
+        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}; None is equivalent to {}
         **kwargs: keyword arguments for BipartiteBase
     '''
 
-    def __init__(self, *args, col_reference_dict={}, **kwargs):
+    def __init__(self, *args, col_reference_dict=None, **kwargs):
+        # Update parameters to be lists/dictionaries instead of None (source: https://stackoverflow.com/a/54781084/17333120)
+        if col_reference_dict is None:
+            col_reference_dict = {}
         col_reference_dict = bpd.util.update_dict({'j': 'j', 'y': 'y', 'g': 'g', 'w': 'w'}, col_reference_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)

@@ -79,18 +79,19 @@ _clean_params_default = bpd.util.ParamsDict({
         ''', None)
 })
 
-def clean_params(update_dict={}):
+def clean_params(update_dict=None):
     '''
     Dictionary of default clean_params. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
-        update_dict (dict): user parameter values
+        update_dict (dict or None): user parameter values; None is equivalent to {}
 
     Returns:
         (ParamsDict): dictionary of clean_params
     '''
     new_dict = _clean_params_default.copy()
-    new_dict.update(update_dict)
+    if update_dict is not None:
+        new_dict.update(update_dict)
     return new_dict
 
 _cluster_params_default = bpd.util.ParamsDict({
@@ -132,18 +133,19 @@ _cluster_params_default = bpd.util.ParamsDict({
         ''', None)
 })
 
-def cluster_params(update_dict={}):
+def cluster_params(update_dict=None):
     '''
     Dictionary of default cluster_params. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
-        update_dict (dict): user parameter values
+        update_dict (dict or None): user parameter values; None is equivalent to {}
 
     Returns:
         (ParamsDict): dictionary of cluster_params
     '''
     new_dict = _cluster_params_default.copy()
-    new_dict.update(update_dict)
+    if update_dict is not None:
+        new_dict.update(update_dict)
     return new_dict
 
 class BipartiteBase(DataFrame):
@@ -152,13 +154,13 @@ class BipartiteBase(DataFrame):
 
     Arguments:
         *args: arguments for Pandas DataFrame
-        columns_req (list): required columns (only put general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'; then put the joint columns in col_reference_dict)
-        columns_opt (list): optional columns (only put general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'; then put the joint columns in col_reference_dict)
-        columns_contig (dictionary): columns requiring contiguous ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {'i': False, 'j': False, 'g': None} (only put general column names for joint columns)
-        col_reference_dict (dict): clarify which joint columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}
-        col_dtype_dict (dict): link column to datatype, e.g. {'m': 'int'}
-        col_collapse_dict (dict): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}
-        col_long_es_dict (dict): whether each column should split into two when converting from long to event study (None indicates the column should be dropped), e.g. {'y': True, 'm': None}
+        columns_req (list or None): required columns (only put general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'; then put the joint columns in col_reference_dict); None is equivalent to []
+        columns_opt (list or None): optional columns (only put general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'; then put the joint columns in col_reference_dict); None is equivalent to []
+        columns_contig (dict or None): columns requiring contiguous ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {'i': False, 'j': False, 'g': None} (only put general column names for joint columns); None is equivalent to {}
+        col_reference_dict (dict or None): clarify which joint columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}; None is equivalent to {}
+        col_dtype_dict (dict or None): link column to datatype, e.g. {'m': 'int'}; None is equivalent to {}
+        col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
+        col_long_es_dict (dict or None): whether each column should split into two when converting from long to event study (None indicates the column should be dropped), e.g. {'y': True, 'm': None}; None is equivalent to {}
         include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
         log (bool): if True, will create log file(s)
         **kwargs: keyword arguments for Pandas DataFrame
@@ -166,7 +168,7 @@ class BipartiteBase(DataFrame):
     # Attributes, required for Pandas inheritance
     _metadata = ['columns_req', 'columns_opt', 'columns_contig', 'col_reference_dict', 'col_dtype_dict', 'col_collapse_dict', 'col_long_es_dict', 'id_reference_dict', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', 'no_returns', '_log_on_indicator', '_log_level_fn_dict']
 
-    def __init__(self, *args, columns_req=[], columns_opt=[], columns_contig=[], col_reference_dict={}, col_dtype_dict={}, col_collapse_dict={}, col_long_es_dict={}, include_id_reference_dict=False, log=True, **kwargs):
+    def __init__(self, *args, columns_req=None, columns_opt=None, columns_contig=None, col_reference_dict=None, col_dtype_dict=None, col_collapse_dict=None, col_long_es_dict=None, include_id_reference_dict=False, log=True, **kwargs):
         # Initialize DataFrame
         super().__init__(*args, **kwargs)
 
@@ -175,6 +177,22 @@ class BipartiteBase(DataFrame):
         # Option to turn on/off logger
         self._log_on_indicator = log
         # self.log('initializing BipartiteBase object', level='info')
+
+        # Update parameters to be lists/dictionaries instead of None (source: https://stackoverflow.com/a/54781084/17333120)
+        if columns_req is None:
+            columns_req = []
+        if columns_opt is None:
+            columns_opt = []
+        if columns_contig is None:
+            columns_contig = []
+        if col_reference_dict is None:
+            col_reference_dict = {}
+        if col_dtype_dict is None:
+            col_dtype_dict = {}
+        if col_collapse_dict is None:
+            col_collapse_dict = {}
+        if col_long_es_dict is None:
+            col_long_es_dict = {}
 
         if len(args) > 0 and isinstance(args[0], BipartiteBase):
             # Note that isinstance works for subclasses
@@ -545,7 +563,7 @@ class BipartiteBase(DataFrame):
         frame.col_long_es_dict[col_name] = long_es_split
 
         return frame
-            
+
 
     def get_column_properties(self, col_name):
         '''
@@ -809,7 +827,7 @@ class BipartiteBase(DataFrame):
     def _included_cols(self, subcols=False):
         '''
         Get all columns included from the pre-established required/optional lists.
-        
+
         Arguments:
             subcols (bool): if False, uses general column names for joint columns, e.g. returns 'j' instead of 'j1', 'j2'
 
@@ -1147,7 +1165,7 @@ class BipartiteBase(DataFrame):
                         raise ValueError(error_msg)
                 # If column included and has correct type, add to list
                 known_included_cols.append(subcol)
-        
+
         for col in self.columns:
             # Check all included columns (where some are possibly not referenced)
             if col not in known_included_cols:

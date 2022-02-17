@@ -69,18 +69,19 @@ _sim_params_default = ParamsDict({
         ''', 'in [0, 1]')
 })
 
-def sim_params(update_dict={}):
+def sim_params(update_dict=None):
     '''
     Dictionary of default sim_params. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
-        update_dict (dict): user parameter values
+        update_dict (dict or None): user parameter values; None is equivalent to {}
 
     Returns:
         (ParamsDict): dictionary of sim_params
     '''
     new_dict = _sim_params_default.copy()
-    new_dict.update(update_dict)
+    if update_dict is not None:
+        new_dict.update(update_dict)
     return new_dict
 
 class SimBipartite:

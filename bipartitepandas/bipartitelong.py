@@ -30,18 +30,19 @@ _plot_extended_eventstudy_params_default = bpd.util.ParamsDict({
         ''', None)
 })
 
-def plot_extended_eventstudy_params(update_dict={}):
+def plot_extended_eventstudy_params(update_dict=None):
     '''
     Dictionary of default plot_extended_eventstudy_params. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
-        update_dict (dict): user parameter values
+        update_dict (dict or None): user parameter values; None is equivalent to {}
 
     Returns:
         (ParamsDict): dictionary of plot_extended_eventstudy_params
     '''
     new_dict = _plot_extended_eventstudy_params_default.copy()
-    new_dict.update(update_dict)
+    if update_dict is not None:
+        new_dict.update(update_dict)
     return new_dict
 
 class BipartiteLong(bpd.BipartiteLongBase):
@@ -50,12 +51,17 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     Arguments:
         *args: arguments for BipartiteLongBase
-        col_reference_dict (dict): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}
-        col_collapse_dict (dict): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}
+        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}; None is equivalent to {}
+        col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
         **kwargs: keyword arguments for BipartiteLongBase
     '''
 
-    def __init__(self, *args, col_reference_dict={}, col_collapse_dict={}, **kwargs):
+    def __init__(self, *args, col_reference_dict=None, col_collapse_dict=None, **kwargs):
+        # Update parameters to be lists/dictionaries instead of None (source: https://stackoverflow.com/a/54781084/17333120)
+        if col_reference_dict is None:
+            col_reference_dict = {}
+        if col_collapse_dict is None:
+            col_collapse_dict = {}
         col_reference_dict = bpd.util.update_dict({'t': 't'}, col_reference_dict)
         col_collapse_dict = bpd.util.update_dict({'m': 'sum'}, col_collapse_dict)
         # Initialize DataFrame
@@ -315,12 +321,12 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return articulation_rows
 
-    def fill_missing_periods(self, fill_dict={}, is_sorted=False, copy=True):
+    def fill_missing_periods(self, fill_dict=None, is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of long format data with missing periods filled in as unemployed. By default j is filled in as - 1, and y and m are filled in as pd.NA, but these values can be specified.
 
         Arguments:
-            fill_dict (dict): dictionary linking general column to value to fill in for missing rows. Set to 'prev' to set to previous value that appeared in the dataframe (cannot use 'next' because this method iterates forward over the dataframe). Can set value for any column except i. Any column not listed will default to pd.NA, except 'j' will always default to -1 unless overridden.
+            fill_dict (dict or None): dictionary linking general column to value to fill in for missing rows. None is equivalent to {}. Set value to 'prev' to set to previous value that appeared in the dataframe (cannot use 'next' because this method iterates forward over the dataframe). Can set value for any column except i. Any column not listed will default to pd.NA, except 'j' will always default to -1 unless overridden.
             is_sorted (bool): if False, dataframe will be sorted by i and t. Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
@@ -330,6 +336,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         if not self._col_included('t'):
             # Check whether t column included
             raise NotImplementedError('.fill_missing_periods() requires a time column, but dataframe does not include one.')
+
+        if fill_dict is None:
+            fill_dict = {}
 
         if 'i' in fill_dict.keys():
             raise NotImplementedError("Cannot set the value for 'i' in fill_dict.")
@@ -408,7 +417,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return frame
 
-    def get_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], is_sorted=False, copy=True):
+    def get_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=3, periods_post=3, stable_pre=None, stable_post=None, is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods.
 
@@ -417,8 +426,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
             outcomes (column name or list of column names): columns to include data for all periods
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
-            stable_pre (column name or list of column names): for each column, keep only workers who have constant values in that column before the transition
-            stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition            
+            stable_pre (column name or list of column names or None): for each column, keep only workers who have constant values in that column before the transition; None is equivalent to []
+            stable_post (column name or list of column names or None): for each column, keep only workers who have constant values in that column after the transition; None is equivalent to []
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
@@ -427,8 +436,14 @@ class BipartiteLong(bpd.BipartiteLongBase):
         '''
         # Convert into lists
         outcomes = bpd.util.to_list(outcomes)
-        stable_pre = bpd.util.to_list(stable_pre)
-        stable_post = bpd.util.to_list(stable_post)
+        if stable_pre is None:
+            stable_pre = []
+        else:
+            stable_pre = bpd.util.to_list(stable_pre)
+        if stable_post is None:
+            stable_post = []
+        else:
+            stable_post = bpd.util.to_list(stable_post)
 
         included_cols = self._included_cols()
         if transition_col not in included_cols:
@@ -557,7 +572,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], plot_extended_eventstudy_params=plot_extended_eventstudy_params(), is_sorted=False, copy=True):
+    def plot_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=2, periods_post=2, stable_pre=None, stable_post=None, plot_extended_eventstudy_params=plot_extended_eventstudy_params(), is_sorted=False, copy=True):
         '''
         Generate event study plots. If data is not clustered, will plot all transitions in a single figure.
 
@@ -566,8 +581,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
             outcomes (column name or list of column names): columns to include data for all periods
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
-            stable_pre (column name or list of column names): for each column, keep only workers who have constant values in that column before the transition
-            stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition            
+            stable_pre (column name or list of column names or None): for each column, keep only workers who have constant values in that column before the transition; None is equivalent to []
+            stable_post (column name or list of column names or None): for each column, keep only workers who have constant values in that column after the transition; None is equivalent to []
             plot_extended_eventstudy_params (ParamsDict): dictionary of parameters for plotting. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy

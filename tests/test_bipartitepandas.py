@@ -1613,6 +1613,8 @@ def test_fill_time_24_4():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
+    print('df.columns:', df.columns)
+
     bdf = bpd.BipartiteDataFrame(df)
     bdf = bdf.clean()
     new_df = bdf.fill_missing_periods({'y': 'hello!', 'rs': 'how do you do?'})
@@ -2464,7 +2466,7 @@ def test_long_collapsed_1():
     assert stayers.iloc[0]['i'] == 2
     assert stayers.iloc[0]['j'] == 2
     assert stayers.iloc[0]['y'] == 1
-    
+
     assert movers.iloc[0]['i'] == 0
     assert movers.iloc[0]['j'] == 0
     assert movers.iloc[0]['y'] == 2
@@ -4066,6 +4068,7 @@ def test_dataframe_1():
 
     ## Long format ##
     a = bpd.SimBipartite().simulate()
+    print('a.columns:', a.columns)
     b = bpd.BipartiteDataFrame(**a).clean()
 
     assert isinstance(b, bpd.BipartiteLong)
