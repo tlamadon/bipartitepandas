@@ -7,7 +7,7 @@ import bipartitepandas as bpd
 import warnings
 
 # Define default parameter dictionary
-_es_extended_plot_params_default = bpd.util.ParamsDict({
+_plot_extended_eventstudy_params_default = bpd.util.ParamsDict({
     'title_height': (1, 'type', (int, float),
         '''
             (default=1) Location of titles for subfigures.
@@ -30,17 +30,17 @@ _es_extended_plot_params_default = bpd.util.ParamsDict({
         ''', None)
 })
 
-def es_extended_plot_params(update_dict={}):
+def plot_extended_eventstudy_params(update_dict={}):
     '''
-    Dictionary of default es_extended_plot_params. Run bpd.es_extended_plot_params().describe_all() for descriptions of all valid parameters.
+    Dictionary of default plot_extended_eventstudy_params. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters.
 
     Arguments:
         update_dict (dict): user parameter values
 
     Returns:
-        (ParamsDict): dictionary of es_extended_plot_params
+        (ParamsDict): dictionary of plot_extended_eventstudy_params
     '''
-    new_dict = _es_extended_plot_params_default.copy()
+    new_dict = _plot_extended_eventstudy_params_default.copy()
     new_dict.update(update_dict)
     return new_dict
 
@@ -363,17 +363,17 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return fill_frame
 
-    def get_extended_eventstudy(self, periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', is_sorted=False, copy=True):
+    def get_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=3, periods_post=3, stable_pre=[], stable_post=[], is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods. The function will run .cluster() if no g column exists.
 
         Arguments:
+            transition_col (str): column to use to define a transition
+            outcomes (column name or list of column names): columns to include data for all periods
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
             stable_pre (column name or list of column names): for each column, keep only workers who have constant values in that column before the transition
-            stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
-            include (column name or list of column names): columns to include data for all periods
-            transition_col (str): column to use to define a transition
+            stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition            
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
@@ -381,12 +381,12 @@ class BipartiteLong(bpd.BipartiteLongBase):
             (Pandas DataFrame or None): extended event study generated from long data if clustered; None if not clustered
         '''
         # Convert into lists
-        include = bpd.util.to_list(include)
+        outcomes = bpd.util.to_list(outcomes)
         stable_pre = bpd.util.to_list(stable_pre)
         stable_post = bpd.util.to_list(stable_post)
 
         # Get list of all columns (note that stable_pre and stable_post can have columns that are not in include)
-        all_cols = include[:]
+        all_cols = outcomes[:]
         for col in set(stable_pre + stable_post):
             if col not in all_cols:
                 all_cols.append(col)
@@ -438,20 +438,20 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         ## Compute lags and leads
         # For column order
-        column_order = [[] for _ in range(len(include))]
+        column_order = [[] for _ in range(len(outcomes))]
         for i, col in enumerate(all_cols):
             col_np = es_extended_frame.loc[:, col].to_numpy()
             # Compute lagged values
             for j in range(1, periods_pre + 1):
                 es_extended_frame.loc[:, f'{col}_l{j}'] = bpd.util.fast_shift(col_np, j, fill_value=-2)
-                if col in include:
+                if col in outcomes:
                     column_order[i].insert(0, f'{col}_l{j}')
             # Compute lead values
             for j in range(periods_post): # No + 1 because base period has no shift (e.g. y becomes y_f1)
                 if j > 0:
                     # No shift necessary for base period because already exists
                     es_extended_frame.loc[:, f'{col}_f{j + 1}'] = bpd.util.fast_shift(col_np, -j, fill_value=-2)
-                if col in include:
+                if col in outcomes:
                     column_order[i].append(f'{col}_f{j + 1}')
 
         # Demarcate valid rows (all should start off True)
@@ -480,7 +480,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame = es_extended_frame.loc[valid_rows, :]
 
         # Rename base period to have _f1 (e.g. y becomes y_f1)
-        es_extended_frame.rename({col: col + '_f1' for col in include}, axis=1, inplace=True)
+        es_extended_frame.rename({col: col + '_f1' for col in outcomes}, axis=1, inplace=True)
 
         # Keep rows with valid moves
         es_extended_frame = es_extended_frame.loc[es_extended_frame.loc[:, 'valid_move'].to_numpy() == 1, :]
@@ -490,7 +490,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         es_extended_frame.drop('valid_move', axis=1, inplace=True)
 
         # Correct datatypes
-        for i, col in enumerate(include):
+        for i, col in enumerate(outcomes):
             if self.col_dtype_dict[col] == 'int':
                 es_extended_frame.loc[:, column_order[i]] = es_extended_frame.loc[:, column_order[i]].astype(int, copy=False)
 
@@ -504,18 +504,18 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_extended_eventstudy(self, periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], include=['g', 'y'], transition_col='j', es_extended_plot_params=es_extended_plot_params(), is_sorted=False, copy=True):
+    def plot_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=2, periods_post=2, stable_pre=[], stable_post=[], plot_extended_eventstudy_params=plot_extended_eventstudy_params(), is_sorted=False, copy=True):
         '''
         Generate event study plots. If data is not clustered, will plot all transitions in a single figure.
 
         Arguments:
+            transition_col (str): column to use to define a transition
+            outcomes (column name or list of column names): columns to include data for all periods
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
             stable_pre (column name or list of column names): for each column, keep only workers who have constant values in that column before the transition
-            stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition
-            include (column name or list of column names): columns to include data for all periods
-            transition_col (str): column to use to define a transition
-            es_extended_plot_params (ParamsDict): dictionary of parameters for plotting. Run bpd.es_extended_plot_params().describe_all() for descriptions of all valid parameters.
+            stable_post (column name or list of column names): for each column, keep only workers who have constant values in that column after the transition            
+            plot_extended_eventstudy_params (ParamsDict): dictionary of parameters for plotting. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
         '''
@@ -532,10 +532,10 @@ class BipartiteLong(bpd.BipartiteLongBase):
             n_clusters = 1
             self.loc[:, 'g'] = 0
 
-        es = self.get_extended_eventstudy(periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post, include=include, transition_col=transition_col,is_sorted=is_sorted, copy=copy)
+        es = self.get_extended_eventstudy(transition_col=transition_col, outcomes=outcomes, periods_pre=periods_pre, periods_post=periods_post, stable_pre=stable_pre, stable_post=stable_post,is_sorted=is_sorted, copy=copy)
 
         # Want n_clusters x n_clusters subplots
-        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=es_extended_plot_params['sharex'], sharey=es_extended_plot_params['sharey'])
+        fig, axs = plt.subplots(nrows=n_clusters, ncols=n_clusters, sharex=plot_extended_eventstudy_params['sharex'], sharey=plot_extended_eventstudy_params['sharey'])
         # Create lists of the x values and y columns we want
         x_vals = []
         y_cols = []
@@ -558,7 +558,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                     yerr = es_plot.loc[:, y_cols].std(axis=0) / (len(es_plot) ** 0.5)
                     ax.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
                     ax.axvline(0, color='orange', zorder=1)
-                    ax.set_title(f'{i + 1} to {j + 1} (n={len(es_plot)})', y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
+                    ax.set_title(f'{i + 1} to {j + 1} (n={len(es_plot)})', y=plot_extended_eventstudy_params['title_height'], fontdict={'fontsize': plot_extended_eventstudy_params['fontsize']})
                     ax.grid()
                     y_min = min(y_min, ax.get_ylim()[0])
                     y_max = max(y_max, ax.get_ylim()[1])
@@ -568,7 +568,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             yerr = es.loc[:, y_cols].std(axis=0) / (len(es) ** 0.5)
             axs.errorbar(x_vals, y, yerr=yerr, ecolor='red', elinewidth=1, zorder=2)
             axs.axvline(0, color='orange', zorder=1)
-            axs.set_title(f'All Transitions (n={len(es)})', y=es_extended_plot_params['title_height'], fontdict={'fontsize': es_extended_plot_params['fontsize']})
+            axs.set_title(f'All Transitions (n={len(es)})', y=plot_extended_eventstudy_params['title_height'], fontdict={'fontsize': plot_extended_eventstudy_params['fontsize']})
             axs.grid()
             y_min = min(y_min, axs.get_ylim()[0])
             y_max = max(y_max, axs.get_ylim()[1])
@@ -578,6 +578,6 @@ class BipartiteLong(bpd.BipartiteLongBase):
             self.drop('g', axis=1, inplace=True)
 
         # Plot
-        plt.setp(axs, xticks=np.arange(-periods_pre, periods_post + 1), yticks=np.round(np.linspace(y_min, y_max, 4), es_extended_plot_params['yticks_round']))
+        plt.setp(axs, xticks=np.arange(-periods_pre, periods_post + 1), yticks=np.round(np.linspace(y_min, y_max, 4), plot_extended_eventstudy_params['yticks_round']))
         plt.tight_layout()
         plt.show()

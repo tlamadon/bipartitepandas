@@ -2286,7 +2286,7 @@ def test_long_get_extended_eventstudy_1():
     bdf = bpd.BipartiteLong(df)
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(periods_pre=2, periods_post=1, include=['j', 'y'], transition_col='g')
+    es_extended = bdf.get_extended_eventstudy(transition_col='g', outcomes=['j', 'y'], periods_pre=2, periods_post=1)
 
     assert es_extended.iloc[0]['i'] == 0
     assert es_extended.iloc[0]['j_l2'] == 1
@@ -2312,7 +2312,7 @@ def test_long_get_extended_eventstudy_2():
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(periods_pre=3, periods_post=2, include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=3, periods_post=2)
 
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
 
@@ -2322,7 +2322,7 @@ def test_long_get_extended_eventstudy_3_1():
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(periods_pre=2, periods_post=3, stable_pre='j', include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=2, periods_post=3, stable_pre='j')
 
     assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
@@ -2333,7 +2333,7 @@ def test_long_get_extended_eventstudy_3_2():
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(periods_pre=3, periods_post=2, stable_post='j', include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=3, periods_post=2, stable_post='j')
 
     assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
     assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
@@ -2344,7 +2344,7 @@ def test_long_get_extended_eventstudy_3_3():
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', include=['j', 'y'])
+    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=3, periods_post=2, stable_pre='j', stable_post='j')
 
     assert len(es_extended) > 0 # Make sure something is left
     assert np.sum(es_extended['j_l3'] != es_extended['j_l2']) == 0

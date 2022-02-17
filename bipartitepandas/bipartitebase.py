@@ -65,13 +65,13 @@ _clean_params_default = bpd.util.ParamsDict({
         '''
             (default=False) If False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
         ''', None),
-    'force': (True, 'type', bool,
-        '''
-            (default=True) If True, force all cleaning methods to run; much faster if set to False.
-        ''', None),
     'copy': (True, 'type', bool,
         '''
             (default=True) If False, avoid copying data when possible.
+        ''', None),
+    'force': (True, 'type', bool,
+        '''
+            (default=True) If True, force all cleaning methods to run; much faster if set to False.
         ''', None),
     'verbose': (True, 'type', bool,
         '''
