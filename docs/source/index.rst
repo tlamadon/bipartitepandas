@@ -16,7 +16,7 @@
   Custom Columns <notebooks/custom_columns>
   Clustering <notebooks/clusterings>
   CHK Event Study <notebooks/chk>
-  Extra Features <notebooks/extra_features_examples>
+  Advanced Features <notebooks/advanced_features>
 
 .. toctree::
   :caption: Under the hood
