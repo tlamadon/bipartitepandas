@@ -13,7 +13,7 @@ Sample data: :download:`download <twoway_sample_data.csv>`
 
 To run in Python:
 
-- If you want to create a BipartitePandas object:
+- If you want to create a BipartitePandas dataframe:
 
 .. code-block:: python
 
@@ -21,7 +21,7 @@ To run in Python:
    import bipartitepandas as bpd
    # Load data into pandas dataframe
    df = pd.read_csv(filepath)
-   # Create bipartitepandas object
+   # Create bipartitepandas dataframe
    bdf = bpd.BipartiteDataFrame(i=df['i'], j=df['j'], y=df['j'], t=df['t'])
    # Clean your data
    bdf = bdf.clean()
