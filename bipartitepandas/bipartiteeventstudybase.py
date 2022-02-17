@@ -302,7 +302,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                     subcol_number = subcols[i].strip(col)
                     # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
                     rename_dict_2[subcols[i]] = col + subcol_number[1:]
-                    if frame.col_dtype_dict[col] == 'int':
+                    if frame.col_dtype_dict[col] in ['int', 'any']:
                         astype_dict[rename_dict_2[subcols[i]]] = int
 
                     if col not in default_cols:
@@ -316,7 +316,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
             else:
                 # If column has not been split
-                if frame.col_dtype_dict[col] == 'int':
+                if frame.col_dtype_dict[col] in ['int', 'any']:
                     # Check correct type for other columns
                     for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         astype_dict[subcol] = int
