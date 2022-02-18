@@ -49,7 +49,7 @@ class BipartiteDataFrame:
 
     def __new__(cls, i, j=None, j1=None, j2=None, y=None, y1=None, y2=None, t=None, t1=None, t2=None, t11=None, t12=None, t21=None, t22=None, g=None, g1=None, g2=None, w=None, w1=None, w2=None, m=None, custom_contiguous_dict=None, custom_dtype_dict=None, custom_how_collapse_dict=None, custom_long_es_split_dict=None, **kwargs):
         '''
-        Skip __init__ (source: https://stackoverflow.com/a/2491881/17333120).
+        Return dataframe (source: https://stackoverflow.com/a/2491881/17333120).
         '''
         if isinstance(i, DataFrame):
             # If user didn't split arguments, do it for them
@@ -264,7 +264,5 @@ class BipartiteDataFrame:
                     # Constructed col_references are forced to be lists, if it's length one then just extract the single value from the list
                     col_reference = col_reference[0]
                 df = df.add_column(new_col_name, new_col_data, col_reference=col_reference, is_contiguous=custom_contiguous_dict[new_col_name], dtype=custom_dtype_dict[new_col_name], how_collapse=custom_how_collapse_dict[new_col_name], long_es_split=custom_long_es_split_dict[new_col_name], copy=False)
-
-        self = object.__new__(cls)
 
         return df
