@@ -323,7 +323,7 @@ class BipartiteBase(DataFrame):
         if self._col_included('t'):
             # If t column
             sort_order.append(to_list(self.col_reference_dict['t'])[0])
-        is_sorted = (self.loc[:, sort_order] == self.loc[:, sort_order].sort_values(sort_order)).to_numpy().all()
+        is_sorted = (self.loc[:, sort_order].to_numpy() == self.loc[:, sort_order].sort_values(sort_order).to_numpy()).all()
 
         ret_str += f'sorted by i (and t, if included): {is_sorted}\n'
 
