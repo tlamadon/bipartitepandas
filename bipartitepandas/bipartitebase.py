@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 DataFrame = pd.DataFrame
 try:
-    _fast_zip = pd._libs.fast_zip
+    _fast_zip = pd._libs.lib.fast_zip
 except AttributeError:
-    # Older versions of Pandas call it ._lib
+    # Older versions of Pandas have fast_zip in a different location
     _fast_zip = pd._lib.fast_zip
 from igraph import Graph
 import warnings
