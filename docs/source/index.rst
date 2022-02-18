@@ -14,7 +14,7 @@
   Simple Example <notebooks/simple_example>
   Formats <notebooks/formats>
   Custom Columns <notebooks/custom_columns>
-  Clustering <notebooks/clusterings>
+  Clustering <notebooks/clustering>
   CHK Event Study <notebooks/chk>
   Advanced Features <notebooks/advanced_features>
 
