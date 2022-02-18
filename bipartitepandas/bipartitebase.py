@@ -3,7 +3,12 @@ Class for a bipartite network.
 '''
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
+DataFrame = pd.DataFrame
+try:
+    _fast_zip = pd._libs.fast_zip
+except AttributeError:
+    # Older versions of Pandas call it ._lib
+    _fast_zip = pd._lib.fast_zip
 from igraph import Graph
 import warnings
 from functools import wraps
@@ -1437,7 +1442,7 @@ class BipartiteBase(DataFrame):
         frame.log('firm groups computed', level='info')
 
         # Link firms to clusters
-        clusters_dict = dict(pd._lib.fast_zip([jids, clusters]))
+        clusters_dict = dict(_fast_zip([jids, clusters]))
         frame.log('dictionary linking firms to clusters generated', level='info')
 
         # Drop columns (because prepared data is not always a copy, must drop from self)
