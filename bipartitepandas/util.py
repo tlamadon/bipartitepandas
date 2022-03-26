@@ -213,7 +213,7 @@ class ParamsDict(MutableMapping):
                     raise ValueError(f'Value associated with key {k!r} must be None or an array, but input is {v!r} which is of type {type(v)!r}.')
         elif options_type == 'array_of_type_constrained':
             if _is_subtype(v, np.ndarray):
-                if _is_subtype(v, options[0]):
+                if _is_subdtype(v, options[0]):
                     if options[1](v):
                         self.__data[k] = v
                     else:
@@ -229,7 +229,7 @@ class ParamsDict(MutableMapping):
                 self.__data[k] = v
             else:
                 if _is_subtype(v, np.ndarray):
-                    if _is_subtype(v, options[0]):
+                    if _is_subdtype(v, options[0]):
                         if options[1](v):
                             self.__data[k] = v
                         else:
