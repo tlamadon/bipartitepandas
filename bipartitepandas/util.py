@@ -133,6 +133,7 @@ class ParamsDict(MutableMapping):
             'type_constrained' - the value must be a particular type and fulfill given constraints
             'type_constrained_none' - the value can either be None or must be a particular type and fulfill given constraints
             'array_of_type' - the value must be an array of values of a particular datatype
+            'array_of_type_none' - the value can either be None or must be an array of values of a particular datatype
             'array_of_type_constrained' - the value must be an array of values of a particular datatype and fulfill given constraints
             'array_of_type_constrained_none' - the value can either be None or must be an array of values of a particular datatype and fulfill given constraints
             'set' - the value must be a member of a given set of values
@@ -199,6 +200,17 @@ class ParamsDict(MutableMapping):
                     raise ValueError(f'Value associated with key {k!r} must be an array of datatype {options!r}, but input is {v!r} which has datatype {v.dtype!r}.')
             else:
                 raise ValueError(f'Value associated with key {k!r} must be an array, but input is {v!r} which is of type {type(v)!r}.')
+        elif options_type == 'array_of_type_none':
+            if v is None:
+                self.__data[k] = v
+            else:
+                if _is_subtype(v, np.ndarray):
+                    if _is_subdtype(v, options):
+                        self.__data[k] = v
+                    else:
+                        raise ValueError(f'Value associated with key {k!r} must be None or an array of datatype {options!r}, but input is {v!r} which has datatype {v.dtype!r}.')
+                else:
+                    raise ValueError(f'Value associated with key {k!r} must be None or an array, but input is {v!r} which is of type {type(v)!r}.')
         elif options_type == 'array_of_type_constrained':
             if _is_subtype(v, np.ndarray):
                 if _is_subtype(v, options[0]):
@@ -290,8 +302,6 @@ class ParamsDict(MutableMapping):
             print(f'VALID VALUES: one of type {options!r}')
         elif options_type == 'list_of_type':
             print(f'VALID VALUES: one of or list of type {options!r}')
-        elif options_type == 'array_of_type':
-            print(f'VALID VALUES: array of datatype {options!r}')
         elif options_type == 'type_none':
             print(f'VALID VALUES: None or one of type {options!r}')
         elif options_type == 'type_constrained':
@@ -299,6 +309,16 @@ class ParamsDict(MutableMapping):
             print(f'CONSTRAINTS: {constraints!r}')
         elif options_type == 'type_constrained_none':
             print(f'VALID VALUES: None or one of type {options[0]!r}')
+            print(f'CONSTRAINTS: {constraints!r}')
+        elif options_type == 'array_of_type':
+            print(f'VALID VALUES: array of datatype {options!r}')
+        elif options_type == 'array_of_type_none':
+            print(f'VALID VALUES: None or array of datatype {options!r}')
+        elif options_type == 'array_of_type_constrained':
+            print(f'VALID VALUES: array of datatype {options!r}')
+            print(f'CONSTRAINTS: {constraints!r}')
+        elif options_type == 'array_of_type_constrained_none':
+            print(f'VALID VALUES: None or array of datatype {options!r}')
             print(f'CONSTRAINTS: {constraints!r}')
         elif options_type == 'set':
             print(f'VALID VALUES: one of {options!r}')
