@@ -126,7 +126,17 @@ class ParamsDict(MutableMapping):
     Dictionary with fixed keys, and where values must follow given rules. Source: https://stackoverflow.com/a/14816620/17333120.
 
     Arguments:
-        default_dict (dict): default dictionary. Each key should provide a tuple of (default_value, options_type, options, description), where `default_value` gives the default value associated with the key; if `options_type` is 'type', then the key must be associated with a particular type, if it is `list_of_type` then the value must be a particular type or a list of values of that type, if it is 'type_none' then the value can either be None or must be a particular type, if it is 'set' it must be a member of a given set of values, and if it is 'any' it can be anything; `options` gives the valid values that can associated with the key (this can be a type or a set of particular values); and `description` gives a description of the key-value pair
+        default_dict (dict): default dictionary. Each key should provide a tuple of (default_value, options_type, options, description, constraints), where `default_value` gives the default value associated with the key; `options_type` defines the valid types the value may take; `options` gives the valid values that can associated with the key (this can be a type or a set of particular values); `description` gives a description of the key-value pair; and `constraints` is either None if there are no constraints, or gives a description of the constraints on the value. The specifics on `options_type` follow. If `options_type` is:
+            'type' - the key must be associated with a particular type
+            'list_of_type' - the value must be a particular type or a list of values of a particular type
+            'type_none' - the value can either be None or must be a particular type
+            'type_constrained' - the value must be a particular type and fulfill given constraints
+            'type_constrained_none' - the value can either be None or must be a particular type and fulfill given constraints
+            'array_of_type' - the value must be an array of values of a particular datatype
+            'array_of_type_constrained' - the value must be an array of values of a particular datatype and fulfill given constraints
+            'array_of_type_constrained_none' - the value can either be None or must be an array of values of a particular datatype and fulfill given constraints
+            'set' - the value must be a member of a given set of values
+            'any' - the value can be anything
     '''
     def __init__(self, default_dict):
         self.__data = {k: v[0] for k, v in default_dict.items()}
@@ -168,6 +178,56 @@ class ParamsDict(MutableMapping):
                 raise ValueError(f'Value associated with key {k!r} must be of type {options[0]!r}, but input is {v!r} which is of type {type(v)!r}.')
             else:
                 raise ValueError(f'Value associated with key {k!r} must be of type {options[0]!r}, but input is {v!r} which is of type {type(v)!r}. In addition, the input does not fulfill the constraint(s) {constraints!r}.')
+        elif options_type == 'type_constrained_none':
+            if v is None:
+                self.__data[k] = v
+            else:
+                if _is_subtype(v, options[0]):
+                    if options[1](v):
+                        self.__data[k] = v
+                    else:
+                        raise ValueError(f'Value associated with key {k!r} must be None or fulfill the constraint(s) {constraints!r}, but input is {v!r} which does not.')
+                elif options[1](v):
+                    raise ValueError(f'Value associated with key {k!r} must be of type {options[0]!r} or None, but input is {v!r} which is of type {type(v)!r}.')
+                else:
+                    raise ValueError(f'Value associated with key {k!r} must be of type {options[0]!r} or None, but input is {v!r} which is of type {type(v)!r}. In addition, the input does not fulfill the constraint(s) {constraints!r}.')
+        elif options_type == 'array_of_type':
+            if _is_subtype(v, np.ndarray):
+                if _is_subdtype(v, options):
+                    self.__data[k] = v
+                else:
+                    raise ValueError(f'Value associated with key {k!r} must be an array of datatype {options!r}, but input is {v!r} which has datatype {v.dtype!r}.')
+            else:
+                raise ValueError(f'Value associated with key {k!r} must be an array, but input is {v!r} which is of type {type(v)!r}.')
+        elif options_type == 'array_of_type_constrained':
+            if _is_subtype(v, np.ndarray):
+                if _is_subtype(v, options[0]):
+                    if options[1](v):
+                        self.__data[k] = v
+                    else:
+                        raise ValueError(f'Value associated with key {k!r} must fulfill the constraint(s) {constraints!r}, but input is {v!r} which does not.')
+                else:
+                    raise ValueError(f'Value associated with key {k!r} must be an array of datatype {options!r}, but input is {v!r} which has datatype {v.dtype!r}.')
+            elif options[1](v):
+                raise ValueError(f'Value associated with key {k!r} must be an array, but input is {v!r} which is of type {type(v)!r}.')
+            else:
+                raise ValueError(f'Value associated with key {k!r} must be an array, but input is {v!r} which is of type {type(v)!r}. In addition, the input does not fulfill the constraint(s) {constraints!r}.')
+        elif options_type == 'array_of_type_constrained_none':
+            if v is None:
+                self.__data[k] = v
+            else:
+                if _is_subtype(v, np.ndarray):
+                    if _is_subtype(v, options[0]):
+                        if options[1](v):
+                            self.__data[k] = v
+                        else:
+                            raise ValueError(f'Value associated with key {k!r} must be None or fulfill the constraint(s) {constraints!r}, but input is {v!r} which does not.')
+                    else:
+                        raise ValueError(f'Value associated with key {k!r} must be None or an array of datatype {options!r}, but input is {v!r} which has datatype {v.dtype!r}.')
+                elif options[1](v):
+                    raise ValueError(f'Value associated with key {k!r} must be None or an array, but input is {v!r} which is of type {type(v)!r}.')
+                else:
+                    raise ValueError(f'Value associated with key {k!r} must be None or an array, but input is {v!r} which is of type {type(v)!r}. In addition, the input does not fulfill the constraint(s) {constraints!r}.')
         elif options_type == 'set':
             if v in to_list(options):
                 self.__data[k] = v
@@ -230,10 +290,15 @@ class ParamsDict(MutableMapping):
             print(f'VALID VALUES: one of type {options!r}')
         elif options_type == 'list_of_type':
             print(f'VALID VALUES: one of or list of type {options!r}')
+        elif options_type == 'array_of_type':
+            print(f'VALID VALUES: array of datatype {options!r}')
         elif options_type == 'type_none':
             print(f'VALID VALUES: None or one of type {options!r}')
         elif options_type == 'type_constrained':
             print(f'VALID VALUES: one of type {options[0]!r}')
+            print(f'CONSTRAINTS: {constraints!r}')
+        elif options_type == 'type_constrained_none':
+            print(f'VALID VALUES: None or one of type {options[0]!r}')
             print(f'CONSTRAINTS: {constraints!r}')
         elif options_type == 'set':
             print(f'VALID VALUES: one of {options!r}')

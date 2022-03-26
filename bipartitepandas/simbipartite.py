@@ -130,31 +130,37 @@ class SimBipartite:
 
         return psi, alpha, G, H
 
-    def _draw_fids(self, freq, rng=np.random.default_rng(None)):
+    def _draw_fids(self, freq, rng=None):
         '''
         Draw firm ids for a particular firm type.
 
         Arguments:
             freq (NumPy Array): number of observations in each spell that occurs at the given firm type
-            rng (np.random.Generator): NumPy random number generator
+            rng (np.random.Generator): NumPy random number generator; None is equivalent to np.random.default_rng(None)
 
         Returns:
             (NumPy Array): random firm ids for each spell that occurs at the given firm type
         '''
+        if rng is None:
+            rng = np.random.default_rng(None)
+
         # Set the maximum firm id that can be drawn such that the average number of observations per firm per time period is approximately 'firm_size'
         max_firm_id = max(1, round(freq.sum() / (self.sim_params['firm_size'] * self.sim_params['n_time'])))
         return rng.choice(max_firm_id, size=freq.count())
 
-    def simulate(self, rng=np.random.default_rng(None)):
+    def simulate(self, rng=None):
         '''
         Simulate panel data corresponding to the calibrated model. Columns are as follows: i=worker id; j=firm id; y=wage; t=time period; l=worker type; k=firm type; alpha=worker effect; psi=firm effect.
 
         Arguments:
-            rng (np.random.Generator): NumPy random number generator
+            rng (np.random.Generator): NumPy random number generator; None is equivalent to np.random.default_rng(None)
 
         Returns:
             (Pandas DataFrame): simulated network
         '''
+        if rng is None:
+            rng = np.random.default_rng(None)
+
         # Extract parameters
         n_workers, n_time, nk, nl, w_sig, p_move = self.sim_params.get_multiple(('n_workers', 'n_time', 'nk', 'nl', 'w_sig', 'p_move'))
 
