@@ -73,19 +73,26 @@ col_type = (np.ndarray, pd.Series)
 
 def _is_subtype(obj, types):
     '''
-    Check if obj is a subtype of types.
+    Check if obj is a subtype of types. Can also input 'fn' to specify the tuple of (types.BuiltinFunctionType, types.FunctionType, types.MethodType), as these types are not pickleable so multiprocessing fails if they are input directly.
 
     Arguments:
-        obj (object): object to compare
-        types (type or list of types): types to check
+        obj (object): object to check
+        types (type or string, or list of types or strings): types to check
 
     Returns:
         (bool): if subtype, returns True
     '''
     obj_type = type(obj)
     for type_i in to_list(types):
-        if np.issubdtype(obj_type, type_i):
-            return True
+        if isinstance(type_i, str):
+            if type_i == 'fn':
+                if _is_subtype(obj, fn_type):
+                    return True
+            else:
+                raise ValueError(f"Only valid string input is 'fn', but input included string {type_i!r}.")
+        else:
+            if np.issubdtype(obj_type, type_i):
+                return True
     return False
 
 def _is_subdtype(col, types):
