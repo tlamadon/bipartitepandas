@@ -1404,27 +1404,30 @@ class BipartiteBase(DataFrame):
 
         return frame.min_workers_firms(threshold, is_sorted=is_sorted, copy=copy)
 
-    def cluster(self, cluster_params=cluster_params()):
+    def cluster(self, params=None):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
 
         Arguments:
-            cluster_params (ParamsDict): dictionary of parameters for clustering. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters.
+            params (ParamsDict or None): dictionary of parameters for clustering. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.cluster_params().
 
         Returns:
             (BipartiteBase): dataframe with clusters
         '''
+        if params is None:
+            params = bpd.cluster_params()
+
         self.log('beginning clustering', level='info')
-        if cluster_params['copy']:
+        if params['copy']:
             frame = self.copy()
         else:
             frame = self
 
         # Prepare data for clustering
-        cluster_data, weights, jids = frame._prep_cluster(stayers_movers=cluster_params['stayers_movers'], t=cluster_params['t'], weighted=cluster_params['weighted'], is_sorted=cluster_params['is_sorted'], copy=False)
+        cluster_data, weights, jids = frame._prep_cluster(stayers_movers=params['stayers_movers'], t=params['t'], weighted=params['weighted'], is_sorted=params['is_sorted'], copy=False)
 
         # Compute measures
-        for i, measure in enumerate(to_list(cluster_params['measures'])):
+        for i, measure in enumerate(to_list(params['measures'])):
             if i == 0:
                 computed_measures = measure.compute_measure(cluster_data, jids)
             else:
@@ -1433,12 +1436,12 @@ class BipartiteBase(DataFrame):
         frame.log('firm moments computed', level='info')
 
         # Can't group using quantiles if more than 1 column
-        if isinstance(cluster_params['grouping'], bpd.grouping.Quantiles) and (computed_measures.shape[1] > 1):
+        if isinstance(params['grouping'], bpd.grouping.Quantiles) and (computed_measures.shape[1] > 1):
             raise NotImplementedError('Cannot cluster using quantiles if multiple measures computed.')
 
         # Compute firm groups
         frame.log('computing firm groups', level='info')
-        clusters = cluster_params['grouping'].compute_groups(computed_measures, weights)
+        clusters = params['grouping'].compute_groups(computed_measures, weights)
         frame.log('firm groups computed', level='info')
 
         # Link firms to clusters
@@ -1471,16 +1474,16 @@ class BipartiteBase(DataFrame):
         # Sort columns
         frame = frame.sort_cols(copy=False)
 
-        if cluster_params['dropna']:
+        if params['dropna']:
             # Drop firms that don't get clustered
             frame.dropna(inplace=True)
             frame.reset_index(drop=True, inplace=True)
             frame.loc[:, frame.col_reference_dict['g']] = frame.loc[:, frame.col_reference_dict['g']].astype(int, copy=False)
             # Clean data
-            if cluster_params['clean_params'] is None:
+            if params['clean_params'] is None:
                 frame = frame.clean(bpd.clean_params({'connectedness': frame.connectedness}))
             else:
-                frame = frame.clean(cluster_params['clean_params'])
+                frame = frame.clean(params['clean_params'])
 
         frame.columns_contig['g'] = True
 

@@ -63,42 +63,45 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
-    def clean(self, clean_params=bpd.clean_params()):
+    def clean(self, params=None):
         '''
         Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
 
         Arguments:
-            clean_params (ParamsDict): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
+            params (ParamsDict or None): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.clean_params().
 
         Returns:
             (BipartiteEventStudyBase): dataframe with cleaned data
         '''
+        if params is None:
+            params = bpd.clean_params()
+
         self.log('beginning BipartiteEventStudyBase data cleaning', level='info')
 
-        verbose = clean_params['verbose']
+        verbose = params['verbose']
 
         # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
         no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
 
         # We copy when we generate 'm' (if the user specified to make a copy), then sort during the conversion to long, so we don't need to do these again when we clean the data after we convert it to long format
-        clean_params_copy = clean_params.copy()
-        clean_params_copy.update({'is_sorted': True, 'copy': False})
+        params_copy = params.copy()
+        params_copy.update({'is_sorted': True, 'copy': False})
 
         # Generate 'm' column - this is necessary for the next steps (note: 'm' will get updated in the following steps as it changes)
         self.log("generating 'm' column", level='info')
         if verbose:
             print('checking required columns and datatypes')
-        frame = self.gen_m(force=True, copy=clean_params['copy'])
+        frame = self.gen_m(force=True, copy=params['copy'])
 
         # Clean long data, then convert back to event study (note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - setting is_clean=True would arbitrarily decide which rows are already correct)
         self.log('converting data to long format', level='info')
         if verbose:
             print('converting data to long format')
-        frame = frame.to_long(is_clean=False, drop_no_split_columns=False, is_sorted=clean_params['is_sorted'], copy=False)
+        frame = frame.to_long(is_clean=False, drop_no_split_columns=False, is_sorted=params['is_sorted'], copy=False)
 
         frame.drop_duplicates(inplace=True)
 
-        frame = frame.clean(clean_params_copy)
+        frame = frame.clean(params_copy)
 
         self.log('converting data back to event study format', level='info')
         if verbose:

@@ -417,13 +417,13 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         return frame
 
-    def get_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=3, periods_post=3, stable_pre=None, stable_post=None, is_sorted=False, copy=True):
+    def get_extended_eventstudy(self, transition_col='j', outcomes=None, periods_pre=3, periods_post=3, stable_pre=None, stable_post=None, is_sorted=False, copy=True):
         '''
         Return Pandas dataframe of event study with periods_pre periods before the transition (the transition is defined by a switch in the transition column) and periods_post periods after the transition, where transition fulcrums are given by job moves, and the first post-period is given by the job move. Returned dataframe gives worker id, period of transition, income over all periods, and firm cluster over all periods.
 
         Arguments:
             transition_col (str): column to use to define a transition
-            outcomes (column name or list of column names): columns to include data for all periods
+            outcomes (column name or list of column names or None): columns to include data for all periods; None is equivalent to ['g', 'y']
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
             stable_pre (column name or list of column names or None): for each column, keep only workers who have constant values in that column before the transition; None is equivalent to []
@@ -434,6 +434,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             (Pandas DataFrame): extended event study generated from long data
         '''
+        if outcomes is None:
+            outcomes = ['g', 'y']
+
         # Convert into lists
         outcomes = bpd.util.to_list(outcomes)
         if stable_pre is None:
@@ -572,24 +575,31 @@ class BipartiteLong(bpd.BipartiteLongBase):
         # Return es_extended_frame
         return es_extended_frame
 
-    def plot_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=2, periods_post=2, stable_pre=None, stable_post=None, plot_extended_eventstudy_params=plot_extended_eventstudy_params(), is_sorted=False, copy=True):
+    def plot_extended_eventstudy(self, transition_col='j', outcomes=['g', 'y'], periods_pre=2, periods_post=2, stable_pre=None, stable_post=None, plot_extended_eventstudy_params=None, is_sorted=False, copy=True):
         '''
         Generate event study plots. If data is not clustered, will plot all transitions in a single figure.
 
         Arguments:
             transition_col (str): column to use to define a transition
-            outcomes (column name or list of column names): columns to include data for all periods
+            outcomes (column name or list of column names or None): columns to include data for all periods; None is equivalent to ['g', 'y']
             periods_pre (int): number of periods before the transition
             periods_post (int): number of periods after the transition
             stable_pre (column name or list of column names or None): for each column, keep only workers who have constant values in that column before the transition; None is equivalent to []
             stable_post (column name or list of column names or None): for each column, keep only workers who have constant values in that column after the transition; None is equivalent to []
-            plot_extended_eventstudy_params (ParamsDict): dictionary of parameters for plotting. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters.
+            plot_extended_eventstudy_params (ParamsDict or None): dictionary of parameters for plotting. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.plot_extended_eventstudy_params().
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
         '''
         # FIXME this method raises the following warnings:
         # ResourceWarning: unclosed event loop <_UnixSelectorEventLoop running=False closed=False debug=False> source=self)
         # ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+        if outcomes is None:
+            outcomes = ['g', 'y']
+
+        if plot_extended_eventstudy_params is None:
+            plot_extended_eventstudy_params = bpd.plot_extended_eventstudy_params()
+
         from matplotlib import pyplot as plt
 
         n_clusters = self.n_clusters()

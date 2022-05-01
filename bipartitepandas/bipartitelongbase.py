@@ -70,22 +70,25 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def clean(self, clean_params=bpd.clean_params()):
+    def clean(self, params=None):
         '''
         Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
 
         Arguments:
-            clean_params (ParamsDict): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
+            params (ParamsDict or None): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.clean_params().
 
         Returns:
             (BipartiteLongBase): dataframe with cleaned data
         '''
+        if params is None:
+            params = bpd.clean_params()
+
         self.log('beginning BipartiteLongBase data cleaning', level='info')
 
-        force = clean_params['force']
-        verbose = clean_params['verbose']
+        force = params['force']
+        verbose = params['verbose']
 
-        if clean_params['copy']:
+        if params['copy']:
             frame = self.copy()
         else:
             frame = self
@@ -100,7 +103,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         self.log('sorting rows', level='info')
         if verbose:
             print('sorting rows')
-        frame = frame.sort_rows(is_sorted=clean_params['is_sorted'], copy=False)
+        frame = frame.sort_rows(is_sorted=params['is_sorted'], copy=False)
 
         # Next, drop NaN observations
         if force or (not frame.no_na):
@@ -122,10 +125,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         # Next, make sure i-t (worker-year) observations are unique
         if (force or (not frame.i_t_unique)) and (frame.i_t_unique is not None):
-            self.log(f"keeping highest paying job for i-t (worker-year) duplicates (how={clean_params['i_t_how']!r})", level='info')
+            self.log(f"keeping highest paying job for i-t (worker-year) duplicates (how={params['i_t_how']!r})", level='info')
             if verbose:
-                print(f"keeping highest paying job for i-t (worker-year) duplicates (how={clean_params['i_t_how']!r})")
-            frame = frame._drop_i_t_duplicates(how=clean_params['i_t_how'], is_sorted=True, copy=False)
+                print(f"keeping highest paying job for i-t (worker-year) duplicates (how={params['i_t_how']!r})")
+            frame = frame._drop_i_t_duplicates(how=params['i_t_how'], is_sorted=True, copy=False)
 
             # Update no_duplicates
             frame.no_duplicates = True
@@ -140,11 +143,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame.no_duplicates = True
 
         # Next, drop returns
-        if force or (frame.no_returns is None) or ((not frame.no_returns) and clean_params['drop_returns']):
-            self.log(f"dropping workers who leave a firm then return to it (how={clean_params['drop_returns']!r})", level='info')
+        if force or (frame.no_returns is None) or ((not frame.no_returns) and params['drop_returns']):
+            self.log(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})", level='info')
             if verbose:
-                print(f"dropping workers who leave a firm then return to it (how={clean_params['drop_returns']!r})")
-            frame = frame._drop_returns(how=clean_params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
+                print(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})")
+            frame = frame._drop_returns(how=params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         for contig_col, is_contig in frame.columns_contig.items():
@@ -157,10 +160,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Next, find largest set of firms connected by movers
         if force or (frame.connectedness in [False, None]):
             # Generate largest connected set
-            self.log(f"computing largest connected set (how={clean_params['connectedness']!r})", level='info')
+            self.log(f"computing largest connected set (how={params['connectedness']!r})", level='info')
             if verbose:
-                print(f"computing largest connected set (how={clean_params['connectedness']!r})")
-            frame = frame._connected_components(connectedness=clean_params['connectedness'], component_size_variable=clean_params['component_size_variable'], drop_returns_to_stays=clean_params['drop_returns_to_stays'], is_sorted=True, copy=False)
+                print(f"computing largest connected set (how={params['connectedness']!r})")
+            frame = frame._connected_components(connectedness=params['connectedness'], component_size_variable=params['component_size_variable'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():

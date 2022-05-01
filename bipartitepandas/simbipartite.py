@@ -89,12 +89,15 @@ class SimBipartite:
     Class of SimBipartite, where SimBipartite simulates a bipartite network of firms and workers.
 
     Arguments:
-        sim_params (ParamsDict): dictionary of parameters for simulating data. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
+        params (ParamsDict or None): dictionary of parameters for simulating data. Run bpd.sim_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.sim_params().
     '''
 
-    def __init__(self, sim_params=sim_params()):
+    def __init__(self, params=None):
+        if params is None:
+            params = sim_params()
+
         # Store parameters
-        self.sim_params = sim_params
+        self.params = params
 
     def _gen_fe(self):
         '''
@@ -107,7 +110,7 @@ class SimBipartite:
             H (NumPy Array): stationary distribution
         '''
         # Extract parameters
-        nk, nl, alpha_sig, psi_sig, c_sort, c_netw, c_sig = self.sim_params.get_multiple(('nk', 'nl', 'alpha_sig', 'psi_sig', 'c_sort', 'c_netw', 'c_sig'))
+        nk, nl, alpha_sig, psi_sig, c_sort, c_netw, c_sig = self.params.get_multiple(('nk', 'nl', 'alpha_sig', 'psi_sig', 'c_sort', 'c_netw', 'c_sig'))
 
         # Draw fixed effects
         psi = norm.ppf(np.linspace(1, nk, nk) / (nk + 1)) * psi_sig
@@ -145,7 +148,7 @@ class SimBipartite:
             rng = np.random.default_rng(None)
 
         # Set the maximum firm id that can be drawn such that the average number of observations per firm per time period is approximately 'firm_size'
-        max_firm_id = max(1, round(freq.sum() / (self.sim_params['firm_size'] * self.sim_params['n_time'])))
+        max_firm_id = max(1, round(freq.sum() / (self.params['firm_size'] * self.params['n_time'])))
         return rng.choice(max_firm_id, size=freq.count())
 
     def simulate(self, rng=None):
@@ -162,7 +165,7 @@ class SimBipartite:
             rng = np.random.default_rng(None)
 
         # Extract parameters
-        n_workers, n_time, nk, nl, w_sig, p_move = self.sim_params.get_multiple(('n_workers', 'n_time', 'nk', 'nl', 'w_sig', 'p_move'))
+        n_workers, n_time, nk, nl, w_sig, p_move = self.params.get_multiple(('n_workers', 'n_time', 'nk', 'nl', 'w_sig', 'p_move'))
 
         # Generate fixed effects
         psi, alpha, G, H = self._gen_fe()
