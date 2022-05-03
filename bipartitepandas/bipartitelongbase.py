@@ -1,6 +1,7 @@
 '''
 Base class for bipartite networks in long or collapsed long format.
 '''
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
@@ -96,20 +97,20 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # First, check that required columns are included and datatypes are correct
         self.log('checking required columns and datatypes', level='info')
         if verbose:
-            print('checking required columns and datatypes')
+            tqdm.write('checking required columns and datatypes')
         frame._check_cols()
 
         # Next, sort rows
         self.log('sorting rows', level='info')
         if verbose:
-            print('sorting rows')
+            tqdm.write('sorting rows')
         frame = frame.sort_rows(is_sorted=params['is_sorted'], copy=False)
 
         # Next, drop NaN observations
         if force or (not frame.no_na):
             self.log('dropping NaN observations', level='info')
             if verbose:
-                print('dropping NaN observations')
+                tqdm.write('dropping NaN observations')
             if frame.isna().to_numpy().any():
                 # Checking first is considerably faster if there are no NaN observations
                 frame.dropna(inplace=True)
@@ -120,14 +121,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Generate 'm' column - this is necessary for the next steps (note: 'm' will get updated in the following steps as it changes)
         self.log("generating 'm' column", level='info')
         if verbose:
-            print("generating 'm' column")
+            tqdm.write("generating 'm' column")
         frame = frame.gen_m(force=True, copy=False)
 
         # Next, make sure i-t (worker-year) observations are unique
         if (force or (not frame.i_t_unique)) and (frame.i_t_unique is not None):
             self.log(f"keeping highest paying job for i-t (worker-year) duplicates (how={params['i_t_how']!r})", level='info')
             if verbose:
-                print(f"keeping highest paying job for i-t (worker-year) duplicates (how={params['i_t_how']!r})")
+                tqdm.write(f"keeping highest paying job for i-t (worker-year) duplicates (how={params['i_t_how']!r})")
             frame = frame._drop_i_t_duplicates(how=params['i_t_how'], is_sorted=True, copy=False)
 
             # Update no_duplicates
@@ -136,7 +137,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             # Drop duplicate observations
             self.log('dropping duplicate observations', level='info')
             if verbose:
-                print('dropping duplicate observations')
+                tqdm.write('dropping duplicate observations')
             frame.drop_duplicates(inplace=True)
 
             # Update no_duplicates
@@ -146,7 +147,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         if force or (frame.no_returns is None) or ((not frame.no_returns) and params['drop_returns']):
             self.log(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})", level='info')
             if verbose:
-                print(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})")
+                tqdm.write(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})")
             frame = frame._drop_returns(how=params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
@@ -154,7 +155,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             if frame._col_included(contig_col) and (force or (not is_contig)):
                 self.log(f'making {contig_col!r} ids contiguous', level='info')
                 if verbose:
-                    print(f'making {contig_col!r} ids contiguous')
+                    tqdm.write(f'making {contig_col!r} ids contiguous')
                 frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Next, find largest set of firms connected by movers
@@ -162,7 +163,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             # Generate largest connected set
             self.log(f"computing largest connected set (how={params['connectedness']!r})", level='info')
             if verbose:
-                print(f"computing largest connected set (how={params['connectedness']!r})")
+                tqdm.write(f"computing largest connected set (how={params['connectedness']!r})")
             frame = frame._connected_components(connectedness=params['connectedness'], component_size_variable=params['component_size_variable'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
@@ -170,19 +171,19 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 if frame._col_included(contig_col) and (not is_contig):
                     self.log(f'making {contig_col!r} ids contiguous', level='info')
                     if verbose:
-                        print(f'making {contig_col!r} ids contiguous')
+                        tqdm.write(f'making {contig_col!r} ids contiguous')
                     frame = frame._contiguous_ids(id_col=contig_col, copy=False)
 
         # Sort columns
         self.log('sorting columns', level='info')
         if verbose:
-            print('sorting columns')
+            tqdm.write('sorting columns')
         frame = frame.sort_cols(copy=False)
 
         # Reset index
         self.log('resetting index', level='info')
         if verbose:
-            print('resetting index')
+            tqdm.write('resetting index')
         frame.reset_index(drop=True, inplace=True)
 
         self.log('BipartiteLongBase data cleaning complete', level='info')

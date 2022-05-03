@@ -1,6 +1,7 @@
 '''
 Base class for bipartite networks in event study or collapsed event study format.
 '''
+from tqdm import tqdm
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
@@ -90,13 +91,13 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         # Generate 'm' column - this is necessary for the next steps (note: 'm' will get updated in the following steps as it changes)
         self.log("generating 'm' column", level='info')
         if verbose:
-            print('checking required columns and datatypes')
+            tqdm.write('checking required columns and datatypes')
         frame = self.gen_m(force=True, copy=params['copy'])
 
         # Clean long data, then convert back to event study (note: we use is_clean=False because duplicates mean that we should fully unstack all observations, to see which are duplicates and which are legitimate - setting is_clean=True would arbitrarily decide which rows are already correct)
         self.log('converting data to long format', level='info')
         if verbose:
-            print('converting data to long format')
+            tqdm.write('converting data to long format')
         frame = frame.to_long(is_clean=False, drop_no_split_columns=False, is_sorted=params['is_sorted'], copy=False)
 
         frame.drop_duplicates(inplace=True)
@@ -105,7 +106,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         self.log('converting data back to event study format', level='info')
         if verbose:
-            print('converting data back to event study format')
+            tqdm.write('converting data back to event study format')
         frame = frame.to_eventstudy(is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
