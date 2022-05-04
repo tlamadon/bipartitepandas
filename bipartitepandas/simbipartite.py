@@ -129,7 +129,8 @@ class SimBipartite:
             evals, evecs = np.linalg.eig(G[l, :, :].T)
             stationary = evecs[:, np.isclose(evals, 1)][:, 0]
             stationary = stationary / np.sum(stationary)
-            H[l, :] = stationary
+            # Take real component
+            H[l, :] = np.real(stationary)
 
         return psi, alpha, G, H
 

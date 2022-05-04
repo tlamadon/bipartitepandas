@@ -1,7 +1,7 @@
 '''
 Base class for bipartite networks in event study or collapsed event study format.
 '''
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
