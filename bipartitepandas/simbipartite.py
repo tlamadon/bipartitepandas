@@ -128,9 +128,11 @@ class SimBipartite:
             # Solve eigenvectors (source: https://stackoverflow.com/a/58334399/17333120)
             evals, evecs = np.linalg.eig(G[l, :, :].T)
             stationary = evecs[:, np.isclose(evals, 1)][:, 0]
-            stationary = stationary / np.sum(stationary)
             # Take real component
-            H[l, :] = np.real(stationary)
+            stationary = np.real(stationary)
+            # Normalize
+            stationary = stationary / np.sum(stationary)
+            H[l, :] = stationary
 
         return psi, alpha, G, H
 
