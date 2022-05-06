@@ -2483,6 +2483,17 @@ def test_long_collapsed_1():
     assert movers.iloc[3]['j'] == 2
     assert movers.iloc[3]['y'] == 1
 
+def test_collapsed_weights_2():
+    # Test that weights are computed correctly.
+    a = bpd.SimBipartite().simulate(np.random.default_rng(1234))
+    # Non-collapsed data
+    b = bpd.BipartiteDataFrame(a.copy()).clean()
+    # Collapsed data
+    c = bpd.BipartiteDataFrame(a.copy()).clean().collapse()
+
+    assert len(c) < len(b)
+    assert np.sum(c.loc[:, 'w'].to_numpy()) == len(b)
+
 #########################################
 ##### Tests for BipartiteEventStudy #####
 #########################################
