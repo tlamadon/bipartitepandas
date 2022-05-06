@@ -2489,7 +2489,7 @@ def test_collapsed_weights_2():
     # Non-collapsed data
     b = bpd.BipartiteDataFrame(a.copy()).clean()
     # Collapsed data
-    c = bpd.BipartiteDataFrame(a.copy()).clean().collapse()
+    c = bpd.BipartiteDataFrame(a.copy()).clean().collapse().to_eventstudy().to_long()
 
     assert len(c) < len(b)
     assert np.sum(c.loc[:, 'w'].to_numpy()) == len(b)
