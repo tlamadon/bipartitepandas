@@ -653,6 +653,13 @@ def test_connectedness_collapsed():
     # leave-out-match
     collapse_m_lom = bdf.clean(quiet).collapse(level='match').clean(bpd.clean_params({'connectedness': 'leave_out_match', 'verbose': False}))
 
+    ## Auto-collapse ##
+    # leave-out-spell
+    los_auto = bdf.clean(bpd.clean_params({'connectedness': 'leave_out_spell', 'collapse_at_connectedness_measure': True, 'verbose': False}))
+    # leave-out-match
+    lom_auto = bdf.clean(bpd.clean_params({'connectedness': 'leave_out_match', 'collapse_at_connectedness_measure': True, 'verbose': False}))
+
+
     ## Within group comparisons ##
     assert len(loo_s) > len(los_s) > len(lom_s)
     assert len(loo_m) > len(los_m) > len(lom_m)
@@ -667,3 +674,6 @@ def test_connectedness_collapsed():
     assert len(los_s) == len(collapse_s_loo)
     # Collapsing at match level then computing leave-out-observation should be equivalent to either computing leave-out-match and collapsing, or collapsing at spell level then computing leave-out-match
     assert len(lom_s) == len(lom_m) == len(collapse_s_lom) == len(collapse_m_loo)
+    # Auto should be equivalent to cleaning, collapsing, then computing leave-out-observation
+    assert len(los_auto) == len(collapse_s_loo)
+    assert len(lom_auto) == len(collapse_m_loo)
