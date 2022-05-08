@@ -56,9 +56,9 @@ def test_dataframe_2():
 
     ## Long format ##
     a = bpd.SimBipartite().simulate()
-    b = bpd.BipartiteDataFrame(**a, custom_contiguous_dict={'l': True}, custom_dtype_dict={'l': 'contig'}, custom_how_collapse_dict={'alpha': None, 'l': None}, custom_long_es_split_dict={'psi': False}).clean()
+    b = bpd.BipartiteDataFrame(**a, custom_categorical_dict={'l': True}, custom_dtype_dict={'l': 'categorical'}, custom_how_collapse_dict={'alpha': None, 'l': None}, custom_long_es_split_dict={'psi': False}).clean()
 
     assert 'l' in b.columns_contig.keys()
-    assert b.col_dtype_dict['l'] == 'contig'
+    assert b.col_dtype_dict['l'] == 'categorical'
     assert b.col_collapse_dict['alpha'] is None
     assert b.col_long_es_dict['psi'] is False

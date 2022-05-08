@@ -587,7 +587,7 @@ def test_refactor_13():
     assert len(bdf) == len(bdf.uncollapse().collapse())
 
 def test_contiguous_fids_11():
-    # Check contiguous_ids() with firm ids.
+    # Check _make_categorical_contiguous() with firm ids.
     worker_data = []
     # Firm 0 -> 1
     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
@@ -628,7 +628,7 @@ def test_contiguous_fids_11():
     assert movers.iloc[1]['y2'] == 1
 
 def test_contiguous_wids_12():
-    # Check contiguous_ids() with worker ids.
+    # Check _make_categorical_contiguous() with worker ids.
     worker_data = []
     # Firm 0 -> 1
     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
@@ -670,7 +670,7 @@ def test_contiguous_wids_12():
     assert movers.iloc[1]['y2'] == 1
 
 def test_contiguous_cids_13():
-    # Check contiguous_ids() with cluster ids.
+    # Check _make_categorical_contiguous() with cluster ids.
     worker_data = []
     # Firm 0 -> 1
     # Cluster 1 -> 2
@@ -720,7 +720,7 @@ def test_contiguous_cids_13():
     assert movers.iloc[1]['g2'] == 0
 
 def test_contiguous_cids_14():
-    # Check contiguous_ids() with cluster ids.
+    # Check _make_categorical_contiguous() with cluster ids.
     worker_data = []
     # Firm 0 -> 1
     # Cluster 2 -> 1

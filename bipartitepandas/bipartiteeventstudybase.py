@@ -66,7 +66,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     def clean(self, params=None):
         '''
-        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
+        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.
 
         Arguments:
             params (ParamsDict or None): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.clean_params().
@@ -309,7 +309,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                     subcol_number = subcols[i].strip(col)
                     # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
                     rename_dict_2[subcols[i]] = col + subcol_number[1:]
-                    if frame.col_dtype_dict[col] in ['int', 'contig']:
+                    if frame.col_dtype_dict[col] in ['int', 'categorical']:
                         astype_dict[rename_dict_2[subcols[i]]] = int
 
                     if col not in default_cols:
@@ -323,7 +323,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
             else:
                 # If column has not been split
-                if frame.col_dtype_dict[col] in ['int', 'contig']:
+                if frame.col_dtype_dict[col] in ['int', 'categorical']:
                     # Check correct type for other columns
                     for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                         astype_dict[subcol] = int
@@ -377,7 +377,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                     del long_frame.col_collapse_dict[col]
                     del long_frame.col_long_es_dict[col]
                     if col in frame.columns_contig.keys():
-                        # If column is contiguous
+                        # If column is categorical
                         del long_frame.columns_contig[col]
                         if long_frame.id_reference_dict:
                             # If linking contiguous ids to original ids

@@ -244,7 +244,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                     del long_frame.col_collapse_dict[col]
                     del long_frame.col_long_es_dict[col]
                     if col in long_frame.columns_contig.keys():
-                        # If column is contiguous
+                        # If column is categorical
                         del long_frame.columns_contig[col]
                         if long_frame.id_reference_dict:
                             # If linking contiguous ids to original ids

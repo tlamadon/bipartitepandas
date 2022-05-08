@@ -165,12 +165,12 @@ class BipartiteBase(DataFrame):
         *args: arguments for Pandas DataFrame
         columns_req (list or None): required columns (only put general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'; then put the joint columns in col_reference_dict); None is equivalent to []
         columns_opt (list or None): optional columns (only put general column names for joint columns, e.g. put 'g' instead of 'g1', 'g2'; then put the joint columns in col_reference_dict); None is equivalent to []
-        columns_contig (dict or None): columns requiring contiguous ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {'i': False, 'j': False, 'g': None} (only put general column names for joint columns); None is equivalent to {}
+        columns_contig (dict or None): columns of categorical ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {'i': False, 'j': False, 'g': None} (only put general column names for joint columns); None is equivalent to {}
         col_reference_dict (dict or None): clarify which joint columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}; None is equivalent to {}
         col_dtype_dict (dict or None): link column to datatype, e.g. {'m': 'int'}; None is equivalent to {}
         col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
         col_long_es_dict (dict or None): whether each column should split into two when converting from long to event study (None indicates the column should be dropped), e.g. {'y': True, 'm': None}; None is equivalent to {}
-        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
+        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values
         log (bool): if True, will create log file(s)
         **kwargs: keyword arguments for Pandas DataFrame
     '''
@@ -219,13 +219,13 @@ class BipartiteBase(DataFrame):
             self.columns_opt = ['t', 'g', 'w', 'm'] + columns_opt
             self.columns_contig = update_dict({'i': False, 'j': False, 'g': None}, columns_contig)
             self.col_reference_dict = update_dict({'i': 'i', 'm': 'm'}, col_reference_dict)
-            self.col_dtype_dict = update_dict({'i': 'contig', 'j': 'contig', 'y': 'float', 't': 'int', 'g': 'contig', 'w': 'float', 'm': 'int'}, col_dtype_dict)
+            self.col_dtype_dict = update_dict({'i': 'categorical', 'j': 'categorical', 'y': 'float', 't': 'int', 'g': 'categorical', 'w': 'float', 'm': 'int'}, col_dtype_dict)
             # Skip t and m for collapsing
             self.col_collapse_dict = update_dict({'i': 'first', 'j': 'first', 'y': 'mean', 'g': 'first', 'w': 'sum'}, col_collapse_dict)
             # Split i to make sure consecutive observations are for the same worker
             self.col_long_es_dict = update_dict({'i': True, 'j': True, 'y': True, 't': True, 'g': True, 'w': True, 'm': False}, col_long_es_dict)
 
-            # Link original id values to contiguous id values
+            # Link original categorical id values to updated contiguous id values
             self._reset_id_reference_dict(include_id_reference_dict)
 
             # Set attributes
@@ -316,8 +316,8 @@ class BipartiteBase(DataFrame):
         ret_str += f'no duplicates: {self.no_duplicates}\n'
         ret_str += f'i-t (worker-year) observations unique (None if t column(s) not included): {self.i_t_unique}\n'
         ret_str += f'no returns (None if not yet computed): {self.no_returns}\n'
-        for contig_col, is_contig in self.columns_contig.items():
-            ret_str += f'contiguous {contig_col!r} ids (None if not included): {is_contig}\n'
+        for cat_col, is_contig in self.columns_contig.items():
+            ret_str += f'contiguous {cat_col!r} ids (None if not included): {is_contig}\n'
         ret_str += f'connectedness (None if ignoring connectedness): {self.connectedness!r}'
 
         print(ret_str)
@@ -360,14 +360,14 @@ class BipartiteBase(DataFrame):
         no_returns = (len(self) == len(self._drop_returns(how='returns', reset_index=False)))
         ret_str += f'no returns: {no_returns}\n'
 
-        ##### Contiguous ids #####
-        for contig_col in self.columns_contig.keys():
-            if self._col_included(contig_col):
-                contig_ids = self.unique_ids(contig_col)
-                is_contig = (len(contig_ids) == (max(contig_ids) + 1))
-                ret_str += f'contiguous {contig_col!r} ids (None if not included): {is_contig}\n'
+        ##### Contiguous categorical ids #####
+        for cat_col in self.columns_contig.keys():
+            if self._col_included(cat_col):
+                cat_ids = self.unique_ids(cat_col)
+                is_contig = ((min(cat_ids) == 0) and ((max(cat_ids) + 1) == len(cat_ids)))
+                ret_str += f'contiguous {cat_col!r} ids (None if not included): {is_contig}\n'
             else:
-                ret_str += f'contiguous {contig_col!r} ids (None if not included): None\n'
+                ret_str += f'contiguous {cat_col!r} ids (None if not included): None\n'
 
         ##### Connectedness #####
         is_connected_dict = {
@@ -396,7 +396,7 @@ class BipartiteBase(DataFrame):
 
         ##### Column attributes #####
         ret_str += f'Column reference dictionary: {self.col_reference_dict}\n'
-        # ret_str += f'Contiguous columns: {self.columns_contig}\n'
+        # ret_str += f'Contiguous categorical columns: {self.columns_contig}\n'
         ret_str += f'Column datatypes: {self.col_dtype_dict}\n'
         ret_str += f'How to collapse at the worker-firm spell level (None if dropped during collapse): {self.col_collapse_dict}\n'
         ret_str += f'Whether column should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict}\n'
@@ -408,7 +408,7 @@ class BipartiteBase(DataFrame):
 
         print(ret_str)
 
-    def add_column(self, col_name, col_data=None, col_reference=None, is_contiguous=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
+    def add_column(self, col_name, col_data=None, col_reference=None, is_categorical=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
         '''
         Safe method for adding custom columns. Columns added with this method will be compatible with conversions between long, collapsed long, event study, and collapsed event study formats.
 
@@ -416,8 +416,8 @@ class BipartiteBase(DataFrame):
             col_name (str): general column name
             col_data (NumPy Array or Pandas Series or list of (NumPy Array or Pandas Series) or None): data for column, or list of data for columns; set to None if columns already added to dataframe via column assignment
             col_reference (str or list of str): if column has multiple subcolumns (e.g. firm ids are associated with the columns ['j1', 'j2']) this must be specified; otherwise, None will automatically default to the column name (plus a column number, if more than one column is listed) (e.g. firm ids are associated with the column 'j' if one column is included, or ['j1', 'j2'] if two columns are included)
-            is_contiguous (bool): if True, column is contiguous
-            dtype (str): column datatype, must be one of 'int', 'float', 'any', or 'contig'
+            is_categorical (bool): if True, column is categorical
+            dtype (str): column datatype, must be one of 'int', 'float', 'any', or 'categorical'
             how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
             long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
             copy (bool): if False, avoid copy
@@ -434,13 +434,13 @@ class BipartiteBase(DataFrame):
             # Check if column already included
             raise ValueError(f'Trying to add general column {col_name!r}, but this column is already assigned.')
 
-        if is_contiguous:
+        if is_categorical:
             if how_collapse not in ['first', 'last', None]:
-                # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
-                raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
-            if dtype != 'contig':
-                # Check if column is contiguous but is not listed as contiguous datatype
-                raise NotImplementedError(f"Input specifies that column {col_name!r} is contiguous and has datatype {dtype!r}, but contiguous columns require datatype 'contig'.")
+                # Check if column is categorical but is collapsed by anything other than 'first', 'last', or None
+                raise NotImplementedError(f"Input specifies that column {col_name!r} is categorical and should be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for categorical columns.")
+            if dtype != 'categorical':
+                # Check if column is categorical but is not listed as categorical datatype
+                raise NotImplementedError(f"Input specifies that column {col_name!r} is categorical and has datatype {dtype!r}, but categorical columns require datatype 'categorical'.")
 
         for char in col_name:
             # Make sure col_name does not contain digits
@@ -498,7 +498,7 @@ class BipartiteBase(DataFrame):
                 frame.col_reference_dict[col_name] = [col_name + str(i + 1) for i in range(len(col_data_lst))]
 
         # Assign remaining class attributes
-        if is_contiguous:
+        if is_categorical:
             frame.columns_contig[col_name] = None
             if frame.id_reference_dict:
                 frame.id_reference_dict[col_name] = DataFrame()
@@ -516,14 +516,14 @@ class BipartiteBase(DataFrame):
 
         return frame
 
-    def set_column_properties(self, col_name, is_contiguous=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
+    def set_column_properties(self, col_name, is_categorical=False, dtype='any', how_collapse='first', long_es_split=True, copy=True):
         '''
         Safe method for setting the properties of pre-existing custom columns.
 
         Arguments:
             col_name (str): general column name
-            is_contiguous (bool): if True, column is contiguous
-            dtype (str): column datatype, must be one of 'int', 'float', 'any', or 'contig'
+            is_categorical (bool): if True, column is categorical
+            dtype (str): column datatype, must be one of 'int', 'float', 'any', or 'categorical'
             how_collapse (function or str or None): how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse
             long_es_split (bool or None) if True, column should split into two when converting from long to event study; if None, column will be dropped when converting between (collapsed) long and (collapsed) event study formats
             copy (bool): if False, avoid copy
@@ -540,13 +540,13 @@ class BipartiteBase(DataFrame):
             # Check if column is a default column
             raise ValueError(f'Trying to update properties for general column {col_name!r}, which is a default column. Default column properties cannot be changed.')
 
-        if is_contiguous:
+        if is_categorical:
             if how_collapse not in ['first', 'last', None]:
-                # Check if column is contiguous but is collapsed by anything other than 'first', 'last', or None
-                raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is contiguous and will be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for contiguous columns.")
-            if dtype != 'contig':
-                # Check if column is contiguous but is not listed as contiguous datatype
-                raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is contiguous and will have datatype {dtype!r}, but contiguous columns require datatype 'contig'.")
+                # Check if column is categorical but is collapsed by anything other than 'first', 'last', or None
+                raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is categorical and will be collapsed at the worker-firm level by {how_collapse!r}, but only 'first', 'last', and None are supported for categorical columns.")
+            if dtype != 'categorical':
+                # Check if column is categorical but is not listed as categorical datatype
+                raise NotImplementedError(f"Input specifies to update the properties for column {col_name!r} so it is categorical and will have datatype {dtype!r}, but categorical columns require datatype 'categorical'.")
 
         # Wait to copy until after initial checks are complete
         if copy:
@@ -555,15 +555,15 @@ class BipartiteBase(DataFrame):
             frame = self
 
         # Assign class attributes
-        if is_contiguous:
+        if is_categorical:
             if col_name not in frame.columns_contig.keys():
-                # Contiguous but wasn't before
+                # Categorical but wasn't before
                 frame.columns_contig[col_name] = None
                 if frame.id_reference_dict:
                     frame.id_reference_dict[col_name] = DataFrame()
         else:
             if col_name in frame.columns_contig.keys():
-                # Not contiguous but was before
+                # Not categorical but was before
                 del frame.columns_contig[col_name]
                 if frame.id_reference_dict:
                     del frame.id_reference_dict[col_name]
@@ -582,14 +582,14 @@ class BipartiteBase(DataFrame):
             col_name (str): general column name whose properties will be printed
 
         Returns:
-            (dict): dictionary linking properties to their value for a particular column ('general_column': general column name; 'subcolumns': subcolumns linked to general column; 'dtype': column datatype; 'is_contiguous': column is contiguous; 'how_collapse': how to collapse at the worker-firm spell level (None if dropped during collapse); 'long_es_split': whether column should split into two columns when converting between long and event study formats (None if dropped during conversion))
+            (dict): dictionary linking properties to their value for a particular column ('general_column': general column name; 'subcolumns': subcolumns linked to general column; 'dtype': column datatype; 'is_categorical': column is categorical; 'how_collapse': how to collapse at the worker-firm spell level (None if dropped during collapse); 'long_es_split': whether column should split into two columns when converting between long and event study formats (None if dropped during conversion))
         '''
         if col_name in self._included_cols():
             return {
                 'general_column': col_name,
                 'subcolumns': self.col_reference_dict[col_name],
                 'dtype': self.col_dtype_dict[col_name],
-                'is_contiguous': col_name in self.columns_contig.keys(),
+                'is_categorical': col_name in self.columns_contig.keys(),
                 'how_collapse': self.col_collapse_dict[col_name],
                 'long_es_split': self.col_long_es_dict[col_name]
                 }
@@ -607,7 +607,7 @@ class BipartiteBase(DataFrame):
             ret_str = f'General column: {col_name!r}\n'
             ret_str += f'Subcolumn(s): {self.col_reference_dict[col_name]!r}\n'
             ret_str += f'Datatype: {self.col_dtype_dict[col_name]!r}\n'
-            ret_str += f'Column is contiguous: {col_name in self.columns_contig.keys()}\n'
+            ret_str += f'Column is categorical: {col_name in self.columns_contig.keys()}\n'
             ret_str += f'How to collapse at the worker-firm spell level (None if dropped during collapse): {self.col_collapse_dict[col_name]!r}\n'
             ret_str += f'Whether column should split into two columns when converting between long and event study formats (None if dropped during conversion): {self.col_long_es_dict[col_name]}'
 
@@ -720,7 +720,7 @@ class BipartiteBase(DataFrame):
         Arguments:
             frame (BipartitePandas): BipartitePandas object whose attributes to use
             no_dict (bool): if True, only set booleans, no dictionaries
-            include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original id values to contiguous id values
+            include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values
         '''
         # Dictionaries
         if not no_dict:
@@ -770,11 +770,11 @@ class BipartiteBase(DataFrame):
             (BipartiteBase): dataframe with reset class attributes
         '''
         if columns_contig:
-            for contig_col in self.columns_contig.keys():
-                if self._col_included(contig_col):
-                    self.columns_contig[contig_col] = False
+            for cat_col in self.columns_contig.keys():
+                if self._col_included(cat_col):
+                    self.columns_contig[cat_col] = False
                 else:
-                    self.columns_contig[contig_col] = None
+                    self.columns_contig[cat_col] = None
         if connected:
             # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_out_observation', observations are in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', observations are in the largest leave-one-match-out connected set; if 'leave_out_worker', observations are in the largest leave-one-worker-out connected set; if 'leave_out_firm', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
             self.connectedness = None
@@ -929,7 +929,7 @@ class BipartiteBase(DataFrame):
                         else:
                             frame = DataFrame.drop(frame, subcol, axis=1, inplace=False, **kwargs)
                     if col in frame.columns_contig.keys():
-                        # If column contiguous
+                        # If column categorical
                         frame.columns_contig[col] = None
                         if frame.id_reference_dict:
                             # If id_reference_dict has been initialized, reset it for the dropped column
@@ -1101,12 +1101,12 @@ class BipartiteBase(DataFrame):
             frame._set_attributes(self)
         return frame
 
-    def _contiguous_ids(self, id_col, copy=True):
+    def _make_categorical_contiguous(self, id_col, copy=True):
         '''
-        Make column of ids contiguous.
+        Make categorical id values for a given column contiguous.
 
         Arguments:
-            id_col (str): column to make contiguous ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'. Only optional columns may be renamed
+            id_col (str): column to make contiguous ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'. Only optional columns may be renamed.
             copy (bool): if False, avoid copy
 
         Returns:
@@ -1133,11 +1133,14 @@ class BipartiteBase(DataFrame):
         frame.loc[:, cols] = factorized[0].reshape((n_rows, n_cols))
 
         # Save id reference dataframe, so user can revert back to original ids
-        if frame.id_reference_dict: # If id_reference_dict has been initialized
-            if len(frame.id_reference_dict[id_col]) == 0: # If dataframe empty, start with original ids: adjusted ids
+        if frame.id_reference_dict:
+            # If id_reference_dict has been initialized
+            if len(frame.id_reference_dict[id_col]) == 0:
+                # If dataframe empty, start with original ids: adjusted ids
                 frame.id_reference_dict[id_col].loc[:, 'original_ids'] = factorized[1]
                 frame.id_reference_dict[id_col].loc[:, 'adjusted_ids_1'] = np.arange(len(factorized[1]))
-            else: # Merge in new adjustment step
+            else:
+                # Merge in new adjustment step
                 n_cols_id = len(frame.id_reference_dict[id_col].columns)
                 id_reference_df = DataFrame({'adjusted_ids_' + str(n_cols_id - 1): factorized[1], 'adjusted_ids_' + str(n_cols_id): np.arange(len(factorized[1]))}, index=np.arange(len(factorized[1]))).astype('Int64', copy=False)
                 frame.id_reference_dict[id_col] = frame.id_reference_dict[id_col].merge(id_reference_df, how='left', on='adjusted_ids_' + str(n_cols_id - 1))
@@ -1207,11 +1210,10 @@ class BipartiteBase(DataFrame):
         if connectedness is None:
             # Skipping connected set
             frame.connectedness = None
-            # frame._check_contiguous_ids() # This is necessary
             frame.log(f'{connectedness!r} connected components (None if ignoring connectedness) computed', level='info')
             return frame
 
-        # Keep track of whether contiguous ids change
+        # Keep track of whether categorical ids change
         n_ids_prev = {id_col: frame.n_unique_ids(id_col) for id_col in frame.columns_contig}
 
         # Update data

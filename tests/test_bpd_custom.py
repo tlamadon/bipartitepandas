@@ -50,7 +50,7 @@ def test_custom_columns_1():
 
     assert success
 
-    ## Second, construct while adding column, but don't make it contiguous ##
+    ## Second, construct while adding column, but don't make it categorical ##
     bdf = bpd.BipartiteLong(data=df).add_column('c').clean()
 
     assert 'c' in bdf.columns
@@ -61,8 +61,8 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
-    ## Third, construct while adding column, and make it contiguous ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
+    ## Third, construct while adding column, and make it categorical ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical').clean()
 
     assert 'c' in bdf.columns
     assert 'c' in bdf.id_reference_dict.keys()
@@ -74,9 +74,9 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') == bdf['c'].max() + 1
 
-    ## Fourth, construct while adding column, and make it contiguous but with an invalid collapse option ##
+    ## Fourth, construct while adding column, and make it categorical but with an invalid collapse option ##
     try:
-        bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse='mean').clean()
+        bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical', how_collapse='mean').clean()
         success = False
     except NotImplementedError:
         success = True
@@ -101,7 +101,7 @@ def test_custom_columns_1():
 
     assert success
 
-    ## Seventh, try with event study format, but don't make custom columns contiguous ##
+    ## Seventh, try with event study format, but don't make custom columns categorical ##
     bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy())).add_column('c').clean()
 
     assert 'c1' in bdf.columns and 'c2' in bdf.columns
@@ -112,8 +112,8 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != max(bdf['c1'].max(), bdf['c2'].max()) + 1
 
-    ## Eighth, try with event study format, and make custom columns contiguous ##
-    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
+    ## Eighth, try with event study format, and make custom columns categorical ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical').clean()
 
     assert 'c1' in bdf.columns and 'c2' in bdf.columns
     assert 'c' in bdf.id_reference_dict.keys()
@@ -156,8 +156,8 @@ def test_custom_columns_1():
     assert 'c' in bdf.col_long_es_dict.keys()
     assert bdf.n_unique_ids('c') != bdf['c'].max() + 1
 
-    ## Twelfth, go from long to event study with contiguous column that should drop ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', long_es_split=None).clean().to_eventstudy()
+    ## Twelfth, go from long to event study with categorical column that should drop ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical', long_es_split=None).clean().to_eventstudy()
 
     assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -167,8 +167,8 @@ def test_custom_columns_1():
     assert 'c' not in bdf.col_collapse_dict.keys()
     assert 'c' not in bdf.col_long_es_dict.keys()
 
-    ## Thirteenth, go from event study to long with contiguous column that should drop ##
-    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', long_es_split=None).clean().to_long()
+    ## Thirteenth, go from event study to long with categorical column that should drop ##
+    bdf = bpd.BipartiteEventStudy(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c').clean().to_eventstudy()), include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical', long_es_split=None).clean().to_long()
 
     assert ('c1' not in bdf.columns) and ('c2' not in bdf.columns)
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -214,7 +214,7 @@ def test_custom_columns_2():
     assert bdf.iloc[0]['c'] == 0.75
 
     ## Fourth, collapse by None ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse=None).clean().collapse()
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical', how_collapse=None).clean().collapse()
 
     assert 'c' not in bdf.columns
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -243,7 +243,7 @@ def test_custom_columns_2():
     assert bdf.iloc[1]['c'] == 0.75
 
     ## Eighth, clean collapsed with None ##
-    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse=None).clean()
+    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical', how_collapse=None).clean()
 
     assert 'c' in bdf.columns
     assert 'c' in bdf.col_reference_dict.keys()
@@ -254,7 +254,7 @@ def test_custom_columns_2():
     assert 'c' in bdf.col_long_es_dict.keys()
 
     ## Ninth, uncollapse by None ##
-    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig', how_collapse=None).clean().uncollapse()
+    bdf = bpd.BipartiteLongCollapsed(pd.DataFrame(bpd.BipartiteLong(data=df).add_column('c', how_collapse='mean').clean().collapse()), include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical', how_collapse=None).clean().uncollapse()
 
     assert 'c' not in bdf.columns
     assert 'c' not in bdf.col_reference_dict.keys()
@@ -284,38 +284,38 @@ def test_custom_columns_3():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-    ## First, contiguous to not contiguous ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
+    ## First, categorical to not categorical ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical').clean()
     init_properties = bdf.get_column_properties('c')
 
-    assert (init_properties['dtype'] == 'contig') and init_properties['is_contiguous'] and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
+    assert (init_properties['dtype'] == 'categorical') and init_properties['is_categorical'] and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
     assert ('c' in bdf.columns_contig.keys()) and ('c' in bdf.id_reference_dict.keys())
 
-    bdf = bdf.set_column_properties('c', dtype='int', is_contiguous=False, how_collapse='mean', long_es_split=None)
+    bdf = bdf.set_column_properties('c', dtype='int', is_categorical=False, how_collapse='mean', long_es_split=None)
     new_properties = bdf.get_column_properties('c')
 
-    assert (new_properties['dtype'] == 'int') and (not new_properties['is_contiguous']) and (new_properties['how_collapse'] == 'mean') and (new_properties['long_es_split'] is None)
+    assert (new_properties['dtype'] == 'int') and (not new_properties['is_categorical']) and (new_properties['how_collapse'] == 'mean') and (new_properties['long_es_split'] is None)
     assert ('c' not in bdf.columns_contig.keys()) and ('c' not in bdf.id_reference_dict.keys())
 
-    ## Second, not contiguous to contiguous ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=False).clean()
+    ## Second, not categorical to categorical ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=False).clean()
     init_properties = bdf.get_column_properties('c')
 
-    assert (init_properties['dtype'] == 'any') and (not init_properties['is_contiguous']) and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
+    assert (init_properties['dtype'] == 'any') and (not init_properties['is_categorical']) and (init_properties['how_collapse'] == 'first') and init_properties['long_es_split']
     assert ('c' not in bdf.columns_contig.keys()) and ('c' not in bdf.id_reference_dict.keys())
 
-    bdf = bdf.set_column_properties('c', is_contiguous=True, dtype='contig', how_collapse='last', long_es_split=None)
+    bdf = bdf.set_column_properties('c', is_categorical=True, dtype='categorical', how_collapse='last', long_es_split=None)
     new_properties = bdf.get_column_properties('c')
 
-    assert (new_properties['dtype'] == 'contig') and new_properties['is_contiguous'] and (new_properties['how_collapse'] == 'last') and (new_properties['long_es_split'] is None)
+    assert (new_properties['dtype'] == 'categorical') and new_properties['is_categorical'] and (new_properties['how_collapse'] == 'last') and (new_properties['long_es_split'] is None)
     assert ('c' in bdf.columns_contig.keys()) and ('c' in bdf.id_reference_dict.keys())
 
-    ## Third, not contiguous to contiguous, but invalid how_collapse ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=False).clean()
+    ## Third, not categorical to categorical, but invalid how_collapse ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=False).clean()
     init_properties = bdf.get_column_properties('c')
 
     try:
-        bdf = bdf.set_column_properties('c', is_contiguous=True, dtype='contig', how_collapse='mean', long_es_split=None)
+        bdf = bdf.set_column_properties('c', is_categorical=True, dtype='categorical', how_collapse='mean', long_es_split=None)
         success = False
     except NotImplementedError:
         success = True
@@ -342,8 +342,8 @@ def test_custom_columns_4():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-    ## Contiguous column should alter id_reference_dict properly ##
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_contiguous=True, dtype='contig').clean()
+    ## Categorical column should alter id_reference_dict properly ##
+    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True).add_column('c', is_categorical=True, dtype='categorical').clean()
 
     assert 'c' in bdf.id_reference_dict.keys()
 

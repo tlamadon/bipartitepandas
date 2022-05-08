@@ -103,7 +103,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
     def clean(self, params=None):
         '''
-        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
+        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.
 
         Arguments:
             params (ParamsDict or None): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.clean_params().
@@ -252,7 +252,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 del collapsed_frame.col_collapse_dict[col]
                 del collapsed_frame.col_long_es_dict[col]
                 if col in collapsed_frame.columns_contig.keys():
-                    # If column is contiguous
+                    # If column is categorical
                     del collapsed_frame.columns_contig[col]
                     if collapsed_frame.id_reference_dict:
                         # If linking contiguous ids to original ids

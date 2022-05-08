@@ -73,7 +73,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
     def clean(self, params=None):
         '''
-        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and firm ids are contiguous.
+        Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.
 
         Arguments:
             params (ParamsDict or None): dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.clean_params().
@@ -153,13 +153,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 tqdm.write(f"dropping workers who leave a firm then return to it (how={drop_returns!r})")
             frame = frame._drop_returns(how=drop_returns, is_sorted=True, reset_index=True, copy=False)
 
-        # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
-        for contig_col, is_contig in frame.columns_contig.items():
-            if frame._col_included(contig_col) and (force or (not is_contig)):
-                self.log(f'making {contig_col!r} ids contiguous', level='info')
+        # Next, check categorical ids are contiguous before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
+        for cat_col, is_contig in frame.columns_contig.items():
+            if frame._col_included(cat_col) and (force or (not is_contig)):
+                self.log(f'making {cat_col!r} ids contiguous', level='info')
                 if verbose:
-                    tqdm.write(f'making {contig_col!r} ids contiguous')
-                frame = frame._contiguous_ids(id_col=contig_col, copy=False)
+                    tqdm.write(f'making {cat_col!r} ids contiguous')
+                frame = frame._make_categorical_contiguous(id_col=cat_col, copy=False)
 
         # Next, find largest set of firms connected by movers
         if force or (frame.connectedness in [False, None]):
@@ -169,13 +169,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 tqdm.write(f"computing largest connected set (how={connectedness!r})")
             frame = frame._connected_components(connectedness=connectedness, component_size_variable=params['component_size_variable'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
-            # Next, check contiguous ids after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
-            for contig_col, is_contig in frame.columns_contig.items():
-                if frame._col_included(contig_col) and (not is_contig):
-                    self.log(f'making {contig_col!r} ids contiguous', level='info')
+            # Next, check categorical ids are contiguous after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
+            for cat_col, is_contig in frame.columns_contig.items():
+                if frame._col_included(cat_col) and (not is_contig):
+                    self.log(f'making {cat_col!r} ids contiguous', level='info')
                     if verbose:
-                        tqdm.write(f'making {contig_col!r} ids contiguous')
-                    frame = frame._contiguous_ids(id_col=contig_col, copy=False)
+                        tqdm.write(f'making {cat_col!r} ids contiguous')
+                    frame = frame._make_categorical_contiguous(id_col=cat_col, copy=False)
 
         # Sort columns
         self.log('sorting columns', level='info')
@@ -308,7 +308,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 del es_frame.col_collapse_dict[col]
                 del es_frame.col_long_es_dict[col]
                 if col in es_frame.columns_contig.keys():
-                    # If column is contiguous
+                    # If column is categorical
                     del es_frame.columns_contig[col]
                     if es_frame.id_reference_dict:
                         # If linking contiguous ids to original ids
