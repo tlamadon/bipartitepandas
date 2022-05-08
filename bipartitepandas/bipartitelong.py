@@ -173,7 +173,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         if level == 'spell':
             group_ids = frame._get_spell_ids(is_sorted=True, copy=False)
         elif level == 'match':
-            group_ids = frame.groupby(['i', 'j'], sort=(not frame.no_returns)).ngroup().tolist()
+            group_ids = frame.groupby(['i', 'j'], sort=(not frame.no_returns)).ngroup().to_numpy()
         else:
             raise ValueError(f"`level` must be one of 'spell' or 'match', but input specifies invalid input {level!r}.")
 

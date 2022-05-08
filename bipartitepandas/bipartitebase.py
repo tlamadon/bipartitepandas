@@ -626,13 +626,22 @@ class BipartiteBase(DataFrame):
             (NumPy Array or None): unique ids if column included; None otherwise
         '''
         self.log(f'finding unique ids in column {id_col!r}', level='info')
+
         if not self._col_included(id_col):
             # If column not in dataframe
             return None
-        id_lst = []
-        for id_subcol in to_list(self.col_reference_dict[id_col]):
-            id_lst += list(self.loc[:, id_subcol].unique())
-        return np.array(list(set(id_lst)))
+
+        id_subcols = to_list(self.col_reference_dict[id_col])
+        if len(id_subcols) == 1:
+            return self.loc[:, id_subcols[0]].unique()
+        else:
+            ids = []
+            for id_subcol in id_subcols:
+                ids += self.loc[:, id_subcol].unique().tolist()
+            ids = set(ids)
+
+            # Fast set to NumPy Array (source: https://stackoverflow.com/a/56967649/17333120)
+            return np.fromiter(ids, int, len(ids))
 
     def n_unique_ids(self, id_col):
         '''

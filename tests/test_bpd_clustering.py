@@ -25,8 +25,8 @@ def test_cluster_1():
             grouping = bpd.grouping.KMeans(n_clusters=nk)
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}), rng)
 
-            clusters_true = sim_data[~bdf['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
-            clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
+            clusters_true = sim_data[~bdf['g'].isna()]['psi'].astype('category', copy=False).cat.codes.astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
+            clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
 
             # Find which clusters are most often matched together
             replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
@@ -91,8 +91,8 @@ def test_cluster_2():
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}), rng)
 
             to_long = bdf.to_long()
-            clusters_true = sim_data[~to_long['g'].isna()]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
-            clusters_estimated = to_long[~to_long['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
+            clusters_true = sim_data[~to_long['g'].isna()]['psi'].astype('category', copy=False).cat.codes.astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
+            clusters_estimated = to_long[~to_long['g'].isna()]['g'].astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
 
             # Find which clusters are most often matched together
             replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
@@ -163,8 +163,8 @@ def test_cluster_3():
             bdf = bdf.cluster(bpd.cluster_params({'measures': measures, 'grouping': grouping, 'stayers_movers': stayers_movers}), rng)
             remaining_jids = bdf.dropna()['j'].unique()
 
-            clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
-            clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
+            clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category', copy=False).cat.codes.astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
+            clusters_estimated = bdf[~bdf['g'].isna()]['g'].astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
 
             # Find which clusters are most often matched together
             replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
@@ -237,8 +237,8 @@ def test_cluster_4():
             collapse = bdf.to_long()
             remaining_jids = collapse.dropna()['j'].unique()
 
-            clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category').cat.codes.astype(int).to_numpy() # Skip firms that aren't clustered
-            clusters_estimated = collapse[~collapse['g'].isna()]['g'].astype(int).to_numpy() # Skip firms that aren't clustered
+            clusters_true = sim_data_spell[sim_data_spell['j'].isin(remaining_jids)]['psi'].astype('category', copy=False).cat.codes.astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
+            clusters_estimated = collapse[~collapse['g'].isna()]['g'].astype(int, copy=False).to_numpy() # Skip firms that aren't clustered
 
             # Find which clusters are most often matched together
             replace_df = pd.DataFrame({'psi': clusters_true, 'psi_est': clusters_estimated}, index=np.arange(len(clusters_true)))
