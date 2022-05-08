@@ -15,24 +15,38 @@ class KMeans:
     Compute KMeans groups for data. Used for clustering.
 
     Arguments:
-        **kwargs: parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html)
+        **kwargs: parameters for KMeans estimation (for more information on what parameters can be used, visit https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html); note that key 'random_state' will be overwritten
     '''
 
     def __init__(self, **kwargs):
-        self.kwargs = kwargs
+        self.kwargs = kwargs.copy()
 
-    def compute_groups(self, data, weights):
+        if 'random_state' in self.kwargs.keys():
+            # Remove 'random_state' key
+            del self.kwargs['random_state']
+
+    def _compute_groups(self, data, weights, rng=None):
         '''
         Compute KMeans groups for data.
 
         Arguments:
             data (NumPy Array): data to group
             weights (NumPy Array or None): firm weights for clustering
+            rng (np.random.Generator or None): NumPy random number generator; None is equivalent to np.random.default_rng(None)
 
         Returns:
             (NumPy Array): KMeans groups for data
         '''
-        groups = sklKMeans(**self.kwargs).fit(data, sample_weight=weights).labels_
+        if rng is None:
+            rng = np.random.default_rng(None)
+
+        if isinstance(rng, np.random._generator.Generator):
+            # Generate seed - SKLearn is not compatible with np.random.default_rng
+            random_state = rng.bit_generator._seed_seq.spawn(1)[0].generate_state(1)[0]
+        else:
+            random_state = rng
+
+        groups = sklKMeans(random_state=random_state, **self.kwargs).fit(data, sample_weight=weights).labels_
         return groups
 
 class Quantiles:
@@ -46,13 +60,14 @@ class Quantiles:
     def __init__(self, n_quantiles=4):
         self.n_quantiles = n_quantiles
 
-    def compute_groups(self, data, weights):
+    def _compute_groups(self, data, weights, rng=None):
         '''
         Compute quantiles groups for data.
 
         Arguments:
             data (NumPy Array): data to group
-            weights (NumPy Array): required for consistent argument inputs with KMeans, not used in this function
+            weights (NumPy Array): used for KMeans, not used for Quantiles
+            rng (np.random.Generator or None): used for KMeans, not used for Quantiles
 
         Returns:
             (NumPy Array): quantile groups for data

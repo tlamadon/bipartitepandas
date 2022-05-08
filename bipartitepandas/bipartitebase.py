@@ -50,6 +50,10 @@ _clean_params_default = bpd.util.ParamsDict({
         '''
             (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
         ''', None),
+    'collapse_at_connectedness_measure': (False, 'type', bool,
+        '''
+            (default=False) If True, computing leave-out-spell connected set will collapse data at the spell level, and computing leave-out-match connected set will collapse data at the match level.
+        ''', None),
     'component_size_variable': ('firms', 'set', ['len', 'length', 'firms', 'workers', 'stayers', 'movers', 'firms_plus_workers', 'firms_plus_stayers', 'firms_plus_movers', 'len_stayers', 'length_stayers', 'len_movers', 'length_movers', 'stays', 'moves'],
         '''
         (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
@@ -1404,7 +1408,7 @@ class BipartiteBase(DataFrame):
 
         return frame.min_workers_firms(threshold, is_sorted=is_sorted, copy=copy)
 
-    def cluster(self, params=None):
+    def cluster(self, params=None, rng=None):
         '''
         Cluster data and assign a new column giving the cluster for each firm.
 
@@ -1416,6 +1420,8 @@ class BipartiteBase(DataFrame):
         '''
         if params is None:
             params = bpd.cluster_params()
+        if rng is None:
+            rng = np.random.default_rng(None)
 
         self.log('beginning clustering', level='info')
         if params['copy']:
@@ -1429,10 +1435,10 @@ class BipartiteBase(DataFrame):
         # Compute measures
         for i, measure in enumerate(to_list(params['measures'])):
             if i == 0:
-                computed_measures = measure.compute_measure(cluster_data, jids)
+                computed_measures = measure._compute_measure(cluster_data, jids)
             else:
                 # For computing both cdfs and moments
-                computed_measures = np.concatenate([computed_measures, measure.compute_measure(cluster_data, jids)], axis=1)
+                computed_measures = np.concatenate([computed_measures, measure._compute_measure(cluster_data, jids)], axis=1)
         frame.log('firm moments computed', level='info')
 
         # Can't group using quantiles if more than 1 column
@@ -1441,7 +1447,7 @@ class BipartiteBase(DataFrame):
 
         # Compute firm groups
         frame.log('computing firm groups', level='info')
-        clusters = params['grouping'].compute_groups(computed_measures, weights)
+        clusters = params['grouping']._compute_groups(computed_measures, weights, rng)
         frame.log('firm groups computed', level='info')
 
         # Link firms to clusters

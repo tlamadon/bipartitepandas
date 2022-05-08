@@ -47,11 +47,12 @@ class BipartiteEventStudy(bpd.BipartiteEventStudyBase):
         '''
         return bpd.BipartiteLong
 
-    def collapse(self, is_sorted=False, copy=True):
+    def collapse(self, level='spell', is_sorted=False, copy=True):
         '''
         Collapse event study data at the worker-firm spell level (so each spell for a particular worker at a particular firm becomes one observation).
 
         Arguments:
+            level (str): if 'spell', collapse at the worker-firm spell level; if 'match', collapse at the worker-firm match level ('spell' and 'match' will differ if a worker leaves then returns to a firm)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 

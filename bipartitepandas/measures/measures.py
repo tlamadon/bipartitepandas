@@ -18,7 +18,7 @@ class CDFs:
         self.cdf_resolution = cdf_resolution
         self.measure = measure
 
-    def compute_measure(self, frame, jids):
+    def _compute_measure(self, frame, jids):
         '''
         Arguments:
             frame (Pandas DataFrame): data to use
@@ -119,7 +119,7 @@ class Moments:
     def __init__(self, measures='mean'):
         self.measures = measures
 
-    def compute_measure(self, frame, jids):
+    def _compute_measure(self, frame, jids):
         '''
         Arguments:
             frame (Pandas DataFrame): data to use

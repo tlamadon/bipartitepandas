@@ -86,6 +86,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         self.log('beginning BipartiteLongBase data cleaning', level='info')
 
+        # Unpack parameters
+        drop_returns = params['drop_returns']
+        connectedness = params['connectedness']
         force = params['force']
         verbose = params['verbose']
 
@@ -144,11 +147,11 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame.no_duplicates = True
 
         # Next, drop returns
-        if force or (frame.no_returns is None) or ((not frame.no_returns) and params['drop_returns']):
-            self.log(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})", level='info')
+        if force or (frame.no_returns is None) or ((not frame.no_returns) and drop_returns):
+            self.log(f"dropping workers who leave a firm then return to it (how={drop_returns!r})", level='info')
             if verbose:
-                tqdm.write(f"dropping workers who leave a firm then return to it (how={params['drop_returns']!r})")
-            frame = frame._drop_returns(how=params['drop_returns'], is_sorted=True, reset_index=True, copy=False)
+                tqdm.write(f"dropping workers who leave a firm then return to it (how={drop_returns!r})")
+            frame = frame._drop_returns(how=drop_returns, is_sorted=True, reset_index=True, copy=False)
 
         # Next, check contiguous ids before using igraph (igraph resets ids to be contiguous, so we need to make sure ours are comparable)
         for contig_col, is_contig in frame.columns_contig.items():
@@ -161,10 +164,10 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Next, find largest set of firms connected by movers
         if force or (frame.connectedness in [False, None]):
             # Generate largest connected set
-            self.log(f"computing largest connected set (how={params['connectedness']!r})", level='info')
+            self.log(f"computing largest connected set (how={connectedness!r})", level='info')
             if verbose:
-                tqdm.write(f"computing largest connected set (how={params['connectedness']!r})")
-            frame = frame._connected_components(connectedness=params['connectedness'], component_size_variable=params['component_size_variable'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
+                tqdm.write(f"computing largest connected set (how={connectedness!r})")
+            frame = frame._connected_components(connectedness=connectedness, component_size_variable=params['component_size_variable'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check contiguous ids after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
             for contig_col, is_contig in frame.columns_contig.items():
