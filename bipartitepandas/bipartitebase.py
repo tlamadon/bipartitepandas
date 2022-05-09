@@ -1425,6 +1425,7 @@ class BipartiteBase(DataFrame):
 
         Arguments:
             params (ParamsDict or None): dictionary of parameters for clustering. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.cluster_params().
+            rng (np.random.Generator): NumPy random number generator; None is equivalent to np.random.default_rng(None)
 
         Returns:
             (BipartiteBase): dataframe with clusters
