@@ -15,6 +15,7 @@
   Formats <notebooks/formats>
   Custom Columns <notebooks/custom_columns>
   Clustering <notebooks/clustering>
+  Connected Sets <notebooks/connected_sets>
   CHK Event Study <notebooks/chk>
   Advanced Features <notebooks/advanced_features>
 
