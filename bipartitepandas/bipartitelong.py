@@ -324,6 +324,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             (NumPy Array): indices of articulation observations
         '''
+        if not is_sorted:
+            raise NotImplementedError('._get_articulation_observations() requires `is_sorted` == True, but it is set to False.')
+
         # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
         bridges = [tuple(sorted(a, reverse=True)) for a in G.biconnected_components() if len(a) == 2]
         bridges_workers = set([bridge[0] - (max_j + 1) for bridge in bridges])
@@ -351,6 +354,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
         Returns:
             (NumPy Array): indices of articulation spells
         '''
+        if not is_sorted:
+            raise NotImplementedError('._get_articulation_spells() requires `is_sorted` == True, but it is set to False.')
+
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 

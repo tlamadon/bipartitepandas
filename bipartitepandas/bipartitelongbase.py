@@ -338,6 +338,9 @@ class BipartiteLongBase(bpd.BipartiteBase):
         '''
         self.log('preparing to compute spell ids', level='info')
 
+        if not is_sorted:
+            raise NotImplementedError('._get_spell_ids() requires `is_sorted` == True, but it is set to False.')
+
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
         self.log('data sorted by i (and t, if included)', level='info')

@@ -129,6 +129,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             (NumPy Array): mask of rows to unstack
         '''
+        if not is_sorted:
+            raise NotImplementedError('._get_unstack_rows() requires `is_sorted` == True, but it is set to False.')
+
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
@@ -545,6 +548,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             (NumPy Array): firm-worker linkages
             (int): maximum firm id
         '''
+        if not is_sorted:
+            raise NotImplementedError('._construct_firm_worker_linkages() requires `is_sorted` == True, but it is set to False.')
+
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 

@@ -267,6 +267,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Returns:
             (NumPy Array): spell ids
         '''
+        if not is_sorted:
+            raise NotImplementedError('._get_spell_ids() requires `is_sorted` == True, but it is set to False.')
+
         if self.no_returns:
             # If no returns, then each observation is guaranteed to be a new spell
             self.log('preparing to compute spell ids', level='info')
