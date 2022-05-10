@@ -58,6 +58,10 @@ _clean_params_default = bpd.util.ParamsDict({
         '''
         (default='firms') How to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
         ''', None),
+    'drop_single_stayers': (False, 'type', bool,
+        '''
+            (default=False) If True, drop stayers who have <= 1 observation weight (check number of observations if data is unweighted) when computing largest connected set of firms.
+        ''', None),
     'i_t_how': ('max', 'type', ('fn', str),
         '''
             (default='max') When dropping i-t duplicates: if 'max', keep max paying job; otherwise, take `i_t_how` over duplicate worker-firm-year observations, then take the highest paying worker-firm observation. `i_t_how` can take any input valid for a Pandas transform. Note that if multiple time and/or firm columns are included (as in collapsed long and event study formats), then data is converted to long, cleaned, then converted back to its original format.
@@ -1195,13 +1199,14 @@ class BipartiteBase(DataFrame):
                 self.log(error_msg, level='info')
                 raise ValueError(error_msg)
 
-    def _connected_components(self, connectedness='connected', component_size_variable='firms', drop_returns_to_stays=False, is_sorted=False, copy=True):
+    def _connected_components(self, connectedness='connected', component_size_variable='firms', drop_single_stayers=False, drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
         Update data to include only the largest component connected by movers.
 
         Arguments:
             connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
+            drop_single_stayers (bool): if True, drop stayers who have <= 1 observation weight (check number of observations if data is unweighted)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
@@ -1280,6 +1285,16 @@ class BipartiteBase(DataFrame):
                 pass
         else:
             raise NotImplementedError(f"Connectedness measure {connectedness!r} is invalid: it must be one of None, 'connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', or 'leave_out_firm'.")
+
+        if drop_single_stayers:
+            # Drop stayers who have <= 1 observation weight
+            worker_m = frame.get_worker_m(is_sorted=True)
+            if frame._col_included('w'):
+                stayers_weight = frame.loc[~worker_m, ['i', 'w']].groupby('i', sort=False)['w'].transform('sum').to_numpy()
+            else:
+                stayers_weight = frame.loc[~worker_m, ['i', 'j']].groupby('i', sort=False)['j'].transform('size').to_numpy()
+            drop_ids = frame.loc[~worker_m, 'i'].to_numpy()[stayers_weight <= 1]
+            frame = frame.drop_ids('i', drop_ids, is_sorted=True, reset_index=False, copy=False)
 
         # Data is now connected
         frame.connectedness = connectedness

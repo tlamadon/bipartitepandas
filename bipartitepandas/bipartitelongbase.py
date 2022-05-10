@@ -167,7 +167,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             self.log(f"computing largest connected set (how={connectedness!r})", level='info')
             if verbose:
                 tqdm.write(f"computing largest connected set (how={connectedness!r})")
-            frame = frame._connected_components(connectedness=connectedness, component_size_variable=params['component_size_variable'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
+            frame = frame._connected_components(connectedness=connectedness, component_size_variable=params['component_size_variable'], drop_single_stayers=params['drop_single_stayers'], drop_returns_to_stays=params['drop_returns_to_stays'], is_sorted=True, copy=False)
 
             # Next, check categorical ids are contiguous after igraph, in case the connected components dropped ids (._connected_components() automatically updates contiguous attributes)
             for cat_col, is_contig in frame.columns_contig.items():
