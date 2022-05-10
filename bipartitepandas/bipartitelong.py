@@ -137,6 +137,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
             }
             # NOTE: leave-out-observation is equivalent to leave-out-(spell/match) if the data is collapsed at the (spell/match) level, but the code is faster
             params['connectedness'] = 'leave_out_observation'
+            params['drop_returns'] = False
             params['is_sorted'] = True
             params['copy'] = False
             params['force'] = False
