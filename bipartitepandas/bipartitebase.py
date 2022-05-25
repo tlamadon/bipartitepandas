@@ -1500,7 +1500,7 @@ class BipartiteBase(DataFrame):
                 g_col = 'g' + str(i + 1)
 
             # Merge into event study data
-            frame[g_col] = frame[j_col].map(clusters_dict)
+            frame.loc[:, g_col] = frame.loc[:, j_col].map(clusters_dict)
             # Keep column as int even with nans
             frame.loc[:, g_col] = frame.loc[:, g_col].astype('Int64', copy=False)
 
