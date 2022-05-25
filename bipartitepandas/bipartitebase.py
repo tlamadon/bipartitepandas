@@ -174,14 +174,14 @@ class BipartiteBase(DataFrame):
         col_dtype_dict (dict or None): link column to datatype, e.g. {'m': 'int'}; None is equivalent to {}
         col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
         col_long_es_dict (dict or None): whether each column should split into two when converting from long to event study (None indicates the column should be dropped), e.g. {'y': True, 'm': None}; None is equivalent to {}
-        include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values
+        track_id_changes (bool): if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values
         log (bool): if True, will create log file(s)
         **kwargs: keyword arguments for Pandas DataFrame
     '''
     # Attributes, required for Pandas inheritance
     _metadata = ['columns_req', 'columns_opt', 'columns_contig', 'col_reference_dict', 'col_dtype_dict', 'col_collapse_dict', 'col_long_es_dict', 'id_reference_dict', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', 'no_returns', '_log_on_indicator', '_log_level_fn_dict']
 
-    def __init__(self, *args, columns_req=None, columns_opt=None, columns_contig=None, col_reference_dict=None, col_dtype_dict=None, col_collapse_dict=None, col_long_es_dict=None, include_id_reference_dict=False, log=True, **kwargs):
+    def __init__(self, *args, columns_req=None, columns_opt=None, columns_contig=None, col_reference_dict=None, col_dtype_dict=None, col_collapse_dict=None, col_long_es_dict=None, track_id_changes=False, log=True, **kwargs):
         # Initialize DataFrame
         super().__init__(*args, **kwargs)
 
@@ -209,7 +209,7 @@ class BipartiteBase(DataFrame):
 
         if len(args) > 0 and isinstance(args[0], BipartiteBase):
             # Note that isinstance works for subclasses
-            self._set_attributes(args[0], no_dict=False, include_id_reference_dict=include_id_reference_dict)
+            self._set_attributes(args[0], no_dict=False, track_id_changes=track_id_changes)
             # Update class attributes from the previous dataframe with parameter inputs
             self.columns_req = ['i', 'j', 'y'] + [column_req for column_req in self.columns_req if column_req not in ['i', 'j', 'y']]
             self.columns_opt = ['t', 'g', 'w', 'm'] + [column_opt for column_opt in self.columns_opt if column_opt not in ['t', 'g', 'w', 'm']]
@@ -230,7 +230,7 @@ class BipartiteBase(DataFrame):
             self.col_long_es_dict = update_dict({'i': True, 'j': True, 'y': True, 't': True, 'g': True, 'w': True, 'm': False}, col_long_es_dict)
 
             # Link original categorical id values to updated contiguous id values
-            self._reset_id_reference_dict(include_id_reference_dict)
+            self._reset_id_reference_dict(track_id_changes)
 
             # Set attributes
             self._reset_attributes()
@@ -722,18 +722,18 @@ class BipartiteBase(DataFrame):
                 #         frame['original_' + id_subcol] = frame[id_subcol]
             return frame
         else:
-            warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `include_id_reference_dict=True` when initializing your BipartitePandas object')
+            warnings.warn('id_reference_dict is empty. Either your id columns are already correct, or you did not specify `track_id_changes=True` when initializing your BipartitePandas object')
 
             return None
 
-    def _set_attributes(self, frame, no_dict=False, include_id_reference_dict=False):
+    def _set_attributes(self, frame, no_dict=False, track_id_changes=False):
         '''
         Set class attributes to equal those of another BipartitePandas object.
 
         Arguments:
             frame (BipartitePandas): BipartitePandas object whose attributes to use
             no_dict (bool): if True, only set booleans, no dictionaries
-            include_id_reference_dict (bool): if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values
+            track_id_changes (bool): if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values
         '''
         # Dictionaries
         if not no_dict:
@@ -752,7 +752,7 @@ class BipartiteBase(DataFrame):
                 self.id_reference_dict[id_col] = reference_df.copy()
         else:
             # This is if the original dataframe DIDN'T have an id_reference_dict (but the new dataframe may or may not)
-            self._reset_id_reference_dict(include_id_reference_dict)
+            self._reset_id_reference_dict(track_id_changes)
         # # Logger
         # self.logger = frame.logger
         ## Booleans

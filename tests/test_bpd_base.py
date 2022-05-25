@@ -737,7 +737,7 @@ def test_contiguous_cids_14():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bpd.BipartiteLong(data=df, track_id_changes=True)
     bdf = bdf.clean()
     bdf = bdf.collapse()
     bdf = bdf.to_eventstudy().original_ids()
@@ -1024,7 +1024,7 @@ def test_worker_year_unique_16_4():
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
     for how in ['max', 'sum', 'mean']:
-        bdf = bpd.BipartiteEventStudy(data=df.copy(), include_id_reference_dict=True)
+        bdf = bpd.BipartiteEventStudy(data=df.copy(), track_id_changes=True)
         bdf = bdf.clean(bpd.clean_params({'i_t_how': how})).original_ids()
 
         stayers = bdf[bdf['m'] == 0]
@@ -1253,7 +1253,7 @@ def test_id_reference_dict_20():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bpd.BipartiteLong(data=df, track_id_changes=True)
     bdf = bdf.clean()
 
     id_reference_dict = bdf.id_reference_dict
@@ -1325,7 +1325,7 @@ def test_id_reference_dict_22():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bpd.BipartiteLong(data=df, track_id_changes=True)
     bdf = bdf.clean()
 
     merge_df = bdf.original_ids()
@@ -1398,7 +1398,7 @@ def test_id_reference_dict_23():
 
     df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
 
-    bdf = bpd.BipartiteLong(data=df, include_id_reference_dict=True)
+    bdf = bpd.BipartiteLong(data=df, track_id_changes=True)
     bdf = bdf.clean()
     bdf = bdf[bdf['j'] > 0]
     bdf = bdf.clean(bpd.clean_params({'connectedness': None}))
