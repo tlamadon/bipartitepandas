@@ -402,9 +402,9 @@ def to_list(data):
     Returns:
         (list): data as a list
     '''
-    if not isinstance(data, (list, tuple, set, frozenset)):
-        return [data]
-    return list(data)
+    if isinstance(data, (list, tuple, set, frozenset, range, np.ndarray)):
+        return list(data)
+    return [data]
 
 def fast_shift(arr, num, fill_value=np.nan):
     '''
