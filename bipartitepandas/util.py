@@ -3,6 +3,8 @@ Utility functions.
 '''
 import logging
 from pathlib import Path
+from contextlib import contextmanager,redirect_stderr,redirect_stdout
+from os import devnull
 from collections.abc import MutableMapping
 # from numpy_groupies.aggregate_numpy import aggregate
 import numpy as np
@@ -438,8 +440,9 @@ class ChainedAssignment:
             --code with errors--
     '''
     def __init__(self, chained=None):
-        acceptable = [None, 'warn', 'raise']
-        assert chained in acceptable, "chained must be in " + str(acceptable)
+        acceptable = [None, 'warn', 'raise', 'error']
+        if chained not in acceptable:
+            raise ValueError(f'`chained` must be one of {acceptable!r}, but input specifies {chained!r}.')
         self.swcw = chained
 
     def __enter__(self):
@@ -449,6 +452,20 @@ class ChainedAssignment:
 
     def __exit__(self, *args):
         pd.options.mode.chained_assignment = self.saved_swcw
+
+@contextmanager
+def HiddenPrints(hidden=True):
+    '''
+    Context manager to temporarily disable printing. Source: https://stackoverflow.com/a/52442331/17333120. Usage:
+        with HiddenPrints():
+            --code with no printing--
+        with HiddenPrints(False):
+            --code with printing--
+    '''
+    if hidden:
+        with open(devnull, 'w') as fnull:
+            with redirect_stderr(fnull) as err, redirect_stdout(fnull) as out:
+                yield (err, out)
 
 loggers = {}
 
