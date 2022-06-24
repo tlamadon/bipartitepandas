@@ -107,7 +107,192 @@ def test_long_get_extended_eventstudy_3_3():
 # def test_long_plot_extended_eventstudy_4():
 #     # Test plot_extended_eventstudy() by making sure it doesn't crash
 #     sim_data = bpd.SimBipartite().simulate()
-#     bdf = bpd.BipartiteLong(sim_data).clean().cluster(grouping=bpd.grouping.KMeans(n_clusters=2))
+#     bdf = bpd.BipartiteDataFrame(sim_data).clean().cluster(bpd.cluster_params({'grouping': bpd.grouping.KMeans(n_clusters=2)}))
 #     bdf.plot_extended_eventstudy()
 
-#     assert True # Just making sure it doesn't crash
+#     # Just making sure it doesn't crash
+#     assert True
+
+def test_weighted_collapse_1():
+    # Test that collapsing weights properly at the spell level.
+    worker_data = []
+    # Worker 0
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'w': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'w': 2})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 3, 'w': 3})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'w': 1})
+    # Worker 1
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'w': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'w': 1.8})
+    worker_data.append({'i': 1, 'j': 2, 'y': 2., 't': 3, 'w': 2.5})
+    worker_data.append({'i': 1, 'j': 5, 'y': 1., 't': 3, 'w': 1})
+    # Worker 2
+    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1, 'w': 1})
+    worker_data.append({'i': 3, 'j': 2, 'y': 1.5, 't': 2, 'w': 2})
+    worker_data.append({'i': 3, 'j': 3, 'y': 1.5, 't': 3, 'w': 1})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(df)
+    bdf = bdf.clean().collapse(level='spell')
+
+    # Worker 0
+    assert bdf.iloc[0]['i'] == 0
+    assert bdf.iloc[0]['j'] == 0
+    assert bdf.iloc[0]['y'] == 2
+    assert bdf.iloc[0]['t1'] == 1
+    assert bdf.iloc[0]['t2'] == 1
+    assert bdf.iloc[0]['w'] == 1
+
+    assert bdf.iloc[1]['i'] == 0
+    assert bdf.iloc[1]['j'] == 1
+    assert bdf.iloc[1]['y'] == (2 * 1 + 3 * 1.5) / (2 + 3)
+    assert bdf.iloc[1]['t1'] == 2
+    assert bdf.iloc[1]['t2'] == 3
+    assert bdf.iloc[1]['w'] == 5
+
+    assert bdf.iloc[2]['i'] == 0
+    assert bdf.iloc[2]['j'] == 0
+    assert bdf.iloc[2]['y'] == 1
+    assert bdf.iloc[2]['t1'] == 4
+    assert bdf.iloc[2]['t2'] == 4
+    assert bdf.iloc[2]['w'] == 1
+
+    # Worker 1
+    assert bdf.iloc[3]['i'] == 1
+    assert bdf.iloc[3]['j'] == 1
+    assert bdf.iloc[3]['y'] == 1
+    assert bdf.iloc[3]['t1'] == 1
+    assert bdf.iloc[3]['t2'] == 1
+    assert bdf.iloc[3]['w'] == 1
+
+    assert bdf.iloc[4]['i'] == 1
+    assert bdf.iloc[4]['j'] == 2
+    assert bdf.iloc[4]['y'] == (1.8 * 1 + 2.5 * 2) / (1.8 + 2.5)
+    assert bdf.iloc[4]['t1'] == 2
+    assert bdf.iloc[4]['t2'] == 3
+    assert bdf.iloc[4]['w'] == 4.3
+
+    # Worker 2
+    assert bdf.iloc[5]['i'] == 2
+    assert bdf.iloc[5]['j'] == 2
+    assert bdf.iloc[5]['y'] == (1 * 1 + 2 * 1.5) / (1 + 2)
+    assert bdf.iloc[5]['t1'] == 1
+    assert bdf.iloc[5]['t2'] == 2
+    assert bdf.iloc[5]['w'] == 3
+
+    assert bdf.iloc[6]['i'] == 2
+    assert bdf.iloc[6]['j'] == 3
+    assert bdf.iloc[6]['y'] == 1.5
+    assert bdf.iloc[6]['t1'] == 3
+    assert bdf.iloc[6]['t2'] == 3
+    assert bdf.iloc[6]['w'] == 1
+
+def test_weighted_collapse_2():
+    # Test that collapsing weights properly at the match level.
+    worker_data = []
+    # Worker 0
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'w': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'w': 2})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 3, 'w': 3})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'w': 1})
+    # Worker 1
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'w': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'w': 1.8})
+    worker_data.append({'i': 1, 'j': 2, 'y': 2., 't': 3, 'w': 2.5})
+    worker_data.append({'i': 1, 'j': 5, 'y': 1., 't': 3, 'w': 1})
+    # Worker 2
+    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1, 'w': 1})
+    worker_data.append({'i': 3, 'j': 2, 'y': 1.5, 't': 2, 'w': 2})
+    worker_data.append({'i': 3, 'j': 3, 'y': 1.5, 't': 3, 'w': 1})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(df)
+    bdf = bdf.clean().collapse(level='match')
+
+    # Worker 0
+    assert bdf.iloc[0]['i'] == 0
+    assert bdf.iloc[0]['j'] == 0
+    assert bdf.iloc[0]['y'] == 1.5
+    assert bdf.iloc[0]['t1'] == 1
+    assert bdf.iloc[0]['t2'] == 4
+    assert bdf.iloc[0]['w'] == 2
+
+    assert bdf.iloc[1]['i'] == 0
+    assert bdf.iloc[1]['j'] == 1
+    assert bdf.iloc[1]['y'] == (2 * 1 + 3 * 1.5) / (2 + 3)
+    assert bdf.iloc[1]['t1'] == 2
+    assert bdf.iloc[1]['t2'] == 3
+    assert bdf.iloc[1]['w'] == 5
+
+    # Worker 1
+    assert bdf.iloc[2]['i'] == 1
+    assert bdf.iloc[2]['j'] == 1
+    assert bdf.iloc[2]['y'] == 1
+    assert bdf.iloc[2]['t1'] == 1
+    assert bdf.iloc[2]['t2'] == 1
+    assert bdf.iloc[2]['w'] == 1
+
+    assert bdf.iloc[3]['i'] == 1
+    assert bdf.iloc[3]['j'] == 2
+    assert bdf.iloc[3]['y'] == (1.8 * 1 + 2.5 * 2) / (1.8 + 2.5)
+    assert bdf.iloc[3]['t1'] == 2
+    assert bdf.iloc[3]['t2'] == 3
+    assert bdf.iloc[3]['w'] == 4.3
+
+    # Worker 2
+    assert bdf.iloc[4]['i'] == 2
+    assert bdf.iloc[4]['j'] == 2
+    assert bdf.iloc[4]['y'] == (1 * 1 + 2 * 1.5) / (1 + 2)
+    assert bdf.iloc[4]['t1'] == 1
+    assert bdf.iloc[4]['t2'] == 2
+    assert bdf.iloc[4]['w'] == 3
+
+    assert bdf.iloc[5]['i'] == 2
+    assert bdf.iloc[5]['j'] == 3
+    assert bdf.iloc[5]['y'] == 1.5
+    assert bdf.iloc[5]['t1'] == 3
+    assert bdf.iloc[5]['t2'] == 3
+    assert bdf.iloc[5]['w'] == 1
+
+def test_weighted_collapse_2():
+    # Test that collapsing computed weighted variance properly.
+    worker_data = []
+    # Worker 0
+    worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1, 'w': 1})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1., 't': 2, 'w': 2})
+    worker_data.append({'i': 0, 'j': 1, 'y': 1.5, 't': 3, 'w': 3})
+    worker_data.append({'i': 0, 'j': 0, 'y': 1., 't': 4, 'w': 1})
+    # Worker 1
+    worker_data.append({'i': 1, 'j': 1, 'y': 1., 't': 1, 'w': 1})
+    worker_data.append({'i': 1, 'j': 2, 'y': 1., 't': 2, 'w': 1.8})
+    worker_data.append({'i': 1, 'j': 2, 'y': 2., 't': 3, 'w': 2.5})
+    worker_data.append({'i': 1, 'j': 5, 'y': 1., 't': 3, 'w': 1})
+    # Worker 2
+    worker_data.append({'i': 3, 'j': 2, 'y': 1., 't': 1, 'w': 1})
+    worker_data.append({'i': 3, 'j': 2, 'y': 1.5, 't': 2, 'w': 2})
+    worker_data.append({'i': 3, 'j': 3, 'y': 1.5, 't': 3, 'w': 1})
+
+    df = pd.concat([pd.DataFrame(worker, index=[i]) for i, worker in enumerate(worker_data)])
+
+    bdf = bpd.BipartiteLong(df)
+    bdf = bdf.clean()
+    bdf.col_collapse_dict['y'] = 'var'
+    bdf = bdf.collapse(level='spell')
+
+    # Worker 0
+    assert bdf.iloc[0]['y'] == 0
+    y_mean = (2 * 1 + 3 * 1.5) / (2 + 3)
+    assert bdf.iloc[1]['y'] == (2 * (1 - y_mean) ** 2 + 3 * (1.5 - y_mean) ** 2) / (2 + 3)
+    assert bdf.iloc[2]['y'] == 0
+
+    # Worker 1
+    assert bdf.iloc[3]['y'] == 0
+    y_mean = (1.8 * 1 + 2.5 * 2) / (1.8 + 2.5)
+    assert bdf.iloc[4]['y'] == (1.8 * (1 - y_mean) ** 2 + 2.5 * (2 - y_mean) ** 2) / (1.8 + 2.5)
+
+    # Worker 2
+    y_mean = (1 * 1 + 2 * 1.5) / (1 + 2)
+    assert bdf.iloc[5]['y'] == (1 * (1 - y_mean) ** 2 + 2 * (1.5 - y_mean) ** 2) / (1 + 2)
+    assert bdf.iloc[6]['y'] == 0

@@ -913,6 +913,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             frame = self
 
         if not frame._col_included('t'):
+            # Generate m column
+            frame = frame.gen_m(copy=False)
             # Values for t columns
             if time_per_worker:
                 # Reset time for each worker

@@ -1120,6 +1120,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame = self
 
         if not frame._col_included('t'):
+            ## Values for t columns ##
             if time_per_worker:
                 # Reset time for each worker
                 t = frame.groupby('i', sort=(not is_sorted)).cumcount()

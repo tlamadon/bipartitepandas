@@ -197,15 +197,59 @@ class BipartiteLong(bpd.BipartiteLongBase):
             # Assign data_spell
             data_spell = frame
         else:
-            ### If recollapse necessary ###
-            ## Aggregate at the spell level ##
-            spells = frame.groupby(group_ids, sort=False)
-
+            ### If collapse necessary ###
             # Dictionary linking columns to how they should be aggregated
             agg_funcs = {}
 
             # Keep track of user-added columns
             user_added_cols = {}
+
+            ## Correctly weight ##
+            # If weight column exists
+            weighted = frame._col_included('w')
+
+            if weighted:
+                ## Initial preparation if weighted ##
+                any_var = False
+                w = frame.loc[:, 'w'].to_numpy()
+                # Keep track of new, weighted columns
+                weighted_cols = []
+                for col in frame._included_cols():
+                    if (col == 't') or (frame.col_collapse_dict[col] is None):
+                        # If time, skip this column; if None, drop this column
+                        pass
+                    else:
+                        # If not time column
+                        aggfunc = frame.col_collapse_dict[col]
+                        if aggfunc in ['mean', 'var', 'std']:
+                            # If column can be weighted, weight it
+                            for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                                frame.loc[:, subcol + '_weighted'] = w * frame.loc[:, subcol].to_numpy()
+                                weighted_cols.append(subcol + '_weighted')
+                            if aggfunc in ['var', 'std']:
+                                any_var = True
+
+            ## Aggregate at the spell level ##
+            spells = frame.groupby(group_ids, sort=not ((level == 'match') and (not frame.no_returns)))
+
+            if weighted and any_var:
+                ## Variance computation if weighted ##
+                w_sum = spells['w'].transform('sum').to_numpy()
+                for col in frame._included_cols():
+                    if (col == 't') or (frame.col_collapse_dict[col] is None):
+                        # If time, skip this column; if None, drop this column
+                        pass
+                    else:
+                        # If not time column
+                        aggfunc = frame.col_collapse_dict[col]
+                        if aggfunc in ['var', 'std']:
+                            # If computing weighted variance
+                            for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                                subcol_mean = spells[subcol + '_weighted'].transform('sum').to_numpy() / w_sum
+                                frame.loc[:, subcol + '_weighted'] = w * ((frame.loc[:, subcol].to_numpy() - subcol_mean) ** 2)
+
+                ## Re-aggregate at the spell level ##
+                spells = frame.groupby(group_ids, sort=not ((level == 'match') and (not frame.no_returns)))
 
             # First, prepare non-time columns for aggregation
             default_cols = frame.columns_req + frame.columns_opt
@@ -215,10 +259,15 @@ class BipartiteLong(bpd.BipartiteLongBase):
                     pass
                 else:
                     # If not time column
-                    for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                        if frame.col_collapse_dict[col] is not None:
-                            # If column should be collapsed
-                            agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=frame.col_collapse_dict[col])
+                    aggfunc = frame.col_collapse_dict[col]
+                    if weighted and (aggfunc in ['mean', 'var', 'std']):
+                        # If column should be weighted
+                        for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                            agg_funcs[subcol] = pd.NamedAgg(column=subcol + '_weighted', aggfunc='sum')
+                    else:
+                        # Unweighted column
+                        for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                            agg_funcs[subcol] = pd.NamedAgg(column=subcol, aggfunc=aggfunc)
                     if col not in default_cols:
                         # User-added columns
                         user_added_cols[col] = frame.col_reference_dict[col]
@@ -229,11 +278,31 @@ class BipartiteLong(bpd.BipartiteLongBase):
                 agg_funcs['t2'] = pd.NamedAgg(column='t', aggfunc='max')
 
             # Next, prepare the weight column for aggregation
-            if 'w' not in agg_funcs.keys():
+            if not weighted:
                 agg_funcs['w'] = pd.NamedAgg(column='i', aggfunc='size')
 
-            # Finally, aggregate
+            # Aggregate columns
             data_spell = spells.agg(**agg_funcs)
+
+            # Finally, normalize weighted columns
+            if weighted:
+                w_sum = data_spell.loc[:, 'w'].to_numpy()
+                for col in frame._included_cols():
+                    if (col == 't') or (frame.col_collapse_dict[col] is None):
+                        # If time, skip this column; if None, drop this column
+                        pass
+                    else:
+                        # If not time column
+                        aggfunc = frame.col_collapse_dict[col]
+                        if aggfunc in ['mean', 'var', 'std']:
+                            # If column should be normalized
+                            for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                                data_spell.loc[:, subcol] /= w_sum
+                                if aggfunc == 'std':
+                                    # Take square root of variance
+                                    data_spell.loc[:, subcol] = np.sqrt(data_spell.loc[:, subcol].to_numpy())
+                # Drop added columns
+                frame = frame.drop(weighted_cols, axis=1, inplace=True)
 
             # Sort columns
             sorted_cols = bpd.util._sort_cols(data_spell.columns)
@@ -247,6 +316,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
         for col, col_collapse in frame.col_collapse_dict.items():
             # Remove dropped columns from attribute dictionaries
+            # NOTE: this must iterate over frame's dictionary, not collapsed_frame's dictionary, otherwise it raises an error
             if col_collapse is None:
                 # If column should be dropped during collapse
                 del collapsed_frame.col_dtype_dict[col]
@@ -260,11 +330,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
                         del collapsed_frame.id_reference_dict[col]
 
         if not ((len(frame) < 2) or (group_ids[-1] == len(frame))):
-            # If data actually collapsed, m can change from long to collapsed long
+            # If data actually collapsed, m can change from collapsing
             collapsed_frame = collapsed_frame.gen_m(force=True, copy=False)
 
         # If no time column, or level == 'match', then returns will be collapsed
-        if not collapsed_frame._col_included('t') or level == 'match':
+        if not collapsed_frame._col_included('t') or (level == 'match'):
             collapsed_frame.no_returns = True
 
         return collapsed_frame
