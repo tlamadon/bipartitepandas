@@ -412,7 +412,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             (NumPy Array): indices of articulation observations
         '''
         # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source for manual method: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
-        bridges = [a for a in G.biconnected_components() if len(a) == 2] # [G.es[edge].tuple for edge in G.bridges()]
+        # NOTE: use built-in for single observations, manual for spells/matches
+        bridges = [G.es[bridge].tuple for bridge in G.bridges()] # [a for a in G.biconnected_components() if len(a) == 2]
         bridges_workers = set([bridge[1] - (max_j + 1) for bridge in bridges])
         bridges_firms = set([bridge[0] for bridge in bridges])
 

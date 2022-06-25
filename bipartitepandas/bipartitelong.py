@@ -399,7 +399,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
             raise NotImplementedError('._get_articulation_observations() requires `is_sorted` == True, but it is set to False.')
 
         # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source for manual method: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
-        bridges = [a for a in G.biconnected_components() if len(a) == 2] # [G.es[edge].tuple for edge in G.bridges()]
+        # NOTE: use built-in for single observations, manual for spells/matches
+        bridges = [G.es[bridge].tuple for bridge in G.bridges()] # [a for a in G.biconnected_components() if len(a) == 2]
         bridges_workers = set([bridge[1] - (max_j + 1) for bridge in bridges])
         bridges_firms = set([bridge[0] for bridge in bridges])
 
@@ -432,7 +433,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
         # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source for manual method: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
-        bridges = [a for a in G.biconnected_components() if len(a) == 2] # [G.es[edge].tuple for edge in G.bridges()]
+        # NOTE: use built-in for single observations, manual for spells/matches
+        bridges = [a for a in G.biconnected_components() if len(a) == 2] # [G.es[bridge].tuple for bridge in G.bridges()]
         bridges_workers = set([bridge[1] - (max_j + 1) for bridge in bridges])
         bridges_firms = set([bridge[0] for bridge in bridges])
 
