@@ -915,7 +915,8 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         if not frame._col_included('t'):
             # Generate m column
             frame = frame.gen_m(copy=False)
-            # Values for t columns
+
+            ## Values for t columns ##
             if time_per_worker:
                 # Reset time for each worker
                 t1 = frame.groupby('i', sort=(not is_sorted)).cumcount()

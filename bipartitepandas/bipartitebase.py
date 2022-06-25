@@ -46,9 +46,9 @@ def _recollapse_loop(force=False):
 
 # Define default parameter dictionaries
 _clean_params_default = bpd.util.ParamsDict({
-    'connectedness': (None, 'set', ['connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', 'leave_out_firm', None],
+    'connectedness': (None, 'set', ['connected', 'strongly_connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', 'leave_out_firm', None],
         '''
-            (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
+            (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'strongly_connected', keep observations in the largest strongly connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
         ''', None),
     'collapse_at_connectedness_measure': (False, 'type', bool,
         '''
@@ -376,7 +376,8 @@ class BipartiteBase(DataFrame):
         ##### Connectedness #####
         is_connected_dict = {
             None: lambda : None,
-            'connected': lambda : self._construct_graph(self.connectedness)[0].is_connected(),
+            'connected': lambda : self._construct_graph(self.connectedness)[0].is_connected(mode='weak'),
+            'strongly_connected': lambda : self._construct_graph(self.connectedness)[0].is_connected(mode='strong'),
             'leave_out_observation': lambda: (len(self) == len(self._connected_components(connectedness=self.connectedness))),
             'leave_out_spell': lambda: (len(self) == len(self._connected_components(connectedness=self.connectedness))),
             'leave_out_match': lambda: (len(self) == len(self._connected_components(connectedness=self.connectedness))),
@@ -756,7 +757,7 @@ class BipartiteBase(DataFrame):
         # # Logger
         # self.logger = frame.logger
         ## Booleans
-        # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_out_observation', observations are in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', observations are in the largest leave-one-match-out connected set; if 'leave_out_worker', observations are in the largest leave-one-worker-out connected set; if 'leave_out_firm', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
+        # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'strongly_connected', keep observations in the largest strongly connected set of firms; if 'leave_out_observation', observations are in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', observations are in the largest leave-one-match-out connected set; if 'leave_out_worker', observations are in the largest leave-one-worker-out connected set; if 'leave_out_firm', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
         self.connectedness = frame.connectedness
         # If True, no NaN observations in the data
         self.no_na = frame.no_na
@@ -789,7 +790,7 @@ class BipartiteBase(DataFrame):
                 else:
                     self.columns_contig[cat_col] = None
         if connected:
-            # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'leave_out_observation', observations are in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', observations are in the largest leave-one-match-out connected set; if 'leave_out_worker', observations are in the largest leave-one-worker-out connected set; if 'leave_out_firm', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
+            # If False, not connected; if 'connected', all observations are in the largest connected set of firms; if 'strongly_connected', keep observations in the largest strongly connected set of firms; if 'leave_out_observation', observations are in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', observations are in the largest leave-one-match-out connected set; if 'leave_out_worker', observations are in the largest leave-one-worker-out connected set; if 'leave_out_firm', observations are in the largest leave-one-firm-out connected set; if None, connectedness ignored
             self.connectedness = None
         if no_na:
             # If True, no NaN observations in the data
@@ -1204,7 +1205,7 @@ class BipartiteBase(DataFrame):
         Update data to include only the largest component connected by movers.
 
         Arguments:
-            connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
+            connectedness (str or None): if 'connected', keep observations in the largest connected set of firms; if 'strongly_connected', keep observations in the largest strongly connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             component_size_variable (str): how to determine largest connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_single_stayers (bool): if True, drop stayers who have <= 1 observation weight (check number of observations if data is unweighted)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
@@ -1234,9 +1235,13 @@ class BipartiteBase(DataFrame):
         # Find largest connected set of firms
         # First, create graph
         G, max_j = frame._construct_graph(connectedness, is_sorted=is_sorted, copy=False)
-        if connectedness == 'connected':
+        if connectedness in ['connected', 'strongly_connected']:
             # Compute all connected components of firms (each entry is a connected component)
-            cc_list = sorted(G.components(), reverse=True, key=len)
+            components_mode_dict = {
+                'connected': 'weak',
+                'strongly_connected': 'strong'
+            }
+            cc_list = sorted(G.components(mode=components_mode_dict[connectedness]), reverse=True, key=len)
             # Iterate over connected components to find the largest
             largest_cc = cc_list[0]
             frame_largest_cc = frame.keep_ids('j', largest_cc, is_sorted=is_sorted, copy=False)
@@ -1255,13 +1260,13 @@ class BipartiteBase(DataFrame):
                 pass
         elif connectedness in ['leave_out_observation', 'leave_out_spell', 'leave_out_match']:
             # Compute all connected components of firms (each entry is a connected component)
-            cc_list = G.components()
+            cc_list = G.components(mode='weak')
             # Keep largest leave-one-(observation/spell/match)-out component
             leave_out_group = connectedness.split('_')[-1]
             frame = frame._leave_out_observation_spell_match(cc_list=cc_list, max_j=max_j, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
         elif connectedness == 'leave_out_worker':
             # Compute all connected components of firms (each entry is a connected component)
-            cc_list = G.components()
+            cc_list = G.components(mode='weak')
             # Keep largest leave-one-worker-out set of firms
             frame = frame._leave_out_worker(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
         elif connectedness == 'leave_out_firm':
@@ -1284,7 +1289,7 @@ class BipartiteBase(DataFrame):
             except AttributeError:
                 pass
         else:
-            raise NotImplementedError(f"Connectedness measure {connectedness!r} is invalid: it must be one of None, 'connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', or 'leave_out_firm'.")
+            raise NotImplementedError(f"Connectedness measure {connectedness!r} is invalid: it must be one of None, 'connected', 'strongly_connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', or 'leave_out_firm'.")
 
         if drop_single_stayers:
             # Drop stayers who have <= 1 observation weight
@@ -1313,7 +1318,7 @@ class BipartiteBase(DataFrame):
         Construct igraph graph linking firms by movers.
 
         Arguments:
-            connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
+            connectedness (str): if 'connected', keep observations in the largest connected set of firms; if 'strongly_connected', keep observations in the largest strongly connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations
             is_sorted (bool): If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
@@ -1324,15 +1329,26 @@ class BipartiteBase(DataFrame):
         self.log(f'constructing {connectedness!r} graph', level='info')
         linkages_fn_dict = {
             'connected': self._construct_firm_linkages,
+            'strongly_connected': self._construct_firm_linkages,
             'leave_out_observation': self._construct_firm_worker_linkages,
             'leave_out_spell': self._construct_firm_worker_linkages,
             'leave_out_match': self._construct_firm_worker_linkages,
             'leave_out_worker': self._construct_firm_worker_linkages,
             'leave_out_firm': self._construct_firm_double_linkages
         }
+        directed_dict = {
+            'connected': False,
+            'strongly_connected': True,
+            'leave_out_observation': False,
+            'leave_out_spell': False,
+            'leave_out_match': False,
+            'leave_out_worker': False,
+            'leave_out_firm': False
+
+        }
         linkages, max_j = linkages_fn_dict[connectedness](is_sorted=is_sorted, copy=copy)
         # n_firms = self.loc[(self.loc[:, 'm'] > 0).to_numpy(), :].n_firms()
-        return Graph(edges=linkages), max_j # n=n_firms
+        return Graph(edges=linkages, directed=directed_dict[connectedness]), max_j # n=n_firms
 
     def sort_cols(self, copy=True):
         '''

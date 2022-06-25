@@ -456,7 +456,7 @@ def test_connectedness_8():
     assert len(bad_df) == len(bad_df2) > 0
 
 def test_connectedness_9():
-    # Construct data that has different connected, leave-one-observation-out, leave-one-spell-out, leave-one-match-out, and leave-one-work-out connected components, and make sure each method is working properly.
+    # Construct data that has different connected, strongly connected, leave-one-observation-out, leave-one-spell-out, leave-one-match-out, and leave-one-work-out connected components, and make sure each method is working properly.
     worker_data = []
     ## Group 1 is firms 0 to 2 ##
     # Worker 0
@@ -515,6 +515,11 @@ def test_connectedness_9():
     bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'connected'}))
     assert bdf.n_firms() == 12
     assert bdf.n_workers() == 8
+
+    # Strongly-connected
+    bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'strongly_connected'}))
+    assert bdf.n_firms() == 4
+    assert bdf.n_workers() == 5
 
     # Leave-out-observation
     bdf = bpd.BipartiteLong(df).clean(bpd.clean_params({'connectedness': 'leave_out_observation'}))
@@ -658,7 +663,6 @@ def test_connectedness_collapsed():
     los_auto = bdf.clean(bpd.clean_params({'connectedness': 'leave_out_spell', 'collapse_at_connectedness_measure': True, 'verbose': False}))
     # leave-out-match
     lom_auto = bdf.clean(bpd.clean_params({'connectedness': 'leave_out_match', 'collapse_at_connectedness_measure': True, 'verbose': False}))
-
 
     ## Within group comparisons ##
     assert len(loo_s) > len(los_s) > len(lom_s)

@@ -411,10 +411,10 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         Returns:
             (NumPy Array): indices of articulation observations
         '''
-        # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
-        bridges = [tuple(sorted(a, reverse=True)) for a in G.biconnected_components() if len(a) == 2]
-        bridges_workers = set([bridge[0] - (max_j + 1) for bridge in bridges])
-        bridges_firms = set([bridge[1] for bridge in bridges])
+        # Find bridges (recall i is adjusted to be greater than j, which is why we reverse the order) (source for manual method: https://igraph.discourse.group/t/function-to-find-edges-which-are-bridges-in-r-igraph/154/2)
+        bridges = [a for a in G.biconnected_components() if len(a) == 2] # [G.es[edge].tuple for edge in G.bridges()]
+        bridges_workers = set([bridge[1] - (max_j + 1) for bridge in bridges])
+        bridges_firms = set([bridge[0] for bridge in bridges])
 
         # Get possible articulation observations
         # possible_articulation_obs = self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
