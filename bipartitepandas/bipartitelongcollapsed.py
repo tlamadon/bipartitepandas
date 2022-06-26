@@ -417,21 +417,24 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         bridges_workers = set([bridge[1] - (max_j + 1) for bridge in bridges])
         bridges_firms = set([bridge[0] for bridge in bridges])
 
-        # Get possible articulation observations
-        # possible_articulation_obs = self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
-        possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
+        # Find articulation observations (source for alternative: https://stackoverflow.com/a/55893561/17333120)
+        articulation_rows = self.index[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms)].to_numpy() # self.index[self.set_index(['i', 'j']).index.isin(bridges)].to_numpy()
 
-        # Find articulation observations - an observation is an articulation observation if the firm-worker pair has only a single observation
-        if self.no_returns:
-            # If no returns, every row is guaranteed to be an articulation observation
-            articulation_rows = possible_articulation_obs.index.to_numpy()
-        else:
-            # If returns, then returns will have multiple worker-firm pairs, meaning they are not articulation observations
-            articulation_rows = possible_articulation_obs.index.to_numpy()[possible_articulation_obs.groupby(['i', 'j'], sort=True)['m'].transform('size').to_numpy() == 1]
+        # # Get possible articulation observations
+        # # possible_articulation_obs = self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), ['i', 'j', 'm']] # FIXME this doesn't work
+        # possible_articulation_obs = self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), ['i', 'j', 'm']]
+
+        # # Find articulation observations - an observation is an articulation observation if the firm-worker pair has only a single observation
+        # if self.no_returns:
+        #     # If no returns, every row is guaranteed to be an articulation observation
+        #     articulation_rows = possible_articulation_obs.index.to_numpy()
+        # else:
+        #     # If returns, then returns will have multiple worker-firm pairs, meaning they are not articulation observations
+        #     articulation_rows = possible_articulation_obs.index.to_numpy()[possible_articulation_obs.groupby(['i', 'j'], sort=True)['m'].transform('size').to_numpy() == 1]
 
         return articulation_rows
 
-    def _get_articulation_spells(self, G, max_j, is_sorted=False, copy=True):
+    def _get_articulation_spells(self, G, max_j, is_sorted=False):
         '''
         Compute articulation spells for self, by checking whether self is leave-one-spell-out connected when dropping selected spells one at a time.
 
@@ -439,7 +442,6 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             G (igraph Graph): graph linking firms by movers
             max_j (int): maximum j
             is_sorted (bool): not used for collapsed long format
-            copy (bool): not used for collapsed long format
 
         Returns:
             (NumPy Array): indices of articulation spells
