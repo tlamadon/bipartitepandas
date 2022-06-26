@@ -190,8 +190,9 @@ class BipartiteLong(bpd.BipartiteLongBase):
 
             # Update time column
             if frame._col_included('t'):
-                frame.loc[:, 't1'] = frame.loc[:, 't']
-                frame.loc[:, 't2'] = frame.loc[:, 't']
+                with bpd.util.ChainedAssignment():
+                    frame.loc[:, 't1'] = frame.loc[:, 't']
+                    frame.loc[:, 't2'] = frame.loc[:, 't']
                 frame.drop('t', axis=1, inplace=True, allow_optional=True)
 
             # Assign data_spell
@@ -224,7 +225,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
                         if aggfunc in ['mean', 'var', 'std']:
                             # If column can be weighted, weight it
                             for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                                frame.loc[:, subcol + '_weighted'] = w * frame.loc[:, subcol].to_numpy()
+                                with bpd.util.ChainedAssignment():
+                                    frame.loc[:, subcol + '_weighted'] = w * frame.loc[:, subcol].to_numpy()
                                 weighted_cols.append(subcol + '_weighted')
                             if aggfunc in ['var', 'std']:
                                 any_var = True
@@ -246,7 +248,8 @@ class BipartiteLong(bpd.BipartiteLongBase):
                             # If computing weighted variance
                             for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                                 subcol_mean = spells[subcol + '_weighted'].transform('sum').to_numpy() / w_sum
-                                frame.loc[:, subcol + '_weighted'] = w * ((frame.loc[:, subcol].to_numpy() - subcol_mean) ** 2)
+                                with bpd.util.ChainedAssignment():
+                                    frame.loc[:, subcol + '_weighted'] = w * ((frame.loc[:, subcol].to_numpy() - subcol_mean) ** 2)
 
                 ## Re-aggregate at the spell level ##
                 spells = frame.groupby(group_ids, sort=not ((level == 'match') and (not frame.no_returns)))
@@ -300,9 +303,11 @@ class BipartiteLong(bpd.BipartiteLongBase):
                                 data_spell.loc[:, subcol] /= w_sum
                                 if aggfunc == 'std':
                                     # Take square root of variance
-                                    data_spell.loc[:, subcol] = np.sqrt(data_spell.loc[:, subcol].to_numpy())
-                # Drop added columns
-                frame = frame.drop(weighted_cols, axis=1, inplace=True)
+                                    with bpd.util.ChainedAssignment():
+                                        data_spell.loc[:, subcol] = np.sqrt(data_spell.loc[:, subcol].to_numpy())
+                with bpd.util.ChainedAssignment():
+                    # Drop added columns
+                    frame = frame.drop(weighted_cols, axis=1, inplace=True)
 
             # Sort columns
             sorted_cols = bpd.util._sort_cols(data_spell.columns)

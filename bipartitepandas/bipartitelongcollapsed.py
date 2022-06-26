@@ -129,7 +129,8 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                         if aggfunc == 'mean':
                             # If column can be weighted, weight it
                             for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                                frame.loc[:, subcol + '_weighted'] = w * frame.loc[:, subcol].to_numpy()
+                                with bpd.util.ChainedAssignment():
+                                    frame.loc[:, subcol + '_weighted'] = w * frame.loc[:, subcol].to_numpy()
                                 weighted_cols.append(subcol + '_weighted')
                         elif aggfunc in ['var', 'std']:
                             # Variance and standard deviation can't be computed
@@ -191,8 +192,9 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                             # If column should be normalized
                             for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                                 data_spell.loc[:, subcol] /= w_sum
-                # Drop added columns
-                frame = frame.drop(weighted_cols, axis=1, inplace=True)
+                with bpd.util.ChainedAssignment():
+                    # Drop added columns
+                    frame = frame.drop(weighted_cols, axis=1, inplace=True)
 
         # Sort columns
         sorted_cols = bpd.util._sort_cols(data_spell.columns)
