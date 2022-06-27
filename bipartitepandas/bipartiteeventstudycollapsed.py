@@ -9,7 +9,7 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
 
     Arguments:
         *args: arguments for BipartiteEventStudyBase
-        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}; None is equivalent to {}
+        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}; None is equivalent to {}
         col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
         **kwargs: keyword arguments for BipartiteEventStudyBase
     '''

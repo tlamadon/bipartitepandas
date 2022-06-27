@@ -12,7 +12,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     Arguments:
         *args: arguments for BipartiteBase
-        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'wid': 'wid', 'j': ['j1', 'j2']}; None is equivalent to {}
+        col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}; None is equivalent to {}
         **kwargs: keyword arguments for BipartiteBase
     '''
 
