@@ -1,7 +1,7 @@
 '''
 Class for a bipartite network in collapsed long format.
 '''
-from numpy import array, append, arange, nan
+import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -135,7 +135,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                         elif aggfunc in ['var', 'std']:
                             # Variance and standard deviation can't be computed
                             for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                                frame.loc[:, subcol + '_weighted'] = nan
+                                frame.loc[:, subcol + '_weighted'] = np.nan
                                 weighted_cols.append(subcol + '_weighted')
 
             ## Aggregate at the spell level ##
@@ -337,23 +337,28 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return long_frame
 
-    def to_permutedeventstudy(self, move_to_worker=False, is_sorted=False, copy=True):
+    def to_permutedeventstudy(self, order='sequential', move_to_worker=False, is_sorted=False, copy=True, rng=None):
         '''
         Return collapsed long form data reformatted into collapsed permuted event study data. In this method, permuting the data means combining each set of two observations drawn from a single worker into an event study observation (e.g. if a worker works at firms A, B, and C, this will create data with rows A-B; B-C; and A-C).
 
         Arguments:
+            order (str): if 'sequential', each observation will be in sequential order; if 'income', order will be set based on the average income of the worker
             move_to_worker (bool): if True, each move is treated as a new worker
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
+            rng (np.random.Generator or None): NumPy random number generator; None is equivalent to np.random.default_rng(None)
 
         Returns:
             (Pandas DataFrame): permuted collapsed event study dataframe
         '''
-        if not self._col_included('t'):
-            raise NotImplementedError("Cannot convert from long to event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
+        if rng is None:
+            rng = np.random.default_rng(None)
 
         if not self.no_returns:
             raise ValueError("Cannot run method .to_permutedeventstudy() if there are returns in the data. When cleaning your data, please set the parameter 'drop_returns' to drop returns.")
+
+        if order not in ['sequential', 'income']:
+            raise ValueError(f"`order` must be either 'sequential' or 'income', but input specifies {order!r}.")
 
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
@@ -365,11 +370,23 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         frame.log('workers split by movers and stayers', level='info')
 
         ## Figure out new indices for permutations ##
+        if order == 'income':
+            # Sort workers by average income
+            with bpd.util.ChainedAssignment():
+                if frame._col_included('w'):
+                    movers.loc[:, 'weighted_y'] = movers.loc[:, 'w'].to_numpy() * movers.loc[:, 'y'].to_numpy()
+                    movers['mean_y'] = movers.groupby('i')['weighted_y'].transform('sum') / movers.groupby('i')['w'].transform('sum')
+                    movers.drop('weighted_y', axis=1, inplace=True)
+                else:
+                    movers['mean_y'] = movers.groupby('i')['y'].transform('mean')
+                movers.sort_values('mean_y', inplace=True)
+                movers.drop('mean_y', axis=1, inplace=True)
+
         # Initial data construction
         j = movers.loc[:, 'j'].to_numpy()
-        idx = arange(len(movers))
-        idx_1 = array([], dtype=int)
-        idx_2 = array([], dtype=int)
+        idx = np.arange(len(movers))
+        idx_1 = np.array([], dtype=int)
+        idx_2 = np.array([], dtype=int)
 
         # Construct graph
         G, _ = frame._construct_graph(connectedness='leave_out_observation', is_sorted=True, copy=False)
@@ -406,14 +423,22 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
                     idx_j11 = idx_j12[j_j12 == j1]
                     idx_j22 = idx_j12[j_j12 == j2]
                     # Split observations into entering/exiting groups
-                    j_j12_first = j_j12[arange(len(j_j12)) % 2 == 0]
-                    entering = (j_j12_first == j2)
-                    exiting = (j_j12_first == j1)
+                    if order == 'sequential':
+                        j_j12_first = j_j12[np.arange(len(j_j12)) % 2 == 0]
+                        entering = (j_j12_first == j2)
+                        exiting = (j_j12_first == j1)
+                    elif order == 'income':
+                        if len(idx_j11) % 2 == 0:
+                            halfway = len(idx_j11) // 2
+                        else:
+                            halfway = len(idx_j11) // 2 + rng.binomial(n=1, p=0.5)
+                        entering = (np.arange(len(idx_j11)) < halfway)
+                        exiting = (np.arange(len(idx_j11)) >= halfway)
                     # Append new indices
-                    idx_1 = append(idx_1, idx_j11[exiting])
-                    idx_1 = append(idx_1, idx_j22[entering])
-                    idx_2 = append(idx_2, idx_j22[exiting])
-                    idx_2 = append(idx_2, idx_j11[entering])
+                    idx_1 = np.append(idx_1, idx_j11[exiting])
+                    idx_1 = np.append(idx_1, idx_j22[entering])
+                    idx_2 = np.append(idx_2, idx_j22[exiting])
+                    idx_2 = np.append(idx_2, idx_j11[entering])
 
         ## Add lagged values ##
         movers_permuted = pd.DataFrame()
@@ -540,7 +565,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             # If no returns, then each observation is guaranteed to be a new spell
             self.log('preparing to compute spell ids', level='info')
 
-            spell_ids = arange(len(self))
+            spell_ids = np.arange(len(self))
             self.log('spell ids generated', level='info')
 
             return spell_ids
