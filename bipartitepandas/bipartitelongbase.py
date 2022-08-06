@@ -922,48 +922,54 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return frame
 
-    def min_obs_firms(self, threshold=2, is_sorted=False, copy=True):
+    def min_obs_ids(self, threshold=2, id_col='j', is_sorted=False, copy=True):
         '''
-        List firms with at least `threshold` many observations.
+        List column ids with at least `threshold` many observations.
 
         Arguments:
-            threshold (int): minimum number of observations required to keep a firm
+            threshold (int): minimum number of observations required to keep an id
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
             is_sorted (bool): not used for long format
             copy (bool): not used for long format
 
         Returns:
-            (NumPy Array): firms with sufficiently many observations
+            (NumPy Array): ids with sufficiently many observations
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
-            return self.unique_ids('j')
+            return self.unique_ids(id_col)
 
-        n_obs = self.loc[:, 'j'].value_counts(sort=False)
-        valid_firms = n_obs[n_obs.to_numpy() >= threshold].index.to_numpy()
+        n_obs = self.loc[:, id_col].value_counts(sort=False)
+        valid_ids = n_obs[n_obs.to_numpy() >= threshold].index.to_numpy()
 
-        return valid_firms
+        return valid_ids
 
     @bpd.bipartitebase._recollapse_loop(False)
-    def min_obs_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, copy=True):
+    def min_obs_frame(self, threshold=2, id_col='j', drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
-        Return dataframe of firms with at least `threshold` many observations.
+        Return dataframe of column ids with at least `threshold` many observations.
 
         Arguments:
-            threshold (int): minimum number of observations required to keep a firm
+            threshold (int): minimum number of observations required to keep an id
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe may be sorted by i (and t, if included) if data is collapsed long format. Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            (BipartiteLongBase): dataframe of firms with sufficiently many observations
+            (BipartiteLongBase): dataframe of ids with sufficiently many observations
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
             if copy:
                 return self.copy()
             return self
 
-        frame = self.loc[self.groupby('j')['i'].transform('size').to_numpy() >= threshold, :]
+        c2 = 'i'
+        if id_col == 'i':
+            c2 = 'j'
+
+        frame = self.loc[self.groupby(id_col)[c2].transform('size').to_numpy() >= threshold, :]
 
         if isinstance(frame, bpd.BipartiteLongCollapsed):
             # If BipartiteLongCollapsed
@@ -975,6 +981,42 @@ class BipartiteLongBase(bpd.BipartiteBase):
         frame = frame.gen_m(force=True, copy=copy)
 
         frame.reset_index(drop=True, inplace=True)
+
+        return frame
+
+    @bpd.bipartitebase._recollapse_loop(True)
+    def min_joint_obs_frame(self, threshold_1=2, threshold_2=2, id_col_1='j', id_col_2='i', drop_returns_to_stays=False, is_sorted=False, copy=True):
+        '''
+        Return dataframe where column 1 ids have at least `threshold_1` many observations and column 2 ids have at least `threshold_2` many observations.
+
+        Arguments:
+            threshold_1 (int): minimum number of observations required to keep an id from column 1
+            threshold_2 (int): minimum number of observations required to keep an id from column 2
+            id_col_1 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            id_col_2 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): used for event study format. If False, avoid copy.
+
+        Returns:
+            (BipartiteLongBase): dataframe of ids with sufficiently many observations
+        '''
+        self.log(f'computing ids from {id_col_1!r} with a minimum of {threshold_1} observation(s) and ids from {id_col_2!r} with a minimum of {threshold_2} observations', level='info')
+
+        if (threshold_1 <= 1) and (threshold_2 <= 1):
+            # If no thresholds
+            if copy:
+                return self.copy()
+            else:
+                return self
+
+        if threshold_1 > 1:
+            # Column 1
+            frame = self.min_obs_frame(threshold=threshold_1, id_col=id_col_1, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=copy)
+
+        if threshold_2 > 1:
+            # Column 2
+            frame = frame.min_obs_frame(threshold=threshold_2, id_col=id_col_2, drop_returns_to_stays=drop_returns_to_stays, is_sorted=is_sorted, copy=False)
 
         return frame
 
@@ -990,7 +1032,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Returns:
             (NumPy Array): list of firms with sufficiently many workers
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
             return self.unique_ids('j')
 
@@ -1013,7 +1055,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         Returns:
             (BipartiteLongBase): dataframe of firms with sufficiently many workers
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
             if copy:
                 return self.copy()
@@ -1048,7 +1090,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             # If no threshold
             return self.unique_ids('j')
 
-        return self.loc[self.loc[:, 'm'].to_numpy() > 0].min_obs_firms(threshold=threshold)
+        return self.loc[self.loc[:, 'm'].to_numpy() > 0].min_obs_ids(id_col='j', threshold=threshold)
 
     @bpd.bipartitebase._recollapse_loop(True)
     def min_moves_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):

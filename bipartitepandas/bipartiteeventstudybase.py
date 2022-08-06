@@ -675,57 +675,77 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
-    def min_obs_firms(self, threshold=2, is_sorted=False, copy=True):
+    def min_obs_ids(self, threshold=2, id_col='j', is_sorted=False, copy=True):
         '''
-        List firms with at least `threshold` many observations.
+        List column ids with at least `threshold` many observations.
 
         Arguments:
-            threshold (int): minimum number of observations required to keep a firm
+            threshold (int): minimum number of observations required to keep an id
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            (NumPy Array): firms with sufficiently many observations
+            (NumPy Array): ids with sufficiently many observations
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
-            return self.unique_ids('j')
+            return self.unique_ids(id_col)
 
         # Sort and copy
         frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
 
-        # We consider j1 for all rows, but j2 only for unstack rows
-        j_obs = frame.loc[:, 'j1'].value_counts(sort=False).to_dict()
-        j2_obs = frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), 'j2'].value_counts(sort=False).to_dict()
-        for j, n_obs in j2_obs.items():
-            try:
-                # If firm j in j1, add the observations in j2
-                j_obs[j] += n_obs
-            except KeyError:
-                # If firm j not in j1, set observations to be j2
-                j_obs[j] = n_obs
+        if id_col in ['j', 'g']:
+            ## j and g ##
+            # We consider j1/g1 for all rows, but j2/g2 only for unstack rows
+            c1, c2 = frame.col_reference_dict[id_col]
+            jg_obs = frame.loc[:, c1].value_counts(sort=False).to_dict()
+            jg2_obs = frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), c2].value_counts(sort=False).to_dict()
+            for jg, n_obs in jg2_obs.items():
+                try:
+                    # If j/g in j1/g1, add the observations in j2/g2
+                    jg_obs[jg] += n_obs
+                except KeyError:
+                    # If j/g not in j1/g1, set observations to be j2/g2
+                    jg_obs[jg] = n_obs
 
-        valid_firms = []
-        for j, n_obs in j_obs.items():
-            if n_obs >= threshold:
-                valid_firms.append(j)
+            valid_ids = []
+            for jg, n_obs in jg_obs.items():
+                if n_obs >= threshold:
+                    valid_ids.append(jg)
+        elif id_col == 'i':
+            ## i ##
+            # We consider movers and stayers separately
+            worker_m = frame.get_worker_m(is_sorted=True)
+            # Movers + 1
+            jdata_obs = frame.loc[worker_m, 'i'].value_counts(sort=False)
+            jdata_ids = jdata_obs[jdata_obs + 1 >= threshold]
+            # Stayers
+            sdata_obs = frame.loc[~(worker_m), 'i'].value_counts(sort=False)
+            sdata_ids = sdata_obs[sdata_obs >= threshold]
+            # Combine
+            valid_ids = np.concatenate([jdata_ids, sdata_ids])
+        else:
+            ## For other columns, convert to long first ##
+            return frame.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_ids(threshold=threshold, id_col=id_col, is_sorted=True, copy=False)
 
-        return np.array(valid_firms)
+        return np.array(valid_ids)
 
-    def min_obs_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, copy=True):
+    def min_obs_frame(self, threshold=2, id_col='j', drop_returns_to_stays=False, is_sorted=False, copy=True):
         '''
-        Return dataframe of firms with at least `threshold` many observations.
+        Return dataframe of column ids with at least `threshold` many observations.
 
         Arguments:
-            threshold (int): minimum number of observations required to keep a firm
+            threshold (int): minimum number of observations required to keep an id
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
         Returns:
-            (BipartiteEventStudyBase): dataframe of firms with sufficiently many observations
+            (BipartiteEventStudyBase): dataframe of ids with sufficiently many observations
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
             if copy:
                 return self.copy()
@@ -735,7 +755,56 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
 
         # Compute min_obs_frame
-        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_eventstudy(is_sorted=True, copy=False)
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, id_col=id_col, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_eventstudy(is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def min_joint_obs_frame(self, threshold_1=2, threshold_2=2, id_col_1='j', id_col_2='i', drop_returns_to_stays=False, is_sorted=False, copy=True):
+        '''
+        Return dataframe where column 1 ids have at least `threshold_1` many observations and column 2 ids have at least `threshold_2` many observations.
+
+        Arguments:
+            threshold_1 (int): minimum number of observations required to keep an id from column 1
+            threshold_2 (int): minimum number of observations required to keep an id from column 2
+            id_col_1 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            id_col_2 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): used for event study format. If False, avoid copy.
+
+        Returns:
+            (BipartiteEventStudyBase): dataframe of ids with sufficiently many observations
+        '''
+        self.log(f'computing ids from {id_col_1!r} with a minimum of {threshold_1} observation(s) and ids from {id_col_2!r} with a minimum of {threshold_2} observations', level='info')
+
+        if (threshold_1 <= 1) and (threshold_2 <= 1):
+            # If no thresholds
+            if copy:
+                return self.copy()
+            else:
+                return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_joint_obs_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)
+        if (threshold_1 <= 1) or (threshold_2 <= 1):
+            # If one threshold doesn't apply, ignore it
+            if threshold_1 > 1:
+                threshold = threshold_1
+                id_col = id_col_1
+            else:
+                threshold = threshold_2
+                id_col = id_col_2
+            frame = frame.min_obs_frame(threshold=threshold, id_col=id_col, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
+        else:
+            frame = frame.min_joint_obs_frame(threshold_1=threshold_1, threshold_2=threshold_2, id_col_1=id_col_1, id_col_2=id_col_2, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
+        frame = frame.to_eventstudy(is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
         for col in no_split_cols:
@@ -755,7 +824,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             (NumPy Array): firms with sufficiently many workers
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
             return self.unique_ids('j')
 
@@ -793,7 +862,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         Returns:
             (BipartiteEventStudyBase): dataframe of firms with sufficiently many workers
         '''
-        if threshold == 0:
+        if threshold <= 1:
             # If no threshold
             if copy:
                 return self.copy()

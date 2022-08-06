@@ -1976,7 +1976,7 @@ def test_drop_returns_28_4():
     assert movers.iloc[5]['y'] == 2
     assert movers.iloc[5]['t'] == 2
 
-def test_min_obs_firms_28_1():
+def test_min_obs_ids_28_1():
     # List only firms that meet a minimum threshold of observations.
     # Using long/event study.
     df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
@@ -1988,18 +1988,18 @@ def test_min_obs_firms_28_1():
     frame = bdf.copy()
     n_moves = frame.groupby('j')['i'].size()
 
-    valid_firms = sorted(n_moves[n_moves >= threshold].index)
+    valid_firms = np.sort(n_moves[n_moves >= threshold].index)
 
     # Next, estimate the set of valid firms using the built-in function
-    valid_firms2 = sorted(bdf.min_obs_firms(threshold))
-    valid_firms3 = sorted(bdf.to_eventstudy().min_obs_firms(threshold))
+    valid_firms2 = np.sort(bdf.min_obs_ids(threshold=threshold, id_col='j'))
+    valid_firms3 = np.sort(bdf.to_eventstudy().min_obs_ids(threshold=threshold, id_col='j'))
 
     assert (0 < len(valid_firms) < df['j'].nunique())
     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3)
-    for i in range(len(valid_firms)):
-        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i]
+    assert np.all(valid_firms == valid_firms2)
+    assert np.all(valid_firms == valid_firms3)
 
-def test_min_obs_firms_28_2():
+def test_min_obs_ids_28_2():
     # List only firms that meet a minimum threshold of observations.
     # Using long collapsed/event study collapsed.
     df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
@@ -2011,16 +2011,16 @@ def test_min_obs_firms_28_2():
     frame = bdf.copy()
     n_moves = frame.groupby('j')['i'].size()
 
-    valid_firms = sorted(n_moves[n_moves >= threshold].index)
+    valid_firms = np.sort(n_moves[n_moves >= threshold].index)
 
     # Next, estimate the set of valid firms using the built-in function
-    valid_firms2 = sorted(bdf.min_obs_firms(threshold))
-    valid_firms3 = sorted(bdf.to_eventstudy().min_obs_firms(threshold))
+    valid_firms2 = np.sort(bdf.min_obs_ids(threshold=threshold, id_col='j'))
+    valid_firms3 = np.sort(bdf.to_eventstudy().min_obs_ids(threshold=threshold, id_col='j'))
 
     assert (0 < len(valid_firms) < df['j'].nunique())
     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3)
-    for i in range(len(valid_firms)):
-        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i]
+    assert np.all(valid_firms == valid_firms2)
+    assert np.all(valid_firms == valid_firms3)
 
 def test_min_obs_frame_29_1():
     # Keep only firms that meet a minimum threshold of observations.
@@ -2039,19 +2039,15 @@ def test_min_obs_frame_29_1():
     new_frame.reset_index(drop=True, inplace=True)
 
     # Next, estimate the new frame using the built-in function
-    new_frame2 = bdf.min_obs_frame(threshold)
-    new_frame3 = bdf.to_eventstudy().min_obs_frame(threshold).to_long()
+    new_frame2 = bdf.min_obs_frame(threshold=threshold, id_col='j')
+    new_frame3 = bdf.to_eventstudy().min_obs_frame(threshold=threshold, id_col='j').to_long()
 
     assert (0 < len(new_frame) < len(bdf))
     assert len(new_frame) == len(new_frame2) == len(new_frame3)
-    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
-    for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
+    for col in ['i', 'j', 'y', 't']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame2.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame3.loc[:, col].to_numpy())
 
 def test_min_obs_frame_29_2():
     # Keep only firms that meet a minimum threshold of observations.
@@ -2069,19 +2065,44 @@ def test_min_obs_frame_29_2():
     new_frame = frame.keep_ids('j', valid_firms)
 
     # Next, estimate the new frame using the built-in function
-    new_frame2 = bdf.min_obs_frame(threshold)
-    new_frame3 = bdf.to_eventstudy().min_obs_frame(threshold).to_long()
+    new_frame2 = bdf.min_obs_frame(threshold=threshold, id_col='j')
+    new_frame3 = bdf.to_eventstudy().min_obs_frame(threshold=threshold, id_col='j').to_long()
 
     assert (0 < len(new_frame) < len(bdf))
     assert len(new_frame) == len(new_frame2) == len(new_frame3)
-    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
-    for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col]
+    for col in ['i', 'j', 'y', 't1', 't2']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame2.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame3.loc[:, col].to_numpy())
+
+def test_min_joint_obs_frame_29_3():
+    # Keep only firms that meet a minimum threshold of observations and workers that meet a separate minimum threshold of observations.
+    # Using long/event study/long collapsed/event study collapsed.
+    df = bpd.SimBipartite(bpd.sim_params({'p_move': 0.05})).simulate(np.random.default_rng(1234))
+    bdf = bpd.BipartiteLong(df[['i', 'j', 'y', 't']]).clean(bpd.clean_params({'verbose': False}))
+
+    threshold_1 = 10
+    threshold_2 = 2
+
+    # Estimate the new frame using the built-in function
+    new_frame2 = bdf.min_joint_obs_frame(threshold_1, threshold_2)
+    new_frame3 = bdf.to_eventstudy().min_joint_obs_frame(threshold_1, threshold_2).to_long()
+    new_frame4 = bdf.collapse().min_joint_obs_frame(threshold_1, threshold_2)
+    new_frame5 = bdf.collapse().to_eventstudy().min_joint_obs_frame(threshold_1, threshold_2).to_long()
+
+    assert (0 < len(new_frame4) < len(new_frame2) <= len(bdf))
+    assert len(new_frame2) == len(new_frame3)
+    assert len(new_frame4) == len(new_frame5)
+    assert np.min(new_frame2.groupby('j').size()) >= threshold_1
+    assert np.min(new_frame2.groupby('i').size()) >= threshold_2
+    assert np.min(new_frame4.groupby('j').size()) >= threshold_1
+    assert np.min(new_frame4.groupby('i').size()) >= threshold_2
+    for col in ['i', 'j', 'y', 't']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame2.loc[:, col].to_numpy() == new_frame3.loc[:, col].to_numpy())
+    for col in ['i', 'j', 'y', 't1', 't2']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame4.loc[:, col].to_numpy() == new_frame5.loc[:, col].to_numpy())
 
 def test_min_workers_firms_30():
     # List only firms that meet a minimum threshold of workers.
@@ -2096,18 +2117,20 @@ def test_min_workers_firms_30():
     # Count workers
     n_workers = frame.groupby('j')['i'].nunique()
 
-    valid_firms = sorted(n_workers[n_workers >= threshold].index)
+    valid_firms = np.sort(n_workers[n_workers >= threshold].index)
 
     # Next, estimate the set of valid firms using the built-in function
-    valid_firms2 = sorted(bdf.min_workers_firms(threshold))
-    valid_firms3 = sorted(bdf.to_eventstudy().min_workers_firms(threshold))
-    valid_firms4 = sorted(bdf.collapse().min_workers_firms(threshold))
-    valid_firms5 = sorted(bdf.collapse().to_eventstudy().min_workers_firms(threshold))
+    valid_firms2 = np.sort(bdf.min_workers_firms(threshold))
+    valid_firms3 = np.sort(bdf.to_eventstudy().min_workers_firms(threshold))
+    valid_firms4 = np.sort(bdf.collapse().min_workers_firms(threshold))
+    valid_firms5 = np.sort(bdf.collapse().to_eventstudy().min_workers_firms(threshold))
 
     assert (0 < len(valid_firms) < df['j'].nunique())
     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3) == len(valid_firms4) == len(valid_firms5)
-    for i in range(len(valid_firms)):
-        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i] == valid_firms4[i] == valid_firms5[i]
+    assert np.all(valid_firms == valid_firms2)
+    assert np.all(valid_firms == valid_firms3)
+    assert np.all(valid_firms == valid_firms4)
+    assert np.all(valid_firms == valid_firms5)
 
 def test_min_workers_frame_31():
     # Keep only firms that meet a minimum threshold of workers.
@@ -2133,14 +2156,12 @@ def test_min_workers_frame_31():
 
     assert (0 < len(new_frame) < len(bdf))
     assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
-    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
-    for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+    for col in ['i', 'j', 'y', 't1', 't2']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame2.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame3.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame4.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame5.loc[:, col].to_numpy())
 
 def test_min_moves_firms_32_1():
     # List only firms that meet a minimum threshold of moves.
@@ -2155,16 +2176,16 @@ def test_min_moves_firms_32_1():
     frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
     n_moves = frame.groupby('j')['m'].sum()
 
-    valid_firms = sorted(n_moves[n_moves >= threshold].index)
+    valid_firms = np.sort(n_moves[n_moves >= threshold].index)
 
     # Next, estimate the set of valid firms using the built-in function
-    valid_firms2 = sorted(bdf.min_moves_firms(threshold))
-    valid_firms3 = sorted(bdf.to_eventstudy().min_moves_firms(threshold))
+    valid_firms2 = np.sort(bdf.min_moves_firms(threshold))
+    valid_firms3 = np.sort(bdf.to_eventstudy().min_moves_firms(threshold))
 
     assert (0 < len(valid_firms) < df['j'].nunique())
     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3)
-    for i in range(len(valid_firms)):
-        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i]
+    assert np.all(valid_firms == valid_firms2)
+    assert np.all(valid_firms == valid_firms3)
 
 def test_min_moves_firms_32_2():
     # List only firms that meet a minimum threshold of moves.
@@ -2179,16 +2200,16 @@ def test_min_moves_firms_32_2():
     frame.loc[frame.loc[:, 'm'] == 2, 'm'] = 1
     n_moves = frame.groupby('j')['m'].sum()
 
-    valid_firms = sorted(n_moves[n_moves >= threshold].index)
+    valid_firms = np.sort(n_moves[n_moves >= threshold].index)
 
     # Next, estimate the set of valid firms using the built-in function
-    valid_firms2 = sorted(bdf.min_moves_firms(threshold))
-    valid_firms3 = sorted(bdf.to_eventstudy().min_moves_firms(threshold))
+    valid_firms2 = np.sort(bdf.min_moves_firms(threshold))
+    valid_firms3 = np.sort(bdf.to_eventstudy().min_moves_firms(threshold))
 
     assert (0 < len(valid_firms) < df['j'].nunique())
     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3)
-    for i in range(len(valid_firms)):
-        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i]
+    assert np.all(valid_firms == valid_firms2)
+    assert np.all(valid_firms == valid_firms3)
 
 def test_min_moves_frame_33():
     # Keep only firms that meet a minimum threshold of moves.
@@ -2229,14 +2250,12 @@ def test_min_moves_frame_33():
     assert n_loops > 1
     assert (0 < len(new_frame) < len(bdf))
     assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
-    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
-    for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+    for col in ['i', 'j', 'y', 't1', 't2']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame2.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame3.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame4.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame5.loc[:, col].to_numpy())
 
 def test_min_movers_firms_34():
     # List only firms that meet a minimum threshold of movers.
@@ -2252,18 +2271,20 @@ def test_min_movers_firms_34():
     frame = frame[frame['m'] > 0]
     n_movers = frame.groupby('j')['i'].nunique()
 
-    valid_firms = sorted(n_movers[n_movers >= threshold].index)
+    valid_firms = np.sort(n_movers[n_movers >= threshold].index)
 
     # Next, estimate the set of valid firms using the built-in function
-    valid_firms2 = sorted(bdf.min_movers_firms(threshold))
-    valid_firms3 = sorted(bdf.to_eventstudy().min_movers_firms(threshold))
-    valid_firms4 = sorted(bdf.collapse().min_movers_firms(threshold))
-    valid_firms5 = sorted(bdf.collapse().to_eventstudy().min_movers_firms(threshold))
+    valid_firms2 = np.sort(bdf.min_movers_firms(threshold))
+    valid_firms3 = np.sort(bdf.to_eventstudy().min_movers_firms(threshold))
+    valid_firms4 = np.sort(bdf.collapse().min_movers_firms(threshold))
+    valid_firms5 = np.sort(bdf.collapse().to_eventstudy().min_movers_firms(threshold))
 
     assert (0 < len(valid_firms) < df['j'].nunique())
     assert len(valid_firms) == len(valid_firms2) == len(valid_firms3) == len(valid_firms4) == len(valid_firms5)
-    for i in range(len(valid_firms)):
-        assert valid_firms[i] == valid_firms2[i] == valid_firms3[i] == valid_firms4[i] == valid_firms5[i]
+    assert np.all(valid_firms == valid_firms2)
+    assert np.all(valid_firms == valid_firms3)
+    assert np.all(valid_firms == valid_firms4)
+    assert np.all(valid_firms == valid_firms5)
 
 def test_min_movers_frame_35():
     # Keep only firms that meet a minimum threshold of movers.
@@ -2305,14 +2326,12 @@ def test_min_movers_frame_35():
     assert n_loops > 1
     assert (0 < len(new_frame) < len(bdf))
     assert len(new_frame) == len(new_frame2) == len(new_frame3) == len(new_frame4) == len(new_frame5)
-    for i in range(100): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
-    for i in range(len(new_frame) - 100, len(new_frame)): # range(len(new_frame)): # It takes too long to go through all rows
-        for col in ['i', 'j', 'y', 't1', 't2']:
-            # Skip 'm' since we didn't recompute it
-            assert new_frame.iloc[i][col] == new_frame2.iloc[i][col] == new_frame3.iloc[i][col] == new_frame4.iloc[i][col] == new_frame5.iloc[i][col]
+    for col in ['i', 'j', 'y', 't1', 't2']:
+        # Skip 'm' since we didn't recompute it
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame2.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame3.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame4.loc[:, col].to_numpy())
+        assert np.all(new_frame.loc[:, col].to_numpy() == new_frame5.loc[:, col].to_numpy())
 
 def test_construct_artificial_time_36():
     # Test construct_artificial_time() methods

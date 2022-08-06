@@ -653,7 +653,7 @@ class BipartiteBase(DataFrame):
         Number of unique ids in column.
 
         Arguments:
-            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
 
         Returns:
             (int or None): number of unique ids if column included; None otherwise

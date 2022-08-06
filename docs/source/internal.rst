@@ -94,10 +94,11 @@ Classes and Methods
    ~bipartitepandas.BipartiteLongBase.gen_m
    ~bipartitepandas.BipartiteLongBase.keep_ids
    ~bipartitepandas.BipartiteLongBase.keep_rows
+   ~bipartitepandas.BipartiteLongBase.min_joint_obs_frame
    ~bipartitepandas.BipartiteLongBase.min_movers_frame
    ~bipartitepandas.BipartiteLongBase.min_moves_firms
    ~bipartitepandas.BipartiteLongBase.min_moves_frame
-   ~bipartitepandas.BipartiteLongBase.min_obs_firms
+   ~bipartitepandas.BipartiteLongBase.min_obs_ids
    ~bipartitepandas.BipartiteLongBase.min_obs_frame
    ~bipartitepandas.BipartiteLongBase.min_workers_firms
    ~bipartitepandas.BipartiteLongBase.min_workers_frame
@@ -139,10 +140,11 @@ Classes and Methods
    ~bipartitepandas.BipartiteEventStudyBase.get_cs
    ~bipartitepandas.BipartiteEventStudyBase.keep_ids
    ~bipartitepandas.BipartiteEventStudyBase.keep_rows
+   ~bipartitepandas.BipartiteEventStudyBase.min_joint_obs_frame
    ~bipartitepandas.BipartiteEventStudyBase.min_movers_frame
    ~bipartitepandas.BipartiteEventStudyBase.min_moves_firms
    ~bipartitepandas.BipartiteEventStudyBase.min_moves_frame
-   ~bipartitepandas.BipartiteEventStudyBase.min_obs_firms
+   ~bipartitepandas.BipartiteEventStudyBase.min_obs_ids
    ~bipartitepandas.BipartiteEventStudyBase.min_obs_frame
    ~bipartitepandas.BipartiteEventStudyBase.min_workers_firms
    ~bipartitepandas.BipartiteEventStudyBase.min_workers_frame
