@@ -65,3 +65,20 @@ def test_collapsed_weights_2():
 
     assert len(c) < len(b)
     assert np.sum(c.loc[:, 'w'].to_numpy()) == len(b)
+
+def test_permutedeventstudy_3():
+    # Test that permuted event study is computed correctly.
+    a = bpd.BipartiteDataFrame(bpd.SimBipartite().simulate(np.random.default_rng(1234))).clean(bpd.clean_params({'drop_returns': 'returns', 'verbose': False})).collapse(is_sorted=True, copy=False)
+    b = a.to_permutedeventstudy(is_sorted=True, copy=False, rng=np.random.default_rng(12345))
+    
+    # Compute expected length
+    worker_m = a.get_worker_m(is_sorted=True)
+    stayers = pd.DataFrame(a.loc[~worker_m, :])
+    movers = pd.DataFrame(a.loc[worker_m, :])
+    
+    movers_length = movers.groupby('i').size()
+    movers_length = (movers_length * (movers_length - 1)) // 2
+
+    expected_length = len(stayers) + np.sum(movers_length)
+
+    assert len(b) == expected_length
