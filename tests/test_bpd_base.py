@@ -2088,11 +2088,13 @@ def test_min_joint_obs_frame_29_3():
     new_frame2 = bdf.min_joint_obs_frame(threshold_1, threshold_2)
     new_frame3 = bdf.to_eventstudy().min_joint_obs_frame(threshold_1, threshold_2).to_long()
     new_frame4 = bdf.collapse().min_joint_obs_frame(threshold_1, threshold_2)
-    new_frame5 = bdf.collapse().to_eventstudy().min_joint_obs_frame(threshold_1, threshold_2).to_long()
+    new_frame5 = bdf.collapse().min_joint_obs_frame(threshold_2, threshold_1, 'i', 'j')
+    new_frame6 = bdf.collapse().to_eventstudy().min_joint_obs_frame(threshold_1, threshold_2).to_long()
+    new_frame7 = bdf.collapse().to_eventstudy().min_joint_obs_frame(threshold_2, threshold_1, 'i', 'j').to_long()
 
     assert (0 < len(new_frame4) < len(new_frame2) <= len(bdf))
     assert len(new_frame2) == len(new_frame3)
-    assert len(new_frame4) == len(new_frame5)
+    assert len(new_frame4) == len(new_frame5) == len(new_frame6) == len(new_frame7)
     assert np.min(new_frame2.groupby('j').size()) >= threshold_1
     assert np.min(new_frame2.groupby('i').size()) >= threshold_2
     assert np.min(new_frame4.groupby('j').size()) >= threshold_1
@@ -2103,6 +2105,8 @@ def test_min_joint_obs_frame_29_3():
     for col in ['i', 'j', 'y', 't1', 't2']:
         # Skip 'm' since we didn't recompute it
         assert np.all(new_frame4.loc[:, col].to_numpy() == new_frame5.loc[:, col].to_numpy())
+        assert np.all(new_frame4.loc[:, col].to_numpy() == new_frame6.loc[:, col].to_numpy())
+        assert np.all(new_frame4.loc[:, col].to_numpy() == new_frame7.loc[:, col].to_numpy())
 
 def test_min_workers_firms_30():
     # List only firms that meet a minimum threshold of workers.
