@@ -1,7 +1,7 @@
 '''
 Class for a bipartite network in collapsed long format.
 '''
-from numpy import arange, nan
+from numpy import array, append, arange, nan
 import pandas as pd
 import bipartitepandas as bpd
 
@@ -337,6 +337,191 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
 
         return long_frame
 
+    def to_permutedeventstudy(self, move_to_worker=False, is_sorted=False, copy=True):
+        '''
+        Return collapsed long form data reformatted into collapsed permuted event study data. In this method, permuting the data means combining each set of two observations drawn from a single worker into an event study observation (e.g. if a worker works at firms A, B, and C, this will create data with rows A-B; B-C; and A-C).
+
+        Arguments:
+            move_to_worker (bool): if True, each move is treated as a new worker
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (Pandas DataFrame): permuted collapsed event study dataframe
+        '''
+        if not self._col_included('t'):
+            raise NotImplementedError("Cannot convert from long to event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
+
+        if not self.no_returns:
+            raise ValueError("Cannot run method .to_permutedeventstudy() if there are returns in the data. When cleaning your data, please set the parameter 'drop_returns' to drop returns.")
+
+        # Sort and copy
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
+        # Split workers by movers and stayers
+        worker_m = frame.get_worker_m(is_sorted=True)
+        stayers = pd.DataFrame(frame.loc[~worker_m, :])
+        movers = pd.DataFrame(frame.loc[worker_m, :])
+        frame.log('workers split by movers and stayers', level='info')
+
+        ## Figure out new indices for permutations ##
+        # Initial data construction
+        j = movers.loc[:, 'j'].to_numpy()
+        idx = arange(len(movers))
+        idx_1 = array([], dtype=int)
+        idx_2 = array([], dtype=int)
+
+        # Construct graph
+        G, _ = frame._construct_graph(connectedness='leave_out_observation', is_sorted=True, copy=False)
+
+        for j1 in range(self.n_firms()):
+            ### Iterate over all firms ###
+            # Find workers who worked at firm j1
+            obs_in_j1 = (j == j1)
+            movers.loc[:, 'obs_in_j1'] = obs_in_j1
+            i_in_j1 = movers.groupby('i', sort=False)['obs_in_j1'].transform('max').to_numpy()
+            # Take subset of data for workers who worked at firm j1
+            movers_j1 = movers.loc[i_in_j1, :]
+            j_j1 = j[i_in_j1]
+            idx_j1 = idx[i_in_j1]
+            # For each firm, find its neighboring firms
+            j1_neighbors = G.neighborhood(j1, order=2, mindist=2)
+            for j2 in j1_neighbors:
+                ### Iterate over all neighbors ###
+                if j2 > j1:
+                    ## Account for symmetry by estimating only if j2 > j1 ##
+                    # Find workers who worked at both firms j1 and j2
+                    obs_in_j2 = (j_j1 == j2)
+                    with bpd.util.ChainedAssignment():
+                        movers_j1.loc[:, 'obs_in_j2'] = obs_in_j2
+                    i_in_j2 = movers_j1.groupby('i', sort=False)['obs_in_j2'].transform('max').to_numpy()
+                    # Take subsets of data for workers who worked at both firms j1 and j2
+                    j_j12 = j_j1[i_in_j2]
+                    idx_j12 = idx_j1[i_in_j2]
+                    # Take subsets of data specifically for firms j1 and j2
+                    is_j12 = (j_j12 == j1) | (j_j12 == j2)
+                    j_j12 = j_j12[is_j12]
+                    idx_j12 = idx_j12[is_j12]
+                    # Split data for j1 and j2
+                    idx_j11 = idx_j12[j_j12 == j1]
+                    idx_j22 = idx_j12[j_j12 == j2]
+                    # Split observations into entering/exiting groups
+                    j_j12_first = j_j12[arange(len(j_j12)) % 2 == 0]
+                    entering = (j_j12_first == j2)
+                    exiting = (j_j12_first == j1)
+                    # Append new indices
+                    idx_1 = append(idx_1, idx_j11[exiting])
+                    idx_1 = append(idx_1, idx_j22[entering])
+                    idx_2 = append(idx_2, idx_j22[exiting])
+                    idx_2 = append(idx_2, idx_j11[entering])
+
+        ## Add lagged values ##
+        movers_permuted = pd.DataFrame()
+        all_cols = frame._included_cols()
+        default_cols = frame.columns_req + frame.columns_opt
+
+        # Columns to keep
+        keep_cols = ['i']
+        # Keep track of user-added columns
+        user_added_cols = {}
+        for col in all_cols:
+            if frame.col_long_es_dict[col] is None:
+                # If None, drop this column
+                pass
+            elif frame.col_long_es_dict[col]:
+                # If column should split
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                    # Get column number, e.g. j1 will give 1
+                    subcol_number = subcol.strip(col)
+                    ## Movers ##
+                    # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
+                    col_1 = col + '1' + subcol_number
+                    col_2 = col + '2' + subcol_number
+                    # Lagged value
+                    movers_permuted.loc[:, col_1] = movers.loc[:, subcol].to_numpy()[idx_1]
+                    movers_permuted.loc[:, col_2] = movers.loc[:, subcol].to_numpy()[idx_2]
+
+                    if subcol != 'i':
+                        ## Stayers (no lags) ##
+                        stayers.loc[:, col_1] = stayers.loc[:, subcol]
+                        stayers.rename({subcol: col_2}, axis=1, inplace=True)
+
+                        # Columns to keep
+                        keep_cols += [col_1, col_2]
+                        if col not in default_cols:
+                            # User-added columns
+                            if col in user_added_cols.keys():
+                                user_added_cols[col] += [col_1, col_2]
+                            else:
+                                user_added_cols[col] = [col_1, col_2]
+            else:
+                # If column shouldn't split
+                keep_cols += bpd.util.to_list(frame.col_reference_dict[col])
+                if col not in default_cols:
+                    # User-added columns
+                    user_added_cols[col] = frame.col_reference_dict[col]
+
+        # Ensure lagged values are for the same worker
+        movers_permuted = movers_permuted.loc[movers_permuted.loc[:, 'i1'].to_numpy() == movers_permuted.loc[:, 'i2'].to_numpy(), :]
+
+        # Set 'm' for movers
+        movers_permuted.loc[:, 'm'] = 1
+
+        # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
+        for col in all_cols:
+            if ((frame.col_dtype_dict[col] == 'int') or (col in frame.columns_contig.keys())) and frame.col_long_es_dict[col]:
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                    # Get column number, e.g. j1 will give 1
+                    subcol_number = subcol.strip(col)
+                    shifted_col = col + '1' + subcol_number
+                    movers_permuted.loc[:, shifted_col] = movers_permuted.loc[:, shifted_col].astype(int, copy=False)
+
+        # Correct i
+        movers_permuted.drop('i2', axis=1, inplace=True)
+        movers_permuted.rename({'i1': 'i'}, axis=1, inplace=True)
+
+        # Keep only relevant columns
+        stayers = stayers.reindex(keep_cols, axis=1, copy=False)
+        movers_permuted = movers_permuted.reindex(keep_cols, axis=1, copy=False)
+        frame.log('columns updated', level='info')
+
+        # Merge stayers and movers (NOTE: this converts the data into a Pandas DataFrame)
+        data_es = pd.concat([stayers, movers_permuted], ignore_index=True) # .reset_index(drop=True)
+
+        # Sort columns
+        sorted_cols = bpd.util._sort_cols(data_es.columns)
+        data_es = data_es.reindex(sorted_cols, axis=1, copy=False)
+
+        frame.log('data reformatted as event study', level='info')
+
+        es_frame = frame._constructor_es(data_es, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
+        es_frame._set_attributes(frame, no_dict=True)
+
+        for col, long_es_split in frame.col_long_es_dict.items():
+            # Remove dropped columns from attribute dictionaries
+            if long_es_split is None:
+                # If column should be dropped during conversion to event study format
+                del es_frame.col_dtype_dict[col]
+                del es_frame.col_collapse_dict[col]
+                del es_frame.col_long_es_dict[col]
+                if col in es_frame.columns_contig.keys():
+                    # If column is categorical
+                    del es_frame.columns_contig[col]
+                    if es_frame.id_reference_dict:
+                        # If linking contiguous ids to original ids
+                        del es_frame.id_reference_dict[col]
+
+        # Sort data by i and t
+        es_frame = es_frame.sort_rows(is_sorted=False, copy=False)
+
+        # Reset index
+        es_frame.reset_index(drop=True, inplace=True)
+
+        if move_to_worker:
+            es_frame.loc[:, 'i'] = es_frame.index
+
+        return es_frame
+
     def _get_spell_ids(self, is_sorted=False, copy=True):
         '''
         Generate array of spell ids, where a spell is defined as an uninterrupted period of time where a worker works at the same firm. Spell ids are generated on sorted data, so it is recommended to sort your data using .sort_rows() prior to calling this method, then run the method with is_sorted=True.
@@ -379,7 +564,7 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
             frame = self
 
         if frame._col_included('t'):
-            ## Convert to long
+            ## Convert to long ##
             # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
             no_collapse_cols = [col for col, col_collapse in frame.col_collapse_dict.items() if col_collapse is None]
 

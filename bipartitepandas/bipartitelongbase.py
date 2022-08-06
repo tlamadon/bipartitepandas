@@ -217,7 +217,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         movers = pd.DataFrame(frame.loc[worker_m, :])
         frame.log('workers split by movers and stayers', level='info')
 
-        ## Add lagged values
+        ## Add lagged values ##
         all_cols = frame._included_cols()
         default_cols = frame.columns_req + frame.columns_opt
 
@@ -234,7 +234,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                     # Get column number, e.g. j1 will give 1
                     subcol_number = subcol.strip(col)
-                    ## Movers
+                    ## Movers ##
                     # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
                     col_1 = col + '1' + subcol_number
                     col_2 = col + '2' + subcol_number
@@ -244,7 +244,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     movers.rename({subcol: col_2}, axis=1, inplace=True)
 
                     if subcol != 'i':
-                        ## Stayers (no lags)
+                        ## Stayers (no lags) ##
                         stayers.loc[:, col_1] = stayers.loc[:, subcol]
                         stayers.rename({subcol: col_2}, axis=1, inplace=True)
 
@@ -415,7 +415,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             frame.loc[keep_rows, 'return_row'] = 0
             del frame_return_rows, return_spells_keep, keep_rows
 
-        ## Drop returns
+        ## Drop returns ##
         # Find rows
         return_rows = np.where(frame.loc[:, 'return_row'].to_numpy() == 1)[0]
 
