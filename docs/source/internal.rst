@@ -124,6 +124,7 @@ Classes and Methods
    ~bipartitepandas.BipartiteLongCollapsed
    ~bipartitepandas.BipartiteLongCollapsed.get_worker_m
    ~bipartitepandas.BipartiteLongCollapsed.recollapse
+   ~bipartitepandas.BipartiteLongCollapsed.to_permutedeventstudy
    ~bipartitepandas.BipartiteLongCollapsed.uncollapse
 
 ``bipartitepandas.BipartiteEventStudyBase``
