@@ -181,7 +181,7 @@ class BipartiteBase(DataFrame):
     # Attributes, required for Pandas inheritance
     _metadata = ['columns_req', 'columns_opt', 'columns_contig', 'col_reference_dict', 'col_dtype_dict', 'col_collapse_dict', 'col_long_es_dict', 'id_reference_dict', 'connectedness', 'no_na', 'no_duplicates', 'i_t_unique', 'no_returns', '_log_on_indicator', '_log_level_fn_dict']
 
-    def __init__(self, *args, columns_req=None, columns_opt=None, columns_contig=None, col_reference_dict=None, col_dtype_dict=None, col_collapse_dict=None, col_long_es_dict=None, track_id_changes=False, log=True, **kwargs):
+    def __init__(self, *args, columns_req=None, columns_opt=None, columns_contig=None, col_reference_dict=None, col_dtype_dict=None, col_collapse_dict=None, col_long_es_dict=None, track_id_changes=False, log=False, **kwargs):
         # Initialize DataFrame
         super().__init__(*args, **kwargs)
 

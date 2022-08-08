@@ -404,7 +404,7 @@ def to_list(data):
     Returns:
         (list): data as a list
     '''
-    if isinstance(data, (list, tuple, set, frozenset, range, np.ndarray)):
+    if isinstance(data, (list, tuple, set, frozenset, range, type({}.keys()), type({}.values()), np.ndarray, pd.Series)):
         return list(data)
     return [data]
 
