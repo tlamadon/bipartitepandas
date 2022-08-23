@@ -592,14 +592,19 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 'match': {'G': G2, 'max_j': max_j2}
             }
             articulation_rows = articulation_fn_dict[leave_out_group](**articulation_params_dict[leave_out_group])
+            del articulation_fn_dict, articulation_params_dict
 
             if len(articulation_rows) > 0:
                 # If new frame is not leave-one-(observation/spell/match)-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
                 G2, max_j3 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph(f'leave_out_{leave_out_group}', is_sorted=True, copy=False)
                 cc_list_2 = G2.components(mode='weak')
+                del G2, articulation_rows
                 if len(cc_list_2) > 1:
                     # Recursion step (only necessary if dropping articulation workers disconnects the set of firms)
                     frame_cc = frame_cc._leave_out_observation_spell_match(cc_list=cc_list_2, max_j=max_j3, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
+                del cc_list_2
+            else:
+                del G2, articulation_rows
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -611,6 +616,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', save_to_frame1=True, is_sorted=True)
             if replace:
                 frame_largest_cc = frame_cc
+            del frame_cc
 
         if first_loop:
             # Remove comp_size attribute before return
@@ -692,14 +698,19 @@ class BipartiteLongBase(bpd.BipartiteBase):
             articulation_ids = np.array(G2.articulation_points())
             articulation_workers = articulation_ids[articulation_ids > max_j2]
             articulation_workers -= (max_j2 + 1)
+            del articulation_ids
 
             if len(articulation_workers) > 0:
                 # If new frame is not leave-one-worker-out connected, recompute connected components after dropping articulation workers (but note that articulation workers should be kept in the final dataframe) (NOTE: this does not require a copy)
                 G2, max_j3 = frame_cc.drop_ids('i', articulation_workers, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_out_worker', is_sorted=True, copy=False)
                 cc_list_2 = G2.components(mode='weak')
+                del G2, articulation_workers
                 if len(cc_list_2) > 1:
                     # Recursion step (only necessary if dropping articulation workers disconnects the set of firms)
                     frame_cc = frame_cc._leave_out_worker(cc_list=cc_list_2, max_j=max_j3, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
+                del cc_list_2
+            else:
+                del G2, articulation_workers
 
             if frame_largest_cc is None:
                 # If in the first round
@@ -711,6 +722,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 replace = bpd.util.compare_frames(frame_largest_cc, frame_cc, size_variable=component_size_variable, operator='lt', save_to_frame1=True, is_sorted=True)
             if replace:
                 frame_largest_cc = frame_cc
+            del frame_cc
 
         if first_loop:
             # Remove comp_size attribute before return
