@@ -1,13 +1,14 @@
 '''
 Class for a bipartite network in long format.
 '''
+from paramsdict import ParamsDict
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 import warnings
 
 # Define default parameter dictionary
-_plot_extended_eventstudy_params_default = bpd.util.ParamsDict({
+plot_extended_eventstudy_params = ParamsDict({
     'title_height': (1, 'type', (int, float),
         '''
             (default=1) Location of titles for subfigures.
@@ -29,21 +30,6 @@ _plot_extended_eventstudy_params_default = bpd.util.ParamsDict({
             (default=1) How many digits to round y ticks.
         ''', None)
 })
-
-def plot_extended_eventstudy_params(update_dict=None):
-    '''
-    Dictionary of default plot_extended_eventstudy_params. Run bpd.plot_extended_eventstudy_params().describe_all() for descriptions of all valid parameters.
-
-    Arguments:
-        update_dict (dict or None): user parameter values; None is equivalent to {}
-
-    Returns:
-        (ParamsDict): dictionary of plot_extended_eventstudy_params
-    '''
-    new_dict = _plot_extended_eventstudy_params_default.copy()
-    if update_dict is not None:
-        new_dict.update(update_dict)
-    return new_dict
 
 class BipartiteLong(bpd.BipartiteLongBase):
     '''

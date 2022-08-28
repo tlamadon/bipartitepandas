@@ -1,6 +1,7 @@
 '''
 Bipartite DataFrame general constructor.
 '''
+from paramsdict.util import col_type, _is_subtype, _is_subdtype
 from pandas import DataFrame
 import bipartitepandas as bpd
 
@@ -70,7 +71,7 @@ class BipartiteDataFrame:
         new_cols = {}
         new_cols_reference_dict = {}
         for k, v in kwargs.items():
-            if bpd.util._is_subtype(v, bpd.util.col_type):
+            if _is_subtype(v, col_type):
                 col_name, col_num = bpd.util._text_num_split(k)
                 if col_name in new_cols.keys():
                     # If general column already seen
@@ -88,7 +89,7 @@ class BipartiteDataFrame:
                     if col_name not in custom_long_es_split_dict.keys():
                         custom_long_es_split_dict[col_name] = True
                     # Since new general column, try to infer column dtype and how_collapse
-                    col_float_int = int(bpd.util._is_subdtype(v, 'float')) + int(bpd.util._is_subdtype(v, 'int'))
+                    col_float_int = int(_is_subdtype(v, 'float')) + int(_is_subdtype(v, 'int'))
                     dtype_how_collapse_dict = {
                         0: { # If neither float nor int
                             'dtype': 'any',

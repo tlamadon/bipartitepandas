@@ -1,11 +1,11 @@
 '''
 Class for simulating bipartite networks.
 '''
+from paramsdict import ParamsDict
 import numpy as np
 ax = np.newaxis
 from pandas import DataFrame
 from scipy.stats import norm
-from bipartitepandas.util import ParamsDict
 
 # NOTE: multiprocessing isn't compatible with lambda functions
 def _gteq1(a):
@@ -18,7 +18,7 @@ def _0to1(a):
     return 0 <= a <= 1
 
 # Define default parameter dictionary
-_sim_params_default = ParamsDict({
+sim_params = ParamsDict({
     'n_workers': (10000, 'type_constrained', (int, _gteq1),
         '''
             (default=10000) Number of workers.
@@ -68,21 +68,6 @@ _sim_params_default = ParamsDict({
             (default=0.5) Probability a worker moves firms in any period.
         ''', 'in [0, 1]')
 })
-
-def sim_params(update_dict=None):
-    '''
-    Dictionary of default sim_params. Run bpd.sim_params().describe_all() for descriptions of all valid parameters.
-
-    Arguments:
-        update_dict (dict or None): user parameter values; None is equivalent to {}
-
-    Returns:
-        (ParamsDict): dictionary of sim_params
-    '''
-    new_dict = _sim_params_default.copy()
-    if update_dict is not None:
-        new_dict.update(update_dict)
-    return new_dict
 
 class SimBipartite:
     '''

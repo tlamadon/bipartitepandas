@@ -1,6 +1,8 @@
 '''
 Class for a bipartite network.
 '''
+from paramsdict import ParamsDict, ParamsDictBase
+from paramsdict.util import _is_subdtype
 import numpy as np
 import pandas as pd
 DataFrame = pd.DataFrame
@@ -45,7 +47,7 @@ def _recollapse_loop(force=False):
     return recollapse_loop_inner
 
 # Define default parameter dictionaries
-_clean_params_default = bpd.util.ParamsDict({
+clean_params = ParamsDict({
     'connectedness': (None, 'set', ['connected', 'strongly_connected', 'leave_out_observation', 'leave_out_spell', 'leave_out_match', 'leave_out_worker', 'leave_out_firm', None],
         '''
             (default=None) When computing largest connected set of firms: if 'connected', keep observations in the largest connected set of firms; if 'strongly_connected', keep observations in the largest strongly connected set of firms; if 'leave_out_observation', keep observations in the largest leave-one-observation-out connected set; if 'leave_out_spell', keep observations in the largest leave-one-spell-out connected set; if 'leave_out_match', keep observations in the largest leave-one-match-out connected set; if 'leave_out_worker', keep observations in the largest leave-one-worker-out connected set; if 'leave_out_firm', keep observations in the largest leave-one-firm-out connected set; if None, keep all observations.
@@ -92,22 +94,7 @@ _clean_params_default = bpd.util.ParamsDict({
         ''', None)
 })
 
-def clean_params(update_dict=None):
-    '''
-    Dictionary of default clean_params. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
-
-    Arguments:
-        update_dict (dict or None): user parameter values; None is equivalent to {}
-
-    Returns:
-        (ParamsDict): dictionary of clean_params
-    '''
-    new_dict = _clean_params_default.copy()
-    if update_dict is not None:
-        new_dict.update(update_dict)
-    return new_dict
-
-_cluster_params_default = bpd.util.ParamsDict({
+cluster_params = ParamsDict({
     'measures': (bpd.measures.CDFs(), 'list_of_type', (bpd.measures.CDFs, bpd.measures.Moments),
         '''
             (default=bpd.measures.CDFs()) How to compute measures for clustering. Options can be seen in bipartitepandas.measures.
@@ -132,7 +119,7 @@ _cluster_params_default = bpd.util.ParamsDict({
         '''
             (default=False) If True, drop observations where firms aren't clustered; if False, keep all observations.
         ''', None),
-    'clean_params': (None, 'type_none', bpd.util.ParamsDict,
+    'clean_params': (None, 'type_none', ParamsDictBase,
         '''
             (default=None) Dictionary of parameters for cleaning. This is used when observations get dropped because they were not clustered. Default is None, which sets connectedness to be the connectedness measure previously used. Run bpd.clean_params().describe_all() for descriptions of all valid parameters.
         ''', None),
@@ -145,21 +132,6 @@ _cluster_params_default = bpd.util.ParamsDict({
             (default=True) If False, avoid copy.
         ''', None)
 })
-
-def cluster_params(update_dict=None):
-    '''
-    Dictionary of default cluster_params. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters.
-
-    Arguments:
-        update_dict (dict or None): user parameter values; None is equivalent to {}
-
-    Returns:
-        (ParamsDict): dictionary of cluster_params
-    '''
-    new_dict = _cluster_params_default.copy()
-    if update_dict is not None:
-        new_dict.update(update_dict)
-    return new_dict
 
 class BipartiteBase(DataFrame):
     '''
@@ -1139,7 +1111,7 @@ class BipartiteBase(DataFrame):
         # Source: https://stackoverflow.com/questions/16453465/multi-column-factorize-in-pandas
         factorized = pd.factorize(all_ids)
 
-        if bpd.util._is_subdtype(all_ids, 'int') and (min(factorized[1]) == 0) and (max(factorized[1]) + 1 == len(factorized[1])):
+        if _is_subdtype(all_ids, 'int') and (min(factorized[1]) == 0) and (max(factorized[1]) + 1 == len(factorized[1])):
             # Quickly check whether ids need to be reset (i.e. check if ids are already contiguous)
             frame.columns_contig[id_col] = True
             return frame
@@ -1185,7 +1157,7 @@ class BipartiteBase(DataFrame):
                         raise ValueError(error_msg)
                 else:
                     # If column included, check type
-                    if not bpd.util._is_subdtype(self.loc[:, subcol], self.col_dtype_dict[col]):
+                    if not _is_subdtype(self.loc[:, subcol], self.col_dtype_dict[col]):
                         error_msg = f'{subcol} has the wrong dtype, it is currently {self.loc[:, subcol].dtype} but should be one of the following: {self.col_dtype_dict[col]}'
                         self.log(error_msg, level='info')
                         raise ValueError(error_msg)
