@@ -1,26 +1,27 @@
 '''
-Base class for bipartite networks in event study or collapsed event study format.
+Base class for bipartite networks in extended event study or collapsed extended event study format.
 '''
 from tqdm.auto import tqdm
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
 
-class BipartiteEventStudyBase(bpd.BipartiteBase):
+class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
     '''
-    Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed, which give bipartite networks of firms and workers in event study and collapsed event study form, respectively. Contains generalized methods. Inherits from BipartiteBase.
+    Base class for BipartiteExtendedEventStudy and BipartiteExtendedEventStudyCollapsed, which give bipartite networks of firms and workers in event study and collapsed event study form, respectively. Contains generalized methods. Inherits from BipartiteBase.
 
     Arguments:
         *args: arguments for BipartiteBase
+        n_periods (int): number of periods in extended event study
         col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}; None is equivalent to {}
         **kwargs: keyword arguments for BipartiteBase
     '''
 
-    def __init__(self, *args, col_reference_dict=None, **kwargs):
+    def __init__(self, *args, n_periods=4, col_reference_dict=None, **kwargs):
         # Update parameters to be lists/dictionaries instead of None (source: https://stackoverflow.com/a/54781084/17333120)
         if col_reference_dict is None:
             col_reference_dict = {}
-        col_reference_dict = bpd.util.update_dict({'j': ['j1', 'j2'], 'y': ['y1', 'y2'], 'g': ['g1', 'g2'], 'w': ['w1', 'w2']}, col_reference_dict)
+        col_reference_dict = bpd.util.update_dict({col: [f'{col}{t + 1}' for t in range(n_periods)] for col in ['j', 'y', 'g', 'w']}, col_reference_dict)
         # Initialize DataFrame
         super().__init__(*args, col_reference_dict=col_reference_dict, **kwargs)
 
@@ -32,9 +33,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         For inheritance from Pandas.
 
         Returns:
-            (class): BipartiteEventStudyBase class
+            (class): BipartiteExtendedEventStudyBase class
         '''
-        return BipartiteEventStudyBase
+        return BipartiteExtendedEventStudyBase
 
     def gen_m(self, force=False, copy=True):
         '''

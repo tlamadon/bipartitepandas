@@ -1,31 +1,32 @@
 '''
-Class for a bipartite network in collapsed event study format.
+Class for a bipartite network in collapsed extended event study format.
 '''
 import bipartitepandas as bpd
 
-class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
+class BipartiteExtendedEventStudyCollapsed(bpd.BipartiteExtendedEventStudyBase):
     '''
-    Class for bipartite networks of firms and workers in collapsed event study form (i.e. employment spells are collapsed into a single observation). Inherits from BipartiteEventStudyBase.
+    Class for bipartite networks of firms and workers in collapsed extended event study form (i.e. employment spells are collapsed into a single observation). Inherits from BipartiteExtendedEventStudyBase.
 
     Arguments:
-        *args: arguments for BipartiteEventStudyBase
+        *args: arguments for BipartiteExtendedEventStudyBase
+        n_periods (int): number of periods in extended event study
         col_reference_dict (dict or None): clarify which columns are associated with a general column name, e.g. {'i': 'i', 'j': ['j1', 'j2']}; None is equivalent to {}
         col_collapse_dict (dict or None): how to collapse column (None indicates the column should be dropped), e.g. {'y': 'mean'}; None is equivalent to {}
-        **kwargs: keyword arguments for BipartiteEventStudyBase
+        **kwargs: keyword arguments for BipartiteExtendedEventStudyBase
     '''
 
-    def __init__(self, *args, col_reference_dict=None, col_collapse_dict=None, **kwargs):
+    def __init__(self, *args, n_periods=4, col_reference_dict=None, col_collapse_dict=None, **kwargs):
         # Update parameters to be lists/dictionaries instead of None (source: https://stackoverflow.com/a/54781084/17333120)
         if col_reference_dict is None:
             col_reference_dict = {}
         if col_collapse_dict is None:
             col_collapse_dict = {}
-        col_reference_dict = bpd.util.update_dict({'t': ['t11', 't12', 't21', 't22']}, col_reference_dict)
+        col_reference_dict = bpd.util.update_dict({'t': [f't{t1 + 1}{t2 + 1}' for t1 in range(n_periods) for t2 in range(2)]}, col_reference_dict)
         col_collapse_dict = bpd.util.update_dict({'m': None}, col_collapse_dict)
         # Initialize DataFrame
-        super().__init__(*args, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
+        super().__init__(*args, n_periods=n_periods, col_reference_dict=col_reference_dict, col_collapse_dict=col_collapse_dict, **kwargs)
 
-        # self.log('BipartiteEventStudyCollapsed object initialized', level='info')
+        # self.log('BipartiteExtendedEventStudyCollapsed object initialized', level='info')
 
     @property
     def _constructor(self):
@@ -33,14 +34,14 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         For inheritance from Pandas.
 
         Returns:
-            (class): BipartiteEventStudyCollapsed class
+            (class): BipartiteExtendedEventStudyCollapsed class
         '''
-        return BipartiteEventStudyCollapsed
+        return BipartiteExtendedEventStudyCollapsed
 
     @property
     def _constructor_long(self):
         '''
-        For .to_long(), tells BipartiteEventStudyBase which long format to use.
+        For .to_long(), tells BipartiteExtendedEventStudyBase which long format to use.
 
         Returns:
             (class): BipartiteLongCollapsed class
@@ -49,7 +50,7 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
 
     def uncollapse(self, drop_no_collapse_columns=True, is_sorted=False, copy=True):
         '''
-        Return collapsed event study data reformatted into event study data, by assuming variables constant over spells.
+        Return collapsed extended event study data reformatted into event study data, by assuming variables constant over spells.
 
         Arguments:
             drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will not be dropped
@@ -59,14 +60,14 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         Returns:
             (BipartiteEventStudy): collapsed event study data reformatted as event study data
         '''
-        raise NotImplementedError('.uncollapse() is not implemented for collapsed event study format. Please convert to collapsed long format with the method .to_long().')
+        raise NotImplementedError('.uncollapse() is not implemented for collapsed extended event study format. Please convert to collapsed long format with the method .to_long().')
 
     def get_worker_m(self, is_sorted=False):
         '''
         Get NumPy array indicating whether the worker associated with each observation is a mover.
 
         Arguments:
-            is_sorted (bool): not used for collapsed event study format
+            is_sorted (bool): not used for collapsed extended event study format
 
         Returns:
             (NumPy Array): indicates whether the worker associated with each observation is a mover
