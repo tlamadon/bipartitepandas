@@ -5,7 +5,7 @@ Python API
 Overview
 ---------
 
-The main BipartitePandas API is split into eight classes, three of which are base classes and one of which is for simulating bipartite data. It also has two modules for clustering: one for computing measures and one for grouping on measures. BipartitePandas is canonically imported using
+The main BipartitePandas API is split into eleven classes, four of which are base classes and one of which is for simulating bipartite data. It also has two modules for clustering: one for computing measures and one for grouping on measures. BipartitePandas is canonically imported using
 
   .. code-block:: python
 
@@ -24,6 +24,10 @@ Main classes
 
 * ``bipartitepandas.BipartiteEventStudyCollapsed``: Class for bipartite networks in collapsed event study format (i.e. employment spells are collapsed into a single observation)
 
+* ``bipartitepandas.BipartiteExtendedEventStudy``: Class for bipartite networks in extended event study format
+
+* ``bipartitepandas.BipartiteExtendedEventStudyCollapsed``: Class for bipartite networks in collapsed extended event study format (i.e. employment spells are collapsed into a single observation)
+
 * ``bipartitepandas.SimBipartite``: Class for simulating bipartite networks
 
 Base classes
@@ -34,6 +38,8 @@ Base classes
 * ``bipartitepandas.BipartiteLongBase``: Base class for BipartiteLong and BipartiteLongCollapsed. All methods are usable by any class that inherits from BipartiteLongBase.
 
 * ``bipartitepandas.BipartiteEventStudyBase``: Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed. All methods are usable by any class that inherits from BipartiteEventStudyBase.
+
+* ``bipartitepandas.BipartiteExtendedEventStudyBase``: Base class for BipartiteExtendedEventStudy and BipartiteExtendedEventStudyCollapsed. All methods are usable by any class that inherits from BipartiteExtendedEventStudyBase.
 
 Clustering modules
 ~~~~~~~~~~~~~~~~~~
@@ -103,6 +109,7 @@ Classes and Methods
    ~bipartitepandas.BipartiteLongBase.min_workers_firms
    ~bipartitepandas.BipartiteLongBase.min_workers_frame
    ~bipartitepandas.BipartiteLongBase.to_eventstudy
+   ~bipartitepandas.BipartiteLongBase.to_extendedeventstudy
 
 ``bipartitepandas.BipartiteLong``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -112,9 +119,7 @@ Classes and Methods
    ~bipartitepandas.BipartiteLong
    ~bipartitepandas.BipartiteLong.collapse
    ~bipartitepandas.BipartiteLong.fill_missing_periods
-   ~bipartitepandas.BipartiteLong.get_extended_eventstudy
    ~bipartitepandas.BipartiteLong.get_worker_m
-   ~bipartitepandas.BipartiteLong.plot_extended_eventstudy
 
 ``bipartitepandas.BipartiteLongCollapsed``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -168,6 +173,48 @@ Classes and Methods
    ~bipartitepandas.BipartiteEventStudyCollapsed
    ~bipartitepandas.BipartiteEventStudyCollapsed.get_worker_m
    ~bipartitepandas.BipartiteEventStudyCollapsed.uncollapse
+
+``bipartitepandas.BipartiteExtendedEventStudyBase``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.BipartiteExtendedEventStudyBase
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.clean
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.construct_artificial_time
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.diagnostic
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.drop_ids
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.gen_m
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.get_cs
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.keep_ids
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.keep_rows
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_joint_obs_frame
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_movers_frame
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_moves_firms
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_moves_frame
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_obs_ids
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_obs_frame
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_workers_firms
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.min_workers_frame
+   ~bipartitepandas.BipartiteExtendedEventStudyBase.to_long
+
+``bipartitepandas.BipartiteExtendedEventStudy``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.BipartiteExtendedEventStudy
+   ~bipartitepandas.BipartiteExtendedEventStudy.collapse
+   ~bipartitepandas.BipartiteExtendedEventStudy.get_worker_m
+
+``bipartitepandas.BipartiteEventExtendedStudyCollapsed``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autosummary::
+
+   ~bipartitepandas.BipartiteEventExtendedStudyCollapsed
+   ~bipartitepandas.BipartiteEventExtendedStudyCollapsed.get_worker_m
+   ~bipartitepandas.BipartiteEventExtendedStudyCollapsed.uncollapse
 
 ``bipartitepandas.SimBipartite``
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -108,7 +108,7 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
         self.log('converting data back to event study format', level='info')
         if verbose:
             tqdm.write('converting data back to extended event study format')
-        frame = frame.to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
+        frame = frame.to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
         for col in no_split_cols:
@@ -178,7 +178,7 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
 
             frame.drop_duplicates(inplace=True)
 
-            frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
+            frame = frame._drop_i_t_duplicates(how, is_sorted=True, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
 
             # Update col_long_es_dict for columns that aren't supposed to convert to long
             for col in no_split_cols:
@@ -315,7 +315,7 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
         no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
 
         # Drop returns
-        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._drop_returns(how=how, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._drop_returns(how=how, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
         for col in no_split_cols:
@@ -340,573 +340,498 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
         '''
         return self.to_long(is_sorted=is_sorted, copy=copy)._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, is_sorted=True, copy=False)
 
-    # def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
-    #     '''
-    #     Extract largest leave-one-(observation/spell/match)-out connected component.
-
-    #     Arguments:
-    #         cc_list (list of lists): each entry is a connected component
-    #         max_j (int): maximum j in graph
-    #         leave_out_group (str): which type of leave-one-out connected component to compute (options are 'observation', 'spell', or 'match')
-    #         component_size_variable (str): how to determine largest leave-one-(observation/spell/match)-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-(observation/spell/match)-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-(observation/spell/match)-out connected component
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-    #         first_loop (bool): if True, this is the first loop of the method
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of largest leave-one-(observation/spell/match)-out connected component
-    #     '''
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute leave-one-(observation/spell/match)-out connected components
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_observation_spell_match(cc_list=cc_list, max_j=max_j, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def _leave_out_worker(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
-    #     '''
-    #     Extract largest leave-one-worker-out connected component.
-
-    #     Arguments:
-    #         cc_list (list of lists): each entry is a connected component
-    #         max_j (int): maximum j in graph
-    #         component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-    #         first_loop (bool): if True, this is the first loop of the method
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of largest leave-one-worker-out connected component
-    #     '''
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute leave-one-worker-out connected components
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_worker(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def _construct_firm_linkages(self, is_sorted=False, copy=True):
-    #     '''
-    #     Construct numpy array linking firms by movers, for use with connected components.
-
-    #     Arguments:
-    #         is_sorted (bool): not used for ._construct_firm_linkages()
-    #         copy (bool): not used for ._construct_firm_linkages()
-
-    #     Returns:
-    #         (NumPy Array): firm linkages
-    #         (int): maximum firm id
-    #     '''
-    #     return self.loc[(self.loc[:, 'm'].to_numpy() > 0), ['j1', 'j2']].to_numpy()
-
-    # def _construct_firm_double_linkages(self, is_sorted=False, copy=True):
-    #     '''
-    #     Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
-
-    #     Arguments:
-    #         is_sorted (bool): not used for ._construct_firm_double_linkages()
-    #         copy (bool): not used for ._construct_firm_double_linkages()
-
-    #     Returns:
-    #         (NumPy Array): firm linkages
-    #         (int): maximum firm id
-    #     '''
-    #     move_rows = (self.loc[:, 'm'].to_numpy() > 0)
-    #     base_linkages = self.loc[move_rows, ['j1', 'j2']].to_numpy()
-    #     i_col = self.loc[move_rows, 'i'].to_numpy()
-    #     i_next = bpd.util.fast_shift(i_col, -1, fill_value=-2)
-    #     j2_next = np.roll(base_linkages[:, 1], -1)
-    #     valid_i = (i_col == i_next)
-    #     secondary_linkages = np.stack([base_linkages[valid_i, 1], j2_next[valid_i]], axis=1)
-    #     linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
-    #     max_j = np.max(linkages)
-
-    #     return linkages, max_j
-
-    # def _construct_firm_worker_linkages(self, is_sorted=False, copy=True):
-    #     '''
-    #     Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
-
-    #     Arguments:
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (NumPy Array): firm-worker linkages
-    #         (int): maximum firm id
-    #     '''
-    #     if not is_sorted:
-    #         raise NotImplementedError('._construct_firm_worker_linkages() requires `is_sorted` == True, but it is set to False.')
-
-    #     # Sort and copy
-    #     frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-
-    #     worker_m = frame.get_worker_m(is_sorted=True)
-    #     base_linkages = frame.loc[worker_m, ['i', 'j1']].to_numpy()
-    #     secondary_linkages = frame.loc[frame._get_unstack_rows(worker_m=worker_m, is_sorted=True, copy=False), ['i', 'j2']].to_numpy()
-    #     linkages = np.concatenate([base_linkages, secondary_linkages], axis=0)
-    #     max_j = np.max(linkages)
-
-    #     return linkages, max_j
-
-    # def keep_ids(self, id_col, keep_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
-    #     '''
-    #     Only keep ids belonging to a given set of ids.
-
-    #     Arguments:
-    #         id_col (str): column of ids to consider ('i', 'j', or 'g')
-    #         keep_ids_list (list): ids to keep
-    #         drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         reset_index (bool): not used for event study format
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe with ids in the given set
-    #     '''
-    #     keep_ids_list = set(keep_ids_list)
-    #     if len(keep_ids_list) == self.n_unique_ids(id_col):
-    #         # If keeping everything
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Keep ids
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def drop_ids(self, id_col, drop_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
-    #     '''
-    #     Drop ids belonging to a given set of ids.
-
-    #     Arguments:
-    #         id_col (str): column of ids to consider ('i', 'j', or 'g')
-    #         drop_ids_list (list): ids to drop
-    #         drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         reset_index (bool): not used for event study format
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe with ids outside the given set
-    #     '''
-    #     drop_ids_list = set(drop_ids_list)
-    #     if len(drop_ids_list) == 0:
-    #         # If nothing input
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Drop ids
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def keep_rows(self, rows, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
-    #     '''
-    #     Only keep particular rows.
-
-    #     Arguments:
-    #         rows (list): rows to keep
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         reset_index (bool): not used for event study format
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe with given rows
-    #     '''
-    #     rows = set(rows)
-    #     if len(rows) == len(self):
-    #         # If keeping everything
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     rows_list = sorted(list(rows_list))
-
-    #     frame = self.iloc[rows_list]
-
-    #     if isinstance(frame, bpd.BipartiteEventStudyCollapsed) and (not frame.no_returns):
-    #         ## If BipartiteEventStudyCollapsed and there are returns, we have to recollapse
-    #         # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #         no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #         # Recollapse
-    #         frame = frame.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).recollapse(drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #         # We don't need to copy again
-    #         copy = False
-
-    #         # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #         for col in no_split_cols:
-    #             frame.col_long_es_dict[col] = None
-
-    #     if copy:
-    #         return frame.copy()
-
-    #     return frame
-
-    # def min_obs_ids(self, threshold=2, id_col='j', is_sorted=False, copy=True):
-    #     '''
-    #     List column ids with at least `threshold` many observations.
-
-    #     Arguments:
-    #         threshold (int): minimum number of observations required to keep an id
-    #         id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (NumPy Array): ids with sufficiently many observations
-    #     '''
-    #     if threshold <= 1:
-    #         # If no threshold
-    #         return self.unique_ids(id_col)
-
-    #     # Sort and copy
-    #     frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-
-    #     if id_col in ['j', 'g']:
-    #         ## j and g ##
-    #         # We consider j1/g1 for all rows, but j2/g2 only for unstack rows
-    #         c1, c2 = frame.col_reference_dict[id_col]
-    #         jg_obs = frame.loc[:, c1].value_counts(sort=False).to_dict()
-    #         jg2_obs = frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), c2].value_counts(sort=False).to_dict()
-    #         for jg, n_obs in jg2_obs.items():
-    #             try:
-    #                 # If j/g in j1/g1, add the observations in j2/g2
-    #                 jg_obs[jg] += n_obs
-    #             except KeyError:
-    #                 # If j/g not in j1/g1, set observations to be j2/g2
-    #                 jg_obs[jg] = n_obs
-
-    #         valid_ids = []
-    #         for jg, n_obs in jg_obs.items():
-    #             if n_obs >= threshold:
-    #                 valid_ids.append(jg)
-    #     elif id_col == 'i':
-    #         ## i ##
-    #         # We consider movers and stayers separately
-    #         worker_m = frame.get_worker_m(is_sorted=True)
-    #         # Movers + 1
-    #         jdata_obs = frame.loc[worker_m, 'i'].value_counts(sort=False)
-    #         jdata_ids = jdata_obs[jdata_obs + 1 >= threshold]
-    #         # Stayers
-    #         sdata_obs = frame.loc[~(worker_m), 'i'].value_counts(sort=False)
-    #         sdata_ids = sdata_obs[sdata_obs >= threshold]
-    #         # Combine
-    #         valid_ids = np.concatenate([jdata_ids, sdata_ids])
-    #     else:
-    #         ## For other columns, convert to long first ##
-    #         return frame.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_ids(threshold=threshold, id_col=id_col, is_sorted=True, copy=False)
-
-    #     return np.array(valid_ids)
-
-    # def min_obs_frame(self, threshold=2, id_col='j', drop_returns_to_stays=False, is_sorted=False, copy=True):
-    #     '''
-    #     Return dataframe of column ids with at least `threshold` many observations.
-
-    #     Arguments:
-    #         threshold (int): minimum number of observations required to keep an id
-    #         id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of ids with sufficiently many observations
-    #     '''
-    #     if threshold <= 1:
-    #         # If no threshold
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute min_obs_frame
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, id_col=id_col, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def min_joint_obs_frame(self, threshold_1=2, threshold_2=2, id_col_1='j', id_col_2='i', drop_returns_to_stays=False, is_sorted=False, copy=True):
-    #     '''
-    #     Return dataframe where column 1 ids have at least `threshold_1` many observations and column 2 ids have at least `threshold_2` many observations.
-
-    #     Arguments:
-    #         threshold_1 (int): minimum number of observations required to keep an id from column 1
-    #         threshold_2 (int): minimum number of observations required to keep an id from column 2
-    #         id_col_1 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
-    #         id_col_2 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         is_sorted (bool): used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): used for event study format. If False, avoid copy.
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of ids with sufficiently many observations
-    #     '''
-    #     self.log(f'computing ids from {id_col_1!r} with a minimum of {threshold_1} observation(s) and ids from {id_col_2!r} with a minimum of {threshold_2} observations', level='info')
-
-    #     if (threshold_1 <= 1) and (threshold_2 <= 1):
-    #         # If no thresholds
-    #         if copy:
-    #             return self.copy()
-    #         else:
-    #             return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute min_joint_obs_frame
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)
-    #     if (threshold_1 <= 1) or (threshold_2 <= 1):
-    #         # If one threshold doesn't apply, ignore it
-    #         if threshold_1 > 1:
-    #             threshold = threshold_1
-    #             id_col = id_col_1
-    #         else:
-    #             threshold = threshold_2
-    #             id_col = id_col_2
-    #         frame = frame.min_obs_frame(threshold=threshold, id_col=id_col, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
-    #     else:
-    #         frame = frame.min_joint_obs_frame(threshold_1=threshold_1, threshold_2=threshold_2, id_col_1=id_col_1, id_col_2=id_col_2, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
-    #     frame = frame.to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def min_workers_firms(self, threshold=2, is_sorted=False, copy=True):
-    #     '''
-    #     List firms with at least `threshold` many workers.
-
-    #     Arguments:
-    #         threshold (int): minimum number of workers required to keep a firm
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (NumPy Array): firms with sufficiently many workers
-    #     '''
-    #     if threshold <= 1:
-    #         # If no threshold
-    #         return self.unique_ids('j')
-
-    #     # Sort and copy
-    #     frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
-
-    #     # We consider j1 for all rows, but j2 only for unstack rows
-    #     j_i_ids = frame.groupby('j1')['i'].unique().apply(list).to_dict()
-    #     j2_i_ids = frame.loc[frame._get_unstack_rows(is_sorted=True, copy=False), :].groupby('j2')['i'].unique().apply(list).to_dict()
-    #     for j, i_ids in j2_i_ids.items():
-    #         try:
-    #             # If firm j in j1, add the worker ids in j2
-    #             j_i_ids[j] += i_ids
-    #         except KeyError:
-    #             # If firm j not in j1, set worker ids to be j2
-    #             j_i_ids[j] = i_ids
-
-    #     valid_firms = []
-    #     for j, i_ids in j_i_ids.items():
-    #         if len(set(i_ids)) >= threshold:
-    #             valid_firms.append(j)
-
-    #     return np.array(valid_firms)
-
-    # def min_workers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, copy=True):
-    #     '''
-    #     Return dataframe of firms with at least `threshold` many workers.
-
-    #     Arguments:
-    #         threshold (int): minimum number of workers required to keep a firm
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of firms with sufficiently many workers
-    #     '''
-    #     if threshold <= 1:
-    #         # If no threshold
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute min_workers_frame
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def min_moves_firms(self, threshold=2, is_sorted=False, copy=True):
-    #     '''
-    #     List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
-
-    #     Arguments:
-    #         threshold (int): minimum number of moves required to keep a firm
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (NumPy Array): firms with sufficiently many moves
-    #     '''
-    #     if threshold == 0:
-    #         # If no threshold
-    #         return self.unique_ids('j')
-
-    #     return self.to_long(is_sorted=is_sorted, copy=copy).min_moves_firms(threshold=threshold)
-
-    # def min_moves_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
-    #     '''
-    #     Return dataframe where all firms have at least `threshold` many moves. Note that a single worker can have multiple moves at the same firm. This method employs loops, as dropping firms that don't meet the threshold may lower the number of moves at other firms.
-
-    #     Arguments:
-    #         threshold (int): minimum number of moves required to keep a firm
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         reset_index (bool): not used for event study format
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of firms with sufficiently many moves
-    #     '''
-    #     if threshold == 0:
-    #         # If no threshold
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute min_moves_frame
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
-    #     '''
-    #     Return dataframe where all firms have at least `threshold` many movers. This method employs loops, as dropping firms that don't meet the threshold may lower the number of movers at other firms.
-
-    #     Arguments:
-    #         threshold (int): minimum number of movers required to keep a firm
-    #         drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
-    #         is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
-    #         reset_index (bool): not used for event study format
-    #         copy (bool): if False, avoid copy.
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe of firms with sufficiently many movers
-    #     '''
-    #     self.log('generating frame of firms with a minimum number of movers', level='info')
-
-    #     if threshold == 0:
-    #         # If no threshold
-    #         if copy:
-    #             return self.copy()
-    #         return self
-
-    #     # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
-    #     no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
-
-    #     # Compute min_movers_frame
-    #     frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_movers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(n_periods=len(self.col_reference_dict['j']), is_sorted=True, copy=False)
-
-    #     # Update col_long_es_dict for columns that aren't supposed to convert to long
-    #     for col in no_split_cols:
-    #         frame.col_long_es_dict[col] = None
-
-    #     return frame
-
-    # def construct_artificial_time(self, time_per_worker=False, is_sorted=False, copy=True):
-    #     '''
-    #     Construct artificial time columns to enable conversion to (collapsed) long format. Only adds columns if time columns not already included.
-
-    #     Arguments:
-    #         time_per_worker (bool): if True, set time independently for each worker (note that this is significantly more computationally costly)
-    #         is_sorted (bool): set to True if dataframe is already sorted by i (this avoids a sort inside a groupby if time_per_worker=True, but this groupby will not sort the returned dataframe)
-    #         copy (bool): if False, avoid copy
-
-    #     Returns:
-    #         (BipartiteExtendedEventStudyBase): dataframe with artificial time columns
-    #     '''
-    #     if copy:
-    #         frame = self.copy()
-    #     else:
-    #         frame = self
-
-    #     if not frame._col_included('t'):
-    #         # Generate m column
-    #         frame = frame.gen_m(copy=False)
-
-    #         ## Values for t columns ##
-    #         if time_per_worker:
-    #             # Reset time for each worker
-    #             t1 = frame.groupby('i', sort=(not is_sorted)).cumcount()
-    #         else:
-    #             # Cumulative time over all workers
-    #             t1 = np.arange(len(frame))
-    #         t2 = t1 + 1
-    #         # t column names
-    #         t_subcols = bpd.util.to_list(frame.col_reference_dict['t'])
-    #         halfway = len(t_subcols) // 2
-    #         for i in range(halfway):
-    #             # Iterate over t columns and fill in values
-    #             frame.loc[:, t_subcols[i]] = t1
-    #             frame.loc[:, t_subcols[i + halfway]] = t2
-
-    #             # Update time for stayers to be constant
-    #             stayers = ~frame.get_worker_m(is_sorted=is_sorted)
-    #             frame.loc[stayers, t_subcols[i + halfway]] = frame.loc[stayers, t_subcols[i]]
-
-    #     # Sort columns
-    #     frame = frame.sort_cols(copy=False)
-
-    #     return frame
+    def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
+        '''
+        Extract largest leave-one-(observation/spell/match)-out connected component.
+
+        Arguments:
+            cc_list (list of lists): each entry is a connected component
+            max_j (int): maximum j in graph
+            leave_out_group (str): which type of leave-one-out connected component to compute (options are 'observation', 'spell', or 'match')
+            component_size_variable (str): how to determine largest leave-one-(observation/spell/match)-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-(observation/spell/match)-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-(observation/spell/match)-out connected component
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+            first_loop (bool): if True, this is the first loop of the method
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of largest leave-one-(observation/spell/match)-out connected component
+        '''
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute leave-one-(observation/spell/match)-out connected components
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_observation_spell_match(cc_list=cc_list, max_j=max_j, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def _leave_out_worker(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
+        '''
+        Extract largest leave-one-worker-out connected component.
+
+        Arguments:
+            cc_list (list of lists): each entry is a connected component
+            max_j (int): maximum j in graph
+            component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+            first_loop (bool): if True, this is the first loop of the method
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of largest leave-one-worker-out connected component
+        '''
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute leave-one-worker-out connected components
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_worker(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def _construct_firm_linkages(self, is_sorted=False, copy=True):
+        '''
+        Construct numpy array linking firms by movers, for use with connected components.
+
+        Arguments:
+            is_sorted (bool): not used for ._construct_firm_linkages()
+            copy (bool): not used for ._construct_firm_linkages()
+
+        Returns:
+            (NumPy Array): firm linkages
+            (int): maximum firm id
+        '''
+        return self.to_long(is_sorted=is_sorted, copy=copy)._construct_firm_linkages(is_sorted=True, copy=False)
+
+    def _construct_firm_double_linkages(self, is_sorted=False, copy=True):
+        '''
+        Construct numpy array linking firms by movers, for use with leave-one-firm-out components.
+
+        Arguments:
+            is_sorted (bool): not used for ._construct_firm_double_linkages()
+            copy (bool): not used for ._construct_firm_double_linkages()
+
+        Returns:
+            (NumPy Array): firm linkages
+            (int): maximum firm id
+        '''
+        return self.to_long(is_sorted=is_sorted, copy=copy)._construct_firm_double_linkages(is_sorted=True, copy=False)
+
+    def _construct_firm_worker_linkages(self, is_sorted=False, copy=True):
+        '''
+        Construct numpy array linking firms to worker ids, for use with leave-one-observation-out components.
+
+        Arguments:
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (NumPy Array): firm-worker linkages
+            (int): maximum firm id
+        '''
+        if not is_sorted:
+            raise NotImplementedError('._construct_firm_worker_linkages() requires `is_sorted` == True, but it is set to False.')
+
+        return self.to_long(is_sorted=is_sorted, copy=copy)._construct_firm_worker_linkages(is_sorted=True, copy=False)
+
+    def keep_ids(self, id_col, keep_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
+        '''
+        Only keep ids belonging to a given set of ids.
+
+        Arguments:
+            id_col (str): column of ids to consider ('i', 'j', or 'g')
+            keep_ids_list (list): ids to keep
+            drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteExtendedEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe with ids in the given set
+        '''
+        keep_ids_list = set(keep_ids_list)
+        if len(keep_ids_list) == self.n_unique_ids(id_col):
+            # If keeping everything
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Keep ids
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).keep_ids(id_col=id_col, keep_ids_list=keep_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def drop_ids(self, id_col, drop_ids_list, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
+        '''
+        Drop ids belonging to a given set of ids.
+
+        Arguments:
+            id_col (str): column of ids to consider ('i', 'j', or 'g')
+            drop_ids_list (list): ids to drop
+            drop_returns_to_stays (bool): used only if id_col is 'j' or 'g' and using BipartiteExtendedEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe with ids outside the given set
+        '''
+        drop_ids_list = set(drop_ids_list)
+        if len(drop_ids_list) == 0:
+            # If nothing input
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Drop ids
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).drop_ids(id_col=id_col, drop_ids_list=drop_ids_list, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def keep_rows(self, rows, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
+        '''
+        Only keep particular rows.
+
+        Arguments:
+            rows (list): rows to keep
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe with given rows
+        '''
+        rows = set(rows)
+        if len(rows) == len(self):
+            # If keeping everything
+            if copy:
+                return self.copy()
+            return self
+
+        rows_list = sorted(list(rows_list))
+
+        frame = self.iloc[rows_list]
+
+        if isinstance(frame, bpd.BipartiteExtendedEventStudyCollapsed) and (not frame.no_returns):
+            ## If BipartiteExtendedEventStudyCollapsed and there are returns, we have to recollapse
+            # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+            no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+            # Recollapse
+            frame = frame.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).recollapse(drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+            # We don't need to copy again
+            copy = False
+
+            # Update col_long_es_dict for columns that aren't supposed to convert to long
+            for col in no_split_cols:
+                frame.col_long_es_dict[col] = None
+
+        if copy:
+            return frame.copy()
+
+        return frame
+
+    def min_obs_ids(self, threshold=2, id_col='j', is_sorted=False, copy=True):
+        '''
+        List column ids with at least `threshold` many observations.
+
+        Arguments:
+            threshold (int): minimum number of observations required to keep an id
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (NumPy Array): ids with sufficiently many observations
+        '''
+        if threshold <= 1:
+            # If no threshold
+            return self.unique_ids(id_col)
+
+        return self.to_long(is_sorted=is_sorted, copy=copy).min_obs_ids(threshold=threshold, id_col=id_col, is_sorted=True, copy=False)
+
+    def min_obs_frame(self, threshold=2, id_col='j', drop_returns_to_stays=False, is_sorted=False, copy=True):
+        '''
+        Return dataframe of column ids with at least `threshold` many observations.
+
+        Arguments:
+            threshold (int): minimum number of observations required to keep an id
+            id_col (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of ids with sufficiently many observations
+        '''
+        if threshold <= 1:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_obs_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_obs_frame(threshold=threshold, id_col=id_col, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def min_joint_obs_frame(self, threshold_1=2, threshold_2=2, id_col_1='j', id_col_2='i', drop_returns_to_stays=False, is_sorted=False, copy=True):
+        '''
+        Return dataframe where column 1 ids have at least `threshold_1` many observations and column 2 ids have at least `threshold_2` many observations.
+
+        Arguments:
+            threshold_1 (int): minimum number of observations required to keep an id from column 1
+            threshold_2 (int): minimum number of observations required to keep an id from column 2
+            id_col_1 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            id_col_2 (str): column to check ids ('i', 'j', or 'g'). Use general column names for joint columns, e.g. put 'j' instead of 'j1', 'j2'.
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): used for event study format. If False, avoid copy.
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of ids with sufficiently many observations
+        '''
+        self.log(f'computing ids from {id_col_1!r} with a minimum of {threshold_1} observation(s) and ids from {id_col_2!r} with a minimum of {threshold_2} observations', level='info')
+
+        if (threshold_1 <= 1) and (threshold_2 <= 1):
+            # If no thresholds
+            if copy:
+                return self.copy()
+            else:
+                return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_joint_obs_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)
+        if (threshold_1 <= 1) or (threshold_2 <= 1):
+            # If one threshold doesn't apply, ignore it
+            if threshold_1 > 1:
+                threshold = threshold_1
+                id_col = id_col_1
+            else:
+                threshold = threshold_2
+                id_col = id_col_2
+            frame = frame.min_obs_frame(threshold=threshold, id_col=id_col, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
+        else:
+            frame = frame.min_joint_obs_frame(threshold_1=threshold_1, threshold_2=threshold_2, id_col_1=id_col_1, id_col_2=id_col_2, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False)
+        frame = frame.to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def min_workers_firms(self, threshold=2, is_sorted=False, copy=True):
+        '''
+        List firms with at least `threshold` many workers.
+
+        Arguments:
+            threshold (int): minimum number of workers required to keep a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (NumPy Array): firms with sufficiently many workers
+        '''
+        if threshold <= 1:
+            # If no threshold
+            return self.unique_ids('j')
+
+        return self.to_long(is_sorted=is_sorted, copy=copy).min_workers_firms(threshold=threshold, is_sorted=True, copy=False)
+
+    def min_workers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, copy=True):
+        '''
+        Return dataframe of firms with at least `threshold` many workers.
+
+        Arguments:
+            threshold (int): minimum number of workers required to keep a firm
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of firms with sufficiently many workers
+        '''
+        if threshold <= 1:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_workers_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_workers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def min_moves_firms(self, threshold=2, is_sorted=False, copy=True):
+        '''
+        List firms with at least `threshold` many moves. Note that a single mover can have multiple moves at the same firm.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (NumPy Array): firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            return self.unique_ids('j')
+
+        return self.to_long(is_sorted=is_sorted, copy=copy).min_moves_firms(threshold=threshold)
+
+    def min_moves_frame(self, threshold=2, drop_returns_to_stays=False, is_sorted=False, reset_index=False, copy=True):
+        '''
+        Return dataframe where all firms have at least `threshold` many moves. Note that a single worker can have multiple moves at the same firm. This method employs loops, as dropping firms that don't meet the threshold may lower the number of moves at other firms.
+
+        Arguments:
+            threshold (int): minimum number of moves required to keep a firm
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of firms with sufficiently many moves
+        '''
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_moves_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_moves_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def min_movers_frame(self, threshold=15, drop_returns_to_stays=False, is_sorted=False, reset_index=True, copy=True):
+        '''
+        Return dataframe where all firms have at least `threshold` many movers. This method employs loops, as dropping firms that don't meet the threshold may lower the number of movers at other firms.
+
+        Arguments:
+            threshold (int): minimum number of movers required to keep a firm
+            drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            reset_index (bool): not used for event study format
+            copy (bool): if False, avoid copy.
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe of firms with sufficiently many movers
+        '''
+        self.log('generating frame of firms with a minimum number of movers', level='info')
+
+        if threshold == 0:
+            # If no threshold
+            if copy:
+                return self.copy()
+            return self
+
+        # Keep track of columns that aren't supposed to convert to long, but we allow to convert because this is during data cleaning
+        no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
+
+        # Compute min_movers_frame
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy).min_movers_frame(threshold=threshold, drop_returns_to_stays=drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False).to_extendedeventstudy(periods_pre=len(self.col_reference_dict['j']), periods_post=0, is_sorted=True, copy=False)
+
+        # Update col_long_es_dict for columns that aren't supposed to convert to long
+        for col in no_split_cols:
+            frame.col_long_es_dict[col] = None
+
+        return frame
+
+    def construct_artificial_time(self, time_per_worker=False, is_sorted=False, copy=True):
+        '''
+        Construct artificial time columns to enable conversion to (collapsed) long format. Only adds columns if time columns not already included.
+
+        Arguments:
+            time_per_worker (bool): if True, set time independently for each worker (note that this is significantly more computationally costly)
+            is_sorted (bool): set to True if dataframe is already sorted by i (this avoids a sort inside a groupby if time_per_worker=True, but this groupby will not sort the returned dataframe)
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): dataframe with artificial time columns
+        '''
+        if copy:
+            frame = self.copy()
+        else:
+            frame = self
+
+        if not frame._col_included('t'):
+            # Parameters
+            n_periods = len(frame.col_reference_dict['j'])
+
+            # Generate m column
+            frame = frame.gen_m(copy=False)
+
+            ## Values for t columns ##
+            if time_per_worker:
+                # Reset time for each worker
+                t1 = n_periods * frame.groupby('i', sort=(not is_sorted)).cumcount()
+            else:
+                # Cumulative time over all workers
+                t1 = n_periods * np.arange(len(frame))
+            t2 = t1 + 1
+            # t column names
+            t_subcols = bpd.util.to_list(frame.col_reference_dict['t'])
+            n_split_groups = len(t_subcols) // n_periods
+            for i in range(n_split_groups):
+                # Iterate over t columns and fill in values
+                frame.loc[:, t_subcols[i]] = t1
+                for j in range(1, n_periods):
+                    frame.loc[:, t_subcols[i + j * n_split_groups]] = t1 + j
+
+        # Sort columns
+        frame = frame.sort_cols(copy=False)
+
+        return frame

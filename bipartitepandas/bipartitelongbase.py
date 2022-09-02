@@ -325,7 +325,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
         return es_frame
 
-    def to_extendedeventstudy(self, periods_pre=2, periods_post=2, stable_pre=None, stable_post=None, transition_col=None, move_to_worker=False, is_sorted=False, copy=True):
+    def to_extendedeventstudy(self, periods_pre=2, periods_post=2, stable_pre=None, stable_post=None, transition_col=None, move_to_worker=True, is_sorted=False, copy=True):
         '''
         Return (collapsed) long form data reformatted into (collapsed) extended event study data.
 
