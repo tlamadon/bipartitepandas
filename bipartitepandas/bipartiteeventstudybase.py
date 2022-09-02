@@ -315,7 +315,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
                     rename_dict_1[subcols[halfway + i]] = subcols[i]
                     # Get column number, e.g. j1 will give 1
-                    subcol_number = subcols[i].strip(col)
+                    subcol_number = subcols[i][len(col):]
                     # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
                     rename_dict_2[subcols[i]] = col + subcol_number[1:]
                     if frame.col_dtype_dict[col] in ['int', 'categorical']:

@@ -49,6 +49,16 @@ class BipartiteLongCollapsed(bpd.BipartiteLongBase):
         '''
         return bpd.BipartiteEventStudyCollapsed
 
+    @property
+    def _constructor_ees(self):
+        '''
+        For .to_extendedeventstudy(), tells BipartiteLongBase which event study format to use.
+
+        Returns:
+            (class): BipartiteExtendedEventStudyCollapsed class
+        '''
+        return bpd.BipartiteExtendedEventStudyCollapsed
+
     def get_worker_m(self, is_sorted=False):
         '''
         Get NumPy array indicating whether the worker associated with each observation is a mover.

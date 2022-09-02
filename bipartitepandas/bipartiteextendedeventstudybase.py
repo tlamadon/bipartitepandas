@@ -219,8 +219,8 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
         # New dataframe
         data_long = pd.DataFrame({'i': np.tile(frame.loc[:, 'i'].to_numpy(), n_periods)})
         for col in frame._included_cols():
-            if (frame.col_long_es_dict[col] is None) and drop_no_split_columns:
-                # If None and data is clean, drop this column
+            if ((frame.col_long_es_dict[col] is None) and drop_no_split_columns) or (col == 'm'):
+                # If None and data is clean, or column is 'm', drop this column
                 pass
             elif frame.col_long_es_dict[col]:
                 # If column has been split
@@ -230,7 +230,7 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
                 n_split_groups = len(subcols) // n_periods
                 for i in range(n_split_groups):
                     # Get column number, e.g. j1 will give 1
-                    subcol_number = subcols[i].strip(col)
+                    subcol_number = subcols[i][len(col):]
                     # Get rid of first number, e.g. j12 to j2 (note there is no indexing issue even if subcol_number has only one digit)
                     subcol_i = col + subcol_number[1:]
                     # Concatenate all subcolumns with the same remaining number
@@ -256,9 +256,6 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
                     user_added_cols[col] = frame.col_reference_dict[col]
 
         ## Final steps ##
-        if 'm' in data_long.columns:
-            # Drop 'm' column (the same observation can have different 'm' values for different event studies)
-            data_long.drop('m', axis=1, inplace=True)
         # Drop duplicates
         data_long.drop_duplicates(inplace=True)
         # Sort columns

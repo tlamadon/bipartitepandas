@@ -11,8 +11,8 @@ import pickle
 ##### Tests for BipartiteLong #####
 ###################################
 
-def test_long_get_extended_eventstudy_1():
-    # Test get_extended_eventstudy() by making sure it is generating the event study correctly for periods_pre=2 and periods_post=1
+def test_long_to_extendedeventstudy_1():
+    # Test to_extendedeventstudy() by making sure it is generating the event study correctly for periods_pre=2 and periods_post=1
     worker_data = []
     # Worker 0
     worker_data.append({'i': 0, 'j': 0, 'y': 2., 't': 1})
@@ -37,74 +37,103 @@ def test_long_get_extended_eventstudy_1():
     bdf = bpd.BipartiteLong(df)
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(transition_col='g', outcomes=['j', 'y'], periods_pre=2, periods_post=1)
+    es_extended = bdf.to_extendedeventstudy(periods_pre=2, periods_post=1, transition_col='g')
 
     assert es_extended.iloc[0]['i'] == 0
-    assert es_extended.iloc[0]['j_l2'] == 1
-    assert es_extended.iloc[0]['j_l1'] == 1
-    assert es_extended.iloc[0]['j_f1'] == 0
-    assert es_extended.iloc[0]['y_l2'] == 1
-    assert es_extended.iloc[0]['y_l1'] == 1
-    assert es_extended.iloc[0]['y_f1'] == 1
-    assert es_extended.iloc[0]['t'] == 4
+    assert es_extended.iloc[0]['j1'] == 1
+    assert es_extended.iloc[0]['j2'] == 1
+    assert es_extended.iloc[0]['j3'] == 0
+    assert es_extended.iloc[0]['y1'] == 1
+    assert es_extended.iloc[0]['y2'] == 1
+    assert es_extended.iloc[0]['y3'] == 1
+    assert es_extended.iloc[0]['t1'] == 2
+    assert es_extended.iloc[0]['t2'] == 3
+    assert es_extended.iloc[0]['t3'] == 4
 
     assert es_extended.iloc[1]['i'] == 2
-    assert es_extended.iloc[1]['j_l2'] == 2
-    assert es_extended.iloc[1]['j_l1'] == 2
-    assert es_extended.iloc[1]['j_f1'] == 3
-    assert es_extended.iloc[1]['y_l2'] == 1
-    assert es_extended.iloc[1]['y_l1'] == 1
-    assert es_extended.iloc[1]['y_f1'] == 1.5
-    assert es_extended.iloc[1]['t'] == 3
+    assert es_extended.iloc[1]['j1'] == 2
+    assert es_extended.iloc[1]['j2'] == 2
+    assert es_extended.iloc[1]['j3'] == 3
+    assert es_extended.iloc[1]['y1'] == 1
+    assert es_extended.iloc[1]['y2'] == 1
+    assert es_extended.iloc[1]['y3'] == 1.5
+    assert es_extended.iloc[1]['t1'] == 1
+    assert es_extended.iloc[1]['t2'] == 2
+    assert es_extended.iloc[1]['t3'] == 3
 
-def test_long_get_extended_eventstudy_2():
-    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study
-    sim_data = bpd.SimBipartite().simulate()
+def test_long_to_extendedeventstudy_2():
+    # Test to_extendedeventstudy() by making sure workers move firms at the fulcrum of the event study
+    rng = np.random.default_rng(8591)
+    sim_data = bpd.SimBipartite().simulate(rng)
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=3, periods_post=2)
+    es_extended = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, transition_col='j')
 
-    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
+    assert np.all(es_extended['j3'] != es_extended['j4'])
 
-def test_long_get_extended_eventstudy_3_1():
-    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study and stable_pre works
-    sim_data = bpd.SimBipartite().simulate()
+def test_long_to_extendedeventstudy_3_1():
+    # Test to_extendedeventstudy() by making sure workers move firms at the fulcrum of the event study and stable_pre works
+    rng = np.random.default_rng(8592)
+    sim_data = bpd.SimBipartite().simulate(rng)
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=2, periods_post=3, stable_pre='j')
+    es_extended = bdf.to_extendedeventstudy(periods_pre=2, periods_post=3, stable_pre='j', transition_col='j')
 
-    assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
-    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
+    assert np.all(es_extended['j1'] == es_extended['j2'])
+    assert np.all(es_extended['j2'] != es_extended['j3'])
 
-def test_long_get_extended_eventstudy_3_2():
-    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study and stable_post works
-    sim_data = bpd.SimBipartite().simulate()
+def test_long_to_extendedeventstudy_3_2():
+    # Test to_extendedeventstudy() by making sure workers move firms at the fulcrum of the event study and stable_post works
+    rng = np.random.default_rng(8593)
+    sim_data = bpd.SimBipartite().simulate(rng)
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=3, periods_post=2, stable_post='j')
+    es_extended = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, stable_post='j', transition_col='j')
 
-    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
-    assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
+    assert np.all(es_extended['j3'] != es_extended['j4'])
+    assert np.all(es_extended['j4'] == es_extended['j5'])
 
-def test_long_get_extended_eventstudy_3_3():
-    # Test get_extended_eventstudy() by making sure workers move firms at the fulcrum of the event study and stable_post and stable_pre work together
-    sim_data = bpd.SimBipartite().simulate()
+def test_long_to_extendedeventstudy_3_3():
+    # Test to_extendedeventstudy() by making sure workers move firms at the fulcrum of the event study and stable_post and stable_pre work together
+    rng = np.random.default_rng(8594)
+    sim_data = bpd.SimBipartite().simulate(rng)
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    es_extended = bdf.get_extended_eventstudy(outcomes=['j', 'y'], periods_pre=3, periods_post=2, stable_pre='j', stable_post='j')
+    es_extended = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', transition_col='j')
 
-    assert len(es_extended) > 0 # Make sure something is left
-    assert np.sum(es_extended['j_l3'] != es_extended['j_l2']) == 0
-    assert np.sum(es_extended['j_l2'] != es_extended['j_l1']) == 0
-    assert np.sum(es_extended['j_l1'] == es_extended['j_f1']) == 0
-    assert np.sum(es_extended['j_f1'] != es_extended['j_f2']) == 0
+    # Make sure something is left
+    assert len(es_extended) > 0
+    assert np.all(es_extended['j1'] == es_extended['j2'])
+    assert np.all(es_extended['j2'] == es_extended['j3'])
+    assert np.all(es_extended['j3'] != es_extended['j4'])
+    assert np.all(es_extended['j4'] == es_extended['j5'])
+
+def test_long_to_extendedeventstudy_4():
+    # Test to_extendedeventstudy() by making sure setting move_to_worker=True guarantees that converting between long and extended event study keeps the data unchanged (but there is no guarantee if move_to_worker=False)
+    rng = np.random.default_rng(8595)
+    sim_data = bpd.SimBipartite(bpd.sim_params({'n_time': 10})).simulate(rng)
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
+    bdf = bdf.clean()
+
+    es_extended_1 = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', transition_col='j', move_to_worker=True)
+
+    es_extended_2 = es_extended_1.to_long(is_sorted=True, copy=True).to_extendedeventstudy(periods_pre=3, periods_post=2)
+
+    assert len(es_extended_1) == len(es_extended_2)
+
+    es_extended_3 = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, stable_pre='j', stable_post='j', transition_col='j', move_to_worker=False)
+
+    es_extended_4 = es_extended_3.to_long(is_sorted=True, copy=True).to_extendedeventstudy(periods_pre=3, periods_post=2)
+
+    assert len(es_extended_3) != len(es_extended_4)
+
 
 # Only uncomment for manual testing - this produces a graph which pauses the testing
-# def test_long_plot_extended_eventstudy_4():
+# def test_long_plot_extended_eventstudy_5():
 #     # Test plot_extended_eventstudy() by making sure it doesn't crash
 #     sim_data = bpd.SimBipartite().simulate()
 #     bdf = bpd.BipartiteDataFrame(sim_data).clean().cluster(bpd.cluster_params({'grouping': bpd.grouping.KMeans(n_clusters=2)}))

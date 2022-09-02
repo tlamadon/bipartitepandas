@@ -233,7 +233,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                 # If column should split
                 for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
                     # Get column number, e.g. j1 will give 1
-                    subcol_number = subcol.strip(col)
+                    subcol_number = subcol[len(col):]
                     ## Movers ##
                     # Useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22
                     col_1 = col + '1' + subcol_number
@@ -270,14 +270,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
         movers.loc[:, 'm'] = 1
         movers.loc[movers.loc[:, 'j1'].to_numpy() == movers.loc[:, 'j2'].to_numpy(), 'm'] = 0
 
-        # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
-        for col in all_cols:
-            if ((frame.col_dtype_dict[col] == 'int') or (col in frame.columns_contig.keys())) and frame.col_long_es_dict[col]:
-                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
-                    # Get column number, e.g. j1 will give 1
-                    subcol_number = subcol.strip(col)
-                    shifted_col = col + '1' + subcol_number
-                    movers.loc[:, shifted_col] = movers.loc[:, shifted_col].astype(int, copy=False)
+        # # Correct datatypes (shifting adds nans which converts all columns into float, correct columns that should be int)
+        # for col in all_cols:
+        #     if ((frame.col_dtype_dict[col] == 'int') or (col in frame.columns_contig.keys())) and frame.col_long_es_dict[col]:
+        #         for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+        #             # Get column number, e.g. j1 will give 1
+        #             subcol_number = subcol.strip(col)
+        #             shifted_col = col + '1' + subcol_number
+        #             movers.loc[:, shifted_col] = movers.loc[:, shifted_col].astype(int, copy=False)
 
         # Correct i
         movers.drop('i2', axis=1, inplace=True)
@@ -324,6 +324,180 @@ class BipartiteLongBase(bpd.BipartiteBase):
             es_frame.loc[:, 'i'] = es_frame.index
 
         return es_frame
+
+    def to_extendedeventstudy(self, periods_pre=2, periods_post=2, stable_pre=None, stable_post=None, transition_col=None, move_to_worker=False, is_sorted=False, copy=True):
+        '''
+        Return (collapsed) long form data reformatted into (collapsed) extended event study data.
+
+        Arguments:
+            periods_pre (int): number of periods each event study will include before a transition (if a transition is not specified, any new observation is considered a transition)
+            periods_post (int): number of periods each event study will include after a transition (if a transition is not specified, any new observation is considered a transition)
+            stable_pre (str or list of str or None): column name or list of column names, where each event study should be kept only if the values in all listed columns are constant before the transition; None is equivalent to []
+            stable_post (str or list of str or None): column name or list of column names, where each event study should be kept only if the values in all listed columns are constant after the transition; None is equivalent to []
+            transition_col (str or None): column to use to define a transition; if None, any new observation is considered a transition
+            move_to_worker (bool): if True, each move is treated as a new worker
+            is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
+            copy (bool): if False, avoid copy
+
+        Returns:
+            (BipartiteExtendedEventStudyBase): extended event study dataframe
+        '''
+        if not self._col_included('t'):
+            raise NotImplementedError("Cannot convert from long to extended event study format without a time column. To bypass this, if you know your data is ordered by time but do not have time data, it is recommended to construct an artificial time column by calling .construct_artificial_time(copy=False).")
+
+        # Parameters
+        if stable_pre is None:
+            stable_pre = []
+        else:
+            stable_pre = bpd.util.to_list(stable_pre)
+        if stable_post is None:
+            stable_post = []
+        else:
+            stable_post = bpd.util.to_list(stable_post)
+        n_periods = periods_pre + periods_post
+
+        # Sort and copy
+        frame = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
+        ## Add lagged values ##
+        all_cols = frame._included_cols()
+        default_cols = frame.columns_req + frame.columns_opt
+
+        # Keep track of user-added columns
+        user_added_cols = {}
+
+        # New dataframe
+        data_ees = pd.DataFrame()
+        for col in all_cols:
+            if frame.col_long_es_dict[col] is None:
+                # If None, drop this column
+                pass
+            elif frame.col_long_es_dict[col]:
+                # If column should split
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                    # Get column number, e.g. j1 will give 1
+                    subcol_number = subcol[len(col):]
+                    # Baseline column (note that new number goes before previous number, this is useful for t1 and t2: t1 should go to t11 and t21; t2 should go to t12 and t22)
+                    col_1 = f'{col}{1}{subcol_number}'
+                    data_ees.loc[:, col_1] = frame.loc[:, subcol].to_numpy()
+                    # Keep track of new columns
+                    new_subcols = [col_1]
+                    for t in range(1, n_periods):
+                        # Lagged values (shift each subcolumn (n_periods - 1) times)
+                        col_t = f'{col}{t + 1}{subcol_number}'
+                        data_ees.loc[:, col_t] = bpd.util.fast_shift(frame.loc[:, subcol].to_numpy(), -t, fill_value=-2)
+                        # Keep track of new columns
+                        new_subcols.append(col_t)
+
+                    if col not in default_cols:
+                        # User-added columns
+                        if col in user_added_cols.keys():
+                            user_added_cols[col] += new_subcols
+                        else:
+                            user_added_cols[col] = new_subcols
+            else:
+                # If column shouldn't split
+                for subcol in bpd.util.to_list(frame.col_reference_dict[col]):
+                    data_ees.loc[:, subcol] = frame.loc[:, subcol].to_numpy()
+                if col not in default_cols:
+                    # User-added columns
+                    user_added_cols[col] = frame.col_reference_dict[col]
+
+        # Ensure lagged values are for the same worker
+        same_i = data_ees.loc[:, 'i1'].to_numpy() == data_ees.loc[:, 'i2'].to_numpy()
+        for t in range(3, n_periods + 1):
+            same_i = same_i & (data_ees.loc[:, 'i1'].to_numpy() == data_ees.loc[:, f'i{t}'].to_numpy())
+        data_ees = data_ees.loc[same_i, :]
+        del same_i
+
+        # Set 'm'
+        diff_j = data_ees.loc[:, 'j1'].to_numpy() != data_ees.loc[:, 'j2'].to_numpy()
+        for t in range(3, n_periods + 1):
+            diff_j = diff_j | (data_ees.loc[:, 'j1'].to_numpy() != data_ees.loc[:, f'j{t}'].to_numpy())
+        data_ees.loc[:, 'm'] = diff_j.astype(int, copy=False)
+        del diff_j
+
+        # Correct i
+        data_ees.drop([f'i{t}' for t in range(2, n_periods + 1)], axis=1, inplace=True)
+        data_ees.rename({'i1': 'i'}, axis=1, inplace=True)
+
+        # Sort columns
+        sorted_cols = bpd.util._sort_cols(data_ees.columns)
+        data_ees = data_ees.reindex(sorted_cols, axis=1, copy=False)
+
+        frame.log('columns updated', level='info')
+
+        ees_frame = frame._constructor_ees(data_ees, n_periods=n_periods, col_reference_dict=user_added_cols, log=frame._log_on_indicator)
+
+        frame.log('data reformatted as extended event study', level='info')
+
+        ees_frame._set_attributes(frame, no_dict=True)
+
+        for col, long_es_split in frame.col_long_es_dict.items():
+            # Remove dropped columns from attribute dictionaries
+            if long_es_split is None:
+                # If column should be dropped during conversion to event study format
+                del ees_frame.col_dtype_dict[col]
+                del ees_frame.col_collapse_dict[col]
+                del ees_frame.col_long_es_dict[col]
+                if col in ees_frame.columns_contig.keys():
+                    # If column is categorical
+                    del ees_frame.columns_contig[col]
+                    if ees_frame.id_reference_dict:
+                        # If linking contiguous ids to original ids
+                        del ees_frame.id_reference_dict[col]
+
+        # Handle transitions
+        if transition_col is not None:
+            transition_subcols = bpd.util.to_list(ees_frame.col_reference_dict[transition_col])
+            pre_transition = transition_subcols[: periods_pre]
+            post_transition = transition_subcols[periods_pre:]
+
+            # Check that last observation before the transition isn't equal to the first observation after the transition
+            transition = (ees_frame.loc[:, pre_transition[-1]].to_numpy() != ees_frame.loc[:, post_transition[0]].to_numpy())
+            ees_frame = ees_frame.loc[transition, :]
+            del transition
+
+            frame.log('transitions handled', level='info')
+
+        # Handle stable-pre
+        for pre_col in stable_pre:
+            pre_all_subcols = bpd.util.to_list(ees_frame.col_reference_dict[pre_col])
+            pre_subcols = pre_all_subcols[: periods_pre]
+
+            # Check that the column is stable before the transition
+            same_subcol = ees_frame.loc[:, pre_subcols[0]].to_numpy() == ees_frame.loc[:, pre_subcols[1]].to_numpy()
+            for t in range(2, periods_pre):
+                same_subcol = same_subcol & (ees_frame.loc[:, pre_subcols[0]].to_numpy() == ees_frame.loc[:, pre_subcols[t]].to_numpy())
+            ees_frame = ees_frame.loc[same_subcol, :]
+            del same_subcol
+
+            frame.log(f'stable-pre handled for column {pre_col!r}', level='info')
+
+        # Handle stable-post
+        for post_col in stable_post:
+            post_all_subcols = bpd.util.to_list(ees_frame.col_reference_dict[post_col])
+            post_subcols = post_all_subcols[periods_pre:]
+
+            # Check that the column is stable after the transition
+            same_subcol = ees_frame.loc[:, post_subcols[0]].to_numpy() == ees_frame.loc[:, post_subcols[1]].to_numpy()
+            for t in range(2, periods_post):
+                same_subcol = same_subcol & (ees_frame.loc[:, post_subcols[0]].to_numpy() == ees_frame.loc[:, post_subcols[t]].to_numpy())
+            ees_frame = ees_frame.loc[same_subcol, :]
+            del same_subcol
+
+            frame.log(f'stable-post handled for column {post_col!r}', level='info')
+
+        # Sort data by i and t
+        ees_frame = ees_frame.sort_rows(is_sorted=False, copy=False)
+
+        # Reset index
+        ees_frame.reset_index(drop=True, inplace=True)
+
+        if move_to_worker:
+            ees_frame.loc[:, 'i'] = ees_frame.index
+
+        return ees_frame
 
     def _get_spell_ids(self, is_sorted=False, copy=True):
         '''
