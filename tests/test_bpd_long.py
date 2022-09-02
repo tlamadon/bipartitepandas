@@ -131,7 +131,6 @@ def test_long_to_extendedeventstudy_4():
 
     assert len(es_extended_3) != len(es_extended_4)
 
-
 # Only uncomment for manual testing - this produces a graph which pauses the testing
 # def test_long_plot_extended_eventstudy_5():
 #     # Test plot_extended_eventstudy() by making sure it doesn't crash
