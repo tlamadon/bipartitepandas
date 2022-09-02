@@ -123,7 +123,7 @@ def test_long_to_extendedeventstudy_3_3():
     assert np.all(es_extended['j3'] != es_extended['j4'])
     assert np.all(es_extended['j4'] == es_extended['j5'])
 
-def test_long_to_extendedeventstudy_4():
+def test_long_to_extendedeventstudy_4_1():
     # Test to_extendedeventstudy() by making sure setting move_to_worker=True guarantees that converting between long and extended event study keeps the data unchanged (but there is no guarantee if move_to_worker=False)
     rng = np.random.default_rng(8595)
     sim_data = bpd.SimBipartite(bpd.sim_params({'n_time': 10})).simulate(rng)
@@ -141,6 +141,25 @@ def test_long_to_extendedeventstudy_4():
     es_extended_4 = es_extended_3.to_long(is_sorted=True, copy=True).to_extendedeventstudy(periods_pre=3, periods_post=2)
 
     assert len(es_extended_3) != len(es_extended_4)
+
+def test_long_to_extendedeventstudy_4_2():
+    # Test to_extendedeventstudy() by making sure that converting between long and extended event study keeps the data unchanged, regardless of whether move_to_worker=True (for collapsed data)
+    rng = np.random.default_rng(8596)
+    sim_data = bpd.SimBipartite(bpd.sim_params({'n_time': 10})).simulate(rng)
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
+    bdf = bdf.clean().collapse()
+
+    es_extended_1 = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, transition_col='j', move_to_worker=True)
+
+    es_extended_2 = es_extended_1.to_long(is_sorted=True, copy=True).to_extendedeventstudy(periods_pre=3, periods_post=2)
+
+    assert len(es_extended_1) == len(es_extended_2)
+
+    es_extended_3 = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, transition_col='j', move_to_worker=False)
+
+    es_extended_4 = es_extended_3.to_long(is_sorted=True, copy=True).to_extendedeventstudy(periods_pre=3, periods_post=2)
+
+    assert len(es_extended_3) == len(es_extended_4)
 
 # Only uncomment for manual testing - this produces a graph which pauses the testing
 # def test_long_plot_extended_eventstudy_5():
