@@ -37,7 +37,7 @@ def test_long_to_extendedeventstudy_1():
     bdf = bpd.BipartiteLong(df)
     bdf = bdf.clean()
 
-    es_extended = bdf.to_extendedeventstudy(periods_pre=2, periods_post=1, transition_col='g')
+    es_extended = bdf.to_extendedeventstudy(periods_pre=2, periods_post=1, transition_col='g', move_to_worker=False)
 
     assert es_extended.iloc[0]['i'] == 0
     assert es_extended.iloc[0]['j1'] == 1
