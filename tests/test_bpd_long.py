@@ -61,12 +61,23 @@ def test_long_to_extendedeventstudy_1():
     assert es_extended.iloc[1]['t2'] == 2
     assert es_extended.iloc[1]['t3'] == 3
 
-def test_long_to_extendedeventstudy_2():
+def test_long_to_extendedeventstudy_2_1():
     # Test to_extendedeventstudy() by making sure workers move firms at the fulcrum of the event study
     rng = np.random.default_rng(8591)
     sim_data = bpd.SimBipartite().simulate(rng)
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
+
+    es_extended = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, transition_col='j')
+
+    assert np.all(es_extended['j3'] != es_extended['j4'])
+
+def test_long_to_extendedeventstudy_2_2():
+    # Test to_extendedeventstudy() by making sure workers move firms at the fulcrum of the event study (for collapsed data)
+    rng = np.random.default_rng(8591)
+    sim_data = bpd.SimBipartite().simulate(rng)
+    bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
+    bdf = bdf.clean().collapse()
 
     es_extended = bdf.to_extendedeventstudy(periods_pre=3, periods_post=2, transition_col='j')
 
