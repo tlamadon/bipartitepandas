@@ -217,13 +217,11 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
         default_cols = frame.columns_req + frame.columns_opt
 
         # New dataframe
-        data_long = pd.DataFrame()
-        # Columns to drop
-        drops = []
+        data_long = pd.DataFrame({'i': np.tile(frame.loc[:, 'i'].to_numpy(), n_periods)})
         for col in frame._included_cols():
             if (frame.col_long_es_dict[col] is None) and drop_no_split_columns:
                 # If None and data is clean, drop this column
-                drops += bpd.util.to_list(frame.col_reference_dict[col])
+                pass
             elif frame.col_long_es_dict[col]:
                 # If column has been split
                 subcols = bpd.util.to_list(frame.col_reference_dict[col])
@@ -238,7 +236,7 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
                     # Concatenate all subcolumns with the same remaining number
                     data_long[subcol_i] = np.concatenate(
                         [
-                            frame.loc[:, subcols[i + j * n_periods]] for j in range(n_split_groups)
+                            frame.loc[:, subcols[i + j * n_split_groups]] for j in range(n_periods)
                         ]
                     )
 
@@ -258,6 +256,9 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
                     user_added_cols[col] = frame.col_reference_dict[col]
 
         ## Final steps ##
+        if 'm' in data_long.columns:
+            # Drop 'm' column (the same observation can have different 'm' values for different event studies)
+            data_long.drop('m', axis=1, inplace=True)
         # Drop duplicates
         data_long.drop_duplicates(inplace=True)
         # Sort columns
