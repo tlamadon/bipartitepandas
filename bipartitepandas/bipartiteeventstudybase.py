@@ -38,7 +38,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
     def gen_m(self, force=False, copy=True):
         '''
-        Generate m column for data (m == 0 if stayer, m == 1 or 2 if mover).
+        Generate m column for data (m == 0 if stayer, m == 1 if mover).
 
         Arguments:
             force (bool): if True, reset 'm' column even if it exists
@@ -179,6 +179,12 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
             ret_str += f'm==0 with different income (should be 0): {income_stayers}'
 
+            if self._col_included('g'):
+                ##### Clusters #####
+                clusters_stayers = (stayers.loc[:, 'g1'].to_numpy() != stayers.loc[:, 'g2'].to_numpy()).sum()
+
+                ret_str += f'm==0 with different clusters (should be 0): {clusters_stayers}'
+
             print(ret_str)
 
     def _drop_i_t_duplicates(self, how='max', is_sorted=False, copy=True):
@@ -302,9 +308,9 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             elif frame.col_long_es_dict[col]:
                 # If column has been split
                 subcols = bpd.util.to_list(frame.col_reference_dict[col])
-                halfway = len(subcols) // 2
                 if (col != 'i') and (len(subcols) % 2 == 1):
                     raise ValueError(f'{col!r} is listed as being split, but has an odd number of subcolumns. If this is a custom column, please make sure when adding it to the dataframe to specify long_es_split=False, to ensure it is not marked as being split, or long_es_split=None, to indicate the column should be dropped when converting between long and event study formats.')
+                halfway = len(subcols) // 2
                 for i in range(halfway):
                     rename_dict_1[subcols[i]] = subcols[halfway + i]
                     rename_dict_1[subcols[halfway + i]] = subcols[i]
@@ -356,7 +362,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             data_long.rename(rename_dict_2, axis=1, inplace=True)
             data_long = data_long.astype(astype_dict, copy=False)
 
-        ## Final steps
+        ## Final steps ##
         # Sort columns
         sorted_cols = bpd.util._sort_cols(data_long.columns)
         data_long = data_long.reindex(sorted_cols, axis=1, copy=False)
