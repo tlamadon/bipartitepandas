@@ -77,7 +77,7 @@ class BipartiteDataFrame:
                     # If general column already seen
                     new_cols[col_name].append(v)
                     new_cols_reference_dict[col_name].append(k)
-                else:
+                elif col_name not in ['j', 'y', 't', 'g', 'w']:
                     # If new general column
                     new_cols[col_name] = [v]
                     new_cols_reference_dict[col_name] = [k]
@@ -195,48 +195,131 @@ class BipartiteDataFrame:
                 if (t11 is not None) or (t12 is not None) or (t21 is not None) or (t22 is not None):
                     # Can't mix event study and collapsed event study for t
                     raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes 't1' and 't2' in addition to at least one of 't11', 't12', 't21', and 't22'. Please include only the set of time columns relevant for the format you would like to use.")
-                ##### RETURN EVENT STUDY #####
-                df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2})
-                if (g1 is not None) and (g2 is not None):
-                    df.loc[:, 'g1'] = g1
-                    df.loc[:, 'g2'] = g2
-                if (w1 is not None) and (w2 is not None):
-                    df.loc[:, 'w1'] = w1
-                    df.loc[:, 'w2'] = w2
-                if m is not None:
-                    df.loc[:, 'm'] = m
-                df = bpd.BipartiteEventStudy(df, **new_kwargs)
+                if 'y3' not in kwargs.keys():
+                    ##### RETURN EVENT STUDY #####
+                    df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2})
+                    if (g1 is not None) and (g2 is not None):
+                        df.loc[:, 'g1'] = g1
+                        df.loc[:, 'g2'] = g2
+                    if (w1 is not None) and (w2 is not None):
+                        df.loc[:, 'w1'] = w1
+                        df.loc[:, 'w2'] = w2
+                    if m is not None:
+                        df.loc[:, 'm'] = m
+                    df = bpd.BipartiteEventStudy(df, **new_kwargs)
+                else:
+                    ##### RETURN EXTENDED EVENT STUDY #####
+                    n_periods_continue = True
+                    n_periods = 3
+                    while n_periods_continue:
+                        if f'y{n_periods + 1}' in kwargs.keys():
+                            n_periods += 1
+                        else:
+                            n_periods_continue = False
+                    df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't1': t1, 't2': t2})
+                    if (g1 is not None) and (g2 is not None):
+                        df.loc[:, 'g1'] = g1
+                        df.loc[:, 'g2'] = g2
+                    if (w1 is not None) and (w2 is not None):
+                        df.loc[:, 'w1'] = w1
+                        df.loc[:, 'w2'] = w2
+                    if m is not None:
+                        df.loc[:, 'm'] = m
+                    for period in range(3, n_periods + 1):
+                        for col in ['j', 'y', 't']:
+                            df.loc[:, f'{col}{period}'] = kwargs[f'{col}{period}']
+                        if (g1 is not None) and (g2 is not None):
+                            df.loc[:, f'g{period}'] = kwargs[f'g{period}']
+                        if (w1 is not None) and (w2 is not None):
+                            df.loc[:, f'w{period}'] = kwargs[f'w{period}']
+                    df = bpd.BipartiteExtendedEventStudy(df, n_periods=n_periods, **new_kwargs)
             elif (t1 is not None) or (t2 is not None):
                 # Can't include only one of t1 and t2 for event study
                 raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes only one of 't1' and 't2'. Please add the missing time column for event study format or remove the included time column, as time columns are optional.")
             elif (t11 is not None) and (t12 is not None) and (t21 is not None) and (t22 is not None):
                 ## Collapsed event study format ##
-                ##### RETURN COLLAPSED EVENT STUDY #####
-                df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22})
-                if (g1 is not None) and (g2 is not None):
-                    df.loc[:, 'g1'] = g1
-                    df.loc[:, 'g2'] = g2
-                if (w1 is not None) and (w2 is not None):
-                    df.loc[:, 'w1'] = w1
-                    df.loc[:, 'w2'] = w2
-                if m is not None:
-                    df.loc[:, 'm'] = m
-                df = bpd.BipartiteEventStudyCollapsed(df, **new_kwargs)
+                if 'y3' not in kwargs.keys():
+                    ##### RETURN COLLAPSED EVENT STUDY #####
+                    df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22})
+                    if (g1 is not None) and (g2 is not None):
+                        df.loc[:, 'g1'] = g1
+                        df.loc[:, 'g2'] = g2
+                    if (w1 is not None) and (w2 is not None):
+                        df.loc[:, 'w1'] = w1
+                        df.loc[:, 'w2'] = w2
+                    if m is not None:
+                        df.loc[:, 'm'] = m
+                    df = bpd.BipartiteEventStudyCollapsed(df, **new_kwargs)
+                else:
+                    ##### RETURN COLLAPSED EXTENDED EVENT STUDY #####
+                    n_periods_continue = True
+                    n_periods = 3
+                    while n_periods_continue:
+                        if f'y{n_periods + 1}' in kwargs.keys():
+                            n_periods += 1
+                        else:
+                            n_periods_continue = False
+                    df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2, 't11': t11, 't12': t12, 't21': t21, 't22': t22})
+                    if (g1 is not None) and (g2 is not None):
+                        df.loc[:, 'g1'] = g1
+                        df.loc[:, 'g2'] = g2
+                    if (w1 is not None) and (w2 is not None):
+                        df.loc[:, 'w1'] = w1
+                        df.loc[:, 'w2'] = w2
+                    if m is not None:
+                        df.loc[:, 'm'] = m
+                    for period in range(3, n_periods + 1):
+                        for col in ['j', 'y']:
+                            df.loc[:, f'{col}{period}'] = kwargs[f'{col}{period}']
+                        df.loc[:, f't{period}1'] = kwargs[f't{period}1']
+                        df.loc[:, f't{period}2'] = kwargs[f't{period}2']
+                        if (g1 is not None) and (g2 is not None):
+                            df.loc[:, f'g{period}'] = kwargs[f'g{period}']
+                        if (w1 is not None) and (w2 is not None):
+                            df.loc[:, f'w{period}'] = kwargs[f'w{period}']
+                    df = bpd.BipartiteExtendedEventStudyCollapsed(df, n_periods=n_periods, **new_kwargs)
             elif (t11 is not None) or (t12 is not None) or (t21 is not None) or (t22 is not None):
                 # Can't include only one of t11, t12, t21, and t22 for collapsed event study
                 raise ValueError("Your input includes 'j1', 'j2', 'y1', and 'y2' columns, indicating the construction of an event study or collapsed event study dataframe. An event study dataframe can optionally include 't1' and 't2' columns, indicating the time for the the pre- and post- periods for each observation in the event study, while a collapsed event study dataframe can optionally include 't11', 't12', 't21', and 't22' columns, indicating the first and last time period, respectively, for the worker-firm spells represented by the pre- and post- periods for each observation in the event study. However, your input includes a strict (and nonempty) subset of 't11', 't12', 't21', and 't22'. Please add the missing time column(s) for collapsed event study format or remove the included time column(s), as time columns are optional.")
             if df is None:
-                ##### RETURN UNSPECIFIED EVENT STUDY #####
-                df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2})
-                if (g1 is not None) and (g2 is not None):
-                    df.loc[:, 'g1'] = g1
-                    df.loc[:, 'g2'] = g2
-                if (w1 is not None) and (w2 is not None):
-                    df.loc[:, 'w1'] = w1
-                    df.loc[:, 'w2'] = w2
-                if m is not None:
-                    df.loc[:, 'm'] = m
-                df = bpd.BipartiteEventStudy(df, **new_kwargs)
+                if 'y3' not in kwargs.keys():
+                    ##### RETURN UNSPECIFIED EVENT STUDY #####
+                    df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2})
+                    if (g1 is not None) and (g2 is not None):
+                        df.loc[:, 'g1'] = g1
+                        df.loc[:, 'g2'] = g2
+                    if (w1 is not None) and (w2 is not None):
+                        df.loc[:, 'w1'] = w1
+                        df.loc[:, 'w2'] = w2
+                    if m is not None:
+                        df.loc[:, 'm'] = m
+                    df = bpd.BipartiteEventStudy(df, **new_kwargs)
+                else:
+                    ##### RETURN UNSPECIFIED EXTENDED EVENT STUDY #####
+                    n_periods_continue = True
+                    n_periods = 3
+                    while n_periods_continue:
+                        if f'y{n_periods + 1}' in kwargs.keys():
+                            n_periods += 1
+                        else:
+                            n_periods_continue = False
+                    df = DataFrame({'i': i, 'j1': j1, 'j2': j2, 'y1': y1, 'y2': y2})
+                    if (g1 is not None) and (g2 is not None):
+                        df.loc[:, 'g1'] = g1
+                        df.loc[:, 'g2'] = g2
+                    if (w1 is not None) and (w2 is not None):
+                        df.loc[:, 'w1'] = w1
+                        df.loc[:, 'w2'] = w2
+                    if m is not None:
+                        df.loc[:, 'm'] = m
+                    for period in range(3, n_periods + 1):
+                        for col in ['j', 'y']:
+                            df.loc[:, f'{col}{period}'] = kwargs[f'{col}{period}']
+                        if (g1 is not None) and (g2 is not None):
+                            df.loc[:, f'g{period}'] = kwargs[f'g{period}']
+                        if (w1 is not None) and (w2 is not None):
+                            df.loc[:, f'w{period}'] = kwargs[f'w{period}']
+                    df = bpd.BipartiteExtendedEventStudy(df, n_periods=n_periods, **new_kwargs)
         else:
             # Neither long format nor event study format
             raise ValueError("A long format dataframe requires a 'j' column, indicating a firm id for each observation, while an event study format dataframe requires 'j1' and 'j2' columns, indicating firm ids for the the pre- and post- periods for each observation in the event study. However, your input does not include 'j' and includes at most one of 'j1' and 'j2'. Please make sure to include the set of firm id columns relevant for the format you would like to use.")
