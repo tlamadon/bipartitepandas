@@ -101,7 +101,7 @@ class BipartiteExtendedEventStudyBase(bpd.BipartiteBase):
         self.log('converting data to long format', level='info')
         if verbose:
             tqdm.write('converting data to long format')
-        frame = frame.to_long(is_clean=False, drop_no_split_columns=False, is_sorted=params['is_sorted'], copy=False)
+        frame = frame.to_long(drop_no_split_columns=False, is_sorted=params['is_sorted'], copy=False)
 
         frame = frame.clean(params_copy)
 
