@@ -32,6 +32,9 @@
   BipartiteEventStudyBase <class-bipartiteeventstudybase>
   BipartiteEventStudy <class-bipartiteeventstudy>
   BipartiteEventStudyCollapsed <class-bipartiteeventstudycollapsed>
+  BipartiteExtendedEventStudyBase <class-bipartiteextendedeventstudybase>
+  BipartiteExtendedEventStudy <class-bipartiteextendedeventstudy>
+  BipartiteExtendedEventStudyCollapsed <class-bipartiteextendedeventstudycollapsed>
   SimBipartite <class-simbipartite>
   Measures <module-measures>
   Grouping <module-grouping>
