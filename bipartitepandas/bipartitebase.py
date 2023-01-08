@@ -12,6 +12,7 @@ except AttributeError:
     # Older versions of Pandas have fast_zip in a different location
     _fast_zip = pd._lib.fast_zip
 from igraph import Graph
+from sklearn.metrics import silhouette_samples
 import warnings
 from functools import wraps
 import bipartitepandas as bpd
@@ -110,6 +111,10 @@ cluster_params = ParamsDict({
     't': (None, 'type_none', (int, list),
         '''
             (default=None) If None, clusters on entire dataset; if int, gives period in data to consider (only valid for non-collapsed data); if list of int, gives periods in data to consider (only valid for non-collapsed data).
+        ''', None),
+    'silhouette': (False, 'type', bool,
+        '''
+            (default=False) If True, return silhouette score for each firm (only set to True if grouping using KMeans).
         ''', None),
     'weighted': (True, 'type', bool,
         '''
@@ -1431,7 +1436,7 @@ class BipartiteBase(DataFrame):
             rng (np.random.Generator): NumPy random number generator; None is equivalent to np.random.default_rng(None)
 
         Returns:
-            (BipartiteBase): dataframe with clusters
+            (BipartiteBase or tuple of (BipartiteBase, NumPy Array)): if silhouette=False, return dataframe with clusters; if silhouette=True, return tuple where first element is dataframe with clusters and second element is NumPy Array of each firm's silhouette score
         '''
         if params is None:
             params = bpd.cluster_params()
@@ -1464,6 +1469,10 @@ class BipartiteBase(DataFrame):
         frame.log('computing firm groups', level='info')
         clusters = params['grouping']._compute_groups(computed_measures, weights, rng)
         frame.log('firm groups computed', level='info')
+
+        if params['silhouette']:
+            # Compute silhouette scores
+            silhouette_scores = silhouette_samples(computed_measures, clusters)
 
         # Link firms to clusters
         clusters_dict = dict(_fast_zip([jids, clusters]))
@@ -1510,4 +1519,6 @@ class BipartiteBase(DataFrame):
 
         frame.log('clusters merged into data', level='info')
 
+        if params['silhouette']:
+            return (frame, silhouette_scores)
         return frame

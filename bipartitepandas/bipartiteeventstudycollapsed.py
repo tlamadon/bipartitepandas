@@ -52,7 +52,7 @@ class BipartiteEventStudyCollapsed(bpd.BipartiteEventStudyBase):
         Return collapsed event study data reformatted into event study data, by assuming variables constant over spells.
 
         Arguments:
-            drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will not be dropped
+            drop_no_collapse_columns (bool): if True, columns marked by self.col_collapse_dict as None (i.e. they should be dropped) will be dropped
             is_sorted (bool): if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.
             copy (bool): if False, avoid copy
 
