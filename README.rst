@@ -33,8 +33,8 @@ BipartitePandas is used in `PyTwoWay <https://github.com/tlamadon/pytwoway/>`_.
 
 The package provides a Python interface. Installation is handled by `pip` or `Conda`. The source of the package is available on GitHub at `BipartitePandas <https://github.com/tlamadon/bipartitepandas>`_. The online documentation is hosted `here <https://tlamadon.github.io/bipartitepandas/>`_.
 
-Quick Start
------------
+Installation
+------------
 
 To install via pip, from the command line run::
 
