@@ -687,7 +687,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # return self.loc[pd.Series(map(tuple, self.loc[:, ['i', 'j']].to_numpy())).reindex_like(self, copy=False).isin(bridges), :].index.to_numpy() # FIXME this doesn't work
         return self.loc[self.loc[:, 'i'].isin(bridges_workers) & self.loc[:, 'j'].isin(bridges_firms), :].index.to_numpy()
 
-    def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
+    def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, strongly_connected=False, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
         '''
         Extract largest leave-one-(observation/spell/match)-out connected component.
 
@@ -695,6 +695,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
             cc_list (list of lists): each entry is a connected component
             max_j (int): maximum j in graph
             leave_out_group (str): which type of leave-one-out connected component to compute (options are 'observation', 'spell', or 'match')
+            strongly_connected (bool): if True, compute the largest strongly connected set that is also leave-one-(observation/spell/match)-out connected (NOT leave-one-(observation/spell/match)-out strongly connected)
             component_size_variable (str): how to determine largest leave-one-(observation/spell/match)-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-(observation/spell/match)-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-(observation/spell/match)-out connected component
@@ -707,6 +708,13 @@ class BipartiteLongBase(bpd.BipartiteBase):
         '''
         # Sort and copy
         frame_init = self.sort_rows(is_sorted=is_sorted, copy=copy)
+
+        # Name of connectedness
+        connectedness_name_short = f'leave_out_{leave_out_group}'
+        if strongly_connected:
+            connectedness_name_full = f'strongly_{connectedness_name_short}'
+        else:
+            connectedness_name_full = connectedness_name_short
 
         for cc in sorted(cc_list, reverse=True, key=len):
             cc = np.array(cc)
@@ -742,7 +750,17 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+            if strongly_connected:
+                prev_len = len(frame_cc)
             frame_cc = frame_cc.min_moves_frame(2, drop_returns_to_stays, is_sorted=True, copy=False)
+            if strongly_connected and (len(frame_cc) != prev_len):
+                # Dropping firms with 1 mover observation can change the strongly connected components, so recompute strongly connected components
+                G2, max_j2 = frame_cc._construct_graph(connectedness_name_full, is_sorted=True, copy=False)
+                cc_list_2 = G2.components(mode='strong')
+                del G2
+                if len(cc_list_2) > 1:
+                    # Recursion step (only necessary if dropping firms with 1 mover observations disconnects the set of firms)
+                    frame_cc = frame_cc._leave_out_observation_spell_match(cc_list=cc_list_2, max_j=max_j2, leave_out_group=leave_out_group, strongly_connected=strongly_connected, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
@@ -752,7 +770,7 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Construct graph
-            G2, max_j2 = frame_cc._construct_graph(f'leave_out_{leave_out_group}', is_sorted=True, copy=False)
+            G2, max_j2 = frame_cc._construct_graph(connectedness_name_short, is_sorted=True, copy=False)
 
             # Extract articulation rows
             articulation_fn_dict = {
@@ -770,12 +788,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if len(articulation_rows) > 0:
                 # If new frame is not leave-one-(observation/spell/match)-out connected, recompute connected components after dropping articulation rows (but note that articulation rows should be kept in the final dataframe) (NOTE: this does not require a copy)
-                G2, max_j3 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph(f'leave_out_{leave_out_group}', is_sorted=True, copy=False)
-                cc_list_2 = G2.components(mode='weak')
+                G2, max_j3 = frame_cc.drop_rows(articulation_rows, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph(connectedness_name_full, is_sorted=True, copy=False)
+                cc_list_2 = G2.components(mode={False: 'weak', True: 'strong'}[strongly_connected])
                 del G2, articulation_rows
                 if len(cc_list_2) > 1:
                     # Recursion step (only necessary if dropping articulation workers disconnects the set of firms)
-                    frame_cc = frame_cc._leave_out_observation_spell_match(cc_list=cc_list_2, max_j=max_j3, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
+                    frame_cc = frame_cc._leave_out_observation_spell_match(cc_list=cc_list_2, max_j=max_j3, leave_out_group=leave_out_group, strongly_connected=strongly_connected, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
                 del cc_list_2
             else:
                 del G2, articulation_rows
@@ -802,13 +820,14 @@ class BipartiteLongBase(bpd.BipartiteBase):
         # Return largest leave-one-(observation/spell/match)-out component
         return frame_largest_cc
 
-    def _leave_out_worker(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
+    def _leave_out_worker(self, cc_list, max_j, strongly_connected=False, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
         '''
         Extract largest leave-one-worker-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
             max_j (int): maximum j in graph
+            strongly_connected (bool): if True, compute the largest strongly connected set that is also leave-one-worker-out connected (NOT leave-one-worker-out strongly connected)
             component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
@@ -856,7 +875,17 @@ class BipartiteLongBase(bpd.BipartiteBase):
                     continue
 
             # Remove firms with only 1 mover observation (can have 1 mover with multiple observations)
+            if strongly_connected:
+                prev_len = len(frame_cc)
             frame_cc = frame_cc.min_moves_frame(2, drop_returns_to_stays, is_sorted=True, copy=False)
+            if strongly_connected and (len(frame_cc) != prev_len):
+                # Dropping firms with 1 mover observation can change the strongly connected components, so recompute strongly connected components
+                G2, max_j2 = frame_cc._construct_graph('strongly_leave_out_worker', is_sorted=True, copy=False)
+                cc_list_2 = G2.components(mode='strong')
+                del G2
+                if len(cc_list_2) > 1:
+                    # Recursion step (only necessary if dropping firms with 1 mover observations disconnects the set of firms)
+                    frame_cc = frame_cc._leave_out_worker(cc_list=cc_list_2, max_j=max_j2, strongly_connected=strongly_connected, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
 
             if frame_largest_cc is not None:
                 # If frame_cc is already smaller than frame_largest_cc
@@ -876,12 +905,12 @@ class BipartiteLongBase(bpd.BipartiteBase):
 
             if len(articulation_workers) > 0:
                 # If new frame is not leave-one-worker-out connected, recompute connected components after dropping articulation workers (but note that articulation workers should be kept in the final dataframe) (NOTE: this does not require a copy)
-                G2, max_j3 = frame_cc.drop_ids('i', articulation_workers, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph('leave_out_worker', is_sorted=True, copy=False)
-                cc_list_2 = G2.components(mode='weak')
+                G2, max_j3 = frame_cc.drop_ids('i', articulation_workers, drop_returns_to_stays, is_sorted=True, reset_index=False, copy=False)._construct_graph({False: 'leave_out_worker', True: 'strongly_leave_out_worker'}[strongly_connected], is_sorted=True, copy=False)
+                cc_list_2 = G2.components(mode={False: 'weak', True: 'strong'}[strongly_connected])
                 del G2, articulation_workers
                 if len(cc_list_2) > 1:
                     # Recursion step (only necessary if dropping articulation workers disconnects the set of firms)
-                    frame_cc = frame_cc._leave_out_worker(cc_list=cc_list_2, max_j=max_j3, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
+                    frame_cc = frame_cc._leave_out_worker(cc_list=cc_list_2, max_j=max_j3, strongly_connected=strongly_connected, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=False)
                 del cc_list_2
             else:
                 del G2, articulation_workers
