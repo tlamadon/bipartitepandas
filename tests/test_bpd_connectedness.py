@@ -681,3 +681,98 @@ def test_connectedness_collapsed():
     # Auto should be equivalent to cleaning, collapsing, then computing leave-out-observation
     assert len(los_auto) == len(collapse_s_loo)
     assert len(lom_auto) == len(collapse_m_loo)
+
+def test_connectedness_strongly_loo():
+    # Test that strongly-leave-out-x connectedness works
+    sim_params = bpd.sim_params({'n_workers': 5000, 'firm_size': 10, 'p_move': 0.05})
+    sim_data = bpd.SimBipartite(sim_params).simulate(rng=np.random.default_rng(1234))
+
+    for measure in ['observation', 'spell', 'match', 'worker']:
+        clean_params_loo = bpd.clean_params(
+            {
+                'connectedness': f'leave_out_{measure}',
+                'collapse_at_connectedness_measure': True,
+                'drop_single_stayers': True,
+                'drop_returns': 'returners',
+                'copy': True
+            }
+        )
+        clean_params_strong = bpd.clean_params(
+            {
+                'connectedness': 'strongly_connected',
+                'collapse_at_connectedness_measure': True,
+                'drop_single_stayers': True,
+                'drop_returns': 'returners',
+                'copy': True
+            }
+        )
+
+        #########################################################
+        ## Strongly connected, but not leave-one-out connected ##
+        #########################################################
+        clean_params2 = bpd.clean_params(
+            {
+                'connectedness': 'strongly_connected',
+                'collapse_at_connectedness_measure': True,
+                'drop_single_stayers': True,
+                'drop_returns': 'returners',
+                'copy': False
+            }
+        )
+
+        # Convert into BipartitePandas DataFrame
+        bdf2 = bpd.BipartiteDataFrame(sim_data)
+        # Clean
+        bdf2 = bdf2.clean(clean_params2)
+
+        # Check that it's not leave-one-out connected
+        bdf2_loo = bdf2.clean(clean_params_loo)
+        assert len(bdf2) != len(bdf2_loo)
+
+        #########################################################
+        ## Leave-one-out connected, but not strongly connected ##
+        #########################################################
+        clean_params3 = bpd.clean_params(
+            {
+                'connectedness': f'leave_out_{measure}',
+                'collapse_at_connectedness_measure': True,
+                'drop_single_stayers': True,
+                'drop_returns': 'returners',
+                'copy': False
+            }
+        )
+
+        # Convert into BipartitePandas DataFrame
+        bdf3 = bpd.BipartiteDataFrame(sim_data)
+        # Clean
+        bdf3 = bdf3.clean(clean_params3)
+
+        # Check that it's not strongly connected
+        bdf3_strong = bdf3.clean(clean_params_strong)
+        assert len(bdf3) != len(bdf3_strong)
+
+        ######################################
+        ## Strongly leave-one-out connected ##
+        ######################################
+        clean_params4 = bpd.clean_params(
+            {
+                'connectedness': f'strongly_leave_out_{measure}',
+                'collapse_at_connectedness_measure': True,
+                'drop_single_stayers': True,
+                'drop_returns': 'returners',
+                'copy': False
+            }
+        )
+
+        # Convert into BipartitePandas DataFrame
+        bdf4 = bpd.BipartiteDataFrame(sim_data)
+        # Clean
+        bdf4 = bdf4.clean(clean_params4)
+
+        # Check that it's leave-one-out connected
+        bdf4_loo = bdf4.clean(clean_params_loo)
+        assert len(bdf4) == len(bdf4_loo)
+
+        # Check that it's strongly connected
+        bdf4_strong = bdf4.clean(clean_params_strong)
+        assert len(bdf4) == len(bdf4_strong)

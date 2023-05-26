@@ -445,7 +445,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         '''
         return self.to_long(is_sorted=is_sorted, copy=copy)._prep_cluster(stayers_movers=stayers_movers, t=t, weighted=weighted, is_sorted=True, copy=False)
 
-    def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
+    def _leave_out_observation_spell_match(self, cc_list, max_j, leave_out_group, strongly_connected=False, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
         '''
         Extract largest leave-one-(observation/spell/match)-out connected component.
 
@@ -453,6 +453,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
             cc_list (list of lists): each entry is a connected component
             max_j (int): maximum j in graph
             leave_out_group (str): which type of leave-one-out connected component to compute (options are 'observation', 'spell', or 'match')
+            strongly_connected (bool): if True, compute the largest strongly connected set that is also leave-one-(observation/spell/match)-out connected (NOT leave-one-(observation/spell/match)-out strongly connected)
             component_size_variable (str): how to determine largest leave-one-(observation/spell/match)-out connected component. Options are 'len'/'length' (length of frames), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), 'movers' (number of unique movers), 'firms_plus_workers' (number of unique firms + number of unique workers), 'firms_plus_stayers' (number of unique firms + number of unique stayers), 'firms_plus_movers' (number of unique firms + number of unique movers), 'len_stayers'/'length_stayers' (number of stayer observations), 'len_movers'/'length_movers' (number of mover observations), 'stays' (number of stay observations), and 'moves' (number of move observations).
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-(observation/spell/match)-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-(observation/spell/match)-out connected component
@@ -467,7 +468,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
 
         # Compute leave-one-(observation/spell/match)-out connected components
-        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_observation_spell_match(cc_list=cc_list, max_j=max_j, leave_out_group=leave_out_group, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_eventstudy(is_sorted=True, copy=False)
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_observation_spell_match(cc_list=cc_list, max_j=max_j, leave_out_group=leave_out_group, strongly_connected=strongly_connected, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_eventstudy(is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
         for col in no_split_cols:
@@ -475,13 +476,14 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
 
         return frame
 
-    def _leave_out_worker(self, cc_list, max_j, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
+    def _leave_out_worker(self, cc_list, max_j, strongly_connected=False, component_size_variable='firms', drop_returns_to_stays=False, frame_largest_cc=None, is_sorted=False, copy=True, first_loop=True):
         '''
         Extract largest leave-one-worker-out connected component.
 
         Arguments:
             cc_list (list of lists): each entry is a connected component
             max_j (int): maximum j in graph
+            strongly_connected (bool): if True, compute the largest strongly connected set that is also leave-one-worker-out connected (NOT leave-one-worker-out strongly connected)
             component_size_variable (str): how to determine largest leave-one-worker-out connected component. Options are 'len'/'length' (length of frame), 'firms' (number of unique firms), 'workers' (number of unique workers), 'stayers' (number of unique stayers), and 'movers' (number of unique movers)
             drop_returns_to_stays (bool): if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)
             frame_largest_cc (BipartiteLongBase): dataframe of baseline largest leave-one-worker-out connected component
@@ -496,7 +498,7 @@ class BipartiteEventStudyBase(bpd.BipartiteBase):
         no_split_cols = [col for col, long_es_split in self.col_long_es_dict.items() if long_es_split is None]
 
         # Compute leave-one-worker-out connected components
-        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_worker(cc_list=cc_list, max_j=max_j, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_eventstudy(is_sorted=True, copy=False)
+        frame = self.to_long(drop_no_split_columns=False, is_sorted=is_sorted, copy=copy)._leave_out_worker(cc_list=cc_list, max_j=max_j, strongly_connected=strongly_connected, component_size_variable=component_size_variable, drop_returns_to_stays=drop_returns_to_stays, frame_largest_cc=frame_largest_cc, is_sorted=True, copy=False, first_loop=first_loop).to_eventstudy(is_sorted=True, copy=False)
 
         # Update col_long_es_dict for columns that aren't supposed to convert to long
         for col in no_split_cols:

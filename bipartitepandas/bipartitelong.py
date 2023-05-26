@@ -92,7 +92,7 @@ class BipartiteLong(bpd.BipartiteLongBase):
         connectedness = params['connectedness']
         collapse_connectedness = params['collapse_at_connectedness_measure']
         # If will have to collapse the data after cleaning
-        collapse = (collapse_connectedness and connectedness in ['leave_out_spell', 'leave_out_match'])
+        collapse = (collapse_connectedness and connectedness in ['leave_out_spell', 'leave_out_match', 'strongly_leave_out_spell', 'strongly_leave_out_match'])
         if collapse:
             params['connectedness'] = None
 
@@ -104,10 +104,16 @@ class BipartiteLong(bpd.BipartiteLongBase):
             # Update parameters
             level_dict = {
                 'leave_out_spell': 'spell',
-                'leave_out_match': 'match'
+                'leave_out_match': 'match',
+                'strongly_leave_out_spell': 'spell',
+                'strongly_leave_out_match': 'match'
             }
             # NOTE: leave-out-observation is equivalent to leave-out-(spell/match) if the data is collapsed at the (spell/match) level, but the code is faster
-            params['connectedness'] = 'leave_out_observation'
+            strongly_connected = (connectedness.split('_')[0] == 'strongly')
+            if strongly_connected:
+                params['connectedness'] = 'strongly_leave_out_observation'
+            else:
+                params['connectedness'] = 'leave_out_observation'
             params['drop_returns'] = False
             params['is_sorted'] = True
             params['copy'] = False
