@@ -19,7 +19,7 @@ def test_cluster_1():
     bdf = bpd.BipartiteLong(sim_data[['i', 'j', 'y', 't']])
     bdf = bdf.clean()
 
-    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm']:
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.CDFs(measure=measure)
             grouping = bpd.grouping.KMeans(n_clusters=nk)
@@ -65,11 +65,9 @@ def test_cluster_1():
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
             if measure == 'quantile_all':
-                bound = 5000 # 10% error
-            elif measure == 'quantile_firm_small':
-                bound = 10000 # 20% error
-            elif measure == 'quantile_firm_large':
-                bound = 10000 # 20% error
+                bound = 1100 # 2.2% error
+            elif measure == 'quantile_firm':
+                bound = 1100 # 2.2% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
@@ -84,7 +82,7 @@ def test_cluster_2():
     bdf = bdf.clean()
     bdf = bdf.to_eventstudy()
 
-    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm']:
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.CDFs(measure=measure)
             grouping = bpd.grouping.KMeans(n_clusters=nk)
@@ -131,11 +129,9 @@ def test_cluster_2():
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
             if measure == 'quantile_all':
-                bound = 5000 # 10% error
-            elif measure == 'quantile_firm_small':
-                bound = 10000 # 20% error
-            elif measure == 'quantile_firm_large':
-                bound = 10500 # 21% error
+                bound = 1300 # 2.6% error
+            elif measure == 'quantile_firm':
+                bound = 2600 # 5.2% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
@@ -156,7 +152,7 @@ def test_cluster_3():
     sim_data['spell'] = sim_data['new_spell'].cumsum()
     sim_data_spell = sim_data.groupby('spell').first()
 
-    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm']:
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.CDFs(measure=measure)
             grouping = bpd.grouping.KMeans(n_clusters=nk)
@@ -203,11 +199,9 @@ def test_cluster_3():
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
             if measure == 'quantile_all':
-                bound = 5000 # 10% error
-            elif measure == 'quantile_firm_small':
-                bound = 10000 # 20% error
-            elif measure == 'quantile_firm_large':
-                bound = 10000 # 20% error
+                bound = 800 # 1.6% error
+            elif measure == 'quantile_firm':
+                bound = 1900 # 3.8% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
@@ -228,7 +222,7 @@ def test_cluster_4():
     sim_data['spell'] = sim_data['new_spell'].cumsum()
     sim_data_spell = sim_data.groupby('spell').first()
 
-    for measure in ['quantile_all', 'quantile_firm_small', 'quantile_firm_large']:
+    for measure in ['quantile_all', 'quantile_firm']:
         for stayers_movers in [None, 'stayers', 'movers']:
             measures = bpd.measures.CDFs(measure=measure)
             grouping = bpd.grouping.KMeans(n_clusters=nk)
@@ -277,11 +271,9 @@ def test_cluster_4():
 
             wrong_cluster = np.sum(clusters_merged['psi_est'] != clusters_estimated)
             if measure == 'quantile_all':
+                bound = 900 # 1.8% error
+            elif measure == 'quantile_firm':
                 bound = 5000 # 10% error
-            elif measure == 'quantile_firm_small':
-                bound = 10000 # 20% error
-            elif measure == 'quantile_firm_large':
-                bound = 10000 # 20% error
             if stayers_movers == 'stayers':
                 bound = 35000 # 70% error
 
