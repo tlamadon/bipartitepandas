@@ -53,5 +53,5 @@ lamadon@uchicago.edu
 
 
 Adam A. Oppenheimer,
-Research Professional, University of Chicago,
-oppenheimer@uchicago.edu
+Graduate Student, University of Minnesota - Twin Cities,
+oppen040@umn.edu
