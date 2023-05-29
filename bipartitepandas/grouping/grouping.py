@@ -65,7 +65,7 @@ class Quantiles:
         Compute quantiles groups for data.
 
         Arguments:
-            data (NumPy Array): data to group
+            data (NumPy Array): firm-level data to group
             weights (NumPy Array): used for KMeans, not used for Quantiles
             rng (np.random.Generator or None): used for KMeans, not used for Quantiles
 
@@ -73,16 +73,11 @@ class Quantiles:
             (NumPy Array): quantile groups for data
         '''
         n_quantiles = self.n_quantiles
-        groups = np.zeros(shape=len(data))
         quantiles = np.linspace(1 / n_quantiles, 1, n_quantiles)
         quantile_groups = np.quantile(data, quantiles)
-        for i, mean_income in enumerate(data):
-            # Find quantile for each firm
-            quantile_group = 0
-            for quantile in quantile_groups:
-                if mean_income > quantile:
-                    quantile_group += 1
-                else:
-                    break
-            groups[i] = quantile_group
-        return groups
+
+        # Source: https://stackoverflow.com/a/40770360/17333120
+        # NOTE: data may be 1D or 2D
+        if len(data.shape) == 1:
+            return (data[:, None] > quantile_groups[None, :]).sum(axis=1)
+        return (data > quantile_groups[None, :]).sum(axis=1)

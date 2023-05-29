@@ -5,7 +5,6 @@ import pytest
 import numpy as np
 import pandas as pd
 import bipartitepandas as bpd
-import pickle
 
 ################################
 ##### Tests for Clustering #####
