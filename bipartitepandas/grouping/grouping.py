@@ -79,5 +79,5 @@ class Quantiles:
         # Source: https://stackoverflow.com/a/40770360/17333120
         # NOTE: data may be 1D or 2D
         if len(data.shape) == 1:
-            return (data[:, None] > quantile_groups[None, :]).sum(axis=1)
-        return (data > quantile_groups[None, :]).sum(axis=1)
+            return np.searchsorted(quantile_groups, data)
+        return np.searchsorted(quantile_groups, data)[:, 0]
