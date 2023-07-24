@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BipartiteBase class &mdash; BipartitePandas 1.1.9 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BipartiteLongBase class" href="class-bipartitelongbase.html" />
+    <link rel="prev" title="BipartiteDataFrame class" href="class-bipartitedataframe.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BipartitePandas
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc-python.html">From Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Notebook examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/simple_example.html">Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/formats.html">Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/custom_columns.html">Custom Columns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/connected_sets.html">Connected Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/advanced_features.html">Advanced Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Under the hood</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="internal.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitedataframe.html">BipartiteDataFrame</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BipartiteBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongbase.html">BipartiteLongBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelong.html">BipartiteLong</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudybase.html">BipartiteExtendedEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudy.html">BipartiteExtendedEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudycollapsed.html">BipartiteExtendedEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BipartitePandas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>BipartiteBase class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/class-bipartitebase.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="bipartitebase-class">
+<h1>BipartiteBase class<a class="headerlink" href="#bipartitebase-class" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bipartitepandas.bipartitebase.</span></span><span class="sig-name descname"><span class="pre">BipartiteBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_req</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_opt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_contig</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_reference_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_dtype_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_collapse_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_long_es_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">track_id_changes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">DataFrame</span></code></p>
+<p>Base class for BipartitePandas, where BipartitePandas gives a bipartite network of firms and workers. Contains generalized methods. Inherits from DataFrame.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – arguments for Pandas DataFrame</p></li>
+<li><p><strong>columns_req</strong> (<em>list</em><em> or </em><em>None</em>) – required columns (only put general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’; then put the joint columns in col_reference_dict); None is equivalent to []</p></li>
+<li><p><strong>columns_opt</strong> (<em>list</em><em> or </em><em>None</em>) – optional columns (only put general column names for joint columns, e.g. put ‘g’ instead of ‘g1’, ‘g2’; then put the joint columns in col_reference_dict); None is equivalent to []</p></li>
+<li><p><strong>columns_contig</strong> (<em>dict</em><em> or </em><em>None</em>) – columns of categorical ids linked to boolean of whether those ids are contiguous, or None if column(s) not included, e.g. {‘i’: False, ‘j’: False, ‘g’: None} (only put general column names for joint columns); None is equivalent to {}</p></li>
+<li><p><strong>col_reference_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – clarify which joint columns are associated with a general column name, e.g. {‘i’: ‘i’, ‘j’: [‘j1’, ‘j2’]}; None is equivalent to {}</p></li>
+<li><p><strong>col_dtype_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – link column to datatype, e.g. {‘m’: ‘int’}; None is equivalent to {}</p></li>
+<li><p><strong>col_collapse_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – how to collapse column (None indicates the column should be dropped), e.g. {‘y’: ‘mean’}; None is equivalent to {}</p></li>
+<li><p><strong>col_long_es_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – whether each column should split into two when converting from long to event study (None indicates the column should be dropped), e.g. {‘y’: True, ‘m’: None}; None is equivalent to {}</p></li>
+<li><p><strong>track_id_changes</strong> (<em>bool</em>) – if True, create dictionary of Pandas dataframes linking original categorical id values to updated contiguous id values</p></li>
+<li><p><strong>log</strong> (<em>bool</em>) – if True, will create log file(s)</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for Pandas DataFrame</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.add_column">
+<span class="sig-name descname"><span class="pre">add_column</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_reference</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_categorical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'any'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_collapse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_es_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.add_column" title="Permalink to this definition"></a></dt>
+<dd><p>Safe method for adding custom columns. Columns added with this method will be compatible with conversions between long, collapsed long, event study, and collapsed event study formats.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>col_name</strong> (<em>str</em>) – general column name</p></li>
+<li><p><strong>col_data</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series</em><em> or </em><em>list of</em><em> (</em><em>NumPy Array</em><em> or </em><em>Pandas Series</em><em>) or </em><em>None</em>) – data for column, or list of data for columns; set to None if columns already added to dataframe via column assignment</p></li>
+<li><p><strong>col_reference</strong> (<em>str</em><em> or </em><em>list of str</em>) – if column has multiple subcolumns (e.g. firm ids are associated with the columns [‘j1’, ‘j2’]) this must be specified; otherwise, None will automatically default to the column name (plus a column number, if more than one column is listed) (e.g. firm ids are associated with the column ‘j’ if one column is included, or [‘j1’, ‘j2’] if two columns are included)</p></li>
+<li><p><strong>is_categorical</strong> (<em>bool</em>) – if True, column is categorical</p></li>
+<li><p><strong>dtype</strong> (<em>str</em>) – column datatype, must be one of ‘int’, ‘float’, ‘any’, or ‘categorical’</p></li>
+<li><p><strong>how_collapse</strong> (<em>function</em><em> or </em><em>str</em><em> or </em><em>None</em>) – how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse</p></li>
+<li><p><strong>long_es_split</strong> (<em>bool</em><em> or </em><em>None</em><em>) </em><em>if True</em><em>, </em><em>column should split into two when converting from long to event study; if None</em><em>, </em><em>column will be dropped when converting between</em><em> (</em><em>collapsed</em><em>) </em><em>long and</em><em> (</em><em>collapsed</em>) – </p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with new column(s)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.cluster">
+<span class="sig-name descname"><span class="pre">cluster</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.cluster" title="Permalink to this definition"></a></dt>
+<dd><p>Cluster data and assign a new column giving the cluster for each firm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>params</strong> (<em>ParamsDict</em><em> or </em><em>None</em>) – dictionary of parameters for clustering. Run bpd.cluster_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.cluster_params().</p></li>
+<li><p><strong>rng</strong> (<em>np.random.Generator</em>) – NumPy random number generator; None is equivalent to np.random.default_rng(None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>if silhouette=False, return dataframe with clusters; if silhouette=True, return tuple where first element is dataframe with clusters and second element is NumPy Array of each firm’s silhouette score</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a> or tuple of (<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>, NumPy Array))</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.copy" title="Permalink to this definition"></a></dt>
+<dd><p>Return copy of self.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>deep</strong> (<em>bool</em>) – make a deep copy, including a copy of the data and the indices. If False, neither the indices nor the data are copied.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>copy of dataframe</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.diagnostic">
+<span class="sig-name descname"><span class="pre">diagnostic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.diagnostic" title="Permalink to this definition"></a></dt>
+<dd><p>Run diagnostic and print diagnostic report.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.drop">
+<span class="sig-name descname"><span class="pre">drop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_optional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_required</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.drop" title="Permalink to this definition"></a></dt>
+<dd><p>Drop labels along axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<em>int</em><em> or </em><em>str</em><em>, </em><em>optionally as a list</em>) – row(s) or column(s) to drop. For columns, use general column names for joint columns, e.g. put ‘g’ instead of ‘g1’, ‘g2’. Only user-added columns may be dropped, unless allow_optional or allow_required is set to True.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em> or </em><em>str</em>) – whether to drop labels from the ‘index’ (0) or ‘columns’ (1)</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – if True, modify in-place</p></li>
+<li><p><strong>allow_optional</strong> (<em>bool</em>) – if True, allow to drop optional columns</p></li>
+<li><p><strong>allow_required</strong> (<em>bool</em>) – if True, allow to drop required columns</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for Pandas drop</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe without dropped labels</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.drop_rows">
+<span class="sig-name descname"><span class="pre">drop_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.drop_rows" title="Permalink to this definition"></a></dt>
+<dd><p>Drop particular rows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rows</strong> (<em>list</em>) – rows to keep</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe is not guaranteed to be sorted if original dataframe is not sorted for long and collapsed long formats, but is guaranteed to be sorted for event study and collapsed event study formats. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>reset_index</strong> (<em>bool</em>) – if True, reset index at end</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with given rows dropped</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.get_column_properties">
+<span class="sig-name descname"><span class="pre">get_column_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.get_column_properties" title="Permalink to this definition"></a></dt>
+<dd><p>Return dictionary linking properties to their value for a particular column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col_name</strong> (<em>str</em>) – general column name whose properties will be printed</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dictionary linking properties to their value for a particular column (‘general_column’: general column name; ‘subcolumns’: subcolumns linked to general column; ‘dtype’: column datatype; ‘is_categorical’: column is categorical; ‘how_collapse’: how to collapse at the worker-firm spell level (None if dropped during collapse); ‘long_es_split’: whether column should split into two columns when converting between long and event study formats (None if dropped during conversion))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.log">
+<span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'info'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.log" title="Permalink to this definition"></a></dt>
+<dd><p>Log a message at the specified level.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>message</strong> (<em>str</em>) – message to log</p></li>
+<li><p><strong>level</strong> (<em>str</em>) – logger level. Options, in increasing severity, are ‘debug’, ‘info’, ‘warning’, ‘error’, and ‘critical’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.log_on">
+<span class="sig-name descname"><span class="pre">log_on</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.log_on" title="Permalink to this definition"></a></dt>
+<dd><p>Toggle logger on or off.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>on</strong> (<em>bool</em>) – if True, turn logger on; if False, turn logger off</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.merge">
+<span class="sig-name descname"><span class="pre">merge</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.merge" title="Permalink to this definition"></a></dt>
+<dd><p>Merge two BipartiteBase objects.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – arguments for Pandas merge</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for Pandas merge</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>merged dataframe</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.min_movers_firms">
+<span class="sig-name descname"><span class="pre">min_movers_firms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.min_movers_firms" title="Permalink to this definition"></a></dt>
+<dd><p>List firms with at least <cite>threshold</cite> many movers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of movers required to keep a firm</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – used for event study format. If False, avoid copy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>firms with sufficiently many movers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(NumPy Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.n_clusters">
+<span class="sig-name descname"><span class="pre">n_clusters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.n_clusters" title="Permalink to this definition"></a></dt>
+<dd><p>Get the number of unique clusters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>number of unique clusters if cluster column included; None otherwise</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(int or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.n_firms">
+<span class="sig-name descname"><span class="pre">n_firms</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.n_firms" title="Permalink to this definition"></a></dt>
+<dd><p>Get the number of unique firms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>number of unique firms</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.n_unique_ids">
+<span class="sig-name descname"><span class="pre">n_unique_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.n_unique_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Number of unique ids in column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id_col</strong> (<em>str</em>) – column to check ids (‘i’, ‘j’, or ‘g’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>number of unique ids if column included; None otherwise</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(int or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.n_workers">
+<span class="sig-name descname"><span class="pre">n_workers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.n_workers" title="Permalink to this definition"></a></dt>
+<dd><p>Get the number of unique workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>number of unique workers</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>(int)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.original_ids">
+<span class="sig-name descname"><span class="pre">original_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.original_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Return self merged with original column ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>copy of dataframe merged with original column ids, or None if id_reference_dict is empty</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a> or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.print_column_properties">
+<span class="sig-name descname"><span class="pre">print_column_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.print_column_properties" title="Permalink to this definition"></a></dt>
+<dd><p>Print properties associated with a particular column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>col_name</strong> (<em>str</em>) – general column name whose properties will be printed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.rename">
+<span class="sig-name descname"><span class="pre">rename</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rename_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_optional</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_required</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.rename" title="Permalink to this definition"></a></dt>
+<dd><p>Rename a column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rename_dict</strong> (<em>dict</em>) – key is current label, value is new label. When renaming columns, use general column names for joint columns, e.g. put ‘g’ instead of ‘g1’, ‘g2’.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em> or </em><em>str</em>) – whether to drop labels from the ‘index’ (0) or ‘columns’ (1)</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em>) – if True, modify in-place</p></li>
+<li><p><strong>allow_optional</strong> (<em>bool</em>) – if True, allow to rename optional columns</p></li>
+<li><p><strong>allow_required</strong> (<em>bool</em>) – if True, allow to rename required columns</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for Pandas rename</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with renamed labels</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.set_column_properties">
+<span class="sig-name descname"><span class="pre">set_column_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">col_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_categorical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'any'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">how_collapse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long_es_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.set_column_properties" title="Permalink to this definition"></a></dt>
+<dd><p>Safe method for setting the properties of pre-existing custom columns.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>col_name</strong> (<em>str</em>) – general column name</p></li>
+<li><p><strong>is_categorical</strong> (<em>bool</em>) – if True, column is categorical</p></li>
+<li><p><strong>dtype</strong> (<em>str</em>) – column datatype, must be one of ‘int’, ‘float’, ‘any’, or ‘categorical’</p></li>
+<li><p><strong>how_collapse</strong> (<em>function</em><em> or </em><em>str</em><em> or </em><em>None</em>) – how to collapse data at the worker-firm spell level, must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse</p></li>
+<li><p><strong>long_es_split</strong> (<em>bool</em><em> or </em><em>None</em><em>) </em><em>if True</em><em>, </em><em>column should split into two when converting from long to event study; if None</em><em>, </em><em>column will be dropped when converting between</em><em> (</em><em>collapsed</em><em>) </em><em>long and</em><em> (</em><em>collapsed</em>) – </p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with new column(s)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.sort_cols">
+<span class="sig-name descname"><span class="pre">sort_cols</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.sort_cols" title="Permalink to this definition"></a></dt>
+<dd><p>Sort frame columns (not in-place).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with sorted columns</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.sort_rows">
+<span class="sig-name descname"><span class="pre">sort_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">j_if_no_t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.sort_rows" title="Permalink to this definition"></a></dt>
+<dd><p>Sort rows by i and t.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>j_if_no_t</strong> (<em>bool</em>) – if no time column, sort on i and j columns instead</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with rows sorted</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase">BipartiteBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.summary" title="Permalink to this definition"></a></dt>
+<dd><p>Print summary statistics. This uses class attributes. To run a diagnostic to verify these values, run <cite>.diagnostic()</cite>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitebase.BipartiteBase.unique_ids">
+<span class="sig-name descname"><span class="pre">unique_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_col</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitebase.BipartiteBase.unique_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Unique ids in column.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>id_col</strong> (<em>str</em>) – column to check ids (‘i’, ‘j’, or ‘g’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>unique ids if column included; None otherwise</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(NumPy Array or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="class-bipartitedataframe.html" class="btn btn-neutral float-left" title="BipartiteDataFrame class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="class-bipartitelongbase.html" class="btn btn-neutral float-right" title="BipartiteLongBase class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Thibaut Lamadon.
+      <span class="lastupdated">Last updated on Jul 24, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

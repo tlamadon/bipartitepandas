@@ -1,0 +1,2117 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Formats &mdash; BipartitePandas 1.1.9 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Custom columns" href="custom_columns.html" />
+    <link rel="prev" title="Simple example" href="simple_example.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> BipartitePandas
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../doc-python.html">From Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Notebook examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="simple_example.html">Simple Example</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Formats</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#Import-the-BipartitePandas-package">Import the BipartitePandas package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Get-your-data-ready">Get your data ready</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Columns">Columns</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Required">Required</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Optional">Optional</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Constructing-DataFrames">Constructing DataFrames</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#Converting-between-formats">Converting between formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Long-to-Collapsed-Long"><em>Long</em> to <em>Collapsed Long</em></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Long-to-Event-Study"><em>Long</em> to <em>Event Study</em></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Collapsed-Long-to-Collapsed-Event-Study"><em>Collapsed Long</em> to <em>Collapsed Event Study</em></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#Initializing-from-different-formats">Initializing from different formats</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#Initializing-from-Collapsed-Long-format">Initializing from <em>Collapsed Long</em> format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Initializing-from-Event-Study-format">Initializing from <em>Event Study</em> format</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#Initializing-from-Collapsed-Event-Study-format">Initializing from <em>Collapsed Event Study</em> format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="custom_columns.html">Custom Columns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="connected_sets.html">Connected Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_features.html">Advanced Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Under the hood</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../internal.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartitedataframe.html">BipartiteDataFrame</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartitebase.html">BipartiteBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartitelongbase.html">BipartiteLongBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartitelong.html">BipartiteLong</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartiteextendedeventstudybase.html">BipartiteExtendedEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartiteextendedeventstudy.html">BipartiteExtendedEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-bipartiteextendedeventstudycollapsed.html">BipartiteExtendedEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module-measures.html">Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module-grouping.html">Grouping</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">BipartitePandas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Formats</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/notebooks/formats.ipynb.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS for nbsphinx extension */
+
+/* remove conflicting styling from Sphinx themes */
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt *,
+div.nbinput.container div.input_area pre,
+div.nboutput.container div.output_area pre,
+div.nbinput.container div.input_area .highlight,
+div.nboutput.container div.output_area .highlight {
+    border: none;
+    padding: 0;
+    margin: 0;
+    box-shadow: none;
+}
+
+div.nbinput.container > div[class*=highlight],
+div.nboutput.container > div[class*=highlight] {
+    margin: 0;
+}
+
+div.nbinput.container div.prompt *,
+div.nboutput.container div.prompt * {
+    background: none;
+}
+
+div.nboutput.container div.output_area .highlight,
+div.nboutput.container div.output_area pre {
+    background: unset;
+}
+
+div.nboutput.container div.output_area div.highlight {
+    color: unset;  /* override Pygments text color */
+}
+
+/* avoid gaps between output lines */
+div.nboutput.container div[class*=highlight] pre {
+    line-height: normal;
+}
+
+/* input/output containers */
+div.nbinput.container,
+div.nboutput.container {
+    display: -webkit-flex;
+    display: flex;
+    align-items: flex-start;
+    margin: 0;
+    width: 100%;
+}
+@media (max-width: 540px) {
+    div.nbinput.container,
+    div.nboutput.container {
+        flex-direction: column;
+    }
+}
+
+/* input container */
+div.nbinput.container {
+    padding-top: 5px;
+}
+
+/* last container */
+div.nblast.container {
+    padding-bottom: 5px;
+}
+
+/* input prompt */
+div.nbinput.container div.prompt pre {
+    color: #307FC1;
+}
+
+/* output prompt */
+div.nboutput.container div.prompt pre {
+    color: #BF5B3D;
+}
+
+/* all prompts */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    width: 4.5ex;
+    padding-top: 5px;
+    position: relative;
+    user-select: none;
+}
+
+div.nbinput.container div.prompt > div,
+div.nboutput.container div.prompt > div {
+    position: absolute;
+    right: 0;
+    margin-right: 0.3ex;
+}
+
+@media (max-width: 540px) {
+    div.nbinput.container div.prompt,
+    div.nboutput.container div.prompt {
+        width: unset;
+        text-align: left;
+        padding: 0.4em;
+    }
+    div.nboutput.container div.prompt.empty {
+        padding: 0;
+    }
+
+    div.nbinput.container div.prompt > div,
+    div.nboutput.container div.prompt > div {
+        position: unset;
+    }
+}
+
+/* disable scrollbars on prompts */
+div.nbinput.container div.prompt pre,
+div.nboutput.container div.prompt pre {
+    overflow: hidden;
+}
+
+/* input/output area */
+div.nbinput.container div.input_area,
+div.nboutput.container div.output_area {
+    -webkit-flex: 1;
+    flex: 1;
+    overflow: auto;
+}
+@media (max-width: 540px) {
+    div.nbinput.container div.input_area,
+    div.nboutput.container div.output_area {
+        width: 100%;
+    }
+}
+
+/* input area */
+div.nbinput.container div.input_area {
+    border: 1px solid #e0e0e0;
+    border-radius: 2px;
+    /*background: #f5f5f5;*/
+}
+
+/* override MathJax center alignment in output cells */
+div.nboutput.container div[class*=MathJax] {
+    text-align: left !important;
+}
+
+/* override sphinx.ext.imgmath center alignment in output cells */
+div.nboutput.container div.math p {
+    text-align: left;
+}
+
+/* standard error */
+div.nboutput.container div.output_area.stderr {
+    background: #fdd;
+}
+
+/* ANSI colors */
+.ansi-black-fg { color: #3E424D; }
+.ansi-black-bg { background-color: #3E424D; }
+.ansi-black-intense-fg { color: #282C36; }
+.ansi-black-intense-bg { background-color: #282C36; }
+.ansi-red-fg { color: #E75C58; }
+.ansi-red-bg { background-color: #E75C58; }
+.ansi-red-intense-fg { color: #B22B31; }
+.ansi-red-intense-bg { background-color: #B22B31; }
+.ansi-green-fg { color: #00A250; }
+.ansi-green-bg { background-color: #00A250; }
+.ansi-green-intense-fg { color: #007427; }
+.ansi-green-intense-bg { background-color: #007427; }
+.ansi-yellow-fg { color: #DDB62B; }
+.ansi-yellow-bg { background-color: #DDB62B; }
+.ansi-yellow-intense-fg { color: #B27D12; }
+.ansi-yellow-intense-bg { background-color: #B27D12; }
+.ansi-blue-fg { color: #208FFB; }
+.ansi-blue-bg { background-color: #208FFB; }
+.ansi-blue-intense-fg { color: #0065CA; }
+.ansi-blue-intense-bg { background-color: #0065CA; }
+.ansi-magenta-fg { color: #D160C4; }
+.ansi-magenta-bg { background-color: #D160C4; }
+.ansi-magenta-intense-fg { color: #A03196; }
+.ansi-magenta-intense-bg { background-color: #A03196; }
+.ansi-cyan-fg { color: #60C6C8; }
+.ansi-cyan-bg { background-color: #60C6C8; }
+.ansi-cyan-intense-fg { color: #258F8F; }
+.ansi-cyan-intense-bg { background-color: #258F8F; }
+.ansi-white-fg { color: #C5C1B4; }
+.ansi-white-bg { background-color: #C5C1B4; }
+.ansi-white-intense-fg { color: #A1A6B2; }
+.ansi-white-intense-bg { background-color: #A1A6B2; }
+
+.ansi-default-inverse-fg { color: #FFFFFF; }
+.ansi-default-inverse-bg { background-color: #000000; }
+
+.ansi-bold { font-weight: bold; }
+.ansi-underline { text-decoration: underline; }
+
+
+div.nbinput.container div.input_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight] > pre,
+div.nboutput.container div.output_area div[class*=highlight].math,
+div.nboutput.container div.output_area.rendered_html,
+div.nboutput.container div.output_area > div.output_javascript,
+div.nboutput.container div.output_area:not(.rendered_html) > img{
+    padding: 5px;
+    margin: 0;
+}
+
+/* fix copybtn overflow problem in chromium (needed for 'sphinx_copybutton') */
+div.nbinput.container div.input_area > div[class^='highlight'],
+div.nboutput.container div.output_area > div[class^='highlight']{
+    overflow-y: hidden;
+}
+
+/* hide copybtn icon on prompts (needed for 'sphinx_copybutton') */
+.prompt .copybtn {
+    display: none;
+}
+
+/* Some additional styling taken form the Jupyter notebook CSS */
+.jp-RenderedHTMLCommon table,
+div.rendered_html table {
+  border: none;
+  border-collapse: collapse;
+  border-spacing: 0;
+  color: black;
+  font-size: 12px;
+  table-layout: fixed;
+}
+.jp-RenderedHTMLCommon thead,
+div.rendered_html thead {
+  border-bottom: 1px solid black;
+  vertical-align: bottom;
+}
+.jp-RenderedHTMLCommon tr,
+.jp-RenderedHTMLCommon th,
+.jp-RenderedHTMLCommon td,
+div.rendered_html tr,
+div.rendered_html th,
+div.rendered_html td {
+  text-align: right;
+  vertical-align: middle;
+  padding: 0.5em 0.5em;
+  line-height: normal;
+  white-space: normal;
+  max-width: none;
+  border: none;
+}
+.jp-RenderedHTMLCommon th,
+div.rendered_html th {
+  font-weight: bold;
+}
+.jp-RenderedHTMLCommon tbody tr:nth-child(odd),
+div.rendered_html tbody tr:nth-child(odd) {
+  background: #f5f5f5;
+}
+.jp-RenderedHTMLCommon tbody tr:hover,
+div.rendered_html tbody tr:hover {
+  background: rgba(66, 165, 245, 0.2);
+}
+
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="Formats">
+<h1>Formats<a class="headerlink" href="#Formats" title="Permalink to this heading"></a></h1>
+<section id="Import-the-BipartitePandas-package">
+<h2>Import the BipartitePandas package<a class="headerlink" href="#Import-the-BipartitePandas-package" title="Permalink to this heading"></a></h2>
+<p>Make sure to install it using <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">bipartitepandas</span></code>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bipartitepandas</span> <span class="k">as</span> <span class="nn">bpd</span>
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Get-your-data-ready">
+<h2>Get your data ready<a class="headerlink" href="#Get-your-data-ready" title="Permalink to this heading"></a></h2>
+<p>For this notebook, we simulate data.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">df</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">SimBipartite</span><span class="p">()</span><span class="o">.</span><span class="n">simulate</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>l</th>
+      <th>k</th>
+      <th>alpha</th>
+      <th>psi</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>-0.066354</td>
+      <td>0</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.000000</td>
+      <td>-0.908458</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.319229</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.000000</td>
+      <td>-0.908458</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-2.141775</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.000000</td>
+      <td>-0.908458</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.831186</td>
+      <td>3</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.000000</td>
+      <td>-0.908458</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>24</td>
+      <td>0.086822</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+      <td>0.000000</td>
+      <td>-0.908458</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49995</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>2.877201</td>
+      <td>0</td>
+      <td>4</td>
+      <td>9</td>
+      <td>0.967422</td>
+      <td>1.335178</td>
+    </tr>
+    <tr>
+      <th>49996</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>1.415829</td>
+      <td>1</td>
+      <td>4</td>
+      <td>6</td>
+      <td>0.967422</td>
+      <td>0.348756</td>
+    </tr>
+    <tr>
+      <th>49997</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>0.772108</td>
+      <td>2</td>
+      <td>4</td>
+      <td>6</td>
+      <td>0.967422</td>
+      <td>0.348756</td>
+    </tr>
+    <tr>
+      <th>49998</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>2.263156</td>
+      <td>3</td>
+      <td>4</td>
+      <td>8</td>
+      <td>0.967422</td>
+      <td>0.908458</td>
+    </tr>
+    <tr>
+      <th>49999</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>1.796405</td>
+      <td>4</td>
+      <td>4</td>
+      <td>8</td>
+      <td>0.967422</td>
+      <td>0.908458</td>
+    </tr>
+  </tbody>
+</table>
+<p>50000 rows × 8 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Columns">
+<h2>Columns<a class="headerlink" href="#Columns" title="Permalink to this heading"></a></h2>
+<p>BipartitePandas includes seven pre-defined general columns:</p>
+<section id="Required">
+<h3>Required<a class="headerlink" href="#Required" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">i</span></code>: worker id (any type)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code>: firm id (any type)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code>: income (float or int)</p></li>
+</ul>
+</section>
+<section id="Optional">
+<h3>Optional<a class="headerlink" href="#Optional" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">t</span></code>: time (int)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">g</span></code>: firm type (any type)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w</span></code>: weight (float or int)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">m</span></code>: move indicator (int)</p></li>
+</ul>
+</section>
+</section>
+<section id="id1">
+<h2>Formats<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<p>BipartitePandas includes six formats:</p>
+<ul class="simple">
+<li><p><em>Long</em> - each row gives a single observation</p></li>
+<li><p><em>Collapsed Long</em> - like <em>Long</em>, but employment spells at the same firm, or entire worker-firm matches, are collapsed into a single observation (these will differ if there are workers who leave, then return to, a particular firm)</p></li>
+<li><p><em>Event Study</em> - each row gives two consecutive observations</p></li>
+<li><p><em>Collapsed Event Study</em> - like <em>Event Study</em>, but employment spells at the same firm, or entire worker-firm matches, are collapsed into a single observation (these will differ if there are workers who leave, then return to, a particular firm)</p></li>
+<li><p><em>Extended Event Study</em> - each row gives arbitrarily many consecutive observations</p></li>
+<li><p><em>Collapsed Extended Event Study</em> - like <em>Extended Event Study</em>, but employment spells at the same firm, or entire worker-firm matches, are collapsed into a single observation (these will differ if there are workers who leave, then return to, a particular firm)</p></li>
+</ul>
+<p>These formats divide general columns differently:</p>
+<ul class="simple">
+<li><p><em>Long</em> - <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">t</span></code>, <code class="docutils literal notranslate"><span class="pre">g</span></code>, <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+<li><p><em>Collapsed Long</em> - <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, <code class="docutils literal notranslate"><span class="pre">t1</span></code>, <code class="docutils literal notranslate"><span class="pre">t2</span></code>, <code class="docutils literal notranslate"><span class="pre">g</span></code>, <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+<li><p><em>Event Study</em> - <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j1</span></code>, <code class="docutils literal notranslate"><span class="pre">j2</span></code>, <code class="docutils literal notranslate"><span class="pre">y1</span></code>, <code class="docutils literal notranslate"><span class="pre">y2</span></code>, <code class="docutils literal notranslate"><span class="pre">t1</span></code>, <code class="docutils literal notranslate"><span class="pre">t2</span></code>, <code class="docutils literal notranslate"><span class="pre">g1</span></code>, <code class="docutils literal notranslate"><span class="pre">g2</span></code>, <code class="docutils literal notranslate"><span class="pre">w1</span></code>, <code class="docutils literal notranslate"><span class="pre">w2</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+<li><p><em>Collapsed Event Study</em> - <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j1</span></code>, <code class="docutils literal notranslate"><span class="pre">j2</span></code>, <code class="docutils literal notranslate"><span class="pre">y1</span></code>, <code class="docutils literal notranslate"><span class="pre">y2</span></code>, <code class="docutils literal notranslate"><span class="pre">t11</span></code>, <code class="docutils literal notranslate"><span class="pre">t12</span></code>, <code class="docutils literal notranslate"><span class="pre">t21</span></code>, <code class="docutils literal notranslate"><span class="pre">t22</span></code>, <code class="docutils literal notranslate"><span class="pre">g1</span></code>, <code class="docutils literal notranslate"><span class="pre">g2</span></code>, <code class="docutils literal notranslate"><span class="pre">w1</span></code>, <code class="docutils literal notranslate"><span class="pre">w2</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+<li><p><em>Extended Event Study</em> - <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">jp</span></code>, <code class="docutils literal notranslate"><span class="pre">y1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">yp</span></code>, <code class="docutils literal notranslate"><span class="pre">t1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">tp</span></code>, <code class="docutils literal notranslate"><span class="pre">g1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">gp</span></code>, <code class="docutils literal notranslate"><span class="pre">w1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">wp</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+<li><p><em>Collapsed Extended Event Study</em> - <code class="docutils literal notranslate"><span class="pre">i</span></code>, <code class="docutils literal notranslate"><span class="pre">j1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">jp</span></code>, <code class="docutils literal notranslate"><span class="pre">y1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">yp</span></code>, <code class="docutils literal notranslate"><span class="pre">t11</span></code>, <code class="docutils literal notranslate"><span class="pre">t12</span></code>, …, <code class="docutils literal notranslate"><span class="pre">tp1</span></code>, <code class="docutils literal notranslate"><span class="pre">tp2</span></code>, <code class="docutils literal notranslate"><span class="pre">g1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">gp</span></code>, <code class="docutils literal notranslate"><span class="pre">w1</span></code>, …, <code class="docutils literal notranslate"><span class="pre">wp</span></code>, <code class="docutils literal notranslate"><span class="pre">m</span></code></p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title fa fa-exclamation-circle">Note</p>
+<p><em>Event Study</em> and <em>Extended Event Study</em> differ even if <em>Extended Event Study</em> has 2 periods. This is because <em>Event Study</em> treats each stayer observation as a new event study, while <em>Extended Event Study</em> treats stayers the same as movers: event studies are based on consecutive observations.</p>
+<p>In addition to the fact that stayers are treated differently for non-collapsed data, <em>Collapsed Event Study</em> will contain stayers, but <em>Collapsed Extended Event Study</em> will not.</p>
+</div>
+</section>
+<section id="Constructing-DataFrames">
+<h2>Constructing DataFrames<a class="headerlink" href="#Constructing-DataFrames" title="Permalink to this heading"></a></h2>
+<p>Our simulated data is in <em>Long</em> format. How do we construct a <em>Long</em> dataframe?</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bdf_long</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteDataFrame</span><span class="p">(</span>
+    <span class="n">i</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">],</span> <span class="n">j</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;j&#39;</span><span class="p">],</span> <span class="n">y</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">],</span> <span class="n">t</span><span class="o">=</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;t&#39;</span><span class="p">]</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_long</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>-0.066354</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.319229</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-2.141775</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.831186</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>24</td>
+      <td>0.086822</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49995</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>2.877201</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>49996</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>1.415829</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49997</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>0.772108</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>49998</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>2.263156</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>49999</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>1.796405</td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table>
+<p>50000 rows × 4 columns</p>
+</div></div>
+</div>
+<p>Are we sure this is long? Let’s check the datatype:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span><span class="p">(</span><span class="n">bdf_long</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+bipartitepandas.bipartitelong.BipartiteLong
+</pre></div></div>
+</div>
+<p>This method works to construct any format! Just make sure not to mix up columns between formats.</p>
+</section>
+<section id="Converting-between-formats">
+<h2>Converting between formats<a class="headerlink" href="#Converting-between-formats" title="Permalink to this heading"></a></h2>
+<p>Converting between formats is meant to be easy. Methods exist to go from:</p>
+<ul class="simple">
+<li><p><em>Long</em> to <em>Collapsed Long</em> (<code class="docutils literal notranslate"><span class="pre">.collapse()</span></code>)</p></li>
+<li><p><em>Long</em> to <em>Event Study</em> (<code class="docutils literal notranslate"><span class="pre">.to_eventstudy()</span></code>)</p></li>
+<li><p><em>Long</em> to <em>Extended Event Study</em> (<code class="docutils literal notranslate"><span class="pre">.to_extendedeventstudy()</span></code>)</p></li>
+<li><p><em>Collapsed Long</em> to <em>Long</em> (<code class="docutils literal notranslate"><span class="pre">.uncollapse()</span></code>)</p></li>
+<li><p><em>Collapsed Long</em> to <em>Collapsed Event Study</em> (<code class="docutils literal notranslate"><span class="pre">.to_eventstudy()</span></code>)</p></li>
+<li><p><em>Collapsed Long</em> to <em>Collapsed Extended Event Study</em> (<code class="docutils literal notranslate"><span class="pre">.to_extendedeventstudy()</span></code>)</p></li>
+<li><p><em>Event Study</em> to <em>Long</em> (<code class="docutils literal notranslate"><span class="pre">.to_long()</span></code>)</p></li>
+<li><p><em>Collapsed Event Study</em> to <em>Collapsed Long</em> (<code class="docutils literal notranslate"><span class="pre">.to_long()</span></code>)</p></li>
+</ul>
+<p>Let’s experiment with these and see what happens. Before we start, we just need to clean our data to make sure the conversions work properly (notice the new <code class="docutils literal notranslate"><span class="pre">m</span></code> column).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bdf_long</span> <span class="o">=</span> <span class="n">bdf_long</span><span class="o">.</span><span class="n">clean</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_long</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+checking required columns and datatypes
+sorting rows
+dropping NaN observations
+generating &#39;m&#39; column
+keeping highest paying job for i-t (worker-year) duplicates (how=&#39;max&#39;)
+dropping workers who leave a firm then return to it (how=False)
+making &#39;i&#39; ids contiguous
+making &#39;j&#39; ids contiguous
+computing largest connected set (how=None)
+sorting columns
+resetting index
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>-0.066354</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.319229</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-2.141775</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.831186</td>
+      <td>3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0</td>
+      <td>24</td>
+      <td>0.086822</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>49995</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>2.877201</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49996</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>1.415829</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49997</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>0.772108</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49998</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>2.263156</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>49999</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>1.796405</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>50000 rows × 5 columns</p>
+</div></div>
+</div>
+<section id="Long-to-Collapsed-Long">
+<h3><em>Long</em> to <em>Collapsed Long</em><a class="headerlink" href="#Long-to-Collapsed-Long" title="Permalink to this heading"></a></h3>
+<p>Notice that:</p>
+<ul class="simple">
+<li><p>We specify <code class="docutils literal notranslate"><span class="pre">level='spell'</span></code> to collapse employment spells at the same firm into single observations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t</span></code> splits into <code class="docutils literal notranslate"><span class="pre">t1</span></code> and <code class="docutils literal notranslate"><span class="pre">t2</span></code>, which indicate the start the end of the spell, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w</span></code> is new - it gives the number of observations in the spell</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bdf_collapsedlong</span> <span class="o">=</span> <span class="n">bdf_long</span><span class="o">.</span><span class="n">collapse</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="s1">&#39;spell&#39;</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_collapsedlong</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>w</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>-0.066354</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.301342</td>
+      <td>1</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>140</td>
+      <td>0.237748</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>81</td>
+      <td>-1.262375</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>9</td>
+      <td>-1.098072</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>29684</th>
+      <td>9998</td>
+      <td>139</td>
+      <td>0.361819</td>
+      <td>0</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29685</th>
+      <td>9998</td>
+      <td>30</td>
+      <td>-0.136980</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29686</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>2.877201</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>29687</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>1.093969</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>29688</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>2.029781</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>29689 rows × 7 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Long-to-Event-Study">
+<h3><em>Long</em> to <em>Event Study</em><a class="headerlink" href="#Long-to-Event-Study" title="Permalink to this heading"></a></h3>
+<p>Notice that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code> splits into <code class="docutils literal notranslate"><span class="pre">j1</span></code> and <code class="docutils literal notranslate"><span class="pre">j2</span></code>, which indicate the first and second firm id in the event study, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> splits into <code class="docutils literal notranslate"><span class="pre">y1</span></code> and <code class="docutils literal notranslate"><span class="pre">y2</span></code>, which indicate the first and second income in the event study, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t</span></code> splits into <code class="docutils literal notranslate"><span class="pre">t1</span></code> and <code class="docutils literal notranslate"><span class="pre">t2</span></code>, which indicate the first and second period in the event study, respectively</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title fa fa-exclamation-circle">Note</p>
+<p>For stayers (individuals who stay at the same firm for all their observations), each row in the event study represents a single observation, since they never move firms.</p>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bdf_eventstudy</span> <span class="o">=</span> <span class="n">bdf_long</span><span class="o">.</span><span class="n">to_eventstudy</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_eventstudy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
+      <th>y1</th>
+      <th>y2</th>
+      <th>t1</th>
+      <th>t2</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>24</td>
+      <td>-0.066354</td>
+      <td>-1.319229</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>24</td>
+      <td>-1.319229</td>
+      <td>-2.141775</td>
+      <td>1</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>24</td>
+      <td>24</td>
+      <td>-2.141775</td>
+      <td>-1.831186</td>
+      <td>2</td>
+      <td>3</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>24</td>
+      <td>24</td>
+      <td>-1.831186</td>
+      <td>0.086822</td>
+      <td>3</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>140</td>
+      <td>140</td>
+      <td>1.157531</td>
+      <td>-0.682035</td>
+      <td>0</td>
+      <td>1</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>40637</th>
+      <td>9998</td>
+      <td>139</td>
+      <td>30</td>
+      <td>-0.256372</td>
+      <td>-0.136980</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40638</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>126</td>
+      <td>2.877201</td>
+      <td>1.415829</td>
+      <td>0</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40639</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>126</td>
+      <td>1.415829</td>
+      <td>0.772108</td>
+      <td>1</td>
+      <td>2</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>40640</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>176</td>
+      <td>0.772108</td>
+      <td>2.263156</td>
+      <td>2</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40641</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>176</td>
+      <td>2.263156</td>
+      <td>1.796405</td>
+      <td>3</td>
+      <td>4</td>
+      <td>0</td>
+    </tr>
+  </tbody>
+</table>
+<p>40642 rows × 8 columns</p>
+</div></div>
+</div>
+</section>
+<section id="Collapsed-Long-to-Collapsed-Event-Study">
+<h3><em>Collapsed Long</em> to <em>Collapsed Event Study</em><a class="headerlink" href="#Collapsed-Long-to-Collapsed-Event-Study" title="Permalink to this heading"></a></h3>
+<p>Notice that:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">j</span></code> splits into <code class="docutils literal notranslate"><span class="pre">j1</span></code> and <code class="docutils literal notranslate"><span class="pre">j2</span></code>, which indicate the first and second firm id in the event study, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> splits into <code class="docutils literal notranslate"><span class="pre">y1</span></code> and <code class="docutils literal notranslate"><span class="pre">y2</span></code>, which indicate the first and second income in the event study, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t1</span></code> splits into <code class="docutils literal notranslate"><span class="pre">t11</span></code> and <code class="docutils literal notranslate"><span class="pre">t12</span></code>, which indicate the start the end of the spell for the first observation in the event study, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">t2</span></code> splits into <code class="docutils literal notranslate"><span class="pre">t21</span></code> and <code class="docutils literal notranslate"><span class="pre">t22</span></code>, which indicate the start the end of the spell for the second observation in the event study, respectively</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">w</span></code> splits into <code class="docutils literal notranslate"><span class="pre">w1</span></code> and <code class="docutils literal notranslate"><span class="pre">w2</span></code>, which indicate number of observations in the first and second spell in the event study, respectively</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">bdf_collapsedeventstudy</span> <span class="o">=</span> <span class="n">bdf_collapsedlong</span><span class="o">.</span><span class="n">to_eventstudy</span><span class="p">()</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_collapsedeventstudy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
+      <th>y1</th>
+      <th>y2</th>
+      <th>t11</th>
+      <th>t12</th>
+      <th>t21</th>
+      <th>t22</th>
+      <th>w1</th>
+      <th>w2</th>
+      <th>m</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>24</td>
+      <td>-0.066354</td>
+      <td>-1.301342</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>4</td>
+      <td>1</td>
+      <td>4</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>140</td>
+      <td>81</td>
+      <td>0.237748</td>
+      <td>-1.262375</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>81</td>
+      <td>9</td>
+      <td>-1.262375</td>
+      <td>-1.098072</td>
+      <td>2</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2</td>
+      <td>126</td>
+      <td>131</td>
+      <td>0.538577</td>
+      <td>0.628338</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2</td>
+      <td>131</td>
+      <td>33</td>
+      <td>0.628338</td>
+      <td>-0.646154</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>20326</th>
+      <td>9996</td>
+      <td>105</td>
+      <td>156</td>
+      <td>0.493585</td>
+      <td>0.097240</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>4</td>
+      <td>2</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20327</th>
+      <td>9997</td>
+      <td>147</td>
+      <td>98</td>
+      <td>-0.331835</td>
+      <td>-1.363738</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>4</td>
+      <td>2</td>
+      <td>3</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20328</th>
+      <td>9998</td>
+      <td>139</td>
+      <td>30</td>
+      <td>0.361819</td>
+      <td>-0.136980</td>
+      <td>0</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+      <td>4</td>
+      <td>1</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20329</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>126</td>
+      <td>2.877201</td>
+      <td>1.093969</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>20330</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>176</td>
+      <td>1.093969</td>
+      <td>2.029781</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+      <td>2</td>
+      <td>2</td>
+      <td>1</td>
+    </tr>
+  </tbody>
+</table>
+<p>20331 rows × 12 columns</p>
+</div></div>
+</div>
+<p>We showed how to get from <em>Long</em> to any other format, but feel free to experiment and see what happens when you convert in other directions!</p>
+</section>
+</section>
+<section id="Initializing-from-different-formats">
+<h2>Initializing from different formats<a class="headerlink" href="#Initializing-from-different-formats" title="Permalink to this heading"></a></h2>
+<p>If your data is saved in a format other than <em>Long</em>, it’s simple to construct a BipartiteDataFrame.</p>
+<section id="Initializing-from-Collapsed-Long-format">
+<h3>Initializing from <em>Collapsed Long</em> format<a class="headerlink" href="#Initializing-from-Collapsed-Long-format" title="Permalink to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="n">bdf_collapsedlong</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">]</span>
+<span class="n">j</span> <span class="o">=</span> <span class="n">bdf_collapsedlong</span><span class="p">[</span><span class="s1">&#39;j&#39;</span><span class="p">]</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">bdf_collapsedlong</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+<span class="n">t1</span> <span class="o">=</span> <span class="n">bdf_collapsedlong</span><span class="p">[</span><span class="s1">&#39;t1&#39;</span><span class="p">]</span>
+<span class="n">t2</span> <span class="o">=</span> <span class="n">bdf_collapsedlong</span><span class="p">[</span><span class="s1">&#39;t2&#39;</span><span class="p">]</span>
+<span class="n">bdf_collapsedlong</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteDataFrame</span><span class="p">(</span>
+    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="n">j</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">t1</span><span class="o">=</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="o">=</span><span class="n">t2</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_collapsedlong</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j</th>
+      <th>y</th>
+      <th>t1</th>
+      <th>t2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>-0.066354</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>-1.301342</td>
+      <td>1</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>140</td>
+      <td>0.237748</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1</td>
+      <td>81</td>
+      <td>-1.262375</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>9</td>
+      <td>-1.098072</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>29684</th>
+      <td>9998</td>
+      <td>139</td>
+      <td>0.361819</td>
+      <td>0</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>29685</th>
+      <td>9998</td>
+      <td>30</td>
+      <td>-0.136980</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>29686</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>2.877201</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <th>29687</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>1.093969</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>29688</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>2.029781</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table>
+<p>29689 rows × 5 columns</p>
+</div></div>
+</div>
+<p>Let’s check the datatype:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span><span class="p">(</span><span class="n">bdf_collapsedlong</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+bipartitepandas.bipartitelongcollapsed.BipartiteLongCollapsed
+</pre></div></div>
+</div>
+</section>
+<section id="Initializing-from-Event-Study-format">
+<h3>Initializing from <em>Event Study</em> format<a class="headerlink" href="#Initializing-from-Event-Study-format" title="Permalink to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">]</span>
+<span class="n">j1</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;j1&#39;</span><span class="p">]</span>
+<span class="n">j2</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;j2&#39;</span><span class="p">]</span>
+<span class="n">y1</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">]</span>
+<span class="n">y2</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">]</span>
+<span class="n">t1</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;t1&#39;</span><span class="p">]</span>
+<span class="n">t2</span> <span class="o">=</span> <span class="n">bdf_eventstudy</span><span class="p">[</span><span class="s1">&#39;t2&#39;</span><span class="p">]</span>
+<span class="n">bdf_eventstudy</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteDataFrame</span><span class="p">(</span>
+    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">j1</span><span class="o">=</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="o">=</span><span class="n">j2</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="n">y2</span><span class="p">,</span> <span class="n">t1</span><span class="o">=</span><span class="n">t1</span><span class="p">,</span> <span class="n">t2</span><span class="o">=</span><span class="n">t2</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_eventstudy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
+      <th>y1</th>
+      <th>y2</th>
+      <th>t1</th>
+      <th>t2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>24</td>
+      <td>-0.066354</td>
+      <td>-1.319229</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0</td>
+      <td>24</td>
+      <td>24</td>
+      <td>-1.319229</td>
+      <td>-2.141775</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0</td>
+      <td>24</td>
+      <td>24</td>
+      <td>-2.141775</td>
+      <td>-1.831186</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>0</td>
+      <td>24</td>
+      <td>24</td>
+      <td>-1.831186</td>
+      <td>0.086822</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1</td>
+      <td>140</td>
+      <td>140</td>
+      <td>1.157531</td>
+      <td>-0.682035</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>40637</th>
+      <td>9998</td>
+      <td>139</td>
+      <td>30</td>
+      <td>-0.256372</td>
+      <td>-0.136980</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>40638</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>126</td>
+      <td>2.877201</td>
+      <td>1.415829</td>
+      <td>0</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>40639</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>126</td>
+      <td>1.415829</td>
+      <td>0.772108</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>40640</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>176</td>
+      <td>0.772108</td>
+      <td>2.263156</td>
+      <td>2</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>40641</th>
+      <td>9999</td>
+      <td>176</td>
+      <td>176</td>
+      <td>2.263156</td>
+      <td>1.796405</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table>
+<p>40642 rows × 7 columns</p>
+</div></div>
+</div>
+<p>Let’s check the datatype:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span><span class="p">(</span><span class="n">bdf_eventstudy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+bipartitepandas.bipartiteeventstudy.BipartiteEventStudy
+</pre></div></div>
+</div>
+</section>
+<section id="Initializing-from-Collapsed-Event-Study-format">
+<h3>Initializing from <em>Collapsed Event Study</em> format<a class="headerlink" href="#Initializing-from-Collapsed-Event-Study-format" title="Permalink to this heading"></a></h3>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">i</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;i&#39;</span><span class="p">]</span>
+<span class="n">j1</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;j1&#39;</span><span class="p">]</span>
+<span class="n">j2</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;j2&#39;</span><span class="p">]</span>
+<span class="n">y1</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;y1&#39;</span><span class="p">]</span>
+<span class="n">y2</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;y2&#39;</span><span class="p">]</span>
+<span class="n">t11</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;t11&#39;</span><span class="p">]</span>
+<span class="n">t12</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;t12&#39;</span><span class="p">]</span>
+<span class="n">t21</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;t21&#39;</span><span class="p">]</span>
+<span class="n">t22</span> <span class="o">=</span> <span class="n">bdf_collapsedeventstudy</span><span class="p">[</span><span class="s1">&#39;t22&#39;</span><span class="p">]</span>
+<span class="n">bdf_collapsedeventstudy</span> <span class="o">=</span> <span class="n">bpd</span><span class="o">.</span><span class="n">BipartiteDataFrame</span><span class="p">(</span>
+    <span class="n">i</span><span class="o">=</span><span class="n">i</span><span class="p">,</span> <span class="n">j1</span><span class="o">=</span><span class="n">j1</span><span class="p">,</span> <span class="n">j2</span><span class="o">=</span><span class="n">j2</span><span class="p">,</span> <span class="n">y1</span><span class="o">=</span><span class="n">y1</span><span class="p">,</span> <span class="n">y2</span><span class="o">=</span><span class="n">y2</span><span class="p">,</span>
+    <span class="n">t11</span><span class="o">=</span><span class="n">t11</span><span class="p">,</span> <span class="n">t12</span><span class="o">=</span><span class="n">t12</span><span class="p">,</span> <span class="n">t21</span><span class="o">=</span><span class="n">t21</span><span class="p">,</span> <span class="n">t22</span><span class="o">=</span><span class="n">t22</span>
+<span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">bdf_collapsedeventstudy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area rendered_html docutils container">
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>i</th>
+      <th>j1</th>
+      <th>j2</th>
+      <th>y1</th>
+      <th>y2</th>
+      <th>t11</th>
+      <th>t12</th>
+      <th>t21</th>
+      <th>t22</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0</td>
+      <td>31</td>
+      <td>24</td>
+      <td>-0.066354</td>
+      <td>-1.301342</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>140</td>
+      <td>81</td>
+      <td>0.237748</td>
+      <td>-1.262375</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1</td>
+      <td>81</td>
+      <td>9</td>
+      <td>-1.262375</td>
+      <td>-1.098072</td>
+      <td>2</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>2</td>
+      <td>126</td>
+      <td>131</td>
+      <td>0.538577</td>
+      <td>0.628338</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>2</td>
+      <td>131</td>
+      <td>33</td>
+      <td>0.628338</td>
+      <td>-0.646154</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>...</th>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+      <td>...</td>
+    </tr>
+    <tr>
+      <th>20326</th>
+      <td>9996</td>
+      <td>105</td>
+      <td>156</td>
+      <td>0.493585</td>
+      <td>0.097240</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>20327</th>
+      <td>9997</td>
+      <td>147</td>
+      <td>98</td>
+      <td>-0.331835</td>
+      <td>-1.363738</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>20328</th>
+      <td>9998</td>
+      <td>139</td>
+      <td>30</td>
+      <td>0.361819</td>
+      <td>-0.136980</td>
+      <td>0</td>
+      <td>3</td>
+      <td>4</td>
+      <td>4</td>
+    </tr>
+    <tr>
+      <th>20329</th>
+      <td>9999</td>
+      <td>188</td>
+      <td>126</td>
+      <td>2.877201</td>
+      <td>1.093969</td>
+      <td>0</td>
+      <td>0</td>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>20330</th>
+      <td>9999</td>
+      <td>126</td>
+      <td>176</td>
+      <td>1.093969</td>
+      <td>2.029781</td>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>4</td>
+    </tr>
+  </tbody>
+</table>
+<p>20331 rows × 9 columns</p>
+</div></div>
+</div>
+<p>Let’s check the datatype:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="nb">type</span><span class="p">(</span><span class="n">bdf_collapsedeventstudy</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+</pre></div>
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+bipartitepandas.bipartiteeventstudycollapsed.BipartiteEventStudyCollapsed
+</pre></div></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="simple_example.html" class="btn btn-neutral float-left" title="Simple example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="custom_columns.html" class="btn btn-neutral float-right" title="Custom columns" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Thibaut Lamadon.
+      <span class="lastupdated">Last updated on Jul 24, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

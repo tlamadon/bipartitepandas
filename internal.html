@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Python API &mdash; BipartitePandas 1.1.9 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BipartiteDataFrame class" href="class-bipartitedataframe.html" />
+    <link rel="prev" title="Advanced features" href="notebooks/advanced_features.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BipartitePandas
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc-python.html">From Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Notebook examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/simple_example.html">Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/formats.html">Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/custom_columns.html">Custom Columns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/connected_sets.html">Connected Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/advanced_features.html">Advanced Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Under the hood</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#main-classes">Main classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#base-classes">Base classes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#clustering-modules">Clustering modules</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#classes-and-methods">Classes and Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitedataframe"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteDataFrame</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitebase"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitelongbase"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitelong"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartitelongcollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudybase"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudy"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventstudycollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteextendedeventstudybase"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudyBase</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteextendedeventstudy"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudy</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-bipartiteeventextendedstudycollapsed"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventExtendedStudyCollapsed</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-simbipartite"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.SimBipartite</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#modules-and-methods">Modules and Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-measures"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.measures</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#bipartitepandas-grouping"><code class="docutils literal notranslate"><span class="pre">bipartitepandas.grouping</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitedataframe.html">BipartiteDataFrame</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitebase.html">BipartiteBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongbase.html">BipartiteLongBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelong.html">BipartiteLong</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudybase.html">BipartiteExtendedEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudy.html">BipartiteExtendedEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudycollapsed.html">BipartiteExtendedEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BipartitePandas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Python API</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/internal.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="python-api">
+<h1>Python API<a class="headerlink" href="#python-api" title="Permalink to this heading"></a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The main BipartitePandas API is split into eleven classes, four of which are base classes and one of which is for simulating bipartite data. It also has two modules for clustering: one for computing measures and one for grouping on measures. BipartitePandas is canonically imported using</p>
+<blockquote>
+<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">bipartitepandas</span> <span class="k">as</span> <span class="nn">bpd</span>
+</pre></div>
+</div>
+</div></blockquote>
+<section id="main-classes">
+<h3>Main classes<a class="headerlink" href="#main-classes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteDataFrame</span></code>: Class to easily construct bipartite dataframes without explicitly specifying a format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code>: Class for bipartite networks in long format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code>: Class for bipartite networks in collapsed long format (i.e. employment spells are collapsed into a single observation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code>: Class for bipartite networks in event study format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code>: Class for bipartite networks in collapsed event study format (i.e. employment spells are collapsed into a single observation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudy</span></code>: Class for bipartite networks in extended event study format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudyCollapsed</span></code>: Class for bipartite networks in collapsed extended event study format (i.e. employment spells are collapsed into a single observation)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.SimBipartite</span></code>: Class for simulating bipartite networks</p></li>
+</ul>
+</section>
+<section id="base-classes">
+<h3>Base classes<a class="headerlink" href="#base-classes" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteBase</span></code>: Base class for BipartiteLongBase and BipartiteEventStudyBase. All methods are usable by any class that inherits from BipartiteBase.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongBase</span></code>: Base class for BipartiteLong and BipartiteLongCollapsed. All methods are usable by any class that inherits from BipartiteLongBase.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyBase</span></code>: Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed. All methods are usable by any class that inherits from BipartiteEventStudyBase.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudyBase</span></code>: Base class for BipartiteExtendedEventStudy and BipartiteExtendedEventStudyCollapsed. All methods are usable by any class that inherits from BipartiteExtendedEventStudyBase.</p></li>
+</ul>
+</section>
+<section id="clustering-modules">
+<h3>Clustering modules<a class="headerlink" href="#clustering-modules" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.measures</span></code>: Module for computing measures</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bipartitepandas.grouping</span></code>: Module for grouping on measures</p></li>
+</ul>
+</section>
+</section>
+<section id="classes-and-methods">
+<h2>Classes and Methods<a class="headerlink" href="#classes-and-methods" title="Permalink to this heading"></a></h2>
+<section id="bipartitepandas-bipartitedataframe">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteDataFrame</span></code><a class="headerlink" href="#bipartitepandas-bipartitedataframe" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteDataFrame</span></code>(i[, j, j1, j2, y, y1, ...])</p></td>
+<td><p>Constructor class for easily constructing BipartitePandas dataframes without explicitly specifying a format.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartitebase">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteBase</span></code><a class="headerlink" href="#bipartitepandas-bipartitebase" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteBase</span></code>(*args[, columns_req, ...])</p></td>
+<td><p>Base class for BipartitePandas, where BipartitePandas gives a bipartite network of firms and workers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">add_column</span></code>(col_name[, col_data, ...])</p></td>
+<td><p>Safe method for adding custom columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cluster</span></code>([params, rng])</p></td>
+<td><p>Cluster data and assign a new column giving the cluster for each firm.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">copy</span></code>([deep])</p></td>
+<td><p>Return copy of self.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagnostic</span></code>()</p></td>
+<td><p>Run diagnostic and print diagnostic report.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop</span></code>(labels[, axis, inplace, ...])</p></td>
+<td><p>Drop labels along axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop_rows</span></code>(rows[, drop_returns_to_stays, ...])</p></td>
+<td><p>Drop particular rows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_column_properties</span></code>(col_name)</p></td>
+<td><p>Return dictionary linking properties to their value for a particular column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log</span></code>(message[, level])</p></td>
+<td><p>Log a message at the specified level.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">log_on</span></code>([on])</p></td>
+<td><p>Toggle logger on or off.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">merge</span></code>(*args, **kwargs)</p></td>
+<td><p>Merge two BipartiteBase objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_movers_firms</span></code>([threshold, is_sorted, copy])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many movers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_clusters</span></code>()</p></td>
+<td><p>Get the number of unique clusters.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_firms</span></code>()</p></td>
+<td><p>Get the number of unique firms.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_unique_ids</span></code>(id_col)</p></td>
+<td><p>Number of unique ids in column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">n_workers</span></code>()</p></td>
+<td><p>Get the number of unique workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">original_ids</span></code>([copy])</p></td>
+<td><p>Return self merged with original column ids.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">print_column_properties</span></code>(col_name)</p></td>
+<td><p>Print properties associated with a particular column.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">rename</span></code>(rename_dict[, axis, inplace, ...])</p></td>
+<td><p>Rename a column.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_column_properties</span></code>(col_name[, ...])</p></td>
+<td><p>Safe method for setting the properties of pre-existing custom columns.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_cols</span></code>([copy])</p></td>
+<td><p>Sort frame columns (not in-place).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_rows</span></code>([j_if_no_t, is_sorted, copy])</p></td>
+<td><p>Sort rows by i and t.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">summary</span></code>()</p></td>
+<td><p>Print summary statistics.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">unique_ids</span></code>(id_col)</p></td>
+<td><p>Unique ids in column.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartitelongbase">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongBase</span></code><a class="headerlink" href="#bipartitepandas-bipartitelongbase" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteLongBase</span></code>(*args[, col_reference_dict])</p></td>
+<td><p>Base class for BipartiteLong and BipartiteLongCollapsed, where BipartiteLong and BipartiteLongCollapsed give a bipartite network of firms and workers in long and collapsed long form, respectively.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean</span></code>([params])</p></td>
+<td><p>Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">construct_artificial_time</span></code>([time_per_worker, ...])</p></td>
+<td><p>Construct artificial time column(s) to enable conversion to (collapsed) event study format.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop_ids</span></code>(id_col, drop_ids_list[, ...])</p></td>
+<td><p>Drop ids belonging to a given set of ids.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_m</span></code>([force, copy])</p></td>
+<td><p>Generate m column for data (m == 0 if stayer, m == 1 or 2 if mover).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_ids</span></code>(id_col, keep_ids_list[, ...])</p></td>
+<td><p>Only keep ids belonging to a given set of ids.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_rows</span></code>(rows_list[, ...])</p></td>
+<td><p>Only keep particular rows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_joint_obs_frame</span></code>([threshold_1, ...])</p></td>
+<td><p>Return dataframe where column 1 ids have at least <cite>threshold_1</cite> many observations and column 2 ids have at least <cite>threshold_2</cite> many observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_movers_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe where all firms have at least <cite>threshold</cite> many movers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_moves_firms</span></code>([threshold])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many moves.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_moves_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe where all firms have at least <cite>threshold</cite> many moves.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_obs_ids</span></code>([threshold, id_col, is_sorted, copy])</p></td>
+<td><p>List column ids with at least <cite>threshold</cite> many observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_obs_frame</span></code>([threshold, id_col, ...])</p></td>
+<td><p>Return dataframe of column ids with at least <cite>threshold</cite> many observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_workers_firms</span></code>([threshold, is_sorted, copy])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_workers_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe of firms with at least <cite>threshold</cite> many workers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_eventstudy</span></code>([move_to_worker, is_sorted, copy])</p></td>
+<td><p>Return (collapsed) long form data reformatted into (collapsed) event study data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_extendedeventstudy</span></code>([periods_pre, ...])</p></td>
+<td><p>Return (collapsed) long form data reformatted into (collapsed) extended event study data.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartitelong">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLong</span></code><a class="headerlink" href="#bipartitepandas-bipartitelong" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteLong</span></code>(*args[, col_reference_dict, ...])</p></td>
+<td><p>Class for bipartite networks of firms and workers in long form.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">collapse</span></code>([level, is_sorted, copy])</p></td>
+<td><p>Collapse long data at the worker-firm spell/match level (so each spell/match for a particular worker at a particular firm becomes one observation).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">fill_missing_periods</span></code>([fill_dict, is_sorted, ...])</p></td>
+<td><p>Return Pandas dataframe of long format data with missing periods filled in as unemployed.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_worker_m</span></code>([is_sorted])</p></td>
+<td><p>Get NumPy array indicating whether the worker associated with each observation is a mover.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartitelongcollapsed">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteLongCollapsed</span></code><a class="headerlink" href="#bipartitepandas-bipartitelongcollapsed" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteLongCollapsed</span></code>(*args[, ...])</p></td>
+<td><p>Class for bipartite networks of firms and workers in collapsed long form (i.e.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_worker_m</span></code>([is_sorted])</p></td>
+<td><p>Get NumPy array indicating whether the worker associated with each observation is a mover.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">recollapse</span></code>([drop_returns_to_stays, ...])</p></td>
+<td><p>Recollapse data by job spells (so each spell for a particular worker at a particular firm is one observation).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_permutedeventstudy</span></code>([order, ...])</p></td>
+<td><p>Return collapsed long form data reformatted into collapsed permuted event study data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncollapse</span></code>([drop_no_collapse_columns, ...])</p></td>
+<td><p>Return collapsed long data reformatted into long data, by assuming variables constant over spells.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartiteeventstudybase">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyBase</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventstudybase" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteEventStudyBase</span></code>(*args[, ...])</p></td>
+<td><p>Base class for BipartiteEventStudy and BipartiteEventStudyCollapsed, which give bipartite networks of firms and workers in event study and collapsed event study form, respectively.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean</span></code>([params])</p></td>
+<td><p>Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">construct_artificial_time</span></code>([time_per_worker, ...])</p></td>
+<td><p>Construct artificial time columns to enable conversion to (collapsed) long format.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagnostic</span></code>()</p></td>
+<td><p>Run diagnostic and print diagnostic report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop_ids</span></code>(id_col, drop_ids_list[, ...])</p></td>
+<td><p>Drop ids belonging to a given set of ids.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_m</span></code>([force, copy])</p></td>
+<td><p>Generate m column for data (m == 0 if stayer, m == 1 if mover).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_cs</span></code>([copy])</p></td>
+<td><p>Return (collapsed) event study data reformatted into cross section data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_ids</span></code>(id_col, keep_ids_list[, ...])</p></td>
+<td><p>Only keep ids belonging to a given set of ids.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_rows</span></code>(rows[, drop_returns_to_stays, ...])</p></td>
+<td><p>Only keep particular rows.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_joint_obs_frame</span></code>([threshold_1, ...])</p></td>
+<td><p>Return dataframe where column 1 ids have at least <cite>threshold_1</cite> many observations and column 2 ids have at least <cite>threshold_2</cite> many observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_movers_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe where all firms have at least <cite>threshold</cite> many movers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_moves_firms</span></code>([threshold, is_sorted, copy])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many moves.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_moves_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe where all firms have at least <cite>threshold</cite> many moves.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_obs_ids</span></code>([threshold, id_col, is_sorted, copy])</p></td>
+<td><p>List column ids with at least <cite>threshold</cite> many observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_obs_frame</span></code>([threshold, id_col, ...])</p></td>
+<td><p>Return dataframe of column ids with at least <cite>threshold</cite> many observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_workers_firms</span></code>([threshold, is_sorted, copy])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_workers_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe of firms with at least <cite>threshold</cite> many workers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_long</span></code>([is_clean, drop_no_split_columns, ...])</p></td>
+<td><p>Return (collapsed) event study data reformatted into (collapsed) long form.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartiteeventstudy">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudy</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventstudy" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteEventStudy</span></code>(*args[, ...])</p></td>
+<td><p>Class for bipartite networks of firms and workers in event study form.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">collapse</span></code>([level, is_sorted, copy])</p></td>
+<td><p>Collapse event study data at the worker-firm spell level (so each spell for a particular worker at a particular firm becomes one observation).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_worker_m</span></code>([is_sorted])</p></td>
+<td><p>Get NumPy array indicating whether the worker associated with each observation is a mover.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartiteeventstudycollapsed">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventStudyCollapsed</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventstudycollapsed" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteEventStudyCollapsed</span></code>(*args[, ...])</p></td>
+<td><p>Class for bipartite networks of firms and workers in collapsed event study form (i.e.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_worker_m</span></code>([is_sorted])</p></td>
+<td><p>Get NumPy array indicating whether the worker associated with each observation is a mover.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">uncollapse</span></code>([drop_no_collapse_columns, ...])</p></td>
+<td><p>Return collapsed event study data reformatted into event study data, by assuming variables constant over spells.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartiteextendedeventstudybase">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudyBase</span></code><a class="headerlink" href="#bipartitepandas-bipartiteextendedeventstudybase" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteExtendedEventStudyBase</span></code>(*args[, ...])</p></td>
+<td><p>Base class for BipartiteExtendedEventStudy and BipartiteExtendedEventStudyCollapsed, which give bipartite networks of firms and workers in event study and collapsed event study form, respectively.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">clean</span></code>([params])</p></td>
+<td><p>Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">construct_artificial_time</span></code>([time_per_worker, ...])</p></td>
+<td><p>Construct artificial time columns to enable conversion to (collapsed) long format.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">diagnostic</span></code>()</p></td>
+<td><p>Run diagnostic and print diagnostic report.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">drop_ids</span></code>(id_col, drop_ids_list[, ...])</p></td>
+<td><p>Drop ids belonging to a given set of ids.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_m</span></code>([force, copy])</p></td>
+<td><p>Generate m column for data (m == 0 if stayer, m == 1 if mover).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_ids</span></code>(id_col, keep_ids_list[, ...])</p></td>
+<td><p>Only keep ids belonging to a given set of ids.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">keep_rows</span></code>(rows[, drop_returns_to_stays, ...])</p></td>
+<td><p>Only keep particular rows.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_joint_obs_frame</span></code>([threshold_1, ...])</p></td>
+<td><p>Return dataframe where column 1 ids have at least <cite>threshold_1</cite> many observations and column 2 ids have at least <cite>threshold_2</cite> many observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_movers_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe where all firms have at least <cite>threshold</cite> many movers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_moves_firms</span></code>([threshold, is_sorted, copy])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many moves.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_moves_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe where all firms have at least <cite>threshold</cite> many moves.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_obs_ids</span></code>([threshold, id_col, is_sorted, copy])</p></td>
+<td><p>List column ids with at least <cite>threshold</cite> many observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_obs_frame</span></code>([threshold, id_col, ...])</p></td>
+<td><p>Return dataframe of column ids with at least <cite>threshold</cite> many observations.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_workers_firms</span></code>([threshold, is_sorted, copy])</p></td>
+<td><p>List firms with at least <cite>threshold</cite> many workers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">min_workers_frame</span></code>([threshold, ...])</p></td>
+<td><p>Return dataframe of firms with at least <cite>threshold</cite> many workers.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">to_long</span></code>([drop_no_split_columns, is_sorted, copy])</p></td>
+<td><p>Return (collapsed) extended event study data reformatted into (collapsed) long form.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartiteextendedeventstudy">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteExtendedEventStudy</span></code><a class="headerlink" href="#bipartitepandas-bipartiteextendedeventstudy" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">BipartiteExtendedEventStudy</span></code>(*args[, ...])</p></td>
+<td><p>Class for bipartite networks of firms and workers in extended event study form.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">collapse</span></code>([level, is_sorted, copy])</p></td>
+<td><p>Collapse extended event study data at the worker-firm spell level (so each spell for a particular worker at a particular firm becomes one observation).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_worker_m</span></code>([is_sorted])</p></td>
+<td><p>Get NumPy array indicating whether the worker associated with each observation is a mover.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-bipartiteeventextendedstudycollapsed">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.BipartiteEventExtendedStudyCollapsed</span></code><a class="headerlink" href="#bipartitepandas-bipartiteeventextendedstudycollapsed" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-simbipartite">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.SimBipartite</span></code><a class="headerlink" href="#bipartitepandas-simbipartite" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">SimBipartite</span></code>([params])</p></td>
+<td><p>Class of SimBipartite, where SimBipartite simulates a bipartite network of firms and workers.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">simulate</span></code>([rng])</p></td>
+<td><p>Simulate panel data corresponding to the calibrated model.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="modules-and-methods">
+<h2>Modules and Methods<a class="headerlink" href="#modules-and-methods" title="Permalink to this heading"></a></h2>
+<section id="bipartitepandas-measures">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.measures</span></code><a class="headerlink" href="#bipartitepandas-measures" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">CDFs</span></code>([cdf_resolution, measure, outcome_col])</p></td>
+<td><p>Generate cdfs of compensation for firms.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Moments</span></code>([measures, outcome_col])</p></td>
+<td><p>Generate compensation moments for firms.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="bipartitepandas-grouping">
+<h3><code class="docutils literal notranslate"><span class="pre">bipartitepandas.grouping</span></code><a class="headerlink" href="#bipartitepandas-grouping" title="Permalink to this heading"></a></h3>
+<table class="autosummary longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">KMeans</span></code>(**kwargs)</p></td>
+<td><p>Compute KMeans groups for data.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Quantiles</span></code>([n_quantiles])</p></td>
+<td><p>Compute quantile groups for data.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="notebooks/advanced_features.html" class="btn btn-neutral float-left" title="Advanced features" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="class-bipartitedataframe.html" class="btn btn-neutral float-right" title="BipartiteDataFrame class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Thibaut Lamadon.
+      <span class="lastupdated">Last updated on Jul 24, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BipartiteExtendedEventStudyBase class &mdash; BipartitePandas 1.1.9 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BipartiteExtendedEventStudy class" href="class-bipartiteextendedeventstudy.html" />
+    <link rel="prev" title="BipartiteEventStudyCollapsed class" href="class-bipartiteeventstudycollapsed.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BipartitePandas
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc-python.html">From Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Notebook examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/simple_example.html">Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/formats.html">Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/custom_columns.html">Custom Columns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/connected_sets.html">Connected Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/advanced_features.html">Advanced Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Under the hood</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="internal.html">Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitedataframe.html">BipartiteDataFrame</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitebase.html">BipartiteBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongbase.html">BipartiteLongBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelong.html">BipartiteLong</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BipartiteExtendedEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudy.html">BipartiteExtendedEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudycollapsed.html">BipartiteExtendedEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BipartitePandas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>BipartiteExtendedEventStudyBase class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/class-bipartiteextendedeventstudybase.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="bipartiteextendedeventstudybase-class">
+<h1>BipartiteExtendedEventStudyBase class<a class="headerlink" href="#bipartiteextendedeventstudybase-class" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bipartitepandas.bipartiteextendedeventstudybase.</span></span><span class="sig-name descname"><span class="pre">BipartiteExtendedEventStudyBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_periods</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">col_reference_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="class-bipartitebase.html#bipartitepandas.bipartitebase.BipartiteBase" title="bipartitepandas.bipartitebase.BipartiteBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BipartiteBase</span></code></a></p>
+<p>Base class for BipartiteExtendedEventStudy and BipartiteExtendedEventStudyCollapsed, which give bipartite networks of firms and workers in event study and collapsed event study form, respectively. Contains generalized methods. Inherits from BipartiteBase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>*args</strong> – arguments for BipartiteBase</p></li>
+<li><p><strong>n_periods</strong> (<em>int</em>) – number of periods in extended event study</p></li>
+<li><p><strong>col_reference_dict</strong> (<em>dict</em><em> or </em><em>None</em>) – clarify which columns are associated with a general column name, e.g. {‘i’: ‘i’, ‘j’: [‘j1’, ‘j2’]}; None is equivalent to {}</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for BipartiteBase</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.clean">
+<span class="sig-name descname"><span class="pre">clean</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.clean" title="Permalink to this definition"></a></dt>
+<dd><p>Clean data to make sure there are no NaN or duplicate observations, observations where workers leave a firm then return to it are removed, firms are connected by movers, and categorical ids are contiguous.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>params</strong> (<em>ParamsDict</em><em> or </em><em>None</em>) – dictionary of parameters for cleaning. Run bpd.clean_params().describe_all() for descriptions of all valid parameters. None is equivalent to bpd.clean_params().</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with cleaned data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.construct_artificial_time">
+<span class="sig-name descname"><span class="pre">construct_artificial_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_per_worker</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.construct_artificial_time" title="Permalink to this definition"></a></dt>
+<dd><p>Construct artificial time columns to enable conversion to (collapsed) long format. Only adds columns if time columns not already included.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_per_worker</strong> (<em>bool</em>) – if True, set time independently for each worker (note that this is significantly more computationally costly)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – set to True if dataframe is already sorted by i (this avoids a sort inside a groupby if time_per_worker=True, but this groupby will not sort the returned dataframe)</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with artificial time columns</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.diagnostic">
+<span class="sig-name descname"><span class="pre">diagnostic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.diagnostic" title="Permalink to this definition"></a></dt>
+<dd><p>Run diagnostic and print diagnostic report.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.drop_ids">
+<span class="sig-name descname"><span class="pre">drop_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_ids_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.drop_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Drop ids belonging to a given set of ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_col</strong> (<em>str</em>) – column of ids to consider (‘i’, ‘j’, or ‘g’)</p></li>
+<li><p><strong>drop_ids_list</strong> (<em>list</em>) – ids to drop</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – used only if id_col is ‘j’ or ‘g’ and using BipartiteExtendedEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>reset_index</strong> (<em>bool</em>) – not used for event study format</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with ids outside the given set</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.gen_m">
+<span class="sig-name descname"><span class="pre">gen_m</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.gen_m" title="Permalink to this definition"></a></dt>
+<dd><p>Generate m column for data (m == 0 if stayer, m == 1 if mover).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>force</strong> (<em>bool</em>) – if True, reset ‘m’ column even if it exists</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with m column</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.keep_ids">
+<span class="sig-name descname"><span class="pre">keep_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_ids_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.keep_ids" title="Permalink to this definition"></a></dt>
+<dd><p>Only keep ids belonging to a given set of ids.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_col</strong> (<em>str</em>) – column of ids to consider (‘i’, ‘j’, or ‘g’)</p></li>
+<li><p><strong>keep_ids_list</strong> (<em>list</em>) – ids to keep</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – used only if id_col is ‘j’ or ‘g’ and using BipartiteExtendedEventStudyCollapsed format. If True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer).</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>reset_index</strong> (<em>bool</em>) – not used for event study format</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with ids in the given set</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.keep_rows">
+<span class="sig-name descname"><span class="pre">keep_rows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.keep_rows" title="Permalink to this definition"></a></dt>
+<dd><p>Only keep particular rows.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rows</strong> (<em>list</em>) – rows to keep</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>reset_index</strong> (<em>bool</em>) – not used for event study format</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe with given rows</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_joint_obs_frame">
+<span class="sig-name descname"><span class="pre">min_joint_obs_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_col_1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'j'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_col_2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'i'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_joint_obs_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Return dataframe where column 1 ids have at least <cite>threshold_1</cite> many observations and column 2 ids have at least <cite>threshold_2</cite> many observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold_1</strong> (<em>int</em>) – minimum number of observations required to keep an id from column 1</p></li>
+<li><p><strong>threshold_2</strong> (<em>int</em>) – minimum number of observations required to keep an id from column 2</p></li>
+<li><p><strong>id_col_1</strong> (<em>str</em>) – column to check ids (‘i’, ‘j’, or ‘g’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’.</p></li>
+<li><p><strong>id_col_2</strong> (<em>str</em>) – column to check ids (‘i’, ‘j’, or ‘g’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’.</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – used for event study format. If False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – used for event study format. If False, avoid copy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe of ids with sufficiently many observations</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_movers_frame">
+<span class="sig-name descname"><span class="pre">min_movers_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_movers_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Return dataframe where all firms have at least <cite>threshold</cite> many movers. This method employs loops, as dropping firms that don’t meet the threshold may lower the number of movers at other firms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of movers required to keep a firm</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>reset_index</strong> (<em>bool</em>) – not used for event study format</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe of firms with sufficiently many movers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_moves_firms">
+<span class="sig-name descname"><span class="pre">min_moves_firms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_moves_firms" title="Permalink to this definition"></a></dt>
+<dd><p>List firms with at least <cite>threshold</cite> many moves. Note that a single mover can have multiple moves at the same firm.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of moves required to keep a firm</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>firms with sufficiently many moves</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(NumPy Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_moves_frame">
+<span class="sig-name descname"><span class="pre">min_moves_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reset_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_moves_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Return dataframe where all firms have at least <cite>threshold</cite> many moves. Note that a single worker can have multiple moves at the same firm. This method employs loops, as dropping firms that don’t meet the threshold may lower the number of moves at other firms.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of moves required to keep a firm</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>reset_index</strong> (<em>bool</em>) – not used for event study format</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe of firms with sufficiently many moves</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_obs_frame">
+<span class="sig-name descname"><span class="pre">min_obs_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'j'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_obs_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Return dataframe of column ids with at least <cite>threshold</cite> many observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of observations required to keep an id</p></li>
+<li><p><strong>id_col</strong> (<em>str</em>) – column to check ids (‘i’, ‘j’, or ‘g’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’.</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe of ids with sufficiently many observations</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_obs_ids">
+<span class="sig-name descname"><span class="pre">min_obs_ids</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_col</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'j'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_obs_ids" title="Permalink to this definition"></a></dt>
+<dd><p>List column ids with at least <cite>threshold</cite> many observations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of observations required to keep an id</p></li>
+<li><p><strong>id_col</strong> (<em>str</em>) – column to check ids (‘i’, ‘j’, or ‘g’). Use general column names for joint columns, e.g. put ‘j’ instead of ‘j1’, ‘j2’.</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>ids with sufficiently many observations</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(NumPy Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_workers_firms">
+<span class="sig-name descname"><span class="pre">min_workers_firms</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_workers_firms" title="Permalink to this definition"></a></dt>
+<dd><p>List firms with at least <cite>threshold</cite> many workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of workers required to keep a firm</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>firms with sufficiently many workers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(NumPy Array)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_workers_frame">
+<span class="sig-name descname"><span class="pre">min_workers_frame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">15</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_returns_to_stays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.min_workers_frame" title="Permalink to this definition"></a></dt>
+<dd><p>Return dataframe of firms with at least <cite>threshold</cite> many workers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>threshold</strong> (<em>int</em>) – minimum number of workers required to keep a firm</p></li>
+<li><p><strong>drop_returns_to_stays</strong> (<em>bool</em>) – if True, when recollapsing collapsed data, drop observations that need to be recollapsed instead of collapsing (this is for computational efficiency when re-collapsing data for leave-one-out connected components, where intermediate observations can be dropped, causing a worker who returns to a firm to become a stayer)</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>dataframe of firms with sufficiently many workers</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase" title="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase">BipartiteExtendedEventStudyBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.to_long">
+<span class="sig-name descname"><span class="pre">to_long</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">drop_no_split_columns</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartiteextendedeventstudybase.BipartiteExtendedEventStudyBase.to_long" title="Permalink to this definition"></a></dt>
+<dd><p>Return (collapsed) extended event study data reformatted into (collapsed) long form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>drop_no_split_columns</strong> (<em>bool</em>) – if True, columns marked by self.col_long_es_dict as None (i.e. they should be dropped) will not be dropped</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if False, dataframe will be sorted by i (and t, if included). Returned dataframe will be sorted. Sorting may alter original dataframe if copy is set to False. Set is_sorted to True if dataframe is already sorted.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – if False, avoid copy</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>long format dataframe generated from extended event study data</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>(<a class="reference internal" href="class-bipartitelongbase.html#bipartitepandas.bipartitelongbase.BipartiteLongBase" title="bipartitepandas.bipartitelongbase.BipartiteLongBase">BipartiteLongBase</a>)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="class-bipartiteeventstudycollapsed.html" class="btn btn-neutral float-left" title="BipartiteEventStudyCollapsed class" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="class-bipartiteextendedeventstudy.html" class="btn btn-neutral float-right" title="BipartiteExtendedEventStudy class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Thibaut Lamadon.
+      <span class="lastupdated">Last updated on Jul 24, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BipartiteDataFrame class &mdash; BipartitePandas 1.1.9 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BipartiteBase class" href="class-bipartitebase.html" />
+    <link rel="prev" title="Python API" href="internal.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> BipartitePandas
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">User documentation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="index.html">Home</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doc-python.html">From Python</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Notebook examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/simple_example.html">Simple Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/formats.html">Formats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/custom_columns.html">Custom Columns</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/clustering.html">Clustering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/connected_sets.html">Connected Sets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="notebooks/advanced_features.html">Advanced Features</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Under the hood</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="internal.html">Python API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">BipartiteDataFrame</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitebase.html">BipartiteBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongbase.html">BipartiteLongBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelong.html">BipartiteLong</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartitelongcollapsed.html">BipartiteLongCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudybase.html">BipartiteEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudy.html">BipartiteEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteeventstudycollapsed.html">BipartiteEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudybase.html">BipartiteExtendedEventStudyBase</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudy.html">BipartiteExtendedEventStudy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-bipartiteextendedeventstudycollapsed.html">BipartiteExtendedEventStudyCollapsed</a></li>
+<li class="toctree-l1"><a class="reference internal" href="class-simbipartite.html">SimBipartite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-measures.html">Measures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="module-grouping.html">Grouping</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">BipartitePandas</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>BipartiteDataFrame class</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/class-bipartitedataframe.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  
+<style>
+/* CSS overrides for sphinx_rtd_theme */
+
+/* 24px margin */
+.nbinput.nblast.container,
+.nboutput.nblast.container {
+    margin-bottom: 19px;  /* padding has already 5px */
+}
+
+/* ... except between code cells! */
+.nblast.container + .nbinput.container {
+    margin-top: -19px;
+}
+
+.admonition > p:before {
+    margin-right: 4px;  /* make room for the exclamation icon */
+}
+
+/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
+.math {
+    text-align: unset;
+}
+</style>
+<section id="bipartitedataframe-class">
+<h1>BipartiteDataFrame class<a class="headerlink" href="#bipartitedataframe-class" title="Permalink to this heading"></a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="bipartitepandas.bipartitedataframe.BipartiteDataFrame">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">bipartitepandas.bipartitedataframe.</span></span><span class="sig-name descname"><span class="pre">BipartiteDataFrame</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t11</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t12</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t21</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t22</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">m</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_categorical_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_dtype_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_how_collapse_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_long_es_split_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bipartitepandas.bipartitedataframe.BipartiteDataFrame" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Constructor class for easily constructing BipartitePandas dataframes without explicitly specifying a format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>SECTION</strong> – ANY FORMAT COLUMNS</p></li>
+<li><p><strong>i</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em><em> or </em><em>Pandas DataFrame</em>) – if NumPy Array or Pandas Series: worker id (required); if Pandas DataFrame: full dataframe including all required columns</p></li>
+<li><p><strong>SECTION</strong> – BASE LONG FORMAT COLUMNS</p></li>
+<li><p><strong>j</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em>) – firm id (required)</p></li>
+<li><p><strong>y</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of floats</em><em> or </em><em>ints</em>) – income (required)</p></li>
+<li><p><strong>m</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – mover value (optional)</p></li>
+<li><p><strong>SECTION</strong> – NON-COLLAPSED LONG FORMAT COLUMNS</p></li>
+<li><p><strong>t</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – time (optional)</p></li>
+<li><p><strong>g</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em>) – firm cluster (optional)</p></li>
+<li><p><strong>w</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of floats</em><em> or </em><em>ints</em>) – observation weight (optional)</p></li>
+<li><p><strong>SECTION</strong> – COLLAPSED LONG FORMAT COLUMNS</p></li>
+<li><p><strong>t1</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – first time in worker-firm spell (optional)</p></li>
+<li><p><strong>t2</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – last time in worker-firm spell (optional)</p></li>
+<li><p><strong>SECTION</strong> – BASE EVENT STUDY FORMAT COLUMNS</p></li>
+<li><p><strong>j1</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em>) – firm id in first period of event study (required)</p></li>
+<li><p><strong>j2</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em>) – firm id in second period of event study (required)</p></li>
+<li><p><strong>y1</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of floats</em><em> or </em><em>ints</em>) – income in first period of event study (required)</p></li>
+<li><p><strong>y2</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of floats</em><em> or </em><em>ints</em>) – income in second period of event study (required)</p></li>
+<li><p><strong>g1</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em>) – firm cluster in first period of event study (optional)</p></li>
+<li><p><strong>g2</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of any type</em>) – firm cluster in second period of event study (optional)</p></li>
+<li><p><strong>w1</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of floats</em><em> or </em><em>ints</em>) – observation weight in first period of event study (optional)</p></li>
+<li><p><strong>w2</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of floats</em><em> or </em><em>ints</em>) – observation weight in second period of event study (optional)</p></li>
+<li><p><strong>SECTION</strong> – NON-COLLAPSED EVENT STUDY FORMAT COLUMNS</p></li>
+<li><p><strong>t1</strong> – time in first period of event study (optional)</p></li>
+<li><p><strong>t2</strong> – time in second period of event study (optional)</p></li>
+<li><p><strong>SECTION</strong> – COLLAPSED EVENT STUDY FORMAT COLUMNS</p></li>
+<li><p><strong>t11</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – first time in worker-firm spell in first period of event study (optional)</p></li>
+<li><p><strong>t12</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – last time in worker-firm spell in first period of event study (optional)</p></li>
+<li><p><strong>t21</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – first time in worker-firm spell in second period of event study (optional)</p></li>
+<li><p><strong>t22</strong> (<em>NumPy Array</em><em> or </em><em>Pandas Series of ints</em>) – last time in worker-firm spell in second period of event study (optional)</p></li>
+<li><p><strong>SECTION</strong> – CUSTOM COLUMNS</p></li>
+<li><p><strong>custom_categorical_dict</strong> (<em>dict of bool</em><em> or </em><em>None</em>) – for new columns, optionally link general column names to whether that set of columns is categorical (e.g. ‘j’ is firm ids, links to columns ‘j1’ and ‘j2’ and should be categorical; then set {‘j’: True}); None is equivalent to {}</p></li>
+<li><p><strong>custom_dtype_dict</strong> (<em>dict of str</em><em> or </em><em>None</em>) – for new columns, optionally link general column names to the datatype for that set of columns (e.g. ‘y’ is income, links to columns ‘y1’ and ‘y2’ and should be float; then set {‘y’: ‘float’}); must be one of ‘int’, ‘float’, ‘any’, or ‘categorical’; None is equivalent to {}</p></li>
+<li><p><strong>custom_how_collapse_dict</strong> (<em>dict of</em><em> (</em><em>function</em><em> or </em><em>str</em><em> or </em><em>None</em><em>) or </em><em>None</em>) – for new columns, optionally link general column names to how members of that set of columns should be collapsed at the worker-firm spell level (e.g. ‘y’ is income, links to columns ‘y1’ and ‘y2’ and should become the mean at the worker-firm spell level; then set {‘y’: ‘mean’}); must be a valid input for Pandas groupby; if None, column will be dropped during collapse/uncollapse; None is equivalent to {}</p></li>
+<li><p><strong>custom_long_es_split_dict</strong> (<em>dict of</em><em> (</em><em>bool</em><em> or </em><em>None</em><em>) or </em><em>None</em>) – for new columns, optionally link general column names to whether members of that set of columns should split into two when converting from long to event study; if None, columns will be dropped when converting between (collapsed) long and (collapsed) event study formats; None is equivalent to {}</p></li>
+<li><p><strong>**kwargs</strong> – keyword arguments for BipartiteBase, or new columns</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="internal.html" class="btn btn-neutral float-left" title="Python API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="class-bipartitebase.html" class="btn btn-neutral float-right" title="BipartiteBase class" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Thibaut Lamadon.
+      <span class="lastupdated">Last updated on Jul 24, 2023.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
