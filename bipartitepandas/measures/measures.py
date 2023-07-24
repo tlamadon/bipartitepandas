@@ -12,11 +12,13 @@ class CDFs:
     Arguments:
         cdf_resolution (int): how many values to use to approximate the cdfs
         measure (str): how to compute the cdfs ('quantile_all' to get quantiles from entire set of data, then have firm-level values between 0 and 1; 'quantile_firm' to get quantiles at the firm-level and have values be compensations)
+        outcome_col (str): outcome_col column to use for data
     '''
 
-    def __init__(self, cdf_resolution=10, measure='quantile_all'):
+    def __init__(self, cdf_resolution=10, measure='quantile_all', outcome_col='y'):
         self.cdf_resolution = cdf_resolution
         self.measure = measure
+        self.outcome_col = outcome_col
 
     def _compute_measure(self, frame, jids):
         '''
@@ -28,6 +30,7 @@ class CDFs:
         '''
         cdf_resolution = self.cdf_resolution
         measure = self.measure
+        outcome_col = self.outcome_col
         n_firms = len(jids)
 
         ## Initialize cdf array ##
@@ -40,7 +43,7 @@ class CDFs:
         if measure == 'quantile_all':
             # Convert columns to NumPy
             j = frame.loc[:, 'j'].to_numpy()
-            y = frame.loc[:, 'y'].to_numpy()
+            y = frame.loc[:, outcome_col].to_numpy()
             w = frame.loc[:, 'row_weights'].to_numpy()
 
             # Force j and jids to be integers so np.bincount and indexing work correctly
@@ -64,12 +67,12 @@ class CDFs:
         elif measure == 'quantile_firm':
             # Sort frame by firm + compensation (do this once now, so that don't need to do it again later) (also note it is faster to sort and then manually compute quantiles than to use built-in quantile functions)
             # NOTE: don't sort in-place, otherwise modifies external data
-            frame = frame.sort_values(['j', 'y'], inplace=False)
+            frame = frame.sort_values(['j', outcome_col], inplace=False)
             frame.reset_index(drop=True, inplace=True)
             frame.reset_index(drop=False, inplace=True)
 
             # Convert columns to NumPy (after sorting)
-            y = frame.loc[:, 'y'].to_numpy()
+            y = frame.loc[:, outcome_col].to_numpy()
             w = frame.loc[:, 'row_weights'].to_numpy()
 
             # Find min + max index for each firm
@@ -110,10 +113,12 @@ class Moments:
 
     Arguments:
         measures (str or list of str): how to compute the measures ('mean' to compute average income within each firm; 'var' to compute variance of income within each firm; 'max' to compute max income within each firm; 'min' to compute min income within each firm)
+        outcome_col (str): outcome_col column to use for data
     '''
 
-    def __init__(self, measures='mean'):
+    def __init__(self, measures='mean', outcome_col='y'):
         self.measures = measures
+        self.outcome_col = outcome_col
 
     def _compute_measure(self, frame, jids):
         '''
@@ -127,6 +132,7 @@ class Moments:
         n_firms = len(jids)
         measures = self.measures
         n_measures = len(to_list(measures))
+        outcome_col = self.outcome_col
 
         ## Initialize moments array ##
         moments = np.zeros([n_firms, n_measures])
@@ -139,7 +145,7 @@ class Moments:
             if measure == 'mean':
                 # Group by mean income
                 j_ = frame.loc[:, 'j'].to_numpy()
-                y = frame.loc[:, 'y'].to_numpy()
+                y = frame.loc[:, outcome_col].to_numpy()
                 w = frame.loc[:, 'row_weights'].to_numpy()
                 # Force j and jids to be integers so np.bincount and indexing work correctly
                 if jids.dtype == 'O':
@@ -150,10 +156,10 @@ class Moments:
                 del j_, y, w
             elif measure == 'var':
                 # Group by variance of income
-                moments[:, j] = aggregate_transform(frame, 'j', 'y', 'var', weights='row_weights', merge=False)
+                moments[:, j] = aggregate_transform(frame, 'j', outcome_col, 'var', weights='row_weights', merge=False)
             elif measure == 'max':
-                moments[:, j] = frame.groupby('j', sort=False)['y'].max().to_numpy()
+                moments[:, j] = frame.groupby('j', sort=False)[outcome_col].max().to_numpy()
             elif measure == 'min':
-                moments[:, j] = frame.groupby('j', sort=False)['y'].min().to_numpy()
+                moments[:, j] = frame.groupby('j', sort=False)[outcome_col].min().to_numpy()
 
         return moments
