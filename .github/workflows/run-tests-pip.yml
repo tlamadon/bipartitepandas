@@ -7,18 +7,23 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false  # Ensure all jobs in the matrix run even if one fails
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]  # Add or remove versions as needed
 
     steps:
     # Step 1: Checkout the repository
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # Step 2: Set up Python
-    - name: Set up Python
+    # Step 2: Set up Python 
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9' # Adjust to your required Python version
+        python-version: ${{ matrix.python-version }}
 
     # Step 3: Install dependencies
     - name: Install dependencies
@@ -26,7 +31,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
         pip install pytest-cov
+        
     # Step 4: Run tests
     - name: Run tests
       run: |
          python -m pytest
+         
+    - name: Upload test results (optional)
+      if: ${{ failure() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results-${{ matrix.os }}-${{ matrix.python-version }}
+        path: test-results/
