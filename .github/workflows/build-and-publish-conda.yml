@@ -3,7 +3,7 @@ name: Build and Publish Conda Packages
 on:
   push:
     branches:
-      - publish  # Run this workflow only on pushes to the main branch
+      - release  # Run this workflow only on pushes to the main branch
   workflow_dispatch: # Allow manual triggering of the workflow
 
 jobs:
