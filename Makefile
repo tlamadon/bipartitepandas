@@ -15,3 +15,6 @@ doc:
 	git remote add origin $(GIT_REMOTE) && \
 	git push --force origin master:gh-pages
 	rm -rf docs/build
+
+conda:
+	conda env create -f conda-env-file.yml 

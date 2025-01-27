@@ -1,0 +1,31 @@
+package:
+  name: bipartitepandas
+  version: "1.1.11"
+
+source:
+  path: .
+
+build:
+  number: 0
+  script: python setup.py install  # Command to build and install the package
+
+requirements:
+  build:
+    - python  # Minimum version of Python to build the package
+    - setuptools  # For building Python packages
+  run:
+    - python  # Minimum version of Python required to run the package
+    - numpy  # Example runtime dependency, replace or add as needed
+
+about:
+  home: https://github.com/tlamadon/bipartitepandas  # URL to the project homepage or repo
+  license: MIT  # Replace with your package's license
+  license_file: LICENSE  # Path to the license file
+  summary: Python tools for bipartite labor data
+
+  description: |
+    BipartitePandas is a Python package for handling bipartite labor data.
+    
+extra:
+  recipe-maintainers:
+    - tlamadon  # Replace with the maintainer's GitHub username(s)
