@@ -54,3 +54,4 @@ ehthumbs.db
 Thumbs.db
 .venv/**
 env/** 
+env*
