@@ -27,7 +27,7 @@ jobs:
 
     - name: Build Conda Package
       run: |
-        conda build conda-recipe
+        conda build .
         ls $(conda build conda-recipe --output) > package_path.txt
 
     # - name: Publish Conda Package
