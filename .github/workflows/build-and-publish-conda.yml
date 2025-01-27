@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release  # Run this workflow only on pushes to the main branch
+      - main
   workflow_dispatch: # Allow manual triggering of the workflow
 
 jobs:
@@ -29,9 +30,9 @@ jobs:
         conda build conda-recipe
         ls $(conda build conda-recipe --output) > package_path.txt
 
-    - name: Publish Conda Package
-      env:
-        ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
-      run: |
-        PACKAGE_PATH=$(cat package_path.txt)
-        anaconda upload --user <your-anaconda-username> $PACKAGE_PATH
+    # - name: Publish Conda Package
+    #   env:
+    #     ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_API_TOKEN }}
+    #   run: |
+    #     PACKAGE_PATH=$(cat package_path.txt)
+    #     anaconda upload --user <your-anaconda-username> $PACKAGE_PATH
