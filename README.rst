@@ -53,5 +53,5 @@ lamadon@uchicago.edu
 
 
 Adam A. Oppenheimer,
-Graduate Student, University of Minnesota - Twin Cities,
+PhD Student, University of Minnesota - Twin Cities,
 oppen040@umn.edu
